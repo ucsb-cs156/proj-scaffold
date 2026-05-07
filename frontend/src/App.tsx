@@ -483,7 +483,7 @@ export default function App() {
                         <pre style={{
                           fontFamily: 'monospace',
                           border: '1px solid #000000',
-                          fontSize: 13,
+                          fontSize: 11,
                           background: '#e2e8f0',
                           borderRadius: 6,
                           padding: '8px 12px',
