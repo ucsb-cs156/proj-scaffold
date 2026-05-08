@@ -142,7 +142,6 @@ describe("OurTable tests", () => {
     expect(screen.getByText("30")).toBeInTheDocument();
   });
 
-
   test("rerender with new data reference updates rendered cells", async () => {
     const initialData = [
       {
@@ -237,11 +236,7 @@ describe("OurTable tests", () => {
     expect(screen.getByText("Column 2")).toBeInTheDocument();
 
     rerender(
-      <OurTable
-        columns={nextColumns}
-        data={stableData}
-        testid={"colTestId"}
-      />,
+      <OurTable columns={nextColumns} data={stableData} testid={"colTestId"} />,
     );
 
     await waitFor(() => {
@@ -251,5 +246,4 @@ describe("OurTable tests", () => {
       expect(screen.queryByText("Column 2")).not.toBeInTheDocument();
     });
   });
-
 });
