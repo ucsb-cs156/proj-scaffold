@@ -141,4 +141,115 @@ describe("OurTable tests", () => {
     expect(screen.getByText("Alice")).toBeInTheDocument();
     expect(screen.getByText("30")).toBeInTheDocument();
   });
+
+
+  test("rerender with new data reference updates rendered cells", async () => {
+    const initialData = [
+      {
+        col1: "Hello",
+        col2: "World",
+      },
+    ];
+
+    const nextData = [
+      {
+        col1: "Updated",
+        col2: "Row",
+      },
+    ];
+
+    const stableColumns = [
+      {
+        header: "Column 1",
+        accessorKey: "col1",
+      },
+      {
+        header: "Column 2",
+        accessorKey: "col2",
+      },
+    ];
+
+    const { rerender } = render(
+      <OurTable
+        columns={stableColumns}
+        data={initialData}
+        testid={"mutateTestId"}
+      />,
+    );
+
+    await screen.findByTestId("mutateTestId-cell-row-0-col-col1");
+    expect(screen.getByText("Hello")).toBeInTheDocument();
+
+    rerender(
+      <OurTable
+        columns={stableColumns}
+        data={nextData}
+        testid={"mutateTestId"}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Updated")).toBeInTheDocument();
+      expect(screen.queryByText("Hello")).not.toBeInTheDocument();
+    });
+  });
+
+  test("rerender with new columns reference updates rendered headers", async () => {
+    const stableData = [
+      {
+        col1: "Hello",
+        col2: "World",
+      },
+    ];
+
+    const initialColumns = [
+      {
+        header: "Column 1",
+        accessorKey: "col1",
+      },
+      {
+        header: "Column 2",
+        accessorKey: "col2",
+      },
+    ];
+
+    const nextColumns = [
+      {
+        header: "First",
+        accessorKey: "col1",
+      },
+      {
+        header: "Second",
+        accessorKey: "col2",
+      },
+    ];
+
+    const { rerender } = render(
+      <OurTable
+        columns={initialColumns}
+        data={stableData}
+        testid={"colTestId"}
+      />,
+    );
+
+    await screen.findByTestId("colTestId-header-col1");
+    expect(screen.getByText("Column 1")).toBeInTheDocument();
+    expect(screen.getByText("Column 2")).toBeInTheDocument();
+
+    rerender(
+      <OurTable
+        columns={nextColumns}
+        data={stableData}
+        testid={"colTestId"}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("First")).toBeInTheDocument();
+      expect(screen.getByText("Second")).toBeInTheDocument();
+      expect(screen.queryByText("Column 1")).not.toBeInTheDocument();
+      expect(screen.queryByText("Column 2")).not.toBeInTheDocument();
+    });
+  });
+
 });
