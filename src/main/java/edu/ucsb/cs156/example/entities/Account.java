@@ -1,8 +1,6 @@
 package edu.ucsb.cs156.example.entities;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,13 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Entity(name = "urls")
-public class Url {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private long id;
-
-  private String url;
-  private String shortDescription;
-  private String longDescription;
+@Entity(name = "accounts")
+public class Account {
+  @Id private String email;
+  private String pin;
 }

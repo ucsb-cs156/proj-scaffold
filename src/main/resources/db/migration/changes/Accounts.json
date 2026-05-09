@@ -1,7 +1,8 @@
-{ "databaseChangeLog": [
+{
+  "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "Urls",
+        "id": "Accounts",
         "author": "pconrad",
         "preConditions": [
           {
@@ -11,7 +12,7 @@
             "not": [
               {
                 "tableExists": {
-                  "tableName": "URLS"
+                  "tableName": "ACCOUNTS"
                 }
               }
             ]
@@ -23,42 +24,29 @@
               "columns": [
                 {
                   "column": {
-                    "autoIncrement": true,
                     "constraints": {
                       "primaryKey": true,
-                      "primaryKeyName": "URLS_PK"
+                      "primaryKeyName": "ACCOUNTS_PK"
                     },
-                    "name": "ID",
-                    "type": "BIGINT"
+                    "name": "EMAIL",
+                    "type": "VARCHAR(255)"
                   }
                 },
-
                 {
-                  "column": {  
+                  "column": {
                     "constraints": {
                       "nullable": false
                     },
-                    "name": "URL",
-                    "type": "VARCHAR(255)"
-                  }
-                },
-                {
-                  "column": {
-                    "name": "SHORT_DESCRIPTION",
-                    "type": "VARCHAR(255)"
-                  }
-                },
-                {
-                  "column": {
-                    "name": "LONG_DESCRIPTION",
+                    "name": "PIN",
                     "type": "VARCHAR(255)"
                   }
                 }
               ],
-              "tableName": "URLS"
+              "tableName": "ACCOUNTS"
             }
-          }]
-  
+          }
+        ]
       }
     }
-  ]}
+  ]
+}
