@@ -12,7 +12,7 @@ export const conceptContent: Record<string, ConceptContent> = {
     example: '7\n8.12\n"I love learning Python"\nFalse',
     practice: 'https://us.prairielearn.com/',
   },
-  'data-types:Numeric types (integers, floats)': {
+  'data-types:Numeric (integers, floats)': {
     description: 'Numeric data types are used to store numbers in Python. Integers are whole numbers. Floats, or floating point numbers, are numbers with a decimal point. Both can be positive or negative.',
     example: '29\n-6.88888',
     practice: 'https://us.prairielearn.com/',
@@ -53,7 +53,7 @@ export const conceptContent: Record<string, ConceptContent> = {
     example: '8 + 3\n10 / 2',
     practice: 'https://us.prairielearn.com/',
   },
-  'arithmetic-ops:Simple arithmetic\n(+, -, *, **)': {
+  'arithmetic-ops:Simple arithmetic': {
     description: 'The four basic arithmetic operators in Python are: + (add), - (subtract), * (multiply), and ** (raise to a power).',
     example: '5 + 3\n5 - 3\n5 * 3\n5 ** 3',
     practice: 'https://us.prairielearn.com/',
@@ -109,7 +109,7 @@ export const conceptContent: Record<string, ConceptContent> = {
     example: 'x == y\n5 != 3\n(a and b) or (x and y)',
     practice: 'https://us.prairielearn.com/',
   },
-  'boolean-expr:Comparison: ==, <, >, <=, >=, !=': {
+  'boolean-expr:Comparison: ==, <, <=, !=': {
     description: 'Comparison operators compare two values and return True or False. == checks equality, != checks inequality, and <, >, <=, >= compare relative size.',
     example: '# Evaluate to True\n5 == 5\n5 != 3\n5 > 3\n\n# Evaluate to False\n5 < 3\n5 != 5\n5 <= 4',
     practice: 'https://us.prairielearn.com/',
@@ -239,7 +239,7 @@ export const conceptContent: Record<string, ConceptContent> = {
     example: 'student = {"name": "Abby", "age": 20, "major": "Political Science"}\n\n# Stores the integer 20\nAbby_age = student["age"]',
     practice: 'https://us.prairielearn.com/',
   },
-  'dictionaries:Adding & updating a key': {
+  'dictionaries:Adding/updating a key': {
     description: 'A new key-value pair is added using the format: dictionary_name["new_key"] = value. If the key already exists in the dictionary, its value will be overwritten.',
     example: 'student = {"name": "Abby", "age": 20}\n\n# Adds key "major" with value "Political Science"\nstudent["major"] = "Political Science"',
     practice: 'https://us.prairielearn.com/',
@@ -280,7 +280,7 @@ export const conceptContent: Record<string, ConceptContent> = {
     example: '# A list containing three lists\ngrid = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]',
     practice: 'https://us.prairielearn.com/',
   },
-  'nested-lists:Accessing nested list values': {
+  'nested-lists:Accessing values': {
     description: 'A value in a nested list is accessed using two indexes in a row. The first index selects the inner list, and the second selects the value within that inner list.',
     example: 'grid = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\n\n# Access the first inner list: [1, 2, 3]\ngrid[0]\n\n# Access the second item in the first inner list: 2\ngrid[0][1]\n\n# Access the last item in the last inner list: 9\ngrid[2][2]',
     practice: 'https://us.prairielearn.com/',
@@ -426,12 +426,12 @@ export const conceptContent: Record<string, ConceptContent> = {
     example: '# The list is changed directly to [99, 2, 3]\nnumbers = [1, 2, 3]\nnumbers[0] = 99\n\n# Strings cannot be changed in place\nname = "Alice"\n# This would cause an error: name[0] = "a"',
     practice: 'https://us.prairielearn.com/',
   },
-  'mutability:Mutable objects (lists, dicts)': {
+  'mutability:Mutable objects': {
     description: 'Lists and dictionaries are mutable — a program can modify their contents directly without creating a new object. This means two variables pointing to the same list or dictionary will both reflect any changes made to it.',
     example: 'a = [1, 2, 3]\n\n# b points to the same list as a\nb = a\n\n# Modifying b in place also changes a\nb[0] = 99\n\n# a: [99, 2, 3]\n# b: [99, 2, 3]',
     practice: 'https://us.prairielearn.com/',
   },
-  'mutability:Immutable objects (tuples, strings)': {
+  'mutability:Immutable objects': {
     description: 'Tuples and strings are immutable — their contents cannot be changed after creation. If a program needs a modified version, it must create a brand new object. Trying to change an item in place will cause an error.',
     example: '# Trying to change a character directly would cause an error\nname = "Alice"\n# name[0] = "a"  → Error\n\n# A new string must be created instead\nname = "a" + name[1:]',
     practice: 'https://us.prairielearn.com/',
@@ -587,12 +587,12 @@ export const conceptContent: Record<string, ConceptContent> = {
     example: 'if __name__ == "__main__":\n\n    # Function calls go here\n    function1()\n    function2()',
     practice: 'https://us.prairielearn.com/',
   },
-  'main-fn:Defining the\nmain function': {
+  'main-fn:Defining main functions': {
     description: 'A well-structured Python program follows a consistent layout: imports at the top, then function definitions, then the if __name__ == "__main__" block at the very bottom. This ensures everything is defined before it is used and makes the program easy to read.',
     example: 'def function1():\n    # Code\n\ndef function2():\n    # Code\n\nif __name__ == "__main__":\n\n    function1()\n    function2()',
     practice: 'https://us.prairielearn.com/',
   },
-  'main-fn:Using the\nmain function': {
+  'main-fn:Using main functions': {
     description: 'Every Python file has a built-in variable called __name__. When you run a file directly, Python sets __name__ to the string "__main__", so any code inside the if __name__ == "__main__" block runs automatically. Code outside this block — like function definitions — is still accessible to other files that import it, but will not run automatically.',
     example: 'def function1():\n    # Code\n\nif __name__ == "__main__":\n\n    # function1() runs when this file is executed directly\n    function1()',
     practice: 'https://us.prairielearn.com/',

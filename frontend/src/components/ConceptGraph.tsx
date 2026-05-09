@@ -36,6 +36,8 @@ interface ConceptGraphProps {
   onDetailDeleted?: (cardType: string, itemLabel: string) => void;
   restoredDetailCards?: SavedDetailCard[];
   onDetailMoved?: (cardType: string, itemLabel: string, posX: number, posY: number) => void;
+  masteredSubconcepts:  Set<string>;
+  onSubconceptMastered: (sub: string) => void;
 }
 
 function toPastel(hex: string, strength: number = 0.35): string {
@@ -156,12 +158,14 @@ function MajorNode({ data }: NodeProps) {
   const highlightedSubconcepts = data.highlightedSubconcepts as Set<string>;
   const starred                = data.starred as boolean;
   const onStarClick            = data.onStarClick as () => void;
+  const masteredSubconcepts = data.masteredSubconcepts as Set<string> | undefined;
+  const onSubconceptMastered = data.onSubconceptMastered as ((sub: string) => void) | undefined;
 
   const showColor = !hasSelection || highlighted;
 
   return (
     <div style={{
-      width: 270,
+      width: 280,
       borderRadius: 10,
       overflow: 'hidden',
       borderTop:    '1.5px solid #1E293B',
@@ -217,17 +221,41 @@ function MajorNode({ data }: NodeProps) {
         background: showColor ? `${color}55` : '#CBD5E140',
         padding: 2,
       }}>
-        {subconcepts.map((sub, i) => (
-          <div key={i} style={{
-            background: highlightedSubconcepts?.has(sub) ? toPastel(color) : '#fff',
-            padding: '5px 6px', textAlign: 'center',
-            fontFamily: 'Helvetica, Arial, sans-serif',
-            fontSize: 17, fontWeight: 550,
-            lineHeight: 1.3, color: '#1E293B', whiteSpace: 'pre-line',
-          }}>
-            {sub}
-          </div>
-        ))}
+        {subconcepts.map((sub, i) => {
+          const isMastered = masteredSubconcepts?.has(sub) ?? false;
+          return (
+            <div key={i} style={{
+              position: 'relative',
+              background: highlightedSubconcepts?.has(sub) ? toPastel(color) : '#fff',
+              padding: '5px 6px', textAlign: 'center',
+              fontFamily: 'Helvetica, Arial, sans-serif',
+              fontSize: 17, fontWeight: 550,
+              lineHeight: 1.3, color: '#1E293B', whiteSpace: 'pre-line',
+            }}>
+              <div
+                onClick={e => { e.stopPropagation(); onSubconceptMastered?.(sub); }}
+                style={{
+                  position: 'absolute', left: 6, top: '50%', transform: 'translateY(-50%)',
+                  width: 14, height: 14, borderRadius: 3,
+                  borderTop: '1px solid #1E293B', borderLeft: '1px solid #1E293B',
+                  borderRight: '2.5px solid #1E293B', borderBottom: '2.5px solid #1E293B',
+                  background: isMastered ? color : '#ffffff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', flexShrink: 0,
+                }}
+              >
+                {isMastered && (
+                  <svg width="8" height="8" viewBox="0 0 12 12" fill="none"
+                    stroke="#1E293B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <polyline points="2 6 5 9 10 3" />
+                  </svg>
+                )}
+              </div>
+              {sub}
+            </div>
+          );
+        })}
       </div>
 
       <Handle id="top" type="source" position={Position.Top}
@@ -359,7 +387,7 @@ function DetailNode({ data, id }: NodeProps) {
 const nodeTypes: NodeTypes = { major: MajorNode, detail: DetailNode };
 const { nodes: initialNodes, edges: initialEdges } = buildGraphElements();
 
-export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset, onDetailAdded, onDetailDeleted, restoredDetailCards, onDetailMoved}: ConceptGraphProps) {
+export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset, onDetailAdded, onDetailDeleted, restoredDetailCards, onDetailMoved, masteredSubconcepts, onSubconceptMastered,}: ConceptGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const hasSelection = highlightedIds.size > 0;
@@ -493,10 +521,12 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
           highlightedSubconcepts: highlightedSubconcepts.get(node.id) ?? new Set(),
           starred:                starredIds.has(node.id),
           onStarClick:            () => onStarClick(node.id),
+          masteredSubconcepts:    masteredSubconcepts,                       
+          onSubconceptMastered:   (sub: string) => onSubconceptMastered(sub),
         },
       };
     }));
-  }, [highlightedIds, hasSelection, highlightedSubconcepts, starredIds, onStarClick, setNodes]);
+  }, [highlightedIds, hasSelection, highlightedSubconcepts, starredIds, masteredSubconcepts, onSubconceptMastered, onStarClick, setNodes]);
 
   // Update edge appearance when highlighted set changes
   useEffect(() => {

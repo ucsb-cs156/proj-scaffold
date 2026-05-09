@@ -56,6 +56,8 @@ export default function App() {
   const [savedDetailCards, setSavedDetailCards]             = useState<SavedDetailCard[]>([]);
   const [initialDetailCards, setInitialDetailCards]         = useState<SavedDetailCard[]>([]);
   const [addedDetailKeys, setAddedDetailKeys]               = useState<Set<string>>(new Set());
+  const [masteredSubconcepts, setMasteredSubconcepts] = useState<Set<string>>(new Set());
+
 
   const starredIdsRef = useRef<Set<string>>(starredIds);
   useEffect(() => { starredIdsRef.current = starredIds; }, [starredIds]);
@@ -68,6 +70,15 @@ export default function App() {
       pin,
       starred_ids: Array.from(stars),
       detail_cards: cards,
+    });
+  };
+
+  const handleSubconceptMastered = (sub: string) => {
+    setMasteredSubconcepts(prev => {
+      const next = new Set(prev);
+      next.has(sub) ? next.delete(sub) : next.add(sub);
+      // persist to Supabase here
+      return next;
     });
   };
 
@@ -113,7 +124,7 @@ export default function App() {
   }, [selectedQuestionId]);
 
   useEffect(() => {
-    setSelectedItem(null);
+    setSelectedItem(selectedConceptId);
   }, [selectedConceptId]);
 
   useEffect(() => { // ← #3
@@ -134,7 +145,7 @@ export default function App() {
 
     const { data } = await supabase
       .from('user_state')
-      .select('starred_ids, detail_cards')
+      .select('starred_ids, detail_cards, mastered_subconcepts')
       .eq('pin', pin)
       .maybeSingle();
 
@@ -306,6 +317,8 @@ export default function App() {
           onDetailAdded={handleDetailAdded}
           onDetailDeleted={handleDetailDeleted}
           onDetailMoved={handleDetailMoved}
+          masteredSubconcepts={masteredSubconcepts}
+          onSubconceptMastered={handleSubconceptMastered}
         />
       </div>
 
