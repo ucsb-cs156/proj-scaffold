@@ -5,7 +5,6 @@ import { useBackend } from "main/utils/useBackend";
 import Card from "react-bootstrap/Card";
 
 export default function HomePage() {
-
   const systemInfo = useSystemInfo();
 
   // Stryker disable all
@@ -25,7 +24,7 @@ export default function HomePage() {
   );
 
   // Stryker restore all
-  
+
   return (
     <BasicLayout>
       <Card>
@@ -35,13 +34,20 @@ export default function HomePage() {
             {pin === null ? (
               <p className="fs-1">
                 To view your pin, please
-                <a href={oauthLogin} className="btn btn-primary ms-2 ">Login</a>
+                <a href={oauthLogin} className="btn btn-primary ms-2 ">
+                  Login
+                </a>
               </p>
             ) : (
               <>
                 <p className="fs-1"> Your pin for Scaffold is: {pin}.</p>
-                <p>To proceed to Scaffold, follow the link below, and type in your pin:</p>
-                <p><a href={scaffold}>{scaffold}</a></p>
+                <p>
+                  To proceed to Scaffold, follow the link below, and type in
+                  your pin:
+                </p>
+                <p>
+                  <a href={scaffold}>{scaffold}</a>
+                </p>
               </>
             )}
           </Card.Text>

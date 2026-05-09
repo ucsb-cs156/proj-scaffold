@@ -36,7 +36,9 @@ describe("HomePage tests", () => {
   });
 
   test("renders main content correctly when logged in", async () => {
-    axiosMock.onGet("/api/currentUser").reply(200, apiCurrentUserFixtures.userWithRoles);
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.userWithRoles);
     axiosMock.onGet("/api/user/pin").reply(200, "1234");
 
     render(
@@ -47,8 +49,8 @@ describe("HomePage tests", () => {
       </QueryClientProvider>,
     );
     await screen.findByText(/Your pin for Scaffold is: 1234/);
-    expect(screen.getByText(/Your pin for Scaffold is: 1234/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Your pin for Scaffold is: 1234/),
+    ).toBeInTheDocument();
   });
-
-
 });

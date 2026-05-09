@@ -11,7 +11,6 @@ const queryClient = new QueryClient();
 
 describe("Footer tests", () => {
   describe("SystemInfo returns content", () => {
-  
     test("renders correctly with system info content", async () => {
       render(
         <QueryClientProvider client={queryClient}>
@@ -23,9 +22,7 @@ describe("Footer tests", () => {
         /Scaffold is a product of Kate Larrick at UC Santa Barbara/;
 
       await waitFor(() => {
-        expect(
-          screen.getByText(expectedText)
-        ).toBeInTheDocument();
+        expect(screen.getByText(expectedText)).toBeInTheDocument();
       });
     });
   });
