@@ -53,13 +53,22 @@ function toPastel(hex: string, strength: number = 0.35): string {
 const DeleteDetailContext = createContext<(id: string) => void>(() => {});
 
 const LEVELS = [
-  { label: 'Level 1', color: '#ffd5af' },
-  { label: 'Level 2', color: '#feaef2' },
-  { label: 'Level 3', color: '#93ebff' },
-  { label: 'Level 4', color: '#fe9a71' },
-  { label: 'Level 5', color: '#2bcd9c' },
   { label: 'Level 6', color: '#c99ffe' },
+  { label: 'Level 5', color: '#2bcd9c' },
+  { label: 'Level 4', color: '#fe9a71' },
+  { label: 'Level 3', color: '#93ebff' },
+  { label: 'Level 2', color: '#feaef2' },
+  { label: 'Level 1', color: '#ffd5af' },
 ];
+
+// const LEVELS = [
+//   { label: 'Level 6', color: '#ffd5af' },
+//   { label: 'Level 5', color: '#feaef2' },
+//   { label: 'Level 4', color: '#93ebff' },
+//   { label: 'Level 3', color: '#fe9a71' },
+//   { label: 'Level 2', color: '#2bcd9c' },
+//   { label: 'Level 1', color: '#c99ffe' },
+// ];
 
 function LevelLegend() {
   const [hovered, setHovered] = useState(false);
