@@ -27,7 +27,7 @@ export default function AppNavbar({
       >
         <Container>
           <Navbar.Brand as={Link} to="/">
-            team02
+            Scaffold
           </Navbar.Brand>
 
           <Navbar.Toggle />
