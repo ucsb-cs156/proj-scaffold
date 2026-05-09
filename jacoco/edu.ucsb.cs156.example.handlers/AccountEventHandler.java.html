@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AccountEventHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">team01</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs156.example.handlers</a> &gt; <span class="el_source">AccountEventHandler.java</span></div><h1>AccountEventHandler.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs156.example.handlers;
+
+import edu.ucsb.cs156.example.entities.Account;
+import java.util.regex.Pattern;
+import org.springframework.data.rest.core.annotation.HandleBeforeCreate;
+import org.springframework.data.rest.core.annotation.HandleBeforeSave;
+import org.springframework.data.rest.core.annotation.RepositoryEventHandler;
+import org.springframework.stereotype.Component;
+
+@Component
+@RepositoryEventHandler
+<span class="fc" id="L12">public class AccountEventHandler {</span>
+
+<span class="fc" id="L14">  private static final Pattern EMAIL_PATTERN =</span>
+<span class="fc" id="L15">      Pattern.compile(&quot;^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$&quot;);</span>
+
+  @HandleBeforeCreate
+  @HandleBeforeSave
+  public void validate(Account account) {
+
+    // Custom business logic validation
+
+<span class="fc bfc" id="L23" title="All 4 branches covered.">    if (account.getPin() == null || account.getPin().length() != 4) {</span>
+<span class="fc" id="L24">      throw new IllegalArgumentException(&quot;PIN must be exactly 4 characters long.&quot;);</span>
+    }
+
+<span class="fc bfc" id="L27" title="All 4 branches covered.">    if (account.getEmail() == null || !EMAIL_PATTERN.matcher(account.getEmail()).matches()) {</span>
+<span class="fc" id="L28">      throw new IllegalArgumentException(&quot;Email format is invalid.&quot;);</span>
+    }
+<span class="fc" id="L30">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
