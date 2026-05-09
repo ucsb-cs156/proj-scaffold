@@ -30,9 +30,6 @@ const ProfilePage = () => {
           <RoleBadge role={"ROLE_ADMIN"} currentUser={currentUser} />
         </Col>
       </Row>
-      <Row className="text-left">
-        <JsonView value={currentUser} />
-      </Row>
     </BasicLayout>
   );
 };
