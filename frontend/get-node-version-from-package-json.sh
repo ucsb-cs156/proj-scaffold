@@ -20,7 +20,18 @@ export NVM_DIR="$HOME/.nvm"
 # 2. Load NVM into this shell session
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-nvm install $NODE_VERSION
-nvm use $NODE_VERSION
+if [ -n "$NVM_BIN" ] && [ "${BASH_SOURCE[0]}" != "$0" ]; then
+  nvm install "$NODE_VERSION"
+  nvm use "$NODE_VERSION"
+else
+  echo "This script must be sourced to update the current shell's node version:"
+  echo ". ./get-node-version-from-package-json.sh"
+  echo
+  echo "Or run these commands manually:"
+  echo nvm install "$NODE_VERSION"
+  echo nvm use "$NODE_VERSION"
+fi
+
+
 
 

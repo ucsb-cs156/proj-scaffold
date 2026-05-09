@@ -19,7 +19,10 @@ describe("HomePage tests", () => {
     .reply(200, systemInfoFixtures.showingNeither);
 
   const queryClient = new QueryClient();
-  test("renders without crashing", async () => {
+  test("renders main content correctly", async () => {
+    axiosMock.onGet("/api/currentUser").reply(404);
+    axiosMock.onGet("/api/user/pin").reply(200, null);
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -27,7 +30,25 @@ describe("HomePage tests", () => {
         </MemoryRouter>
       </QueryClientProvider>,
     );
-    await screen.findByText(/Hello, world!/);
-    expect(screen.getByText(/Hello, world!/)).toBeInTheDocument();
+    await screen.findByText(/Welcome to Scaffold!/);
+    expect(screen.getByText(/Welcome to Scaffold!/)).toBeInTheDocument();
+    expect(screen.getByText(/To view your pin, please/)).toBeInTheDocument();
   });
+
+  test("renders main content correctly when logged in", async () => {
+    axiosMock.onGet("/api/currentUser").reply(200, apiCurrentUserFixtures.userWithRoles);
+    axiosMock.onGet("/api/user/pin").reply(200, "1234");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    await screen.findByText(/Your pin for Scaffold is: 1234/);
+    expect(screen.getByText(/Your pin for Scaffold is: 1234/)).toBeInTheDocument();
+  });
+
+
 });
