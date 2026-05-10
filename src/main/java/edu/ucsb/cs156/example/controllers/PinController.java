@@ -2,11 +2,13 @@ package edu.ucsb.cs156.example.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs156.example.entities.Account;
 import edu.ucsb.cs156.example.models.CurrentUser;
 import edu.ucsb.cs156.example.repositories.AccountRepository;
 import edu.ucsb.cs156.example.services.CurrentUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +42,11 @@ public class PinController extends ApiController {
   public String getCurrentUsersPin() {
     CurrentUser currentUser = currentUserService.getCurrentUser();
     String email = currentUser.getUser().getEmail();
-    return accountRepository.findById(email).orElseThrow().getPin();
+    Optional<Account> account = accountRepository.findById(email);
+    if (account.isEmpty()) {
+      return "xxxx";
+    }
+
+    return account.get().getPin();
   }
 }
