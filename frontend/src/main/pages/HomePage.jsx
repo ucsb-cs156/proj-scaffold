@@ -1,11 +1,13 @@
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import { useSystemInfo } from "main/utils/systemInfo";
 import { useBackend } from "main/utils/useBackend";
+import { useCurrentUser } from "main/utils/useCurrentUser";
 
 import Card from "react-bootstrap/Card";
 
 export default function HomePage() {
   const systemInfo = useSystemInfo();
+  const currentUser = useCurrentUser();
 
   // Stryker disable all
 
@@ -31,7 +33,7 @@ export default function HomePage() {
         <Card.Body>
           <Card.Title className="display-3">Welcome to Scaffold!</Card.Title>
           <Card.Text className="fs-1">
-            {pin === null ? (
+            {!currentUser.loggedIn ? (
               <p className="fs-1">
                 To view your pin, please
                 <a href={oauthLogin} className="btn btn-primary ms-2 ">
