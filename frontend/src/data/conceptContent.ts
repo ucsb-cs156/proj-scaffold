@@ -33,7 +33,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'variables': {
     description: 'A variable is a named container that stores a piece of data so your program can use it later. Variables let you reference, update, and reuse information throughout your program.',
     example: 'int_variable = 5\nstring_variable = "CS 8"\nboolean_variable = True',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992232/',
   },
   'variables:Variable names': {
     description: "A variable name is the label you give a variable so you can refer to it in your code. Names are case-sesnsitive and can only contain letters, numbers, or underscores. They can't start with a number or contain spaces, and they can't be Python keywords like 'if', 'else', 'for', etc. Good names clearly describe what the variable holds.",
@@ -56,7 +56,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'arithmetic-ops': {
     description: 'Arithmetic operations are the basic math actions you can perform on numbers in Python. Just like a calculator, Python can add, subtract, multiply, divide, and raise numbers to a power using simple symbols.',
     example: '8 + 3\n10 / 2',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992231/',
   },
   'arithmetic-ops:Simple arithmetic': {
     description: 'The four basic arithmetic operators in Python are: + (add), - (subtract), * (multiply), and ** (raise to a power).',
@@ -84,7 +84,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'string-ops': {
     description: 'String operations are actions you can perform on text in Python. Python gives you tools to combine, slice, and format strings any time your program needs to work with or display text.',
     example: 'greeting = "Hello" + " World!"\nword1 = greeting[0:5]',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992235/',
   },
   'string-ops:String concatenation': {
     description: 'Concatenation joins two or more strings together into one using the + symbol. The strings are combined exactly as they are, so you must include any spaces yourself.',
@@ -112,7 +112,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'boolean-expr': {
     description: 'A boolean expression is an expression that evaluates to either True or False. Python uses these to make decisions — for example, checking whether two values are equal or a condition is met.',
     example: 'x == y\n5 != 3\n(a and b) or (x and y)',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992230/',
   },
   'boolean-expr:Comparison: ==, <, <=, !=': {
     description: 'Comparison operators compare two values and return True or False. == checks equality, != checks inequality, and <, >, <=, >= compare relative size.',
@@ -135,7 +135,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'conditionals': {
     description: 'A conditional statement lets your program make decisions by running certain code only when a specific condition is met. In Python, conditionals are built using if, elif, and else combined with boolean expressions.',
     example: 'test_grade = 85\n\nif test_grade >= 70:\n    class_grade = "Pass"\nelse:\n    class_grade = "Fail"',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000002/',
   },
   'conditionals:if': {
     description: 'An if statement checks a condition. If that condition is True, it runs the indented block of code beneath it. If the condition is False, Python skips that block entirely.',
@@ -158,7 +158,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'functions': {
     description: 'A function is a reusable block of code that performs a specific task. Instead of writing the same code over and over, you can define it once and call it whenever you need it. Functions help keep your code organized, readable, and easier to manage.',
     example: 'def greeting(name):\n    hello = "Hello, " + name\n    return(hello)',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000004/',
   },
   'functions:Defining functions': {
     description: 'Defining a function means creating it and giving it a name. Use the def keyword followed by the function name, parentheses, and a colon. The indented code beneath that line is the block that will run whenever the function is called.',
@@ -186,7 +186,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'built-in-fns': {
     description: 'Built-in functions are ready-made functions that come with Python — you don\'t need to define them yourself. They handle common tasks like measuring length, finding min/max values, or converting data types. The most common are print(), input(), len(), min(), max(), int(), str(), float(), and range().',
     example: '# Returns 3\nlen("CS8")\n\n# Returns 2\nmin(8, 2, 13, 4)',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000012/',
   },
   'built-in-fns:len()': {
     description: 'len() returns the number of items in a sequence — such as the number of characters in a string or the number of values in a list. Pass the sequence in as input.',
@@ -214,7 +214,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'input-output': {
     description: 'Input and output are how a program communicates with the user. Output is information the program displays; input is information it receives from the user. Python provides print() for output and input() for input.',
     example: 'print("This sentence will be printed out.")\nname = input("What is your name?")',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000014/',
   },
   'input-output:print()': {
     description: 'print() displays information to the screen. You can pass in strings, variables, or expressions. Multiple values separated by commas will be printed with a space between them. By default, print() adds a new line after each call.',
@@ -232,7 +232,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'dictionaries': {
     description: 'A dictionary is a data type that stores information as pairs of keys and values. Instead of accessing data by position, you look up a value using its unique key — similar to looking up a definition using a word in a real dictionary.',
     example: 'student_ages = {"Alejandro": 19, "Kyle": 20, "Nikita": 20}',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000003/',
   },
   'dictionaries:Creating a dictionary': {
     description: 'A dictionary is created using curly braces {} with each key-value pair separated by a colon. Multiple pairs are separated by commas. Keys are typically strings or numbers, and values can be any data type.',
@@ -255,7 +255,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'lists': {
     description: 'A list is a data type that stores multiple values in a specific order. A list can hold any combination of data types, and its values can be changed at any time.',
     example: 'numbers = [1, 2, 3, 4, 5]',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992236/',
   },
   'lists:Creating a list': {
     description: 'A list is created using square brackets [] with each value separated by a comma. A list can hold any data type, including a mix of different types. A list can also be empty.',
@@ -278,7 +278,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'nested-lists': {
     description: 'A nested list is a list that contains other lists as its values. Nested lists are useful for representing structured data with rows and columns, like a grid or table. Each inner list can be accessed and worked with just like a regular list.',
     example: 'grid = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000013/',
   },
   'nested-lists:Creating a nested list': {
     description: 'A nested list is created the same way as a regular list, except some or all of its values are themselves lists. Each inner list is separated by a comma, just like any other value.',
@@ -296,7 +296,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'loops': {
     description: 'A loop runs the same block of code multiple times without writing it out repeatedly. A program uses loops to repeat an action, work through a sequence of values, or keep doing something until a condition is met. Python has two kinds of loops: for loops and while loops.',
     example: 'x = 0\nwhile x < 3:\n    x += 1\n\nnum_list = [10, 5, 20, 3, 15]\ntotal = 0\n\nfor num in num_list:\n    total += num',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000010/',
   },
   'loops:For loops': {
     description: 'A for loop repeats a block of code once for each item in a sequence. The loop variable takes on each value in the sequence one at a time, and the indented block runs once per value. One run of that block is called an iteration.',
@@ -334,7 +334,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'nested-loops': {
     description: 'A nested loop is a loop inside the indented block of another loop. For every single iteration of the outer loop, the inner loop runs all the way through completely. A program uses nested loops any time it needs to work through data that has multiple layers, like a grid or a nested list.',
     example: 'nested_list = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\ntotal = 0\n\nfor row in nested_list:\n    for value in row:\n        total += value',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000018/',
   },
   'nested-loops:Creating a nested loop': {
     description: 'A nested loop is created by indenting a second loop inside the block of an outer loop. The inner loop finishes all its iterations before the outer loop moves to its next one.',
@@ -352,7 +352,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'files': {
     description: 'A program can interact with files stored on a computer to save or retrieve information. Unlike variables, file data is stored permanently. Python has built-in tools for opening, reading, and writing files. Working with a file requires knowing its filepath string.',
     example: '# Filepath string example\n"downloads/CS8_data/data.txt"',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000016/',
   },
   'files:Opening & closing files': {
     description: 'Before reading or writing a file, a program must open it using open(), passing in the filename and a mode: "r" for reading or "w" for writing. When done, the file should be closed with .close(). Using the "with" keyword is preferred because it closes the file automatically.',
@@ -375,7 +375,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'tuples': {
     description: 'A tuple is a data type that stores multiple values in a specific order, similar to a list. The key difference is that a tuple\'s values cannot be changed after it is created. A program uses tuples to store data that should stay fixed.',
     example: 'student1 = ("Alejandro", 20, "Data Science")\nstudent2 = ("Christos", 18, "Computer Science")',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992234/',
   },
   'tuples:Creating a tuple': {
     description: 'A tuple is created using parentheses () with each value separated by a comma. It can hold any mix of data types. To create a tuple with only one value, a trailing comma is required after that value.',
@@ -393,7 +393,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'sets': {
     description: 'A set is a data type that stores multiple unique values with no guaranteed order. A program uses sets when duplicates are not allowed and order is not important. Because sets are unordered, values cannot be accessed by index.',
     example: 'fruits = {"apple", "banana", "cherry"}\nnumbers = {1, 2, 3}',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992233/',
   },
   'sets:Creating a set': {
     description: 'A set is created using curly braces {} with each value separated by a comma. Duplicate values are automatically removed. To create an empty set, use set() — using {} alone creates an empty dictionary instead.',
@@ -411,7 +411,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'methods': {
     description: 'A method is a function that is associated with a specific object. Most Python data types come with their own set of built-in methods to perform specific actions. Some methods return a new value; others modify the original object directly.',
     example: '# .add() is a built-in set method\nnum_set = {1, 2, 3}\nnum_set.add(4)',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000007/',
   },
   'methods:Calling a method': {
     description: 'A method is called by attaching it to a value or variable using a dot, followed by the method name and parentheses. Some methods take inputs inside the parentheses; some do not.',
@@ -429,7 +429,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'mutability': {
     description: 'Mutability describes whether the value of an object can be changed after it is created. Mutable objects can be modified in place. Immutable objects are fixed — any operation that seems to modify one actually creates a brand new object instead.',
     example: '# The list is changed directly to [99, 2, 3]\nnumbers = [1, 2, 3]\nnumbers[0] = 99\n\n# Strings cannot be changed in place\nname = "Alice"\n# This would cause an error: name[0] = "a"',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000006/',
   },
   'mutability:Mutable objects': {
     description: 'Lists and dictionaries are mutable — a program can modify their contents directly without creating a new object. This means two variables pointing to the same list or dictionary will both reflect any changes made to it.',
@@ -447,7 +447,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'string-methods': {
     description: 'String methods are built-in methods that perform common operations on strings, called using dot notation on a string value or variable. Because strings are immutable, string methods never modify the original string — they always return a new one.',
     example: 'name = "Nikita"\nuppercase_name = name.upper()\nword_list = "hello world".split()',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000017/',
   },
   'string-methods:upper() and lower()': {
     description: '.upper() returns a new string with all characters converted to uppercase. .lower() returns a new string with all characters converted to lowercase.',
@@ -470,7 +470,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'modules': {
     description: 'A module is a file containing pre-written Python code that a program can use. Instead of writing everything from scratch, a program can import a module to gain access to functions and tools that are already built.',
     example: 'import random\n\n# Returns a random integer between 1 and 10\nrandom_int = random.randint(1, 10)',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000015/',
   },
   'modules:Importing modules': {
     description: 'A module is imported using the import keyword followed by the module name. Once imported, its functions are accessed using dot notation. You can also import a specific function from a module using the from keyword — that function can then be used without dot notation.',
@@ -493,7 +493,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'testing': {
     description: 'Testing is the process of checking that a program\'s code works correctly. Instead of manually verifying results by eye, a program can include automated tests that verify the output of functions for a given input. Writing tests helps catch mistakes early and makes bugs easier to find.',
     example: 'def multiply(a, b):\n    return a * b\n\ndef test_multiply():\n    assert multiply(2, 3) == 6',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000009/',
   },
   'testing:assert statements': {
     description: 'An assert statement checks whether a condition is True. If it is, nothing happens and the program continues. If it is False, Python raises an AssertionError, signaling that something is not working as expected. Assert statements are the building block of writing tests.',
@@ -516,7 +516,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'errors-debugging': {
     description: 'An error occurs when Python encounters something in the code it cannot execute. Debugging is the process of finding and fixing those errors. Understanding the different types of errors and how to read Python\'s error messages makes it easier to figure out what went wrong and where.',
     example: '# The code below causes an error\nnumbers = [1, 2, 3]\nnumbers[5]\n\n# IndexError: list index out of range',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000005/',
   },
   'errors-debugging:Syntax errors': {
     description: 'A syntax error occurs when the code breaks the rules of the Python language and Python cannot understand it. Python catches these before the program even runs. Common causes include missing colons, mismatched parentheses, or misspelled keywords.',
@@ -544,7 +544,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'data-rep': {
     description: 'Data representation is the way computers store and display information using different numbering systems. Since computers work in binary internally, other systems like hexadecimal exist to represent the same values in more compact or human-readable forms.',
     example: '# Decimal\n10\n\n# Binary\n0b1010\n\n# Hex\n0xA',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992229/',
   },
   'data-rep:Binary': {
     description: 'Binary is the most fundamental language a computer speaks, using only two digits: 0 and 1. Every piece of data on a computer is stored as a series of 1s and 0s. In Python, a binary number is written using the prefix 0b.',
@@ -567,7 +567,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'recursion': {
     description: 'Recursion is a technique where a function calls itself to solve a problem. A recursive function breaks a problem down into a smaller version of the same problem, solving it step by step until it reaches a simple stopping point called the base case.',
     example: 'def fibonacci_recursive(n):\n    # Base case\n    if n <= 1:\n        return n\n\n    # Recursive step\n    return fibonacci_recursive(n - 1) + fibonacci_recursive(n - 2)',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000011/',
   },
   'recursion:Base case': {
     description: 'The base case is the condition that stops a recursive function from calling itself. Every recursive function must have one — without it, the function would call itself forever. The base case handles the simplest version of the problem and returns a result directly.',
@@ -590,7 +590,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   'main-fn': {
     description: 'The if __name__ == "__main__" block is the standard way to designate the entry point of a program — the place where execution begins. It also controls which parts of the code only run when the file is executed directly, not when it is imported by another file.',
     example: 'if __name__ == "__main__":\n\n    # Function calls go here\n    function1()\n    function2()',
-    practiceUrl: 'https://us.prairielearn.com/',
+    practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000008/',
   },
   'main-fn:Defining main functions': {
     description: 'A well-structured Python program follows a consistent layout: imports at the top, then function definitions, then the if __name__ == "__main__" block at the very bottom. This ensures everything is defined before it is used and makes the program easy to read.',

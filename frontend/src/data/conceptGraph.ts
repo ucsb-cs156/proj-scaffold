@@ -79,6 +79,8 @@ export const prereqEdgeData = [
   { source: 'boolean-expr',   target: 'loops' },
   { source: 'variables',   target: 'errors-debugging' },
   { source: 'arithmetic-ops',   target: 'errors-debugging' },
+  { source: 'arithmetic-ops',   target: 'recursion' },
+  { source: 'arithmetic-ops',   target: 'loops' },
 
   // Up from Level 3
   { source: 'conditionals',   target: 'main-fn' },
