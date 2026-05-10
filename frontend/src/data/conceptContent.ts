@@ -45,6 +45,11 @@ export const conceptContent: Record<string, ConceptContent> = {
     example: '# Create variable1 to store a string\nvariable1 = "ABC"\n\n# Reassign variable1 to store an integer\nvariable1 = 10\n\n# Update variable1 based on its current value\nvariable1 = variable1 + 3',
     practiceUrl: 'https://us.prairielearn.com/',
   },
+  'variables:+= and -=': {
+    description: '+= and -= are shortcuts for updating a variable based on its current value. += adds the right-hand value to the variable and stores the result; -= subtracts it.',
+    example: 'x = 10\n\n# Same as x = x + 3\nx += 3\n\n# Same as x = x - 5\nx -= 5',
+    practiceUrl: 'https://us.prairielearn.com/',
+  },
 
   // ── ARITHMETIC OPERATIONS ────────────────────────────────────────────────────
 
@@ -73,11 +78,6 @@ export const conceptContent: Record<string, ConceptContent> = {
     example: '# Evaluates to 14\n2 + 3 * 4\n\n# Evaluates to 20\n(2 + 3) * 4',
     practiceUrl: 'https://us.prairielearn.com/',
   },
-  'arithmetic-ops:+= and -=': {
-    description: '+= and -= are shortcuts for updating a variable based on its current value. += adds the right-hand value to the variable and stores the result; -= subtracts it.',
-    example: 'x = 10\n\n# Same as x = x + 3\nx += 3\n\n# Same as x = x - 5\nx -= 5',
-    practiceUrl: 'https://us.prairielearn.com/',
-  },
 
   // ── STRING OPERATIONS ────────────────────────────────────────────────────────
 
@@ -94,6 +94,11 @@ export const conceptContent: Record<string, ConceptContent> = {
   'string-ops:String formatting (f-strings)': {
     description: 'An f-string lets you embed a variable or expression directly inside a string. Place an f before the opening quote, then put variable names or expressions inside curly braces wherever you want their values to appear.',
     example: '# Stores "The sum of 5 and 3 is 8"\nresult = f"The sum of 5 and 3 is {5 + 3}"',
+    practiceUrl: 'https://us.prairielearn.com/',
+  },
+  'string-ops:String slicing': {
+    description: 'A comment is a note in code that Python ignores when running the program. Comments help readers understand what the code is doing and why. They are created by starting a line with a # symbol.',
+    example: '# This is a comment: Python will not run this line',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'string-ops:Comments': {
@@ -262,7 +267,7 @@ export const conceptContent: Record<string, ConceptContent> = {
     example: 'names = ["Alice", "Bob", "Charlie"]\n\n# Stores "Alice"\nfirst_name = names[0]\n\n# Stores "Bob"\nsecond_name = names[1]\n\n# Stores "Charlie"\nlast_name = names[-1]',
     practiceUrl: 'https://us.prairielearn.com/',
   },
-  'lists:List & string slicing': {
+  'lists:List slicing': {
     description: 'Slicing extracts a portion of a list or string using a start and end index: list[start:stop]. The start index is included but the stop index is not. An optional step value controls how many positions Python jumps each time. A negative step counts backwards.',
     example: 'numbers = [10, 20, 30, 40, 50, 60, 70]\n\n# Extracts [30, 40, 50]\nnumbers[2:5]\n\n# Every other value: [10, 30, 50, 70]\nnumbers[::2]\n\n# Reverses the list\nnumbers[::-1]\n\ncourse = "CMPSC 8"\n\n# Extracts "CMPS"\ncourse[:4]',
     practiceUrl: 'https://us.prairielearn.com/',

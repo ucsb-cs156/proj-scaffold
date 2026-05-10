@@ -127,7 +127,7 @@ export default function App() {
   }, [selectedQuestionId]);
 
   useEffect(() => {
-    setSelectedItem(selectedConceptId);
+    setSelectedItem(null);
   }, [selectedConceptId]);
 
   useEffect(() => { // ← #3
@@ -162,8 +162,11 @@ export default function App() {
     }
   };
 
-  const handleConceptClick = (id: string) => { // ← #2
+  const handleConceptClick = (id: string) => {
     setSelectedConceptId(id);
+    if (!selectedQuestionId) {
+      setHighlightedIds(computeSubgraph([id]));
+    }
     logActivity('concept_clicked', { conceptId: id });
   };
 
@@ -400,7 +403,7 @@ export default function App() {
 
               {/* Close button */}
               <div
-                onClick={() => { setSelectedConceptId(null); setSelectedItem(null); setCloseHovered(false); }}
+                onClick={() => { setSelectedConceptId(null); setSelectedItem(null); setCloseHovered(false); if (!selectedQuestionId) setHighlightedIds(new Set());}}
                 onMouseEnter={() => setCloseHovered(true)}
                 onMouseLeave={() => setCloseHovered(false)}
                 style={{

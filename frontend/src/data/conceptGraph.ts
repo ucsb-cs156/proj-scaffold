@@ -6,25 +6,25 @@ export interface MajorConcept {
 }
 
 export const majorConcepts: MajorConcept[] = [
-  { id: 'data-types',        label: 'Basic \n Data Types',              color: '#ffd5af',
+  { id: 'data-types',        label: 'Basic \n Data Types',              color: '#c99ffe',
     subconcepts: ['Numeric (integers, floats)', 'Strings', 'Booleans'] },
   { id: 'data-rep',          label: 'Data \n Representation',     color: '#feaef2',
     subconcepts: ['Binary', 'Hex', 'Decimal'] },
   { id: 'variables',         label: 'Variables',                  color: '#feaef2',
-    subconcepts: ['Variable names', 'Variable assignment'] },
-  { id: 'arithmetic-ops',    label: 'Arithmetic \n Operations',   color: '#93ebff',
-    subconcepts: ['Simple arithmetic', 'Division', 'Modulo', 'Order of operations', '+= and -='] },
-  { id: 'string-ops',        label: 'String \n Operations',       color: '#feaef2',
-    subconcepts: ['String concatenation', 'String formatting (f-strings)', 'Comments'] },
-  { id: 'boolean-expr',      label: 'Boolean \n Expressions',     color: '#93ebff',
+    subconcepts: ['Variable names', 'Variable assignment', '+= and -='] },
+  { id: 'arithmetic-ops',    label: 'Arithmetic \n Operations',   color: '#feaef2',
+    subconcepts: ['Simple arithmetic', 'Division', 'Modulo', 'Order of operations'] },
+  { id: 'string-ops',        label: 'String \n Operations',       color: '#93ebff',
+    subconcepts: ['String concatenation', 'String formatting (f-strings)', 'String slicing', 'Comments'] },
+  { id: 'boolean-expr',      label: 'Boolean \n Expressions',     color: '#feaef2',
     subconcepts: ['Comparison: ==, <, <=, !=', 'Logical: and, or, not', 'Membership: in, not in'] },
-  { id: 'conditionals',      label: 'Conditional \n Statements',  color: '#fe9a71',
+  { id: 'conditionals',      label: 'Conditional \n Statements',  color: '#93ebff',
     subconcepts: ['if', 'else', 'elif'] },
   { id: 'functions',         label: 'Functions',                  color: '#93ebff',
     subconcepts: ['Defining functions', 'Calling functions', 'Function parameters', 'Return statements', ] },
   { id: 'built-in-fns',      label: 'Built-in \n Functions',      color: '#fe9a71',
     subconcepts: ['len()', 'min() and max()', 'range()', 'Type casting'] },
-  { id: 'main-fn',           label: 'Main \n Function',           color: '#2bcd9c',
+  { id: 'main-fn',           label: 'Main \n Function',           color: '#fe9a71',
     subconcepts: ['Defining main functions', 'Using main functions'] },
   { id: 'dictionaries',      label: 'Dictionaries',               color: '#93ebff',
     subconcepts: ['Creating a dictionary', 'Accessing a value', 'Adding/updating a key'] },
@@ -33,7 +33,7 @@ export const majorConcepts: MajorConcept[] = [
   { id: 'loops',             label: 'Loops',                      color: '#fe9a71',
     subconcepts: ['For loops', 'While loops', 'Break', 'Continue', 'Iteration', 'Accumulator Pattern'] },
   { id: 'lists',             label: 'Lists',                      color: '#93ebff',
-    subconcepts: ['Creating a list', 'Accessing a value', 'List & string slicing'] },
+    subconcepts: ['Creating a list', 'Accessing a value', 'List slicing'] },
   { id: 'nested-lists',      label: 'Nested \n Lists',            color: '#fe9a71',
     subconcepts: ['Creating a nested list', 'Accessing values'] },
   { id: 'nested-loops',      label: 'Nested \n Loops',            color: '#2bcd9c',
@@ -42,70 +42,75 @@ export const majorConcepts: MajorConcept[] = [
     subconcepts: ['Creating a tuple', 'Accessing a value'] },
   { id: 'sets',              label: 'Sets',                       color: '#93ebff',
     subconcepts: ['Creating a set', 'Adding an element'] },
-  { id: 'recursion',         label: 'Recursion',                  color: '#2bcd9c',
+  { id: 'recursion',         label: 'Recursion',                  color: '#fe9a71',
     subconcepts: ['Base case', 'State change', 'Recursive step'] },
-  { id: 'files',             label: 'Files',                      color: '#c99ffe',
+  { id: 'files',             label: 'Files',                      color: '#2bcd9c',
     subconcepts: ['Opening & closing files', 'Reading a file', 'Writing to a file'] },
   { id: 'methods',           label: 'Built-in \n Methods',                    color: '#fe9a71',
     subconcepts: ['Calling a method', 'List methods'] },
   { id: 'string-methods',    label: 'String \n Methods',          color: '#2bcd9c',
     subconcepts: ['upper() and lower()', 'replace()', 'split()'] },
-  { id: 'modules',           label: 'Imports & Modules',                    color: '#c99ffe',
+  { id: 'modules',           label: 'Imports & Modules',                    color: '#2bcd9c',
     subconcepts: ['Importing modules', 'random', 'math'] },
   { id: 'mutability',        label: 'Mutability',                 color: '#fe9a71',
     subconcepts: ['Mutable objects', 'Immutable objects'] },
   { id: 'testing',           label: 'Testing',                    color: '#fe9a71',
     subconcepts: ['assert statements', 'Writing test functions', 'Edge cases'] },
-  { id: 'errors-debugging',  label: 'Errors & \n Debugging',      color: '#c99ffe',
+  { id: 'errors-debugging',  label: 'Errors & \n Debugging',      color: '#93ebff',
     subconcepts: ['Syntax errors', 'Runtime errors', 'try / except', 'Reading tracebacks'] },
 ];
 
-// Direct prerequisite edges only (transitive reduction applied)
 export const prereqEdgeData = [
+
+  // Up from Level 1
   { source: 'data-types',     target: 'variables' },
-  { source: 'variables',      target: 'arithmetic-ops' },
-  { source: 'data-types',     target: 'string-ops' },
-  { source: 'variables',      target: 'boolean-expr' },
-  { source: 'boolean-expr',   target: 'conditionals' },
-  { source: 'variables',      target: 'functions' },
-  { source: 'functions',      target: 'built-in-fns' },
-  { source: 'functions',      target: 'main-fn' },
-  { source: 'conditionals',   target: 'main-fn' },
-  { source: 'built-in-fns',   target: 'input-output' },
-  { source: 'variables',      target: 'dictionaries' },
-  { source: 'variables',      target: 'lists' },
-  { source: 'lists',          target: 'nested-lists' },
-  { source: 'lists',          target: 'built-in-fns' },
-  { source: 'lists',          target: 'loops' },
-  { source: 'boolean-expr',   target: 'loops' },
-  { source: 'loops',          target: 'nested-loops' },
-  { source: 'nested-lists',   target: 'nested-loops' },
-  { source: 'functions',      target: 'recursion' },
-  { source: 'conditionals',   target: 'recursion' },
-  { source: 'input-output',   target: 'files' },
-  { source: 'variables',      target: 'tuples' },
-  { source: 'variables',      target: 'sets' },
+  { source: 'data-types',     target: 'arithmetic-ops' },
   { source: 'data-types',     target: 'data-rep' },
-  { source: 'functions',      target: 'methods' },
-  { source: 'string-ops',     target: 'methods' },
-  { source: 'methods',        target: 'string-methods' },
-  { source: 'methods',        target: 'files' },
-  { source: 'functions',      target: 'modules' },
-  { source: 'input-output',   target: 'modules' },
-  { source: 'input-output',   target: 'errors-debugging' },
-  { source: 'lists',          target: 'mutability' },
-  { source: 'tuples',         target: 'mutability' },
-  { source: 'dictionaries',   target: 'mutability' },
+  { source: 'data-types',     target: 'boolean-expr' },
+
+  // Up from Level 2
+  { source: 'variables',      target: 'lists' },
+  { source: 'variables',      target: 'functions' },
+  { source: 'variables',      target: 'dictionaries' },
+  { source: 'variables',      target: 'sets' },
+  { source: 'variables',      target: 'tuples' },
+  { source: 'variables',      target: 'string-ops' },
+  { source: 'boolean-expr',   target: 'conditionals' },
+  { source: 'boolean-expr',   target: 'loops' },
+  { source: 'variables',   target: 'errors-debugging' },
+  { source: 'arithmetic-ops',   target: 'errors-debugging' },
+
+  // Up from Level 3
+  { source: 'conditionals',   target: 'main-fn' },
+  { source: 'conditionals',   target: 'main-fn' },
+  { source: 'conditionals',   target: 'recursion' },
   { source: 'functions',      target: 'testing' },
-  { source: 'functions',      target: 'errors-debugging' },
-  { source: 'conditionals',   target: 'errors-debugging' },
+  { source: 'functions',      target: 'main-fn' },
+  { source: 'functions',      target: 'built-in-fns' },
+  { source: 'functions',      target: 'methods' },
+  { source: 'functions',      target: 'recursion' },
+  { source: 'lists',      target: 'nested-lists' },
+  { source: 'lists',      target: 'mutability' },
+  { source: 'lists',   target: 'loops' },
+  { source: 'dictionaries',   target: 'mutability' },
+  { source: 'tuples',   target: 'mutability' },
+  { source: 'sets',   target: 'mutability' },
+
+  // Up from Level 4
+  { source: 'loops',   target: 'nested-loops' },
+  { source: 'dictionaries',   target: 'mutability' },
+  { source: 'built-in-fns',   target: 'input-output' },
+  { source: 'built-in-fns',   target: 'files' },
+  { source: 'methods',   target: 'string-methods' },
+  { source: 'methods',   target: 'modules' },
+  { source: 'nested-lists',   target: 'nested-loops' },
+
 ];
 
 /*
 Level 1: Basic Data Types
-Level 2: Data Representation, Variables, String Operations
-Level 3: Arithmetic Operations, Boolean Expressions, Functions, Lists, Dictionaries, Tuples, Sets
-Level 4: Loops, Conditional Statements, Testing, Built-in Functions, Nested Lists, Built-in Methods, Mutability
-Level 5: Nested Loops, Main Function, Input & Output, Recursion, String Methods
-Level 6: Files, Imports & Modules, Errors & Debugging
+Level 2: Data Representation, Variables, Arithmetic Operations,Boolean Expressions
+Level 3: String Operations, Functions, Lists, Dictionaries, Tuples, Sets, Conditional Statements, Errors & Debugging
+Level 4: Testing, Recursion, Built-in Functions, Nested Lists, Built-in Methods, Mutability, Nested Loops, Main Function
+Level 5: Input & Output, String Methods, Files, Imports & Modules
 */
