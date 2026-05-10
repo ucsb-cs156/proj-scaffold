@@ -73,7 +73,11 @@ public class CurrentUserServiceImpl extends CurrentUserService {
     java.util.Map<java.lang.String, java.lang.Object> attrs = oAuthUser.getAttributes();
     log.info("attrs={}", attrs);
 
+    log.info("Looking for user with email={}", email);
     Optional<User> ou = userRepository.findByEmail(email);
+
+    log.info("ou.isPresent()={}", ou.isPresent());
+
     if (ou.isPresent()) {
       User u = ou.get();
       if (adminEmails.contains(email) && !u.getAdmin()) {
@@ -96,6 +100,9 @@ public class CurrentUserServiceImpl extends CurrentUserService {
             .hostedDomain(hostedDomain)
             .admin(adminEmails.contains(email))
             .build();
+
+    log.info("Saving new user with email={}", email);
+    log.info("u={}", u);
     userRepository.save(u);
     return u;
   }
