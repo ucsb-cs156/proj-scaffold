@@ -153,6 +153,12 @@ export default function App() {
   const handleConsentComplete = async (pin: string, consented: boolean) => {
     setStudentPin(pin);
     setIsTracked(consented);
+    
+    await supabase.from('user_activity').insert({
+      pin,
+      event_type: 'login',
+      payload: {},
+    });
 
     const { data } = await supabase
       .from('user_state')
