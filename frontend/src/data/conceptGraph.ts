@@ -31,7 +31,7 @@ export const majorConcepts: MajorConcept[] = [
   { id: 'input-output',      label: 'Input \n & Output',          color: '#2bcd9c',
     subconcepts: ['input()', 'print()'] },
   { id: 'loops',             label: 'Loops',                      color: '#fe9a71',
-    subconcepts: ['For loops', 'While loops', 'Break', 'Continue', 'Iteration', 'Accumulator Pattern'] },
+    subconcepts: ['For loops', 'While loops', 'Break', 'Continue', 'Iteration', 'Accumulator pattern'] },
   { id: 'lists',             label: 'Lists',                      color: '#93ebff',
     subconcepts: ['Creating a list', 'Accessing a value', 'List slicing'] },
   { id: 'nested-lists',      label: 'Nested \n Lists',            color: '#fe9a71',
