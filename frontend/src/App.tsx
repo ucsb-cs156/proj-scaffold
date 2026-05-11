@@ -94,6 +94,14 @@ export default function App() {
     });
   }, [studentPin]);
 
+  const handlePaneClick = () => {
+    if (!selectedQuestionId) {
+      setSelectedConceptId(null);
+      setSelectedItem(null);
+      setHighlightedIds(new Set());
+    }
+  };
+
   useEffect(() => { fetchAssessments().then(setAssessments); }, []);
 
   useEffect(() => {
@@ -329,6 +337,7 @@ export default function App() {
           onDetailMoved={handleDetailMoved}
           masteredSubconcepts={masteredSubconcepts}
           onSubconceptMastered={handleSubconceptMastered}
+          onPaneClick={handlePaneClick}
         />
       </div>
 

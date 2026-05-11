@@ -38,6 +38,7 @@ interface ConceptGraphProps {
   onDetailMoved?: (cardType: string, itemLabel: string, posX: number, posY: number) => void;
   masteredSubconcepts:  Set<string>;
   onSubconceptMastered: (sub: string) => void;
+  onPaneClick?: () => void;
 }
 
 function toPastel(hex: string, strength: number = 0.35): string {
@@ -386,7 +387,7 @@ function DetailNode({ data, id }: NodeProps) {
 const nodeTypes: NodeTypes = { major: MajorNode, detail: DetailNode };
 const { nodes: initialNodes, edges: initialEdges } = buildGraphElements();
 
-export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset, onDetailAdded, onDetailDeleted, restoredDetailCards, onDetailMoved, masteredSubconcepts, onSubconceptMastered,}: ConceptGraphProps) {
+export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset, onDetailAdded, onDetailDeleted, restoredDetailCards, onDetailMoved, masteredSubconcepts, onSubconceptMastered, onPaneClick }: ConceptGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const hasSelection = highlightedIds.size > 0;
@@ -622,6 +623,7 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
           onDrop={onDrop}
           onDragOver={onDragOver}
           fitView fitViewOptions={{ padding: 0.08 }} minZoom={0.1}
+          onPaneClick={onPaneClick}
         >
           <Controls />
           <Background variant={BackgroundVariant.Dots} color='#1E293B' gap={20} />
