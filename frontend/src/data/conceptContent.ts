@@ -31,12 +31,12 @@ export const conceptContent: Record<string, ConceptContent> = {
   // ── VARIABLES ────────────────────────────────────────────────────────────────
 
   'variables': {
-    description: 'A variable is a named container that stores a piece of data so your program can use it later. Variables let you reference, update, and reuse information throughout your program.',
+    description: 'A variable is a named container that stores a piece of data so your program can use it later. A variable is like a labeled box, where the label is the variable\'s name, and whatever is inside the box is its value. Variables let you reference, update, and reuse information throughout your program.',
     example: 'int_variable = 5\nstring_variable = "CS 8"\nboolean_variable = True',
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992232/',
   },
   'variables:Variable names': {
-    description: "A variable name is the label you give a variable so you can refer to it in your code. Names are case-sesnsitive and can only contain letters, numbers, or underscores. They can't start with a number or contain spaces, and they can't be Python keywords like 'if', 'else', 'for', etc. Good names clearly describe what the variable holds.",
+    description: "A variable name is the label you give a variable so you can refer to it in your code. Names are case-sensitive and can only contain letters, numbers, or underscores. They can't start with a number or contain spaces, and they can't be Python keywords like 'if', 'else', 'for', etc. Good names clearly describe what the variable holds.",
     example: '# Vague variable name\nx = "Alejandro"\n\n# Specific variable name\nstudent_name = "Kyle"',
     practiceUrl: 'https://us.prairielearn.com/',
   },
@@ -46,7 +46,7 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'variables:+= and -=': {
-    description: '+= and -= are shortcuts for updating a variable based on its current value. += adds the right-hand value to the variable and stores the result; -= subtracts it.',
+    description: '+= and -= are shortcuts for updating a variable based on its current value. "+=" adds the value on the right to the variable on the left and stores the result back in that variable. "-=" subtracts the value on the right from the variable on the left and stores the result back in that variable.',
     example: 'x = 10\n\n# Same as x = x + 3\nx += 3\n\n# Same as x = x - 5\nx -= 5',
     practiceUrl: 'https://us.prairielearn.com/',
   },
@@ -64,12 +64,12 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'arithmetic-ops:Division': {
-    description: 'Python has two kinds of division. Regular division (/) always returns a decimal result. Floor division (//) rounds the result down to the nearest whole number.',
+    description: 'Python has two kinds of division. Regular division (/) always returns a decimal result, even if both operands are integers and the result is a whole number. Floor division (//) rounds the result down to the nearest whole number.',
     example: '# Evaluates to 1.25\n5 / 4\n\n# Evaluates to 1\n5 // 4',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'arithmetic-ops:Modulo': {
-    description: 'The modulo operator (%) returns the remainder left over after dividing two numbers. It is useful for checking things like whether a number is even or odd.',
+    description: 'The modulo operator (%) returns the remainder left over after dividing two numbers. It is useful for checking things like whether a number is even or odd. You can use modulo with floats, but the result will not always be precise due to rounding errors.',
     example: '# Evaluates to 1\n10 % 3\n\n# Evaluates to 0\n10 % 2\n\n# Evaluates to 0.5\n1.5 % 1',
     practiceUrl: 'https://us.prairielearn.com/',
   },
@@ -97,8 +97,8 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'string-ops:String slicing': {
-    description: 'A comment is a note in code that Python ignores when running the program. Comments help readers understand what the code is doing and why. They are created by starting a line with a # symbol.',
-    example: '# This is a comment: Python will not run this line',
+    description: 'String slicing lets a program extract a smaller portion of a string by specifying a start and stop index: string_variable[start:stop]. The start index is included in the result, but the stop index is not. Leaving out the start or stop index tells Python to slice from the beginning or all the way to the end. String slicing also accepts an optional third value called the step: string_variable[start:stop:step]. The step controls how many positions Python jumps forward each time it picks a value. The default step is 1, meaning Python picks every character. A step of 2 picks every other character, a step of 3 picks every third character, and so on. A negative step counts backwards through the string.',
+    example: 'name = "Brennan"\n\n# Extracts Bren\nname[0:4]\n\n# Every other character: Benn\nnumbers[::2]\n\n# Reverses the string\nname[::-1]',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'string-ops:Comments': {
@@ -115,17 +115,17 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992230/',
   },
   'boolean-expr:Comparison: ==, <, <=, !=': {
-    description: 'Comparison operators compare two values and return True or False. == checks equality, != checks inequality, and <, >, <=, >= compare relative size.',
+    description: 'Comparison operators compare two values and return True or False. == checks if two values are equal, != checks if they are not equal, and <, >, <=, >= compare which value is larger or smaller. <= means "less than or equal to" and >= means "greater than or equal to".',
     example: '# Evaluate to True\n5 == 5\n5 != 3\n5 > 3\n\n# Evaluate to False\n5 < 3\n5 != 5\n5 <= 4',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'boolean-expr:Logical: and, or, not': {
-    description: 'Logical operators combine or reverse boolean expressions. "and" returns True only if both sides are True, "or" returns True if at least one side is True, and "not" flips a boolean value.',
+    description: 'Logical operators combine or reverse boolean expressions. "and" returns True only if both sides are True, "or" returns True if at least one side is True, and "not" flips a boolean value from True to False or vice versa.',
     example: '# Evaluate to True\nTrue and True\nnot False\nTrue or False\n\n# Evaluate to False\nTrue and False\nnot True\nFalse or False',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'boolean-expr:Membership: in, not in': {
-    description: 'Membership operators check whether a value exists inside a sequence, like a string. "in" returns True if the value is found; "not in" returns True if it is not found.',
+    description: 'Membership operators check whether a value exists inside a sequence, like if a character is in a string. "in" returns True if the value is found; "not in" returns True if it is not found.',
     example: "# Evaluate to True\n'P' in 'Python'\n'z' not in 'Python'\n\n# Evaluate to False\n'x' in 'Python'\n'n' not in 'Python'",
     practiceUrl: 'https://us.prairielearn.com/',
   },
@@ -133,7 +133,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   // ── CONDITIONAL STATEMENTS ───────────────────────────────────────────────────
 
   'conditionals': {
-    description: 'A conditional statement lets your program make decisions by running certain code only when a specific condition is met. In Python, conditionals are built using if, elif, and else combined with boolean expressions.',
+    description: 'A conditional statement lets your program make decisions by running certain code only when a specific condition is met. In Python, conditionals are built using if, elif, and else combined with boolean expressions. The boolean expression is the "condition" in a conditional statement. ',
     example: 'test_grade = 85\n\nif test_grade >= 70:\n    class_grade = "Pass"\nelse:\n    class_grade = "Fail"',
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000002/',
   },
@@ -143,13 +143,13 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'conditionals:else': {
-    description: 'An else statement is paired with an if and runs its block when the if condition is False. It acts as a fallback. An if statement is always required before an else, but an else is not required after an if.',
+    description: 'An else statement goes after an if statement and runs its block when the if condition is False. It acts as a fallback: "if the condition wasn\'t met, do this instead." You always need an if statement before an else statement, but you don\'t need an else statement after an if statement.',
     example: 'test_grade = 85\n\nif test_grade >= 70:\n    class_grade = "Pass"\nelse:\n    class_grade = "Fail"',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'conditionals:elif': {
-    description: 'An elif ("else if") statement lets you check multiple conditions in order. Python evaluates each from top to bottom and runs the first block whose condition is True, skipping all the rest.',
-    example: 'test_grade = 85\n\nif test_grade >= 90:\n    class_grade = "A"\nelif test_grade >= 80:\n    class_grade = "B"\nelif test_grade >= 70:\n    class_grade = "C"\nelif test_grade >= 60:\n    class_grade = "D"\nelse:\n    class_grade = "F"',
+    description: 'An elif ("else if") statement lets you check multiple conditions in order. Python evaluates each from top to bottom and runs the first block whose condition is True, skipping all the rest. You always need an if statement before an elif statement. You don\'t need an else statement after an elif statement.',
+    example: 'if test_grade >= 90:\n    class_grade = "A"\nelif test_grade >= 80:\n    class_grade = "B"\nelif test_grade >= 70:\n    class_grade = "C"\nelse:\n    class_grade = "Did not pass"',
     practiceUrl: 'https://us.prairielearn.com/',
   },
 
@@ -166,17 +166,17 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'functions:Calling functions': {
-    description: 'Calling a function means actually running it. You call a function by writing its name followed by parentheses. The code inside a function will only run if the function is called, and it can be called as many times as you want.',
+    description: 'Calling a function means actually running it. You call a function by writing its name followed by parentheses. The code inside a function  (the block indented under the function definition line) will only run if the function is called, and it can be called as many times as you want.',
     example: '# Function definition\ndef sum_function():\n    sum = 3 + 5\n\n# Function call\nsum_function()',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'functions:Function parameters': {
-    description: 'A parameter is a variable listed inside a function\'s parentheses when it is defined. It acts as a placeholder for a value that will be passed in when the function is called, letting one function work with different inputs. The values passed in during a function call are called inputs.',
+    description: 'A parameter is a variable listed inside a function\'s parentheses when the function is defined. It acts as a placeholder for a value that will be passed in when the function is called. This lets you write one function that can work with different inputs. To create a function with multiple parameters, separate the variables with commas inside the parentheses. A function does not have to have parameters — if there is no variable inside the parentheses in the function, the function has no parameters. When calling a function that has parameters, "pass in" the values by listing them inside the function call parentheses. The values that you pass in to a function call are called inputs. ',
     example: '# Parameters are a and b\ndef sum_function(a, b):\n    sum = a + b\n\n# Call with inputs x and y\nx = 5\ny = 3\nsum_function(x, y)',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'functions:Return statements': {
-    description: 'A return statement sends a value back out of a function so it can be used elsewhere. It also exits the function — any code after the return statement will not run. Without a return statement, a function performs an action but gives nothing back.',
+    description: 'A return statement sends a value back out of a function so it can be used elsewhere in your program. A return statement is also used to exit a function: any code after the return statement will not run. A return statement starts with the "return" keyword followed by the value being returned (the "return value"). If a function does not have a return statement, it returns None by default. If you assign a variable to a function call (like this: variable_name = sum_function() ), the return value will be stored in the variable. ',
     example: 'def sum_function(a, b):\n    sum = a + b\n    return(sum)\n\n# total stores the return value: 8\ntotal = sum_function(5, 3)',
     practiceUrl: 'https://us.prairielearn.com/',
   },
@@ -184,12 +184,12 @@ export const conceptContent: Record<string, ConceptContent> = {
   // ── BUILT-IN FUNCTIONS ───────────────────────────────────────────────────────
 
   'built-in-fns': {
-    description: 'Built-in functions are ready-made functions that come with Python — you don\'t need to define them yourself. They handle common tasks like measuring length, finding min/max values, or converting data types. The most common are print(), input(), len(), min(), max(), int(), str(), float(), and range().',
+    description: 'Built-in functions are ready-made functions that come with Python — you don\'t need to define them yourself. They handle common tasks like measuring length, finding min/max values, or converting data types. There are over 60 built-in functions in Python, but the most commonly used ones are print(), input(), len(), min(), max(), int(), str(), float(), and range().',
     example: '# Returns 3\nlen("CS8")\n\n# Returns 2\nmin(8, 2, 13, 4)',
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000012/',
   },
   'built-in-fns:len()': {
-    description: 'len() returns the number of items in a sequence — such as the number of characters in a string or the number of values in a list. Pass the sequence in as input.',
+    description: 'len() returns the number of items in a sequence — such as the number of characters in a string or the number of values in a list. When calling the len() function, pass in the sequence as input. ',
     example: '# Returns 5\nlen("Hello")\n\nletter_list = [\'a\', \'b\', \'c\']\n\n# Returns 3\nlen(letter_list)',
     practiceUrl: 'https://us.prairielearn.com/',
   },
@@ -199,12 +199,12 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'built-in-fns:range()': {
-    description: 'range() returns a sequence of integers. It takes up to three inputs: range(start, stop, step). With one input, it counts from 0 up to (but not including) that number. The stop value is never included in the result. The step can be negative to count backwards.',
+    description: 'range() returns a list of integers. range() takes up to three input values: range(start, stop, step). At least one input value is required. If you pass in one number as input, it will be the stop value: the default starting value is 0 and the default step is 1. If you pass in two numbers as input, they will be the start and stop values. If you pass in three inputs, the step controls how much the sequence increments by each time. The stop value is never included in the result — the list that range() returns always stops just before it. The step can also be negative, which lets you count backwards.',
     example: '# Returns [0, 1, 2, 3]\nrange(4)\n\n# Returns [3, 4, 5, 6]\nrange(3, 7)\n\n# Returns [2, 4, 6]\nrange(0, 8, 2)\n\n# Returns [8, 7, 6, 5]\nrange(8, 4, -1)',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'built-in-fns:Type casting': {
-    description: 'Type casting converts a value from one data type to another. int() converts to an integer, float() to a float, str() to a string, and bool() to a boolean. Conversion only works when it\'s possible — converting a word string to an integer will cause an error.',
+    description: 'Type casting means converting a value from one data type to another. Python has built-in functions for this: int() converts a value to an integer, float() converts to a float, bool() converts to a boolean, and str() converts to a string. All of these functions only work if it is possible to convert the original value to the new data type: anything can be converted to a string, but trying to convert a string with letters in it to an integer or float will cause an error. Converting an integer to a float adds .0 to the end of the integer value, and converting a float to an integer removes anything after the decimal point. ',
     example: '# Converts to integer 5\na = 5.2\nint(a)\n\n# Converts to float 6.0\nb = 6\nfloat(b)\n\n# Converts to string "7"\nc = 7\nstr(c)\n\n# Converts to integer 5\nd = "5"\nint(d)',
     practiceUrl: 'https://us.prairielearn.com/',
   },
@@ -263,13 +263,13 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'lists:Accessing a value': {
-    description: 'A value in a list is accessed using its index inside square brackets. List indexes start at 0, so the first item is at index 0, the second at index 1, and so on. A negative index counts from the end of the list.',
+    description: 'A value in a list is accessed using the value\'s numbered position, or index, inside square brackets. List indexes start at 0, so the first item is at index 0, the second at index 1, and so on. A negative index counts from the end of the list.',
     example: 'names = ["Alice", "Bob", "Charlie"]\n\n# Stores "Alice"\nfirst_name = names[0]\n\n# Stores "Bob"\nsecond_name = names[1]\n\n# Stores "Charlie"\nlast_name = names[-1]',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'lists:List slicing': {
-    description: 'Slicing extracts a portion of a list or string using a start and end index: list[start:stop]. The start index is included but the stop index is not. An optional step value controls how many positions Python jumps each time. A negative step counts backwards.',
-    example: 'numbers = [10, 20, 30, 40, 50, 60, 70]\n\n# Extracts [30, 40, 50]\nnumbers[2:5]\n\n# Every other value: [10, 30, 50, 70]\nnumbers[::2]\n\n# Reverses the list\nnumbers[::-1]\n\ncourse = "CMPSC 8"\n\n# Extracts "CMPS"\ncourse[:4]',
+    description: 'List slicing lets a program extract a smaller portion of a list by specifying a start and stop index: list[start:stop]. The start index is included in the result, but the stop index is not. Leaving out the start or stop index tells Python to slice from the beginning or all the way to the end. List slicing also accepts an optional third value called the step: list[start:stop:step]. The step controls how many positions Python jumps forward each time it picks a value. The default step is 1, meaning Python picks every item. A step of 2 picks every other item, a step of 3 picks every third item, and so on. A negative step counts backwards through the list. A string can also be sliced with the same rules. ',
+    example: 'numbers = [10, 20, 30, 40, 50, 60, 70]\n\n# Extracts [30, 40, 50]\nnumbers[2:5]\n\n# Every other value: [10, 30, 50, 70]\nnumbers[::2]\n\n# Reverses the list\nnumbers[::-1]',
     practiceUrl: 'https://us.prairielearn.com/',
   },
 
@@ -299,7 +299,7 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000010/',
   },
   'loops:For loops': {
-    description: 'A for loop repeats a block of code once for each item in a sequence. The loop variable takes on each value in the sequence one at a time, and the indented block runs once per value. One run of that block is called an iteration.',
+    description: 'A for loop repeats a block of code once for each item in a sequence (like a list or a range of numbers). The first line of a for loop has this format: for loop_variable in sequence, with a colon at the end of the line. All the code inside of the for loop is indented. The loop variable takes on each value in the sequence one at a time, and the indented block runs once for each value in the sequence. One run of the indented block inside of a for loop is called a loop iteration. ',
     example: 'vowels = "aeiou"\nvowel_count = 0\n\nfor letter in "Computer":\n    if letter in vowels:\n        vowel_count += 1',
     practiceUrl: 'https://us.prairielearn.com/',
   },
@@ -323,7 +323,7 @@ export const conceptContent: Record<string, ConceptContent> = {
     example: 'a_count = 0\n\n# Iterates over the string "alphabet"\nfor letter in "alphabet":\n    if letter == \'a\':\n        a_count += 1',
     practiceUrl: 'https://us.prairielearn.com/',
   },
-  'loops:Accumulator Pattern': {
+  'loops:Accumulator pattern': {
     description: 'The accumulator pattern starts a variable at an initial value before a loop, then updates it with each iteration to build up a result — like a running total, a count, or a growing string. The variable must be declared before the loop so it doesn\'t reset on each iteration.',
     example: 'num_list = [10, 5, 20, 3, 15]\ntotal = 0\n\nfor num in num_list:\n    total += num',
     practiceUrl: 'https://us.prairielearn.com/',
@@ -391,7 +391,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   // ── SETS ─────────────────────────────────────────────────────────────────────
 
   'sets': {
-    description: 'A set is a data type that stores multiple unique values with no guaranteed order. A program uses sets when duplicates are not allowed and order is not important. Because sets are unordered, values cannot be accessed by index.',
+    description: 'A set is a data type that stores multiple unique values with no guaranteed order. A program uses sets when duplicates are not allowed and order is not important. Because sets are unordered, values cannot be accessed by index. You can use the "in" operator to check if a value is in a set.',
     example: 'fruits = {"apple", "banana", "cherry"}\nnumbers = {1, 2, 3}',
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992233/',
   },
@@ -514,8 +514,8 @@ export const conceptContent: Record<string, ConceptContent> = {
   // ── ERRORS & DEBUGGING ───────────────────────────────────────────────────────
 
   'errors-debugging': {
-    description: 'An error occurs when Python encounters something in the code it cannot execute. Debugging is the process of finding and fixing those errors. Understanding the different types of errors and how to read Python\'s error messages makes it easier to figure out what went wrong and where.',
-    example: '# The code below causes an error\nnumbers = [1, 2, 3]\nnumbers[5]\n\n# IndexError: list index out of range',
+    description: 'An error occurs when Python encounters something in the code that it cannot execute. Debugging is the process of finding and fixing those errors. Understanding the different types of errors and how to read Python\'s error messages makes it easier to figure out what went wrong and where.',
+    example: '# The code below causes an error\nsum = x + \n\nSyntaxError: invalid syntax',
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000005/',
   },
   'errors-debugging:Syntax errors': {
@@ -542,7 +542,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   // ── DATA REPRESENTATION ──────────────────────────────────────────────────────
 
   'data-rep': {
-    description: 'Data representation is the way computers store and display information using different numbering systems. Since computers work in binary internally, other systems like hexadecimal exist to represent the same values in more compact or human-readable forms.',
+    description: 'Data representation is the way computers store and display information using different numbering systems. Since computers work in binary internally, other systems like hexadecimal and decimal exist to represent the same values in more compact or human-readable forms.',
     example: '# Decimal\n10\n\n# Binary\n0b1010\n\n# Hex\n0xA',
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992229/',
   },
@@ -552,7 +552,7 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'data-rep:Hex': {
-    description: 'Hexadecimal ("hex") is a numbering system that uses 16 symbols — digits 0–9 plus letters A through F — to represent values more compactly than binary. In Python, a hex number is written using the prefix 0x.',
+    description: 'Hexadecimal is a numbering system that uses 16 symbols — digits 0–9 plus letters A through F — to represent values more compactly than binary. In Python, a hex number is written using the prefix 0x.',
     example: '# The number 10 in hex:\n0xA\n\n# The number 50 in hex:\n0x32',
     practiceUrl: 'https://us.prairielearn.com/',
   },
@@ -565,7 +565,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   // ── RECURSION ────────────────────────────────────────────────────────────────
 
   'recursion': {
-    description: 'Recursion is a technique where a function calls itself to solve a problem. A recursive function breaks a problem down into a smaller version of the same problem, solving it step by step until it reaches a simple stopping point called the base case.',
+    description: 'Recursion is a technique where a function calls itself to solve a problem. Instead of using a loop, a recursive function breaks a problem down into a smaller version of the same problem, solving it step by step until it reaches a simple stopping point. For example, getting the nth value in the Fibonacci sequence (where each number is the sum of the two numbers before it: 0, 1, 1, 2, 3, 5, 8…) is naturally recursive because to find fib(n), you need fib(n-1) and fib(n-2) - the same problem, just smaller. The simple stopping point is the beginning of the sequence, which is always 0 and 1. ',
     example: 'def fibonacci_recursive(n):\n    # Base case\n    if n <= 1:\n        return n\n\n    # Recursive step\n    return fibonacci_recursive(n - 1) + fibonacci_recursive(n - 2)',
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000011/',
   },
@@ -592,12 +592,12 @@ export const conceptContent: Record<string, ConceptContent> = {
     example: 'if __name__ == "__main__":\n\n    # Function calls go here\n    function1()\n    function2()',
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000008/',
   },
-  'main-fn:Defining main functions': {
+  'main-fn:Program structure': {
     description: 'A well-structured Python program follows a consistent layout: imports at the top, then function definitions, then the if __name__ == "__main__" block at the very bottom. This ensures everything is defined before it is used and makes the program easy to read.',
     example: 'def function1():\n    # Code\n\ndef function2():\n    # Code\n\nif __name__ == "__main__":\n\n    function1()\n    function2()',
     practiceUrl: 'https://us.prairielearn.com/',
   },
-  'main-fn:Using main functions': {
+  'main-fn:Using if __name__ == "__main__"': {
     description: 'Every Python file has a built-in variable called __name__. When you run a file directly, Python sets __name__ to the string "__main__", so any code inside the if __name__ == "__main__" block runs automatically. Code outside this block — like function definitions — is still accessible to other files that import it, but will not run automatically.',
     example: 'def function1():\n    # Code\n\nif __name__ == "__main__":\n\n    # function1() runs when this file is executed directly\n    function1()',
     practiceUrl: 'https://us.prairielearn.com/',
