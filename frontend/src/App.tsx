@@ -515,6 +515,7 @@ export default function App() {
                       fontFamily: 'Helvetica, Arial, sans-serif',
                       fontSize: 15, color: '#1E293B',
                       lineHeight: 1.6,
+                      whiteSpace: 'pre-wrap',
                       //paddingLeft: 4,
                     }}>
                       {card.key === 'example' ? (

@@ -562,8 +562,8 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'data-rep:Converting between bases': {
-    description: 'decimal 10, binary 0b1010, and hexadecimal 0xA all represent the same number',
-    example: '# Convert decimal to binary\nbin(10)  # Output: 0b1010\n\n# Convert decimal to hex\nhex(10)  # Output: 0xA\n\n# Convert binary string to decimal\nint("0b1010", 2)  # Output: 10\n\n# Convert hex string to decimal\nint("0xA", 16)  # Output: 10',
+    description: 'To convert any number from base b to decimal, multiply each digit by b raised to the power of its position, then add everything together. Positions are counted from right to left, starting at 0.\n\nTo convert a decimal number to base b, repeatedly divide by b, keeping track of the remainders. The remainders, read bottom to top, give you the result.\n\nSteps:\n1. Divide the number by b, note the remainder\n2. Divide the quotient by b, note the remainder\n3. Repeat until the quotient is 0\n4. The remainders, read in reverse order, give the result in base b.',
+    example: '# Convert binary value 1011 to decimal\n(1 * 2**3) + (0 * 2**2) + (1 * 2**1) + (1 * 2**0) = 8 + 0 + 2 + 1 = 11\n\n# Convert hex value 2F to decimal (A=10, B=11,…, F=15)\n(2 * 16**1) + (15 * 16**0) = 32 + 15 = 47\n\n# Convert decimal value 11 to binary\n# 11 ÷ 2 = 5 with remainder 1 \n# 5 ÷ 2 = 2 with remainder 1 \n# 2 ÷ 2 = 1 with remainder 0 \n# 1 ÷ 2 = 0 remainder 1\n# Result: 1011',
     practiceUrl: 'https://us.prairielearn.com/',
   },
 
