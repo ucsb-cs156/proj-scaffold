@@ -1,7 +1,12 @@
-# Python
-backend/venv/
-backend/__pycache__/
-backend/*.pyc
+# Maven / Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+!**/src/main/**/target/
+!**/src/test/**/target/
 
 
 # Node

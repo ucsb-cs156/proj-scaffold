@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ConceptGraph from './components/ConceptGraph';
-import { fetchAssessments, fetchQuestions, fetchQuestionConcepts } from './api/client';
+import { fetchAssessments, fetchQuestions, fetchQuestionConcepts, fetchUserState, logUserActivity, saveUserState } from './api/client';
 import type { Assessment, Question } from './api/client';
 import { majorConcepts, prereqEdgeData } from './data/conceptGraph';
 import ConsentScreen from './components/ConsentScreen';
 import QuestionSearch from './components/QuestionSearch';
 import AssessmentSelect from './components/AssessmentSelect';
 import { conceptContent, type ConceptContent} from './data/conceptContent';
-import { supabase } from './lib/supabase';
 
 const normalize = (s: string) => s.replace(/\\n/g, '\n');
 
@@ -68,7 +67,7 @@ export default function App() {
   useEffect(() => { savedDetailCardsRef.current = savedDetailCards; }, [savedDetailCards]);
 
   const persistState = async (pin: string, stars: Set<string>, cards: SavedDetailCard[], mastered: Set<string> = masteredSubconceptsRef.current,) => {
-    await supabase.from('user_state').upsert({
+    await saveUserState({
       pin,
       starred_ids: Array.from(stars),
       detail_cards: cards,
@@ -87,7 +86,7 @@ export default function App() {
 
   const logActivity = useCallback(async (eventType: string, payload: object) => {
     if (!studentPin) return;
-    await supabase.from('user_activity').insert({
+    await logUserActivity({
       pin: studentPin,
       event_type: eventType,
       payload,
@@ -154,17 +153,13 @@ export default function App() {
     setStudentPin(pin);
     setIsTracked(consented);
     
-    await supabase.from('user_activity').insert({
+    await logUserActivity({
       pin,
       event_type: 'login',
       payload: {},
     });
 
-    const { data } = await supabase
-      .from('user_state')
-      .select('starred_ids, detail_cards, mastered_subconcepts')
-      .eq('pin', pin)
-      .maybeSingle();
+    const data = await fetchUserState(pin);
 
     if (data) {
       setStarredIds(new Set(data.starred_ids as string[]));

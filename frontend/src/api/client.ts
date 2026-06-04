@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL as string;
+const API_BASE = '/api';
 
 export interface Assessment {
   id: string;
@@ -21,26 +21,66 @@ export interface QuestionConcept {
 }
 
 export async function fetchAssessments(): Promise<Assessment[]> {
-  const res = await fetch(`${API_URL}/assessments`);
+  const res = await fetch(`${API_BASE}/assessments`);
   return res.json();
 }
 
 export async function fetchQuestions(assessmentId: string): Promise<Question[]> {
-  const res = await fetch(`${API_URL}/assessments/${assessmentId}/questions`);
+  const res = await fetch(`${API_BASE}/assessments/${assessmentId}/questions`);
   return res.json();
 }
 
 export async function fetchQuestionConcepts(questionId: string): Promise<QuestionConcept[]> {
-  const res = await fetch(`${API_URL}/questions/${questionId}/concepts`);
+  const res = await fetch(`${API_BASE}/questions/${questionId}/concepts`);
   return res.json();
 }
 
 export async function validatePin(pin: string): Promise<boolean> {
-  const res = await fetch(`${API_URL}/validate-pin`, {
+  const res = await fetch(`${API_BASE}/validate-pin`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ pin }),
   });
   const data = await res.json();
   return data.valid;
+}
+
+export interface UserStateResponse {
+  starred_ids: string[];
+  detail_cards: unknown[];
+  mastered_subconcepts: string[];
+}
+
+export async function fetchUserState(pin: string): Promise<UserStateResponse | null> {
+  const res = await fetch(`${API_BASE}/user-state/${encodeURIComponent(pin)}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Failed to fetch user state for pin ${pin}`);
+  return res.json();
+}
+
+export async function saveUserState(body: {
+  pin: string;
+  starred_ids: string[];
+  detail_cards: unknown[];
+  mastered_subconcepts: string[];
+}): Promise<void> {
+  const res = await fetch(`${API_BASE}/user-state`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Failed to save user state for pin ${body.pin}`);
+}
+
+export async function logUserActivity(body: {
+  pin: string;
+  event_type: string;
+  payload: object;
+}): Promise<void> {
+  const res = await fetch(`${API_BASE}/user-activity`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Failed to log user activity for pin ${body.pin}`);
 }
