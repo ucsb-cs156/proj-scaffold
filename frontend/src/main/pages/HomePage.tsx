@@ -138,14 +138,14 @@ export default function HomePage() {
       setHighlightedSubconcepts(subMap);
     });
     setSelectedConceptId(null);
-    logActivity('question_viewed', { questionId: selectedQuestionId }); // ← #1
+    logActivity('question_viewed', { questionId: selectedQuestionId });
   }, [logActivity, selectedQuestionId]);
 
   useEffect(() => {
     setSelectedItem(null);
   }, [selectedConceptId]);
 
-  useEffect(() => { // ← #3
+  useEffect(() => {
     if (!selectedItem || !selectedConceptId) return;
     logActivity('detail_visited', {
       conceptId: selectedConceptId,
@@ -157,13 +157,13 @@ export default function HomePage() {
     ? majorConcepts.find(c => c.id === selectedConceptId)
     : null;
 
-  const handleConsentComplete = async (pin: string) => {
+  const handleConsentComplete = async (pin: string, consented: boolean) => {
     setStudentPin(pin);
 
     await logUserActivity({
       pin,
       event_type: 'login',
-      payload: {},
+      payload: { consented },
     });
 
     const data = await fetchUserState(pin);
@@ -174,7 +174,7 @@ export default function HomePage() {
       setSavedDetailCards(cards);
       setAddedDetailKeys(new Set(cards.map(c => `${c.cardType}:${c.itemLabel}`)));
       setInitialDetailCards(cards);
-      setMasteredSubconcepts(new Set(data.mastered_subconcepts as string[] ?? []));
+      setMasteredSubconcepts(new Set((data.mastered_subconcepts ?? []) as string[]));
     }
   };
 
@@ -220,7 +220,7 @@ export default function HomePage() {
       persistState(studentPin!, starredIdsRef.current, next);
       return next;
     });
-    logActivity('detail_added_to_graph', { // ← #4
+    logActivity('detail_added_to_graph', {
       cardType:  card.cardType,
       itemLabel: card.itemLabel,
       conceptId: card.conceptId,
@@ -379,7 +379,6 @@ export default function HomePage() {
                   borderLeft:   '1.5px solid #1E293B',
                   borderRight:  '4px solid #1E293B',
                   borderBottom: '4px solid #1E293B',
-                  //border: '1px solid #000000',
                   borderRadius: 6,
                   padding: '5px 14px',
                   fontSize: 15, fontWeight: 700,
@@ -521,7 +520,6 @@ export default function HomePage() {
                       fontFamily: 'Helvetica, Arial, sans-serif',
                       fontSize: 15, color: '#1E293B',
                       lineHeight: 1.6,
-                      //paddingLeft: 4,
                     }}>
                       {card.key === 'example' ? (
                         <pre style={{
