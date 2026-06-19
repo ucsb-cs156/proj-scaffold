@@ -24,11 +24,11 @@ public class UserStateController {
     private final UserStateRepository userStateRepository;
     private final ObjectMapper objectMapper;
 
-    @Operation(summary = "Get saved user state by PIN")
-    @GetMapping("/api/user-state/{pin}")
+    @Operation(summary = "Get saved user state by user ID")
+    @GetMapping("/api/user-state/{userid}")
     public ResponseEntity<UserStateResponse> getUserState(
-            @Parameter(description = "4-digit student PIN") @PathVariable String pin) {
-        return userStateRepository.findByPin(pin)
+            @Parameter(description = "User ID") @PathVariable String userid) {
+        return userStateRepository.findByUserid(userid)
                 .map(state -> ResponseEntity.ok(new UserStateResponse(
                         parseStringList(state.getStarredIds()),
                         parseJsonNode(state.getDetailCards()),
@@ -37,15 +37,15 @@ public class UserStateController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @Operation(summary = "Upsert saved user state by PIN")
+    @Operation(summary = "Upsert saved user state by user ID")
     @PostMapping("/api/user-state")
     public ResponseEntity<Void> upsertUserState(@RequestBody UserStateRequest body) {
-        if (body.pin() == null || body.pin().isBlank()) {
+        if (body.userid() == null || body.userid().isBlank()) {
             return ResponseEntity.badRequest().build();
         }
 
-        UserState state = userStateRepository.findByPin(body.pin()).orElseGet(UserState::new);
-        state.setPin(body.pin());
+        UserState state = userStateRepository.findByUserid(body.userid()).orElseGet(UserState::new);
+        state.setUserid(body.userid());
         state.setStarredIds(writeJson(body.starredIds() == null ? List.of() : body.starredIds()));
         state.setDetailCards(writeJson(body.detailCards() == null ? objectMapper.createArrayNode() : body.detailCards()));
         state.setMasteredSubconcepts(writeJson(body.masteredSubconcepts() == null ? List.of() : body.masteredSubconcepts()));
@@ -80,7 +80,7 @@ public class UserStateController {
     }
 
     public record UserStateRequest(
-            String pin,
+            String userid,
             @JsonProperty("starred_ids") List<String> starredIds,
             @JsonProperty("detail_cards") JsonNode detailCards,
             @JsonProperty("mastered_subconcepts") List<String> masteredSubconcepts) {

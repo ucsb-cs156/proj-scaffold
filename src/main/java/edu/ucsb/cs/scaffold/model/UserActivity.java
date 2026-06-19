@@ -21,7 +21,7 @@ public class UserActivity {
     private UUID id;
 
     @Column(nullable = false)
-    private String pin;
+    private String userid;
 
     @Column(name = "event_type", nullable = false)
     private String eventType;

@@ -1,0 +1,44 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "002-rename-student-userids-unique-constraint",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "dbms": { "type": "postgresql" } },
+          { "tableExists": { "tableName": "student_userids" } }
+        ],
+        "changes": [
+          {
+            "sql": {
+              "splitStatements": false,
+              "stripComments": true,
+              "sql": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'student_pins_pin_key') THEN ALTER TABLE student_userids RENAME CONSTRAINT student_pins_pin_key TO student_userids_userid_key; ELSIF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'student_userids_pin_key') THEN ALTER TABLE student_userids RENAME CONSTRAINT student_userids_pin_key TO student_userids_userid_key; END IF; END $$;"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "002-rename-user-state-unique-constraint",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "dbms": { "type": "postgresql" } },
+          { "tableExists": { "tableName": "user_state" } }
+        ],
+        "changes": [
+          {
+            "sql": {
+              "splitStatements": false,
+              "stripComments": true,
+              "sql": "DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_state_pin_key') THEN ALTER TABLE user_state RENAME CONSTRAINT user_state_pin_key TO user_state_userid_key; ELSIF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'user_state_pin_unique') THEN ALTER TABLE user_state RENAME CONSTRAINT user_state_pin_unique TO user_state_userid_key; END IF; END $$;"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

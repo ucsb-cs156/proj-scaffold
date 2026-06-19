@@ -42,23 +42,23 @@ class ScaffoldApplicationTests {
     }
 
     @Test
-    void validatePinReturnsFalseForUnknownPin() throws Exception {
-        mockMvc.perform(post("/api/validate-pin")
+    void validateUserIdReturnsFalseForUnknownUserId() throws Exception {
+        mockMvc.perform(post("/api/validate-userid")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"pin\":\"9999\"}"))
+                        .content("{\"userid\":\"9999\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(false));
     }
 
     @Test
-    void userStateCanBeUpsertedAndFetchedByPin() throws Exception {
+    void userStateCanBeUpsertedAndFetchedByUserId() throws Exception {
         userStateRepository.deleteAll();
 
         mockMvc.perform(post("/api/user-state")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "pin": "1234",
+                                                                    "userid": "1234",
                                   "starred_ids": ["graph-a", "graph-b"],
                                   "detail_cards": [{"cardType":"hint","itemLabel":"Item 1"}],
                                   "mastered_subconcepts": ["sub-1"]
@@ -91,7 +91,7 @@ class ScaffoldApplicationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "pin":"1234",
+                                                                    "userid":"1234",
                                   "event_type":"login",
                                   "payload":{"source":"test"}
                                 }

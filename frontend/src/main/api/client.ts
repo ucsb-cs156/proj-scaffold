@@ -35,11 +35,11 @@ export async function fetchQuestionConcepts(questionId: string): Promise<Questio
   return res.json();
 }
 
-export async function validatePin(pin: string): Promise<boolean> {
-  const res = await fetch(`${API_BASE}/validate-pin`, {
+export async function validateUserId(userid: string): Promise<boolean> {
+  const res = await fetch(`${API_BASE}/validate-userid`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pin }),
+    body: JSON.stringify({ userid }),
   });
   const data = await res.json();
   return data.valid;
@@ -51,15 +51,15 @@ export interface UserStateResponse {
   mastered_subconcepts: string[];
 }
 
-export async function fetchUserState(pin: string): Promise<UserStateResponse | null> {
-  const res = await fetch(`${API_BASE}/user-state/${encodeURIComponent(pin)}`);
+export async function fetchUserState(userid: string): Promise<UserStateResponse | null> {
+  const res = await fetch(`${API_BASE}/user-state/${encodeURIComponent(userid)}`);
   if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`Failed to fetch user state for pin ${pin}`);
+  if (!res.ok) throw new Error(`Failed to fetch user state for userid ${userid}`);
   return res.json();
 }
 
 export async function saveUserState(body: {
-  pin: string;
+  userid: string;
   starred_ids: string[];
   detail_cards: unknown[];
   mastered_subconcepts: string[];
@@ -69,11 +69,11 @@ export async function saveUserState(body: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Failed to save user state for pin ${body.pin}`);
+  if (!res.ok) throw new Error(`Failed to save user state for userid ${body.userid}`);
 }
 
 export async function logUserActivity(body: {
-  pin: string;
+  userid: string;
   event_type: string;
   payload: object;
 }): Promise<void> {
@@ -82,5 +82,5 @@ export async function logUserActivity(body: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Failed to log user activity for pin ${body.pin}`);
+  if (!res.ok) throw new Error(`Failed to log user activity for userid ${body.userid}`);
 }
