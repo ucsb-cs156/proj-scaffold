@@ -1,3 +1,6 @@
+data/
+
+
 # Maven / Java
 target/
 *.class
@@ -18,3 +21,5 @@ frontend/dist/
 .env
 .env.local
 .DS_Store
+
+.vscode/

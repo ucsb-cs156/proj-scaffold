@@ -48,7 +48,7 @@ export default function HomePage() {
   const [selectedConceptId, setSelectedConceptId]           = useState<string | null>(null);
   const [highlightedSubconcepts, setHighlightedSubconcepts] = useState<Map<string, Set<string>>>(new Map());
   const [selectedItem, setSelectedItem]                     = useState<string | null>(null);
-  const [studentPin, setStudentPin]                         = useState<string | null>(null);
+  const [studentUserId, setStudentUserId]                   = useState<string | null>(null);
   const [starredIds, setStarredIds]                         = useState<Set<string>>(new Set());
   const [closeHovered, setCloseHovered]                     = useState(false);
   const [savedDetailCards, setSavedDetailCards]             = useState<SavedDetailCard[]>([]);
@@ -66,13 +66,13 @@ export default function HomePage() {
   useEffect(() => { savedDetailCardsRef.current = savedDetailCards; }, [savedDetailCards]);
 
   const persistState = useCallback(async (
-    pin: string,
+    userid: string,
     stars: Set<string>,
     cards: SavedDetailCard[],
     mastered: Set<string> = masteredSubconceptsRef.current,
   ) => {
     await saveUserState({
-      pin,
+      userid,
       starred_ids: Array.from(stars),
       detail_cards: cards,
       mastered_subconcepts: Array.from(mastered),
@@ -87,19 +87,19 @@ export default function HomePage() {
       } else {
         next.add(sub);
       }
-      persistState(studentPin!, starredIdsRef.current, savedDetailCardsRef.current, next);
+      persistState(studentUserId!, starredIdsRef.current, savedDetailCardsRef.current, next);
       return next;
     });
   };
 
   const logActivity = useCallback(async (eventType: string, payload: object) => {
-    if (!studentPin) return;
+    if (!studentUserId) return;
     await logUserActivity({
-      pin: studentPin,
+      userid: studentUserId,
       event_type: eventType,
       payload,
     });
-  }, [studentPin]);
+  }, [studentUserId]);
 
   const handlePaneClick = () => {
     if (!selectedQuestionId) {
@@ -157,16 +157,16 @@ export default function HomePage() {
     ? majorConcepts.find(c => c.id === selectedConceptId)
     : null;
 
-  const handleConsentComplete = async (pin: string, consented: boolean) => {
-    setStudentPin(pin);
+  const handleConsentComplete = async (userid: string, consented: boolean) => {
+    setStudentUserId(userid);
 
     await logUserActivity({
-      pin,
+      userid,
       event_type: 'login',
       payload: { consented },
     });
 
-    const data = await fetchUserState(pin);
+    const data = await fetchUserState(userid);
 
     if (data) {
       setStarredIds(new Set(data.starred_ids as string[]));
@@ -194,7 +194,7 @@ export default function HomePage() {
       } else {
         next.add(id);
       }
-      persistState(studentPin!, next, savedDetailCardsRef.current);
+      persistState(studentUserId!, next, savedDetailCardsRef.current);
       return next;
     });
   };
@@ -209,7 +209,7 @@ export default function HomePage() {
     setSavedDetailCards([]);
     setAddedDetailKeys(new Set());
     setMasteredSubconcepts(new Set());
-    persistState(studentPin!, new Set(), [], new Set());
+    persistState(studentUserId!, new Set(), [], new Set());
   };
 
   const handleDetailAdded = (card: SavedDetailCard) => {
@@ -217,7 +217,7 @@ export default function HomePage() {
     setAddedDetailKeys(prev => new Set([...prev, key]));
     setSavedDetailCards(prev => {
       const next = [...prev, card];
-      persistState(studentPin!, starredIdsRef.current, next);
+      persistState(studentUserId!, starredIdsRef.current, next);
       return next;
     });
     logActivity('detail_added_to_graph', {
@@ -232,7 +232,7 @@ export default function HomePage() {
     setAddedDetailKeys(prev => { const s = new Set(prev); s.delete(key); return s; });
     setSavedDetailCards(prev => {
       const next = prev.filter(c => !(c.cardType === cardType && c.itemLabel === itemLabel));
-      persistState(studentPin!, starredIdsRef.current, next);
+      persistState(studentUserId!, starredIdsRef.current, next);
       return next;
     });
   };
@@ -244,12 +244,12 @@ export default function HomePage() {
           ? { ...c, posX, posY }
           : c
       );
-      persistState(studentPin!, starredIdsRef.current, next);
+      persistState(studentUserId!, starredIdsRef.current, next);
       return next;
     });
   };
 
-  if (!studentPin) {
+  if (!studentUserId) {
     return <ConsentScreen onComplete={handleConsentComplete} />;
   }
 

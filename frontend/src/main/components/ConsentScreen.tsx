@@ -1,24 +1,24 @@
 import { useState } from 'react';
-import { validatePin } from '../api/client';
+import { validateUserId } from '../api/client';
 
 interface ConsentScreenProps {
-  onComplete: (pin: string, consented: boolean) => void;
+  onComplete: (userid: string, consented: boolean) => void;
 }
 
 export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
-  const [pin, setPin]         = useState('');
+  const [userid, setUserid]   = useState('');
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handlePinSubmit = async () => {
-    if (pin.length !== 4) return;
+  const handleUserIdSubmit = async () => {
+    if (userid.length !== 4) return;
     setLoading(true);
     setError('');
-    const valid = await validatePin(pin);
+    const valid = await validateUserId(userid);
     if (valid) {
-      onComplete(pin, true);
+      onComplete(userid, true);
     } else {
-      setError('Invalid pin number.');
+      setError('Invalid user ID.');
     }
     setLoading(false);
   };
@@ -55,15 +55,15 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
           Scaffold
         </div>
         <div style={{ fontSize: 14, color: '#64748B', marginBottom: 20, marginTop: 20 }}>
-          Enter your assigned 4-digit pin to continue.
+          Enter your assigned user ID to continue.
         </div>
         <input
           type="text"
           inputMode="numeric"
           maxLength={4}
-          value={pin}
-          onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
-          onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
+          value={userid}
+          onChange={e => setUserid(e.target.value.replace(/\D/g, ''))}
+          onKeyDown={e => e.key === 'Enter' && handleUserIdSubmit()}
           placeholder="0000"
           style={{
             width: '100%', padding: '10px 14px', fontSize: 24,
@@ -77,13 +77,13 @@ export default function ConsentScreen({ onComplete }: ConsentScreenProps) {
           <div style={{ color: '#DC2626', fontSize: 13, marginBottom: 12 }}>{error}</div>
         )}
         <button
-          onClick={handlePinSubmit}
-          disabled={pin.length !== 4 || loading}
+          onClick={handleUserIdSubmit}
+          disabled={userid.length !== 4 || loading}
           style={{
             width: '100%', padding: '10px 0', fontSize: 14, fontWeight: 600,
-            background: pin.length === 4 ? '#1E293B' : '#CBD5E1',
+            background: userid.length === 4 ? '#1E293B' : '#CBD5E1',
             color: '#fff', border: 'none', borderRadius: 8,
-            cursor: pin.length === 4 ? 'pointer' : 'default',
+            cursor: userid.length === 4 ? 'pointer' : 'default',
           }}
         >
           {loading ? 'Checking…' : 'Continue'}

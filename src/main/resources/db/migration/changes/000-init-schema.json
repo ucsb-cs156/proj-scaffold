@@ -1,0 +1,262 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "000-create-assessments",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "assessments" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "assessments",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "UUID",
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                { "column": { "name": "pl_assessment_id", "type": "VARCHAR(255)" } },
+                {
+                  "column": {
+                    "name": "name",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "000-create-questions",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "questions" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "questions",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "UUID",
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "assessment_id",
+                    "type": "UUID",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                { "column": { "name": "pl_question_uuid", "type": "VARCHAR(255)" } },
+                {
+                  "column": {
+                    "name": "title",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "000-create-question-concepts",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "question_concepts" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "question_concepts",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "UUID",
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "question_id",
+                    "type": "UUID",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "concept_id",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                { "column": { "name": "subconcept_label", "type": "VARCHAR(255)" } }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "000-create-student-userids",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "student_userids" } } },
+          { "not": { "tableExists": { "tableName": "student_pins" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "student_userids",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "UUID",
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "userid",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false, "unique": true }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "000-create-user-state",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "user_state" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "user_state",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "UUID",
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "userid",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false, "unique": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "starred_ids",
+                    "type": "TEXT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "detail_cards",
+                    "type": "TEXT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "mastered_subconcepts",
+                    "type": "TEXT",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "000-create-user-activity",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "user_activity" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "user_activity",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "UUID",
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "userid",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "event_type",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "payload",
+                    "type": "TEXT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "created_at",
+                    "type": "TIMESTAMP",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
