@@ -1,4 +1,8 @@
 name: 42-smoke-test.yml
+
+# This workflow runs a smoke test on the application using the docker-compose file in .devcontainer/production/docker-compose.yml.
+# It uses the files under the .devcontainer/production directory to run the test, so changes to those files will trigger this workflow.
+
 on:
   workflow_dispatch:
   pull_request:
