@@ -9,7 +9,7 @@ export const majorConcepts: MajorConcept[] = [
   { id: 'data-types',        label: 'Basic \n Data Types',              color: '#c99ffe',
     subconcepts: ['Numeric (integers, floats)', 'Strings', 'Booleans'] },
   { id: 'data-rep',          label: 'Data \n Representation',     color: '#feaef2',
-    subconcepts: ['Binary', 'Hex', 'Decimal'] },
+    subconcepts: ['Binary', 'Hex', 'Decimal', 'Converting between bases'] },
   { id: 'variables',         label: 'Variables',                  color: '#feaef2',
     subconcepts: ['Variable names', 'Variable assignment', '+= and -='] },
   { id: 'arithmetic-ops',    label: 'Arithmetic \n Operations',   color: '#feaef2',

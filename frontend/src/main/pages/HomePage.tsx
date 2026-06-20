@@ -465,7 +465,6 @@ export default function HomePage() {
           const selectedItemLabel = selectedItem === selectedConcept.id
             ? selectedConcept.label.replace(/\n/g, ' ')
             : selectedItem ?? '';
-
           const contentKey = selectedItem === selectedConcept.id
             ? selectedConcept.id
             : `${selectedConcept.id}:${selectedItem}`;
@@ -522,6 +521,7 @@ export default function HomePage() {
                       fontFamily: 'Helvetica, Arial, sans-serif',
                       fontSize: 15, color: '#1E293B',
                       lineHeight: 1.6,
+                      whiteSpace: 'pre-wrap'
                     }}>
                       {card.key === 'example' ? (
                         <pre style={{

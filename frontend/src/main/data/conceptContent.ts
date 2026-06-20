@@ -18,7 +18,7 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'data-types:Strings': {
-    description: 'A string is how Python stores text. A string can be a single character, an entire paragraph, or even an empty space. Strings are created by wrapping text in matching single or double quotation marks.',
+    description: 'A string is how Python stores text. A string can be a single character, an entire paragraph, or even an empty space. Strings are created by wrapping text in matching single or double quotation marks. Strings cannot be changed after they are created, but you can create new strings by performing operations on existing strings.',
     example: "# Empty string\n''\n'This is a string.'\n\"This is also a string.\"",
     practiceUrl: 'https://us.prairielearn.com/',
   },
@@ -230,7 +230,7 @@ export const conceptContent: Record<string, ConceptContent> = {
   // ── DICTIONARIES ─────────────────────────────────────────────────────────────
 
   'dictionaries': {
-    description: 'A dictionary is a data type that stores information as pairs of keys and values. Instead of accessing data by position, you look up a value using its unique key — similar to looking up a definition using a word in a real dictionary.',
+    description: 'A dictionary is a data type that stores information as pairs of keys and values. Instead of accessing data by position, you look up a value using its unique key — similar to looking up a definition using a word in a real dictionary. The keys in a dictionary are unique, meaning there is only one of each key, but multiple keys can be "mapped" to the same value.',
     example: 'student_ages = {"Alejandro": 19, "Kyle": 20, "Nikita": 20}',
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000003/',
   },
@@ -519,13 +519,13 @@ export const conceptContent: Record<string, ConceptContent> = {
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000005/',
   },
   'errors-debugging:Syntax errors': {
-    description: 'A syntax error occurs when the code breaks the rules of the Python language and Python cannot understand it. Python catches these before the program even runs. Common causes include missing colons, mismatched parentheses, or misspelled keywords.',
+    description: 'A syntax error occurs when the code breaks the rules of the Python language and Python cannot understand it. Python catches these before the program even runs. Common causes include missing colons, mismatched parentheses, or misspelled keywords. An IndentationError is a specific type of syntax error that happens when the indentation in a program is not consistent.',
     example: '# Missing colon after if statement\nif x > 5\n    x = 10\n\n# Missing closing parenthesis\nresult = (2 + 3',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'errors-debugging:Runtime errors': {
-    description: 'A runtime error occurs while the program is running — the syntax is correct, but something goes wrong during execution. Common examples include accessing an index in a sequencethat doesn\'t exist or using the wrong data type for an operation.',
-    example: '# Accessing an index that doesn\'t exist: IndexError\nnumbers = [1, 2, 3]\nnumbers[5]\n\n# Concatenating the wrong data type: TypeError\nresult = "hello" + 5',
+    description: 'A runtime error occurs while the program is running — the syntax is correct, but something goes wrong during execution. Common examples include accessing an index in a sequence that doesn\'t exist or using the wrong data type for an operation. Common runtime error types include IndexError (index is out of bounds), TypeError (incorrect data type), ValueError (correct data type but inappropriate value), and NameError (variable is not defined).',
+    example: '# Accessing an index that doesn\'t exist: IndexError\nnumbers = [1, 2, 3]\nnumbers[5]\n\n# Concatenating the wrong data type: TypeError\nresult = "hello" + 5\n\n# Trying to convert a non-numeric string to an integer: ValueError\nnum = int("abc")\n\n# Using a variable that hasn\'t been defined: NameError\nprint(x)',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'errors-debugging:try / except': {
@@ -542,23 +542,28 @@ export const conceptContent: Record<string, ConceptContent> = {
   // ── DATA REPRESENTATION ──────────────────────────────────────────────────────
 
   'data-rep': {
-    description: 'Data representation is the way computers store and display information using different numbering systems. Since computers work in binary internally, other systems like hexadecimal and decimal exist to represent the same values in more compact or human-readable forms.',
+    description: 'Data representation is the way computers store and display information using different numbering systems. These numbering systems are called bases. Since computers work in binary internally, other systems like hexadecimal and decimal exist to represent the same values in more compact or human-readable forms. The same value can be represented in different bases - even though the symbols look different, the value stays the same across each base. A Python "literal" is a value written directly in the code, which can be in decimal, binary, or hexadecimal depending on the prefix.',
     example: '# Decimal\n10\n\n# Binary\n0b1010\n\n# Hex\n0xA',
     practiceUrl: 'https://us.prairielearn.com/pl/course_instance/213067/instance_question/697992229/',
   },
   'data-rep:Binary': {
-    description: 'Binary is the most fundamental language a computer speaks, using only two digits: 0 and 1. Every piece of data on a computer is stored as a series of 1s and 0s. In Python, a binary number is written using the prefix 0b.',
+    description: 'Binary is the most fundamental language a computer speaks, using only two digits: 0 and 1. Every piece of data on a computer is stored as a series of 1s and 0s. Each position in a binary number represents a power of 2, so binary is a base-2 numbering system. In Python, a binary number is written using the prefix 0b.',
     example: '# The number 10 in binary:\n0b1010\n\n# The number 50 in binary:\n0b110010',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'data-rep:Hex': {
-    description: 'Hexadecimal is a numbering system that uses 16 symbols — digits 0–9 plus letters A through F — to represent values more compactly than binary. In Python, a hex number is written using the prefix 0x.',
+    description: 'Hexadecimal is a base-16 numbering system that uses 16 symbols — digits 0-9 and letters A through F — to represent values more compactly than binary. Each hex digit represents 4 binary digits. In Python, a hex number is written using the prefix 0x.',
     example: '# The number 10 in hex:\n0xA\n\n# The number 50 in hex:\n0x32',
     practiceUrl: 'https://us.prairielearn.com/',
   },
   'data-rep:Decimal': {
-    description: 'Decimal is the everyday numbering system humans use, built on the digits 0–9. It is the default way Python displays numbers, so any number written without a prefix is automatically decimal.',
+    description: 'Decimal is the base-10 numbering system that humans use in everyday life. It uses the digits 0-9, and each position represents a power of 10. In Python, numbers written without a prefix are treated as decimal by default.',
     example: '# A regular decimal number with no prefix\n42',
+    practiceUrl: 'https://us.prairielearn.com/',
+  },
+  'data-rep:Converting between bases': {
+    description: 'To convert any number from base b to decimal, multiply each digit by b raised to the power of its position, then add everything together. Positions are counted from right to left, starting at 0.\n\nTo convert a decimal number to base b, repeatedly divide by b, keeping track of the remainders. The remainders, read bottom to top, give you the result.\n\nSteps:\n1. Divide the number by b, note the remainder\n2. Divide the quotient by b, note the remainder\n3. Repeat until the quotient is 0\n4. The remainders, read in reverse order, give the result in base b.',
+    example: '# Convert binary value 1011 to decimal\n(1 * 2**3) + (0 * 2**2) + (1 * 2**1) + (1 * 2**0) = 8 + 0 + 2 + 1 = 11\n\n# Convert hex value 2F to decimal (A=10, B=11,…, F=15)\n(2 * 16**1) + (15 * 16**0) = 32 + 15 = 47\n\n# Convert decimal value 11 to binary\n# 11 ÷ 2 = 5 with remainder 1 \n# 5 ÷ 2 = 2 with remainder 1 \n# 2 ÷ 2 = 1 with remainder 0 \n# 1 ÷ 2 = 0 remainder 1\n# Result: 1011',
     practiceUrl: 'https://us.prairielearn.com/',
   },
 
