@@ -42,15 +42,6 @@ class ScaffoldApplicationTests {
     }
 
     @Test
-    void validateUserIdReturnsFalseForUnknownUserId() throws Exception {
-        mockMvc.perform(post("/api/validate-userid")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userid\":\"9999\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.valid").value(false));
-    }
-
-    @Test
     void userStateCanBeUpsertedAndFetchedByUserId() throws Exception {
         userStateRepository.deleteAll();
 
@@ -58,7 +49,7 @@ class ScaffoldApplicationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                                                    "userid": "1234",
+                                  "userid": 1,
                                   "starred_ids": ["graph-a", "graph-b"],
                                   "detail_cards": [{"cardType":"hint","itemLabel":"Item 1"}],
                                   "mastered_subconcepts": ["sub-1"]
@@ -66,7 +57,7 @@ class ScaffoldApplicationTests {
                                 """))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/api/user-state/1234"))
+        mockMvc.perform(get("/api/user-state/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.starred_ids[0]").value("graph-a"))
@@ -79,7 +70,7 @@ class ScaffoldApplicationTests {
     void missingUserStateReturns404() throws Exception {
         userStateRepository.deleteAll();
 
-        mockMvc.perform(get("/api/user-state/0000"))
+        mockMvc.perform(get("/api/user-state/999999"))
                 .andExpect(status().isNotFound());
     }
 
@@ -91,9 +82,9 @@ class ScaffoldApplicationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                                                    "userid":"1234",
-                                  "event_type":"login",
-                                  "payload":{"source":"test"}
+                                  "userid": 1,
+                                  "event_type": "login",
+                                  "payload": {"source": "test"}
                                 }
                                 """))
                 .andExpect(status().isNoContent());
