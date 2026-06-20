@@ -228,7 +228,7 @@
         <configuration>
           <excludes>
             <exclude>**/${app.packagePath}/config/*</exclude>
-            <exclude>**/${app.packagePath}/wiremock/*</exclude>
+            <exclude>**/${app.packagePath}/services/wiremock/*</exclude>
             <exclude>**/${app.packagePath}/controller/FrontendController.*</exclude>
             <exclude>**/${app.packagePath}/controller/FrontendProxyController.*</exclude>
             <exclude>**/${app.packagePath}/services/CurrentUserServiceImpl.*</exclude>
