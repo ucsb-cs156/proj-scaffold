@@ -7,7 +7,7 @@ target/
 *.jar
 *.war
 *.ear
-.mvn/
+.mvn/wrapper/
 !**/src/main/**/target/
 !**/src/test/**/target/
 

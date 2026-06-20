@@ -100,6 +100,26 @@
       <artifactId>h2</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- WireMock for mocking OAuth in integration tests -->
+    <dependency>
+      <groupId>org.wiremock</groupId>
+      <artifactId>wiremock-jetty12</artifactId>
+      <version>3.9.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.wiremock.extensions</groupId>
+      <artifactId>wiremock-jwt-extension</artifactId>
+      <version>0.3.0</version>
+    </dependency>
+
+    <!-- Playwright for browser-based integration tests -->
+    <dependency>
+      <groupId>com.microsoft.playwright</groupId>
+      <artifactId>playwright</artifactId>
+      <version>1.47.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -176,6 +196,26 @@
       </activation>
       <properties>
         <springProfiles>development</springProfiles>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.h2database</groupId>
+          <artifactId>h2</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <!-- Integration profile: builds frontend and runs integration/Playwright tests -->
+    <profile>
+      <id>integration</id>
+      <activation>
+        <property>
+          <name>env.INTEGRATION</name>
+        </property>
+      </activation>
+      <properties>
+        <springProfiles>integration</springProfiles>
       </properties>
       <dependencies>
         <dependency>

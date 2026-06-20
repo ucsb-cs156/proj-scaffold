@@ -18,7 +18,7 @@ export function useCurrentUser() {
         throw e
       }
     },
-    initialData: { loggedIn: false, root: null, initialData: true },
+    initialData: { loggedIn: false, root: null },
   })
   return queryResults.data
 }

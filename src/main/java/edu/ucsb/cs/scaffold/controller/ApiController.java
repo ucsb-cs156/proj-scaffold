@@ -1,9 +1,15 @@
 package edu.ucsb.cs.scaffold.controller;
 
+import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.model.CurrentUser;
 import edu.ucsb.cs.scaffold.services.CurrentUserService;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Slf4j
 public abstract class ApiController {
@@ -12,5 +18,23 @@ public abstract class ApiController {
 
   protected CurrentUser getCurrentUser() {
     return currentUserService.getCurrentUser();
+  }
+
+  protected Object genericMessage(String message) {
+    return Map.of("message", message);
+  }
+
+  @ExceptionHandler({EntityNotFoundException.class})
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public Object handleEntityNotFoundException(Throwable e) {
+    return Map.of(
+        "type", e.getClass().getSimpleName(),
+        "message", e.getMessage());
+  }
+
+  @ExceptionHandler(UnsupportedOperationException.class)
+  public ResponseEntity<Map<String, String>> handleUnsupportedOperation(
+      UnsupportedOperationException ex) {
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", ex.getMessage()));
   }
 }

@@ -36,6 +36,69 @@ npm start
 
 The app is available at <http://localhost:8080>. Use port **8080** (not 3000) so that Google OAuth redirects work correctly.
 
+## Running tests
+
+### Unit and controller tests
+
+```bash
+mvn test
+```
+
+### Integration tests (Playwright + WireMock)
+
+Integration tests start a real Spring Boot server on port 8080, mock Google OAuth via WireMock
+on port 8090, and drive a headless Chromium browser with Playwright.
+
+**Prerequisites:**
+
+1. Install Playwright browsers (one-time setup):
+   ```bash
+   mvn test-compile exec:java -e \
+     -Dexec.mainClass=com.microsoft.playwright.CLI \
+     -Dexec.classpathScope=test \
+     -Dexec.args="install chromium"
+   ```
+
+2. Build the frontend so Spring Boot can serve it:
+   ```bash
+   cd frontend && npm install && npm run build && cd ..
+   ```
+   The built files are copied to `target/classes/public/` by the production Maven profile.
+   For integration tests you can copy them manually:
+   ```bash
+   mkdir -p target/classes/public
+   cp -r frontend/dist/* target/classes/public/
+   ```
+
+3. Run with the integration flag:
+   ```bash
+   INTEGRATION=true mvn test
+   ```
+
+   To run with a visible browser (useful for debugging):
+   ```bash
+   INTEGRATION=true HEADLESS=false mvn test
+   ```
+
+The integration tests are in `src/test/java/edu/ucsb/cs/scaffold/web/`:
+
+| Test class | What it verifies |
+|---|---|
+| `OauthWebIT` | User can log in and log out via mock OAuth |
+| `HomePageWebIT` | After login, the concept graph is visible on the home page |
+
+#### Wiremock development mode
+
+To run the full app with WireMock replacing Google OAuth (useful for local frontend development
+without real Google credentials):
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=wiremock
+```
+
+The app starts with a pre-configured admin user (`admingaucho@ucsb.edu`). Navigate to
+<http://localhost:8080> and use the mock login page at <http://localhost:8090/oauth/authorize>.
+
 ## Local H2 Console (development profile)
 
 When running locally with:
