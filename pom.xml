@@ -1,88 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
     <version>3.4.3</version>
-    <relativePath/>
   </parent>
 
   <groupId>edu.ucsb.cs</groupId>
   <artifactId>scaffold</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>scaffold</name>
   <description>Scaffold backend – Spring Boot + PostgreSQL</description>
 
   <properties>
-    <java.version>17</java.version>
+    <java.version>21</java.version>
+    <mainClass>edu.ucsb.cs.scaffold.ScaffoldApplication</mainClass>
+    <app.package>edu.ucsb.cs.scaffold</app.package>
+    <app.packagePath>edu/ucsb/cs/scaffold</app.packagePath>
+    <targetClasses>${targetClasses:edu.ucsb.cs.scaffold.*}</targetClasses>
+    <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
+    <app.frontend.nodeVersion>v22.18.0</app.frontend.nodeVersion>
   </properties>
 
   <dependencies>
-    <!-- Web -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-gateway-mvc</artifactId>
-      <version>4.2.0</version>
-    </dependency>
-
-    <!-- JPA / Hibernate -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
-
-    <!-- PostgreSQL driver (runtime – only used in production profile) -->
     <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-      <scope>runtime</scope>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-client</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>org.liquibase</groupId>
-      <artifactId>liquibase-core</artifactId>
-    </dependency>
-
-    <!-- Lombok (optional – reduces boilerplate) -->
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <optional>true</optional>
-    </dependency>
-
-    <!-- Swagger / OpenAPI UI (accessible at /swagger-ui/index.html) -->
-    <dependency>
-      <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-      <version>2.8.14</version>
-    </dependency>
-
-    <!-- Spring Security + OAuth2 -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-oauth2-client</artifactId>
+      <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
-    <!-- spring-dotenv: reads .env file into Spring Environment -->
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-gateway-mvc</artifactId>
+      <version>4.2.0</version>
+    </dependency>
+
     <dependency>
       <groupId>me.paulschwarz</groupId>
       <artifactId>spring-dotenv</artifactId>
       <version>4.0.0</version>
     </dependency>
 
-    <!-- Test -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+      <scope>runtime</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-configuration-processor</artifactId>
+      <optional>true</optional>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
@@ -92,6 +86,18 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-test</artifactId>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
+    </dependency>
+
+    <!-- Spring Doc for Spring Boot 3 https://springdoc.org/ -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.8.14</version>
     </dependency>
 
     <!-- H2 in-memory database for tests -->
@@ -104,7 +110,7 @@
 
   <build>
     <resources>
-      <!-- Filter only .properties files so binary resources are not corrupted -->
+      <!-- Filter only .properties/.yml files so binary resources are not corrupted -->
       <resource>
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
@@ -125,16 +131,40 @@
       </resource>
     </resources>
     <plugins>
+      <!-- This fixes a problem as explained in this SO article:
+      https://stackoverflow.com/a/61936537/13960329
+      -->
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M5</version>
+        <configuration>
+          <!-- Activate the use of TCP to transmit events to the plugin -->
+          <forkNode
+            implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory" />
+        </configuration>
+      </plugin>
+
+      <!-- Gives us: mvn spring-boot:run -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-          <excludes>
-            <exclude>
-              <groupId>org.projectlombok</groupId>
-              <artifactId>lombok</artifactId>
-            </exclude>
-          </excludes>
+          <mainClass>${mainClass}</mainClass>
+        </configuration>
+      </plugin>
+
+      <!-- For mvn:package, the jar file is now executable -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <!-- full package name of class with the main you want to run -->
+              <mainClass>${mainClass}</mainClass>
+            </manifest>
+          </archive>
         </configuration>
       </plugin>
 
@@ -143,12 +173,15 @@
         <artifactId>git-code-format-maven-plugin</artifactId>
         <version>5.3</version>
         <executions>
+          <!-- On commit, format the modified files -->
           <execution>
             <id>install-formatter-hook</id>
             <goals>
               <goal>install-hooks</goal>
             </goals>
           </execution>
+          <!-- On Maven verify phase, fail if any file
+          (including unmodified) is badly formatted -->
           <execution>
             <id>validate-code-format</id>
             <goals>
@@ -157,6 +190,7 @@
           </execution>
         </executions>
         <dependencies>
+          <!-- Enable https://github.com/google/google-java-format -->
           <dependency>
             <groupId>com.cosium.code</groupId>
             <artifactId>google-java-format</artifactId>
@@ -164,11 +198,155 @@
           </dependency>
         </dependencies>
       </plugin>
+
+      <!-- Test case coverage report -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.12</version>
+        <configuration>
+          <excludes>
+            <exclude>**/${app.packagePath}/config/*</exclude>
+            <exclude>**/${app.packagePath}/controller/FrontendController.*</exclude>
+            <exclude>**/${app.packagePath}/controller/FrontendProxyController.*</exclude>
+            <exclude>**/${app.packagePath}/services/CurrentUserServiceImpl.*</exclude>
+            <exclude>**/${app.packagePath}/services/GrantedAuthoritiesService.*</exclude>
+            <exclude>**/${app.packagePath}/services/GoogleSignInServiceImpl.*</exclude>
+            <exclude>**/${app.packagePath}/ScaffoldApplication.*</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule implementation="org.jacoco.maven.RuleConfiguration">
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit implementation="org.jacoco.report.check.Limit">
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>1.00</minimum>
+                    </limit>
+                    <limit implementation="org.jacoco.report.check.Limit">
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>1.00</minimum>
+                    </limit>
+                    <limit implementation="org.jacoco.report.check.Limit">
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>1.00</minimum>
+                    </limit>
+                    <limit implementation="org.jacoco.report.check.Limit">
+                      <counter>CLASS</counter>
+                      <value>MISSEDCOUNT</value>
+                      <maximum>0</maximum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>1.17.0</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-junit5-plugin</artifactId>
+            <version>1.2.1</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <historyInputFile>
+            target/pit-history/history.bin
+          </historyInputFile>
+          <historyOutputFile>
+            target/pit-history/history.bin
+          </historyOutputFile>
+          <verbose>true</verbose>
+          <targetClasses>
+            <param>${targetClasses}</param>
+          </targetClasses>
+          <targetTests>
+            <param>edu.ucsb.cs.*</param>
+          </targetTests>
+          <excludedClasses>
+            <param>${app.package}.config.SecurityConfig</param>
+            <param>${app.package}.config.OpenAPIConfig</param>
+            <param>${app.package}.config.CorsConfig</param>
+            <param>${app.package}.controller.FrontendController</param>
+            <param>${app.package}.controller.FrontendProxyController</param>
+            <param>${app.package}.services.CurrentUserServiceImpl</param>
+            <param>${app.package}.services.GrantedAuthoritiesService</param>
+            <param>${app.package}.services.GoogleSignInServiceImpl</param>
+            <param>${app.package}.ScaffoldApplication</param>
+          </excludedClasses>
+          <excludedTestClasses>
+            <param>${app.package}.web.*</param>
+            <param>${app.package}.integration.*</param>
+          </excludedTestClasses>
+          <outputFormats>
+            <outputFormat>HTML</outputFormat>
+            <outputFormat>CSV</outputFormat>
+            <outputFormat>XML</outputFormat>
+          </outputFormats>
+          <avoidCallsTo>
+            <avoidCallsTo>java.util.logging</avoidCallsTo>
+            <avoidCallsTo>org.apache.log4j</avoidCallsTo>
+            <avoidCallsTo>org.slf4j</avoidCallsTo>
+            <avoidCallsTo>org.apache.commons.logging</avoidCallsTo>
+            <avoidCallsTo>java.lang.Exception</avoidCallsTo>
+            <avoidCallsTo>org.springframework.security.core.context.SecurityContextHolder</avoidCallsTo>
+          </avoidCallsTo>
+          <timestampedReports>false</timestampedReports>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>io.github.git-commit-id</groupId>
+        <artifactId>git-commit-id-maven-plugin</artifactId>
+        <version>8.0.2</version>
+        <executions>
+          <execution>
+            <id>get-the-git-infos</id>
+            <goals>
+              <goal>revision</goal>
+            </goals>
+            <phase>initialize</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <generateGitPropertiesFile>true</generateGitPropertiesFile>
+          <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+          <commitIdGenerationMode>full</commitIdGenerationMode>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
   <profiles>
-    <!-- Default profile: runs locally with H2 (no Postgres required) -->
+    <!-- active by default -->
     <profile>
       <id>localhost</id>
       <activation>
@@ -186,7 +364,139 @@
       </dependencies>
     </profile>
 
-    <!-- Production profile: activated when the PRODUCTION environment variable is set (any value) -->
+    <!-- to run with this profile use "INTEGRATION=true mvn spring-boot:run" -->
+    <profile>
+      <id>integration</id>
+      <activation>
+        <property>
+          <name>env.INTEGRATION</name>
+        </property>
+      </activation>
+      <properties>
+        <springProfiles>integration</springProfiles>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.h2database</groupId>
+          <artifactId>h2</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <!-- Check for frontend changes and set skip property -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>3.0.0</version>
+            <executions>
+              <execution>
+                <id>check-frontend-changes</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <condition property="frontend.dependency.skip">
+                      <uptodate>
+                        <srcfiles file="${project.basedir}/frontend/package.json" />
+                        <srcfiles file="${project.basedir}/frontend/package-lock.json" />
+                        <mapper type="merge" to="${project.build.outputDirectory}/public/index.html" />
+                      </uptodate>
+                    </condition>
+                    <condition property="frontend.build.skip">
+                      <and>
+                        <istrue value="${frontend.dependency.skip}" />
+                        <uptodate>
+                          <srcfiles dir="${project.basedir}/frontend/node_modules" includes="**/*" />
+                          <srcfiles dir="${project.basedir}/frontend/src" includes="**/*" />
+                          <srcfiles dir="${project.basedir}/frontend/build" includes="**/*" />
+                          <srcfiles file="${project.basedir}/frontend/vite.config.js" />
+                          <mapper type="merge" to="${project.build.outputDirectory}/public/index.html" />
+                        </uptodate>
+                      </and>
+                    </condition>
+
+                    <condition property="build.message"
+                      value="No frontend changes detected - skipping npm build"
+                      else="Frontend changes detected - will rebuild">
+                      <and>
+                        <istrue value="${frontend.build.skip}" />
+                        <istrue value="${frontend.dependency.skip}" />
+                      </and>
+                    </condition>
+                    <echo message="${build.message}" level="info" />
+                  </target>
+                  <exportAntProperties>true</exportAntProperties>
+                </configuration>
+              </execution>
+
+              <execution>
+                <id>copy-frontend-build</id>
+                <phase>process-resources</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <skip>${frontend.build.skip}</skip>
+                  <target>
+                    <copy todir="${project.build.outputDirectory}/public" failonerror="false">
+                      <fileset dir="${project.basedir}/frontend/build" />
+                    </copy>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- Frontend build plugin - only runs when changes detected -->
+          <plugin>
+            <groupId>com.github.eirslett</groupId>
+            <artifactId>frontend-maven-plugin</artifactId>
+            <version>1.12.1</version>
+            <configuration>
+              <workingDirectory>frontend</workingDirectory>
+              <installDirectory>${project.build.directory}</installDirectory>
+            </configuration>
+            <executions>
+              <execution>
+                <id>install node and npm</id>
+                <goals>
+                  <goal>install-node-and-npm</goal>
+                </goals>
+                <configuration>
+                  <nodeVersion>${app.frontend.nodeVersion}</nodeVersion>
+                  <skip>${frontend.dependency.skip}</skip>
+                </configuration>
+              </execution>
+              <execution>
+                <id>npm install</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <configuration>
+                  <arguments>ci</arguments>
+                  <skip>${frontend.dependency.skip}</skip>
+                </configuration>
+              </execution>
+              <execution>
+                <id>npm run build</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <configuration>
+                  <arguments>run build</arguments>
+                  <skip>${frontend.build.skip}</skip>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- to run with this profile use "PRODUCTION=true mvn spring-boot:run" -->
     <profile>
       <id>production</id>
       <activation>
@@ -197,58 +507,69 @@
       <properties>
         <springProfiles>production</springProfiles>
       </properties>
+      <dependencies>
+        <dependency>
+          <groupId>com.h2database</groupId>
+          <artifactId>h2</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
       <build>
         <plugins>
-          <!-- Install Node.js and build the React frontend -->
           <plugin>
             <groupId>com.github.eirslett</groupId>
             <artifactId>frontend-maven-plugin</artifactId>
-            <version>1.15.0</version>
+            <version>1.12.1</version>
             <configuration>
               <workingDirectory>frontend</workingDirectory>
-              <installDirectory>target</installDirectory>
+              <installDirectory>${project.build.directory}</installDirectory>
             </configuration>
             <executions>
               <execution>
-                <id>install-node-and-npm</id>
-                <goals><goal>install-node-and-npm</goal></goals>
+                <id>install node and npm</id>
+                <goals>
+                  <goal>install-node-and-npm</goal>
+                </goals>
                 <configuration>
-                  <nodeVersion>v20.11.0</nodeVersion>
+                  <nodeVersion>${app.frontend.nodeVersion}</nodeVersion>
                 </configuration>
               </execution>
               <execution>
-                <id>npm-install</id>
-                <goals><goal>npm</goal></goals>
+                <id>npm install</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
                 <configuration>
-                  <arguments>install</arguments>
+                  <arguments>ci</arguments>
                 </configuration>
               </execution>
               <execution>
-                <id>npm-build</id>
-                <goals><goal>npm</goal></goals>
-                <phase>generate-resources</phase>
+                <id>npm run build</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
                 <configuration>
                   <arguments>run build</arguments>
                 </configuration>
               </execution>
             </executions>
           </plugin>
-
-          <!-- Copy frontend/build → target/classes/public so Spring Boot serves it -->
           <plugin>
             <artifactId>maven-antrun-plugin</artifactId>
-            <version>3.1.0</version>
+            <version>3.0.0</version>
             <executions>
               <execution>
                 <phase>generate-resources</phase>
-                <goals><goal>run</goal></goals>
                 <configuration>
                   <target>
                     <copy todir="${project.build.outputDirectory}/public">
-                      <fileset dir="${project.basedir}/frontend/build"/>
+                      <fileset dir="${project.basedir}/frontend/build" />
                     </copy>
                   </target>
                 </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
               </execution>
             </executions>
           </plugin>
@@ -256,4 +577,5 @@
       </build>
     </profile>
   </profiles>
+
 </project>
