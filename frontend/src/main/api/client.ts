@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = "/api";
 
 export interface Assessment {
   id: string;
@@ -25,12 +25,16 @@ export async function fetchAssessments(): Promise<Assessment[]> {
   return res.json();
 }
 
-export async function fetchQuestions(assessmentId: string): Promise<Question[]> {
+export async function fetchQuestions(
+  assessmentId: string,
+): Promise<Question[]> {
   const res = await fetch(`${API_BASE}/assessments/${assessmentId}/questions`);
   return res.json();
 }
 
-export async function fetchQuestionConcepts(questionId: string): Promise<QuestionConcept[]> {
+export async function fetchQuestionConcepts(
+  questionId: string,
+): Promise<QuestionConcept[]> {
   const res = await fetch(`${API_BASE}/questions/${questionId}/concepts`);
   return res.json();
 }
@@ -41,10 +45,13 @@ export interface UserStateResponse {
   mastered_subconcepts: string[];
 }
 
-export async function fetchUserState(userid: number): Promise<UserStateResponse | null> {
+export async function fetchUserState(
+  userid: number,
+): Promise<UserStateResponse | null> {
   const res = await fetch(`${API_BASE}/user-state/${userid}`);
   if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`Failed to fetch user state for userid ${userid}`);
+  if (!res.ok)
+    throw new Error(`Failed to fetch user state for userid ${userid}`);
   return res.json();
 }
 
@@ -55,11 +62,12 @@ export async function saveUserState(body: {
   mastered_subconcepts: string[];
 }): Promise<void> {
   const res = await fetch(`${API_BASE}/user-state`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Failed to save user state for userid ${body.userid}`);
+  if (!res.ok)
+    throw new Error(`Failed to save user state for userid ${body.userid}`);
 }
 
 export async function logUserActivity(body: {
@@ -68,9 +76,10 @@ export async function logUserActivity(body: {
   payload: object;
 }): Promise<void> {
   const res = await fetch(`${API_BASE}/user-activity`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Failed to log user activity for userid ${body.userid}`);
+  if (!res.ok)
+    throw new Error(`Failed to log user activity for userid ${body.userid}`);
 }

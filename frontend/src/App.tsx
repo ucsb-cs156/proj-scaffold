@@ -1,6 +1,6 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import BasicLayout from './main/layouts/BasicLayout/BasicLayout';
-import HomePage from './main/pages/HomePage';
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import BasicLayout from "./main/layouts/BasicLayout/BasicLayout";
+import HomePage from "./main/pages/HomePage";
 
 export default function App() {
   return (
@@ -8,11 +8,11 @@ export default function App() {
       <Routes>
         <Route
           path="/"
-          element={(
+          element={
             <BasicLayout>
               <HomePage />
             </BasicLayout>
-          )}
+          }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

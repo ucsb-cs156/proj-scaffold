@@ -10,6 +10,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "check-format": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
     "preview": "vite preview",
     "start": "vite"
   },
@@ -34,6 +36,7 @@
     "globals": "^17.4.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.0",
+    "prettier": "^3.8.1",
     "vite": "^8.0.4"
   }
 }
