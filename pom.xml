@@ -228,6 +228,7 @@
         <configuration>
           <excludes>
             <exclude>**/${app.packagePath}/config/*</exclude>
+            <exclude>**/${app.packagePath}/wiremock/*</exclude>
             <exclude>**/${app.packagePath}/controller/FrontendController.*</exclude>
             <exclude>**/${app.packagePath}/controller/FrontendProxyController.*</exclude>
             <exclude>**/${app.packagePath}/services/CurrentUserServiceImpl.*</exclude>
@@ -322,6 +323,10 @@
             <param>${app.package}.services.GrantedAuthoritiesService</param>
             <param>${app.package}.services.GoogleSignInServiceImpl</param>
             <param>${app.package}.ScaffoldApplication</param>
+            <param>${app.package}.services.wiremock.WiremockService</param>
+            <param>${app.package}.services.wiremock.WiremockServiceDummy</param>
+            <param>${app.package}.services.wiremock.WiremockServiceImpl</param>
+
           </excludedClasses>
           <excludedTestClasses>
             <param>${app.package}.web.*</param>
