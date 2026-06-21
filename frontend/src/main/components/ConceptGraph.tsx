@@ -1,24 +1,46 @@
-import { useEffect, useCallback, useState, useRef, createContext, useContext } from 'react';
 import {
-  ReactFlow, type ReactFlowInstance, Controls, Background, BackgroundVariant,
-  useNodesState, useEdgesState, Handle, Position, MarkerType, type NodeChange,
-  type NodeProps, type NodeTypes, type Node, type Edge
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-import { buildGraphElements } from '../utils/layout';
-import { majorConcepts, prereqEdgeData } from '../data/conceptGraph';
-import { conceptContent, type ConceptContent } from '../data/conceptContent';
+  useEffect,
+  useCallback,
+  useState,
+  useRef,
+  createContext,
+  useContext,
+} from "react";
+import {
+  ReactFlow,
+  type ReactFlowInstance,
+  Controls,
+  Background,
+  BackgroundVariant,
+  useNodesState,
+  useEdgesState,
+  Handle,
+  Position,
+  MarkerType,
+  type NodeChange,
+  type NodeProps,
+  type NodeTypes,
+  type Node,
+  type Edge,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { buildGraphElements } from "../utils/layout";
+import { majorConcepts, prereqEdgeData } from "../data/conceptGraph";
+import { conceptContent, type ConceptContent } from "../data/conceptContent";
 
 const cardKeyMap: Record<string, keyof ConceptContent> = {
-  'Description':           'description',
-  'Example':               'example',
-  'PrairieLearn Practice': 'practiceUrl',
+  Description: "description",
+  Example: "example",
+  "PrairieLearn Practice": "practiceUrl",
 };
 
 interface SavedDetailCard {
-  cardType: string; itemLabel: string;
-  conceptId: string; conceptColor: string;
-  posX: number; posY: number;
+  cardType: string;
+  itemLabel: string;
+  conceptId: string;
+  conceptColor: string;
+  posX: number;
+  posY: number;
 }
 
 interface ConceptGraphProps {
@@ -29,14 +51,22 @@ interface ConceptGraphProps {
   onStarClick: (id: string) => void;
   onReset: () => void;
   onDetailAdded?: (card: {
-    cardType: string; itemLabel: string;
-    conceptId: string; conceptColor: string;
-    posX: number; posY: number;
+    cardType: string;
+    itemLabel: string;
+    conceptId: string;
+    conceptColor: string;
+    posX: number;
+    posY: number;
   }) => void;
   onDetailDeleted?: (cardType: string, itemLabel: string) => void;
   restoredDetailCards?: SavedDetailCard[];
-  onDetailMoved?: (cardType: string, itemLabel: string, posX: number, posY: number) => void;
-  masteredSubconcepts:  Set<string>;
+  onDetailMoved?: (
+    cardType: string,
+    itemLabel: string,
+    posX: number,
+    posY: number,
+  ) => void;
+  masteredSubconcepts: Set<string>;
   onSubconceptMastered: (sub: string) => void;
   onPaneClick?: () => void;
 }
@@ -54,11 +84,11 @@ function toPastel(hex: string, strength: number = 0.35): string {
 const DeleteDetailContext = createContext<(id: string) => void>(() => {});
 
 const LEVELS = [
-  { label: 'Level 5', color: '#2bcd9c' },
-  { label: 'Level 4', color: '#fe9a71' },
-  { label: 'Level 3', color: '#93ebff' },
-  { label: 'Level 2', color: '#feaef2' },
-  { label: 'Level 1', color: '#c99ffe' },
+  { label: "Level 5", color: "#2bcd9c" },
+  { label: "Level 4", color: "#fe9a71" },
+  { label: "Level 3", color: "#93ebff" },
+  { label: "Level 2", color: "#feaef2" },
+  { label: "Level 1", color: "#c99ffe" },
 ];
 
 function LevelLegend() {
@@ -68,35 +98,47 @@ function LevelLegend() {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: 'rgba(255,255,255,0.92)',
+        background: "rgba(255,255,255,0.92)",
         borderRadius: 10,
-        borderTop:    '1.5px solid #1E293B',
-        borderLeft:   '1.5px solid #1E293B',
-        borderRight:  '4px solid #1E293B',
-        borderBottom: '4px solid #1E293B',
-        padding: '8px',
-        display: 'flex',
-        flexDirection: 'column',
+        borderTop: "1.5px solid #1E293B",
+        borderLeft: "1.5px solid #1E293B",
+        borderRight: "4px solid #1E293B",
+        borderBottom: "4px solid #1E293B",
+        padding: "8px",
+        display: "flex",
+        flexDirection: "column",
         gap: 6,
         width: hovered ? 100 : 44,
-        transition: 'width 0.2s ease',
-        overflow: 'hidden',
-        cursor: 'default',
+        transition: "width 0.2s ease",
+        overflow: "hidden",
+        cursor: "default",
       }}
     >
       {LEVELS.map((level, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{
-            width: 22, height: 22, borderRadius: 5,
-            background: level.color, border: '1.5px solid #1E293B', flexShrink: 0,
-          }} />
-          <span style={{
-            fontFamily: 'Helvetica, Arial, sans-serif',
-            fontSize: 13, fontWeight: 600, color: '#1E293B',
-            whiteSpace: 'nowrap', overflow: 'hidden',
-            width: hovered ? 72 : 0, opacity: hovered ? 1 : 0,
-            transition: 'width 0.2s ease, opacity 0.15s ease',
-          }}>
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: 5,
+              background: level.color,
+              border: "1.5px solid #1E293B",
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              fontFamily: "Helvetica, Arial, sans-serif",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#1E293B",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              width: hovered ? 72 : 0,
+              opacity: hovered ? 1 : 0,
+              transition: "width 0.2s ease, opacity 0.15s ease",
+            }}
+          >
             {level.label}
           </span>
         </div>
@@ -113,36 +155,49 @@ function ResetButton({ onReset }: { onReset: () => void }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: 'rgba(255,255,255,0.92)',
+        background: "rgba(255,255,255,0.92)",
         borderRadius: 10,
-        borderTop:    '1.5px solid #1E293B',
-        borderLeft:   '1.5px solid #1E293B',
-        borderRight:  '4px solid #1E293B',
-        borderBottom: '4px solid #1E293B',
-        padding: '8px',
-        display: 'flex',
-        alignItems: 'center',
+        borderTop: "1.5px solid #1E293B",
+        borderLeft: "1.5px solid #1E293B",
+        borderRight: "4px solid #1E293B",
+        borderBottom: "4px solid #1E293B",
+        padding: "8px",
+        display: "flex",
+        alignItems: "center",
         gap: 4,
         width: hovered ? 180 : 44,
-        transition: 'width 0.2s ease',
-        overflow: 'hidden',
-        cursor: 'pointer',
+        transition: "width 0.2s ease",
+        overflow: "hidden",
+        cursor: "pointer",
       }}
     >
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-        stroke="#1E293B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#1E293B"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         style={{ flexShrink: 0 }}
       >
-        <path d="M23 4v6h-6"/>
-        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        <path d="M23 4v6h-6" />
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
       </svg>
-      <span style={{
-        fontFamily: 'Helvetica, Arial, sans-serif',
-        fontSize: 13, fontWeight: 600, color: '#1E293B',
-        whiteSpace: 'nowrap', overflow: 'hidden',
-        width: hovered ? 180 : 0, opacity: hovered ? 1 : 0,
-        transition: 'width 0.2s ease, opacity 0.15s ease',
-      }}>
+      <span
+        style={{
+          fontFamily: "Helvetica, Arial, sans-serif",
+          fontSize: 13,
+          fontWeight: 600,
+          color: "#1E293B",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          width: hovered ? 180 : 0,
+          opacity: hovered ? 1 : 0,
+          transition: "width 0.2s ease, opacity 0.15s ease",
+        }}
+      >
         Click to reset graph
       </span>
     </div>
@@ -150,103 +205,171 @@ function ResetButton({ onReset }: { onReset: () => void }) {
 }
 
 function MajorNode({ data }: NodeProps) {
-  const color                  = data.color as string;
-  const label                  = data.label as string;
-  const subconcepts            = data.subconcepts as string[];
-  const highlighted            = data.highlighted as boolean;
-  const hasSelection           = data.hasSelection as boolean;
+  const color = data.color as string;
+  const label = data.label as string;
+  const subconcepts = data.subconcepts as string[];
+  const highlighted = data.highlighted as boolean;
+  const hasSelection = data.hasSelection as boolean;
   const highlightedSubconcepts = data.highlightedSubconcepts as Set<string>;
-  const starred                = data.starred as boolean;
-  const onStarClick            = data.onStarClick as () => void;
-  const masteredSubconcepts = data.masteredSubconcepts as Set<string> | undefined;
-  const onSubconceptMastered = data.onSubconceptMastered as ((sub: string) => void) | undefined;
+  const starred = data.starred as boolean;
+  const onStarClick = data.onStarClick as () => void;
+  const masteredSubconcepts = data.masteredSubconcepts as
+    | Set<string>
+    | undefined;
+  const onSubconceptMastered = data.onSubconceptMastered as
+    | ((sub: string) => void)
+    | undefined;
 
   const showColor = !hasSelection || highlighted;
 
   return (
-    <div style={{
-      width: 280,
-      borderRadius: 10,
-      overflow: 'hidden',
-      borderTop:    '1.5px solid #1E293B',
-      borderLeft:   '1.5px solid #1E293B',
-      borderRight:  '4px solid #1E293B',
-      borderBottom: '4px solid #1E293B',
-      boxShadow: highlighted && hasSelection
-        ? `0 0 0 6px ${color}50, 0 4px 16px rgba(0,0,0,0.2)`
-        : showColor ? '0 3px 12px rgba(0,0,0,0.18)' : '0 2px 8px rgba(0,0,0,0.1)',
-      opacity: hasSelection && !highlighted ? 0.25 : 1,
-      cursor: 'pointer',
-      transition: 'opacity 0.25s, box-shadow 0.25s',
-    }}>
-      <Handle id="bottom" type="target" position={Position.Bottom}
-        style={{ opacity: 0, pointerEvents: 'none' }} />
+    <div
+      style={{
+        width: 280,
+        borderRadius: 10,
+        overflow: "hidden",
+        borderTop: "1.5px solid #1E293B",
+        borderLeft: "1.5px solid #1E293B",
+        borderRight: "4px solid #1E293B",
+        borderBottom: "4px solid #1E293B",
+        boxShadow:
+          highlighted && hasSelection
+            ? `0 0 0 6px ${color}50, 0 4px 16px rgba(0,0,0,0.2)`
+            : showColor
+              ? "0 3px 12px rgba(0,0,0,0.18)"
+              : "0 2px 8px rgba(0,0,0,0.1)",
+        opacity: hasSelection && !highlighted ? 0.25 : 1,
+        cursor: "pointer",
+        transition: "opacity 0.25s, box-shadow 0.25s",
+      }}
+    >
+      <Handle
+        id="bottom"
+        type="target"
+        position={Position.Bottom}
+        style={{ opacity: 0, pointerEvents: "none" }}
+      />
 
-      <div style={{
-        background: showColor ? color : '#94A3B8',
-        letterSpacing: '0.03em',
-        fontFamily: 'Helvetica, Arial, sans-serif',
-        color: '#000000',
-        paddingTop: '27px', paddingBottom: '6px',
-        paddingLeft: '14px', paddingRight: '14px',
-        lineHeight: 1.1, textAlign: 'left',
-        fontSize: 28, fontWeight: 700,
-        whiteSpace: 'pre-line',
-        transition: 'background 0.25s',
-        position: 'relative',
-      }}>
+      <div
+        style={{
+          background: showColor ? color : "#94A3B8",
+          letterSpacing: "0.03em",
+          fontFamily: "Helvetica, Arial, sans-serif",
+          color: "#000000",
+          paddingTop: "27px",
+          paddingBottom: "6px",
+          paddingLeft: "14px",
+          paddingRight: "14px",
+          lineHeight: 1.1,
+          textAlign: "left",
+          fontSize: 28,
+          fontWeight: 700,
+          whiteSpace: "pre-line",
+          transition: "background 0.25s",
+          position: "relative",
+        }}
+      >
         {label}
         <div
-          onClick={e => { e.stopPropagation(); onStarClick(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onStarClick();
+          }}
           style={{
-            position: 'absolute', top: 12, right: 12,
-            width: 28, height: 28, borderRadius: 6,
-            border: '2px solid #1E293B',
-            background: starred ? '#FACC15' : '#ffffff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', flexShrink: 0,
+            position: "absolute",
+            top: 12,
+            right: 12,
+            width: 28,
+            height: 28,
+            borderRadius: 6,
+            border: "2px solid #1E293B",
+            background: starred ? "#FACC15" : "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            flexShrink: 0,
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24"
-            fill={starred ? '#1E293B' : 'none'} stroke="#1E293B"
-            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill={starred ? "#1E293B" : "none"}
+            stroke="#1E293B"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
         </div>
       </div>
 
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr', gap: 2,
-        background: showColor ? `${color}55` : '#CBD5E140',
-        padding: 2,
-      }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gap: 2,
+          background: showColor ? `${color}55` : "#CBD5E140",
+          padding: 2,
+        }}
+      >
         {subconcepts.map((sub, i) => {
           const isMastered = masteredSubconcepts?.has(sub) ?? false;
           return (
-            <div key={i} style={{
-              position: 'relative',
-              background: highlightedSubconcepts?.has(sub) ? toPastel(color) : '#fff',
-              padding: '5px 6px', textAlign: 'center',
-              fontFamily: 'Helvetica, Arial, sans-serif',
-              fontSize: 17, fontWeight: 550,
-              lineHeight: 1.3, color: '#1E293B', whiteSpace: 'pre-line',
-            }}>
+            <div
+              key={i}
+              style={{
+                position: "relative",
+                background: highlightedSubconcepts?.has(sub)
+                  ? toPastel(color)
+                  : "#fff",
+                padding: "5px 6px",
+                textAlign: "center",
+                fontFamily: "Helvetica, Arial, sans-serif",
+                fontSize: 17,
+                fontWeight: 550,
+                lineHeight: 1.3,
+                color: "#1E293B",
+                whiteSpace: "pre-line",
+              }}
+            >
               <div
-                onClick={e => { e.stopPropagation(); onSubconceptMastered?.(sub); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSubconceptMastered?.(sub);
+                }}
                 style={{
-                  position: 'absolute', left: 6, top: '50%', transform: 'translateY(-50%)',
-                  width: 14, height: 14, borderRadius: 3,
-                  borderTop: '1px solid #1E293B', borderLeft: '1px solid #1E293B',
-                  borderRight: '2.5px solid #1E293B', borderBottom: '2.5px solid #1E293B',
-                  background: isMastered ? color : '#ffffff',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', flexShrink: 0,
+                  position: "absolute",
+                  left: 6,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  width: 14,
+                  height: 14,
+                  borderRadius: 3,
+                  borderTop: "1px solid #1E293B",
+                  borderLeft: "1px solid #1E293B",
+                  borderRight: "2.5px solid #1E293B",
+                  borderBottom: "2.5px solid #1E293B",
+                  background: isMastered ? color : "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  flexShrink: 0,
                 }}
               >
                 {isMastered && (
-                  <svg width="8" height="8" viewBox="0 0 12 12" fill="none"
-                    stroke="#1E293B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  <svg
+                    width="8"
+                    height="8"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    stroke="#1E293B"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
                     <polyline points="2 6 5 9 10 3" />
                   </svg>
@@ -258,56 +381,86 @@ function MajorNode({ data }: NodeProps) {
         })}
       </div>
 
-      <Handle id="top" type="source" position={Position.Top}
-        style={{ opacity: 0, pointerEvents: 'none' }} />
+      <Handle
+        id="top"
+        type="source"
+        position={Position.Top}
+        style={{ opacity: 0, pointerEvents: "none" }}
+      />
     </div>
   );
 }
 
 function DetailNode({ data, id }: NodeProps) {
-  const onDelete                 = useContext(DeleteDetailContext);
+  const onDelete = useContext(DeleteDetailContext);
   const [closeHovered, setCloseHovered] = useState(false);
 
-  const cardType    = data.cardType    as string;
-  const itemLabel   = data.itemLabel   as string;
+  const cardType = data.cardType as string;
+  const itemLabel = data.itemLabel as string;
   const conceptColor = data.conceptColor as string;
   const greyed = data.greyed as boolean | undefined;
-  const bgColor      = greyed ? '#f1f5f9'  : toPastel(conceptColor);
-  const borderColor  = greyed ? '#cbd5e1'  : '#000000';
-  const pillBg       = greyed ? '#cbd5e1'  : conceptColor;
-  const textColor    = greyed ? '#94a3b8'  : '#1E293B';
+  const bgColor = greyed ? "#f1f5f9" : toPastel(conceptColor);
+  const borderColor = greyed ? "#cbd5e1" : "#000000";
+  const pillBg = greyed ? "#cbd5e1" : conceptColor;
+  const textColor = greyed ? "#94a3b8" : "#1E293B";
 
   return (
-    <div style={{
-      background: bgColor,
-      border: `1px solid ${borderColor}`,
-      borderRadius: 8,
-      width: 250,
-      padding: '10px 10px',
-      position: 'relative',
-      textAlign: 'left',
-    }}>
-      <Handle id="bottom" type="target" position={Position.Bottom} isConnectable={false} 
-        style={{ opacity: 0, pointerEvents: 'none' }} />
+    <div
+      style={{
+        background: bgColor,
+        border: `1px solid ${borderColor}`,
+        borderRadius: 8,
+        width: 250,
+        padding: "10px 10px",
+        position: "relative",
+        textAlign: "left",
+      }}
+    >
+      <Handle
+        id="bottom"
+        type="target"
+        position={Position.Bottom}
+        isConnectable={false}
+        style={{ opacity: 0, pointerEvents: "none" }}
+      />
 
       {/* X button */}
       <div
-        onClick={e => { e.stopPropagation(); onDelete(id); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(id);
+        }}
         onMouseEnter={() => setCloseHovered(true)}
         onMouseLeave={() => setCloseHovered(false)}
         style={{
-          position: 'absolute', top: 8, right: 8,
-          width: 22, height: 22, borderRadius: 5,
-          borderTop: '1.5px solid #1E293B', borderLeft: '1.5px solid #1E293B',
-          borderRight: '3px solid #1E293B', borderBottom: '3px solid #1E293B',
-          background: closeHovered ? '#ef4444' : '#ffffff',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', transition: 'background 0.15s', zIndex: 1,
+          position: "absolute",
+          top: 8,
+          right: 8,
+          width: 22,
+          height: 22,
+          borderRadius: 5,
+          borderTop: "1.5px solid #1E293B",
+          borderLeft: "1.5px solid #1E293B",
+          borderRight: "3px solid #1E293B",
+          borderBottom: "3px solid #1E293B",
+          background: closeHovered ? "#ef4444" : "#ffffff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          transition: "background 0.15s",
+          zIndex: 1,
         }}
       >
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-          stroke={closeHovered ? '#ffffff' : '#1E293B'}
-          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={closeHovered ? "#ffffff" : "#1E293B"}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
@@ -315,71 +468,88 @@ function DetailNode({ data, id }: NodeProps) {
       </div>
 
       {/* Pill label */}
-      <span style={{
-        background: pillBg,
-        borderRadius: 100,
-        padding: '2px 10px',
-        border: `1px solid ${borderColor}`,
-        fontFamily: 'Helvetica, Arial, sans-serif',
-        fontSize: 15, 
-        fontWeight: 700, 
-        color: textColor,
-        whiteSpace: 'nowrap',
-        display: 'inline-block',
-        marginBottom: 6,
-        marginRight: 20,
-      }}>
+      <span
+        style={{
+          background: pillBg,
+          borderRadius: 100,
+          padding: "2px 10px",
+          border: `1px solid ${borderColor}`,
+          fontFamily: "Helvetica, Arial, sans-serif",
+          fontSize: 15,
+          fontWeight: 700,
+          color: textColor,
+          whiteSpace: "nowrap",
+          display: "inline-block",
+          marginBottom: 6,
+          marginRight: 20,
+        }}
+      >
         {cardType}
       </span>
 
       {/* Item label */}
-      <div style={{
-        paddingLeft: 6,
-        fontFamily: 'Helvetica, Arial, sans-serif',
-        fontSize: 13, 
-        fontWeight: 700, 
-        color: textColor, 
-        marginBottom: 6,
-      }}>
+      <div
+        style={{
+          paddingLeft: 6,
+          fontFamily: "Helvetica, Arial, sans-serif",
+          fontSize: 13,
+          fontWeight: 700,
+          color: textColor,
+          marginBottom: 6,
+        }}
+      >
         {itemLabel}
       </div>
 
       {/* Content */}
-      <div style={{
-        paddingLeft: 6,
-        paddingRight: 6,
-        fontFamily: 'Helvetica, Arial, sans-serif',
-        fontSize: 13, 
-        color: textColor,
-        lineHeight: 1.5,
-      }}>
-        {cardType === 'Example' ? (
-          <pre style={{
-            fontFamily: 'monospace',
-            fontSize: 12,
-            background: '#e2e8f0',
-            border: '1px solid #000000',
-            borderRadius: 6,
-            padding: '8px 12px',
-            margin: 0,
-            whiteSpace: 'pre-wrap',
-            color: textColor,
-            lineHeight: 1.5,
-          }}>
-            {(data.cardContent as string) || `Example for "${itemLabel}" will appear here.`}
+      <div
+        style={{
+          paddingLeft: 6,
+          paddingRight: 6,
+          fontFamily: "Helvetica, Arial, sans-serif",
+          fontSize: 13,
+          color: textColor,
+          lineHeight: 1.5,
+        }}
+      >
+        {cardType === "Example" ? (
+          <pre
+            style={{
+              fontFamily: "monospace",
+              fontSize: 12,
+              background: "#e2e8f0",
+              border: "1px solid #000000",
+              borderRadius: 6,
+              padding: "8px 12px",
+              margin: 0,
+              whiteSpace: "pre-wrap",
+              color: textColor,
+              lineHeight: 1.5,
+            }}
+          >
+            {(data.cardContent as string) ||
+              `Example for "${itemLabel}" will appear here.`}
           </pre>
         ) : (
-          <div style={{
-            fontFamily: 'Helvetica, Arial, sans-serif',
-            fontSize: 12, color: '#1E293B', lineHeight: 1.5,
-          }}>
-            {(data.cardContent as string) || `${cardType} for "${itemLabel}" will appear here.`}
+          <div
+            style={{
+              fontFamily: "Helvetica, Arial, sans-serif",
+              fontSize: 12,
+              color: "#1E293B",
+              lineHeight: 1.5,
+            }}
+          >
+            {(data.cardContent as string) ||
+              `${cardType} for "${itemLabel}" will appear here.`}
           </div>
         )}
       </div>
 
-      <Handle type="source" position={Position.Bottom}
-        style={{ opacity: 0, pointerEvents: 'none' }} />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        style={{ opacity: 0, pointerEvents: "none" }}
+      />
     </div>
   );
 }
@@ -387,52 +557,80 @@ function DetailNode({ data, id }: NodeProps) {
 const nodeTypes: NodeTypes = { major: MajorNode, detail: DetailNode };
 const { nodes: initialNodes, edges: initialEdges } = buildGraphElements();
 
-export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, onConceptClick, starredIds, onStarClick, onReset, onDetailAdded, onDetailDeleted, restoredDetailCards, onDetailMoved, masteredSubconcepts, onSubconceptMastered, onPaneClick }: ConceptGraphProps) {
+export default function ConceptGraph({
+  highlightedIds,
+  highlightedSubconcepts,
+  onConceptClick,
+  starredIds,
+  onStarClick,
+  onReset,
+  onDetailAdded,
+  onDetailDeleted,
+  restoredDetailCards,
+  onDetailMoved,
+  masteredSubconcepts,
+  onSubconceptMastered,
+  onPaneClick,
+}: ConceptGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const hasSelection = highlightedIds.size > 0;
   const restoredRef = useRef(false);
   const nodesRef = useRef(nodes);
-  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
 
   const highlightedIdsRef = useRef(highlightedIds);
-  useEffect(() => { highlightedIdsRef.current = highlightedIds; }, [highlightedIds]);
+  useEffect(() => {
+    highlightedIdsRef.current = highlightedIds;
+  }, [highlightedIds]);
 
   useEffect(() => {
     if (restoredRef.current || !restoredDetailCards?.length) return;
     restoredRef.current = true;
 
     const newNodes = restoredDetailCards.map((card, i) => {
-      const concept = majorConcepts.find(c => c.id === card.conceptId);
-      const conceptLabel = concept?.label.replace(/\n/g, ' ') ?? '';
+      const concept = majorConcepts.find((c) => c.id === card.conceptId);
+      const conceptLabel = concept?.label.replace(/\n/g, " ") ?? "";
       const isConceptItself = card.itemLabel === conceptLabel;
       const contentKey = isConceptItself
         ? card.conceptId
         : `${card.conceptId}:${card.itemLabel}`;
-      const cardContent = conceptContent[contentKey]?.[cardKeyMap[card.cardType]] ?? '';
+      const cardContent =
+        conceptContent[contentKey]?.[cardKeyMap[card.cardType]] ?? "";
 
       return {
-        id:       `detail-restored-${i}-${card.cardType}-${card.itemLabel}`,
-        type:     'detail' as const,
+        id: `detail-restored-${i}-${card.cardType}-${card.itemLabel}`,
+        type: "detail" as const,
         position: { x: card.posX, y: card.posY },
-        data:     { cardType: card.cardType, itemLabel: card.itemLabel,
-                    conceptId: card.conceptId, conceptColor: card.conceptColor, cardContent },
+        data: {
+          cardType: card.cardType,
+          itemLabel: card.itemLabel,
+          conceptId: card.conceptId,
+          conceptColor: card.conceptColor,
+          cardContent,
+        },
       };
     });
     const newEdges = restoredDetailCards.map((card, i) => ({
       id: `edge-restored-${i}`,
       source: card.conceptId,
       target: newNodes[i].id,
-      targetHandle: 'bottom',
-      type:         'smooth',
-      style:        { stroke: card.conceptColor, strokeWidth: 4, strokeDasharray: '4 2' },
-      markerEnd:    { type: MarkerType.ArrowClosed, color: card.conceptColor },
+      targetHandle: "bottom",
+      type: "smooth",
+      style: {
+        stroke: card.conceptColor,
+        strokeWidth: 4,
+        strokeDasharray: "4 2",
+      },
+      markerEnd: { type: MarkerType.ArrowClosed, color: card.conceptColor },
       data: { conceptColor: card.conceptColor },
     }));
 
-    setNodes(prev => [...prev, ...newNodes]);
-    setEdges(prev => [...prev, ...newEdges]);
-  }, [restoredDetailCards]);
+    setNodes((prev) => [...prev, ...newNodes]);
+    setEdges((prev) => [...prev, ...newEdges]);
+  }, [restoredDetailCards, setNodes, setEdges]);
 
   const rfInstance = useRef<ReactFlowInstance<Node, Edge> | null>(null);
 
@@ -443,190 +641,272 @@ export default function ConceptGraph({ highlightedIds, highlightedSubconcepts, o
     setTimeout(() => rfInstance.current?.fitView({ padding: 0.08 }), 50);
   }, [onReset, setNodes, setEdges]);
 
-  const handleDeleteDetail = useCallback((id: string) => {
-    setNodes(nds => {
-      const node = nds.find(n => n.id === id);
-      if (node?.data) {
-        onDetailDeleted?.(node.data.cardType as string, node.data.itemLabel as string);
-      }
-      return nds.filter(n => n.id !== id);
-    });
-    setEdges(eds => eds.filter(e => e.source !== id && e.target !== id));
-  }, [setNodes, setEdges, onDetailDeleted]);
+  const handleDeleteDetail = useCallback(
+    (id: string) => {
+      setNodes((nds) => {
+        const node = nds.find((n) => n.id === id);
+        if (node?.data) {
+          onDetailDeleted?.(
+            node.data.cardType as string,
+            node.data.itemLabel as string,
+          );
+        }
+        return nds.filter((n) => n.id !== id);
+      });
+      setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
+    },
+    [setNodes, setEdges, onDetailDeleted],
+  );
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = "move";
   }, []);
 
-  const onDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    const raw = e.dataTransfer.getData('application/scaffold-card');
-    if (!raw) return;
+  const onDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const raw = e.dataTransfer.getData("application/scaffold-card");
+      if (!raw) return;
 
-    const { cardType, itemLabel, conceptId, conceptColor, cardContent } = JSON.parse(raw);
-    const position = rfInstance.current?.screenToFlowPosition({
-      x: e.clientX, y: e.clientY,
-    });
-    if (!position) return;
+      const { cardType, itemLabel, conceptId, conceptColor, cardContent } =
+        JSON.parse(raw);
+      const position = rfInstance.current?.screenToFlowPosition({
+        x: e.clientX,
+        y: e.clientY,
+      });
+      if (!position) return;
 
-    const nodeId = `detail-${Date.now()}`;
+      const nodeId = `detail-${Date.now()}`;
 
-    const isHighlighted = highlightedIdsRef.current.has(conceptId);
-    const hasSelectionNow = highlightedIdsRef.current.size > 0;
-    const edgeColor = (hasSelectionNow && !isHighlighted) ? '#cbd5e1' : conceptColor;
+      const isHighlighted = highlightedIdsRef.current.has(conceptId);
+      const hasSelectionNow = highlightedIdsRef.current.size > 0;
+      const edgeColor =
+        hasSelectionNow && !isHighlighted ? "#cbd5e1" : conceptColor;
 
-    setNodes(nds => [...nds, {
-      id:       nodeId,
-      type:     'detail',
-      position,
-      data: { cardType, itemLabel, conceptColor, cardContent, conceptId },
-    }]);
+      setNodes((nds) => [
+        ...nds,
+        {
+          id: nodeId,
+          type: "detail",
+          position,
+          data: { cardType, itemLabel, conceptColor, cardContent, conceptId },
+        },
+      ]);
 
-    setEdges(eds => [...eds, {
-      id:           `detail-edge-${nodeId}`,
-      source:        conceptId,
-      target:        nodeId,
-      targetHandle: 'bottom',
-      type:         'smooth',
-      style:        { stroke: edgeColor, strokeWidth: 4, strokeDasharray: '4 2' },
-      markerEnd:    { type: MarkerType.ArrowClosed, color: edgeColor },
-      data:         { conceptColor },
-    }]);
+      setEdges((eds) => [
+        ...eds,
+        {
+          id: `detail-edge-${nodeId}`,
+          source: conceptId,
+          target: nodeId,
+          targetHandle: "bottom",
+          type: "smooth",
+          style: { stroke: edgeColor, strokeWidth: 4, strokeDasharray: "4 2" },
+          markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor },
+          data: { conceptColor },
+        },
+      ]);
 
-    onDetailAdded?.({
-      cardType, itemLabel, conceptId, conceptColor,
-      posX: position.x, posY: position.y,
-    }); 
-
-  }, [setNodes, setEdges]);
+      onDetailAdded?.({
+        cardType,
+        itemLabel,
+        conceptId,
+        conceptColor,
+        posX: position.x,
+        posY: position.y,
+      });
+    },
+    [setNodes, setEdges, onDetailAdded],
+  );
 
   // Update node appearance when highlighted set changes
   useEffect(() => {
-    setNodes(nds => nds.map(node => {
-      if (node.type === 'detail') {
-        const greyed = hasSelection && !highlightedIds.has(node.data.conceptId as string);
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.type === "detail") {
+          const greyed =
+            hasSelection && !highlightedIds.has(node.data.conceptId as string);
+          return {
+            ...node,
+            style: { ...node.style, opacity: greyed ? 0.5 : 1 },
+            data: { ...node.data, greyed },
+          };
+        }
         return {
           ...node,
-          style: { ...node.style, opacity: greyed ? 0.5 : 1 },
-          data:  { ...node.data, greyed },
+          data: {
+            ...node.data,
+            highlighted: highlightedIds.has(node.id),
+            hasSelection,
+            highlightedSubconcepts:
+              highlightedSubconcepts.get(node.id) ?? new Set(),
+            starred: starredIds.has(node.id),
+            onStarClick: () => onStarClick(node.id),
+            masteredSubconcepts: masteredSubconcepts,
+            onSubconceptMastered: (sub: string) => onSubconceptMastered(sub),
+          },
         };
-      }
-      return {
-        ...node,
-        data: {
-          ...node.data,
-          highlighted:            highlightedIds.has(node.id),
-          hasSelection,
-          highlightedSubconcepts: highlightedSubconcepts.get(node.id) ?? new Set(),
-          starred:                starredIds.has(node.id),
-          onStarClick:            () => onStarClick(node.id),
-          masteredSubconcepts:    masteredSubconcepts,                       
-          onSubconceptMastered:   (sub: string) => onSubconceptMastered(sub),
-        },
-      };
-    }));
-  }, [highlightedIds, hasSelection, highlightedSubconcepts, starredIds, masteredSubconcepts, onSubconceptMastered, onStarClick, setNodes]);
+      }),
+    );
+  }, [
+    highlightedIds,
+    hasSelection,
+    highlightedSubconcepts,
+    starredIds,
+    masteredSubconcepts,
+    onSubconceptMastered,
+    onStarClick,
+    setNodes,
+  ]);
 
   // Update edge appearance when highlighted set changes
   useEffect(() => {
     if (!hasSelection) {
-      setEdges(eds => [
+      setEdges((eds) => [
         ...initialEdges,
         ...eds
-          .filter(e => e.id.startsWith('detail-edge-') || e.id.startsWith('edge-restored-'))
-          .map(e => {
-            const color = e.data?.conceptColor as string ?? '#64748B';
+          .filter(
+            (e) =>
+              e.id.startsWith("detail-edge-") ||
+              e.id.startsWith("edge-restored-"),
+          )
+          .map((e) => {
+            const color = (e.data?.conceptColor as string) ?? "#64748B";
             return {
               ...e,
-              style:     { stroke: color, strokeWidth: 4, strokeDasharray: '4 2' },
+              style: { stroke: color, strokeWidth: 4, strokeDasharray: "4 2" },
               markerEnd: { type: MarkerType.ArrowClosed, color },
             };
           }),
       ]);
       return;
     }
-    setEdges(eds => [
-      ...prereqEdgeData.map(e => {
-        const isHighlighted = highlightedIds.has(e.source) && highlightedIds.has(e.target);
-        const color = majorConcepts.find(c => c.id === e.source)?.color ?? '#64748B';
+    setEdges((eds) => [
+      ...prereqEdgeData.map((e) => {
+        const isHighlighted =
+          highlightedIds.has(e.source) && highlightedIds.has(e.target);
+        const color =
+          majorConcepts.find((c) => c.id === e.source)?.color ?? "#64748B";
         return {
           id: `prereq-${e.source}-${e.target}`,
-          source: e.source, target: e.target,
-          sourceHandle: 'top', targetHandle: 'bottom',
-          type: 'dashed',
+          source: e.source,
+          target: e.target,
+          sourceHandle: "top",
+          targetHandle: "bottom",
+          type: "dashed",
           animated: isHighlighted,
           style: {
-            stroke:          isHighlighted ? color : '#CBD5E1',
-            strokeWidth:     isHighlighted ? 5 : 4,
-            strokeDasharray: isHighlighted ? undefined : '5 3',
-            opacity:         isHighlighted ? 1 : 0.2,
+            stroke: isHighlighted ? color : "#CBD5E1",
+            strokeWidth: isHighlighted ? 5 : 4,
+            strokeDasharray: isHighlighted ? undefined : "5 3",
+            opacity: isHighlighted ? 1 : 0.2,
           },
-          markerEnd: { type: MarkerType.ArrowClosed, color: isHighlighted ? color : '#CBD5E1' },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: isHighlighted ? color : "#CBD5E1",
+          },
         };
       }),
       ...eds
-        .filter(e => e.id.startsWith('detail-edge-') || e.id.startsWith('edge-restored-'))
-        .map(e => {
+        .filter(
+          (e) =>
+            e.id.startsWith("detail-edge-") ||
+            e.id.startsWith("edge-restored-"),
+        )
+        .map((e) => {
           const isHighlighted = highlightedIds.has(e.source);
-          const color = e.data?.conceptColor as string ?? '#64748B';
+          const color = (e.data?.conceptColor as string) ?? "#64748B";
           return {
             ...e,
-            style:     { stroke: isHighlighted ? color : '#cbd5e1', strokeWidth: 4, strokeDasharray: '4 2' },
-            markerEnd: { type: MarkerType.ArrowClosed, color: isHighlighted ? color : '#cbd5e1' },
+            style: {
+              stroke: isHighlighted ? color : "#cbd5e1",
+              strokeWidth: 4,
+              strokeDasharray: "4 2",
+            },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: isHighlighted ? color : "#cbd5e1",
+            },
           };
         }),
     ]);
   }, [highlightedIds, hasSelection, setEdges]);
 
-  const onNodeClick = useCallback((_e: React.MouseEvent, node: Node) => {
-    if (node.type === 'detail') return;
-    onConceptClick(node.id);
-  }, [onConceptClick]);
+  const onNodeClick = useCallback(
+    (_e: React.MouseEvent, node: Node) => {
+      if (node.type === "detail") return;
+      onConceptClick(node.id);
+    },
+    [onConceptClick],
+  );
 
-  const handleNodesChange = useCallback((changes: NodeChange[]) => {
-    onNodesChange(changes);
-    changes.forEach(change => {
-      if (change.type === 'position' && change.dragging === false && change.position) {
-        const node = nodesRef.current.find(n => n.id === change.id);
-        if (node?.type === 'detail') {
-          onDetailMoved?.(
-            node.data.cardType as string,
-            node.data.itemLabel as string,
-            change.position.x,
-            change.position.y,
-          );
+  const handleNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      onNodesChange(changes);
+      changes.forEach((change) => {
+        if (
+          change.type === "position" &&
+          change.dragging === false &&
+          change.position
+        ) {
+          const node = nodesRef.current.find((n) => n.id === change.id);
+          if (node?.type === "detail") {
+            onDetailMoved?.(
+              node.data.cardType as string,
+              node.data.itemLabel as string,
+              change.position.x,
+              change.position.y,
+            );
+          }
         }
-      }
-    });
-  }, [onNodesChange, onDetailMoved]);
+      });
+    },
+    [onNodesChange, onDetailMoved],
+  );
 
   return (
     <DeleteDetailContext.Provider value={handleDeleteDetail}>
-      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-        <div style={{
-          position: 'absolute', alignItems: 'flex-end',
-          top: 12, right: 12, zIndex: 10,
-          display: 'flex', flexDirection: 'column', gap: 8,
-        }}>
+      <div style={{ width: "100%", height: "100%", position: "relative" }}>
+        <div
+          style={{
+            position: "absolute",
+            alignItems: "flex-end",
+            top: 12,
+            right: 12,
+            zIndex: 10,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
           <ResetButton onReset={handleReset} />
           <LevelLegend />
         </div>
         <ReactFlow
-          nodes={nodes} edges={edges}
-          onNodesChange={handleNodesChange} 
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
           nodesConnectable={false}
           onNodeClick={onNodeClick}
-          onInit={(instance: ReactFlowInstance<Node, Edge>) => { rfInstance.current = instance; }}
+          onInit={(instance: ReactFlowInstance<Node, Edge>) => {
+            rfInstance.current = instance;
+          }}
           onDrop={onDrop}
           onDragOver={onDragOver}
-          fitView fitViewOptions={{ padding: 0.08 }} minZoom={0.1}
+          fitView
+          fitViewOptions={{ padding: 0.08 }}
+          minZoom={0.1}
           onPaneClick={onPaneClick}
         >
           <Controls />
-          <Background variant={BackgroundVariant.Dots} color='#1E293B' gap={20} />
+          <Background
+            variant={BackgroundVariant.Dots}
+            color="#1E293B"
+            gap={20}
+          />
         </ReactFlow>
       </div>
     </DeleteDetailContext.Provider>

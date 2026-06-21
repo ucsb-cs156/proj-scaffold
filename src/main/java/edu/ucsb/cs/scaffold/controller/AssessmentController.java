@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,8 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AssessmentController {
 
-  private final AssessmentRepository assessmentRepository;
-  private final QuestionRepository questionRepository;
+  @Autowired private final AssessmentRepository assessmentRepository;
+
+  @Autowired private final QuestionRepository questionRepository;
 
   @Operation(summary = "List all assessments ordered by name")
   @GetMapping("/api/assessments")

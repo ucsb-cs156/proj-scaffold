@@ -19,7 +19,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "main/*": ["./src/main/*"],
+      "fixtures/*": ["./src/fixtures/*"],
+      "tests/*": ["./src/tests/*"]
+    }
   },
   "include": ["src"]
 }

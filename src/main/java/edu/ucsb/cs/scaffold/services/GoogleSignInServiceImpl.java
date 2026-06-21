@@ -1,12 +1,14 @@
 package edu.ucsb.cs.scaffold.services;
 
 import edu.ucsb.cs.scaffold.entity.User;
+import edu.ucsb.cs.scaffold.repository.AdminRepository;
+import edu.ucsb.cs.scaffold.repository.InstructorRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -20,9 +22,8 @@ import org.springframework.stereotype.Service;
 public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSignInService {
 
   @Autowired private UserRepository userRepository;
-
-  @Value("${app.admin.emails:phtcon@ucsb.edu}")
-  private String adminEmails;
+  @Autowired private AdminRepository adminRepository;
+  @Autowired private InstructorRepository instructorRepository;
 
   @Override
   public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
@@ -34,26 +35,36 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
     Optional<User> existing = userRepository.findByEmail(oidcUser.getEmail());
     Set<GrantedAuthority> authorities = new HashSet<>();
 
-    boolean isAdmin = isAdminEmail(oidcUser.getEmail());
-    authorities.add(new SimpleGrantedAuthority(isAdmin ? "ROLE_ADMIN" : "ROLE_USER"));
+    if (adminRepository.existsByEmail(oidcUser.getEmail())) {
+      authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+    } else if (instructorRepository.existsByEmail(oidcUser.getEmail())) {
+      authorities.add(new SimpleGrantedAuthority("ROLE_INSTRUCTOR"));
+    } else {
+      authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+    }
+
+    String fullName = oidcUser.getFullName();
+    String givenName = oidcUser.getGivenName();
+    String familyName = oidcUser.getFamilyName();
+    String pictureUrl = oidcUser.getPicture();
 
     if (existing.isPresent()) {
       User user = existing.get();
       boolean changed = false;
-      if (!oidcUser.getFullName().equals(user.getFullName())) {
-        user.setFullName(oidcUser.getFullName());
+      if (!Objects.equals(fullName, user.getFullName())) {
+        user.setFullName(fullName);
         changed = true;
       }
-      if (!oidcUser.getGivenName().equals(user.getGivenName())) {
-        user.setGivenName(oidcUser.getGivenName());
+      if (!Objects.equals(givenName, user.getGivenName())) {
+        user.setGivenName(givenName);
         changed = true;
       }
-      if (!oidcUser.getFamilyName().equals(user.getFamilyName())) {
-        user.setFamilyName(oidcUser.getFamilyName());
+      if (!Objects.equals(familyName, user.getFamilyName())) {
+        user.setFamilyName(familyName);
         changed = true;
       }
-      if (!oidcUser.getPicture().equals(user.getPictureUrl())) {
-        user.setPictureUrl(oidcUser.getPicture());
+      if (!Objects.equals(pictureUrl, user.getPictureUrl())) {
+        user.setPictureUrl(pictureUrl);
         changed = true;
       }
       if (changed) {
@@ -64,23 +75,15 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
           User.builder()
               .googleSub(oidcUser.getSubject())
               .email(oidcUser.getEmail())
-              .fullName(oidcUser.getFullName())
-              .givenName(oidcUser.getGivenName())
-              .familyName(oidcUser.getFamilyName())
-              .pictureUrl(oidcUser.getPicture())
+              .fullName(fullName)
+              .givenName(givenName)
+              .familyName(familyName)
+              .pictureUrl(pictureUrl)
               .build();
       userRepository.save(newUser);
     }
 
     authorities.addAll(oidcUser.getAuthorities());
     return new DefaultOidcUser(authorities, oidcUser.getIdToken(), oidcUser.getUserInfo());
-  }
-
-  private boolean isAdminEmail(String email) {
-    if (email == null || adminEmails == null) return false;
-    for (String admin : adminEmails.split(",")) {
-      if (admin.trim().equalsIgnoreCase(email.trim())) return true;
-    }
-    return false;
   }
 }

@@ -13,6 +13,7 @@
 
   <groupId>edu.ucsb.cs</groupId>
   <artifactId>scaffold</artifactId>
+  <name>scaffold</name>
   <version>0.0.1-SNAPSHOT</version>
   <description>Scaffold backend – Spring Boot + PostgreSQL</description>
 
@@ -104,6 +105,26 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- WireMock for mocking OAuth in integration tests -->
+    <dependency>
+      <groupId>org.wiremock</groupId>
+      <artifactId>wiremock-jetty12</artifactId>
+      <version>3.9.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.wiremock.extensions</groupId>
+      <artifactId>wiremock-jwt-extension</artifactId>
+      <version>0.3.0</version>
+    </dependency>
+
+    <!-- Playwright for browser-based integration tests -->
+    <dependency>
+      <groupId>com.microsoft.playwright</groupId>
+      <artifactId>playwright</artifactId>
+      <version>1.47.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -207,6 +228,7 @@
         <configuration>
           <excludes>
             <exclude>**/${app.packagePath}/config/*</exclude>
+            <exclude>**/${app.packagePath}/services/wiremock/*</exclude>
             <exclude>**/${app.packagePath}/controller/FrontendController.*</exclude>
             <exclude>**/${app.packagePath}/controller/FrontendProxyController.*</exclude>
             <exclude>**/${app.packagePath}/services/CurrentUserServiceImpl.*</exclude>
@@ -295,12 +317,18 @@
             <param>${app.package}.config.SecurityConfig</param>
             <param>${app.package}.config.OpenAPIConfig</param>
             <param>${app.package}.config.CorsConfig</param>
+            <param>${app.package}.config.SpaCsrfTokenRequestHandler</param>
+            <param>${app.package}.config.CsrfCookieFilter</param>
             <param>${app.package}.controller.FrontendController</param>
             <param>${app.package}.controller.FrontendProxyController</param>
             <param>${app.package}.services.CurrentUserServiceImpl</param>
             <param>${app.package}.services.GrantedAuthoritiesService</param>
             <param>${app.package}.services.GoogleSignInServiceImpl</param>
             <param>${app.package}.ScaffoldApplication</param>
+            <param>${app.package}.services.wiremock.WiremockService</param>
+            <param>${app.package}.services.wiremock.WiremockServiceDummy</param>
+            <param>${app.package}.services.wiremock.WiremockServiceImpl</param>
+
           </excludedClasses>
           <excludedTestClasses>
             <param>${app.package}.web.*</param>
@@ -364,6 +392,7 @@
       </dependencies>
     </profile>
 
+    <!-- Integration profile: builds frontend and runs integration/Playwright tests -->
     <!-- to run with this profile use "INTEGRATION=true mvn spring-boot:run" -->
     <profile>
       <id>integration</id>
@@ -476,7 +505,7 @@
                   <goal>npm</goal>
                 </goals>
                 <configuration>
-                  <arguments>ci</arguments>
+                  <arguments>install</arguments>
                   <skip>${frontend.dependency.skip}</skip>
                 </configuration>
               </execution>
@@ -540,7 +569,7 @@
                   <goal>npm</goal>
                 </goals>
                 <configuration>
-                  <arguments>ci</arguments>
+                  <arguments>install</arguments>
                 </configuration>
               </execution>
               <execution>
