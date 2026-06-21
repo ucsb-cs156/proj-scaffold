@@ -8,8 +8,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import edu.ucsb.cs.scaffold.ControllerTestCase;
 import edu.ucsb.cs.scaffold.controller.QuestionController;
+import edu.ucsb.cs.scaffold.model.QuestionConcept;
 import edu.ucsb.cs.scaffold.repository.QuestionConceptRepository;
 import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -27,11 +29,30 @@ public class QuestionControllerTests extends ControllerTestCase {
   @Test
   public void any_user_can_get_concepts_for_question() throws Exception {
 
-    when(questionConceptRepository.findByQuestionId(any())).thenReturn(new ArrayList<>());
+    QuestionConcept qc = new QuestionConcept();
+    qc.setId(java.util.UUID.fromString("123e4567-e89b-12d3-a456-426614174001"));
+    qc.setQuestionId(java.util.UUID.fromString("123e4567-e89b-12d3-a456-426614174000"));
+    qc.setConceptId("concept1");
+    qc.setSubconceptLabel("subconceptLabel1");
+    when(questionConceptRepository.findByQuestionId(any()))
+        .thenReturn(new ArrayList<>(List.of(qc)));
+
+    String expectedJson =
+        """
+        [
+          {
+            "id": "123e4567-e89b-12d3-a456-426614174001",
+            "questionId": "123e4567-e89b-12d3-a456-426614174000",
+            "conceptId": "concept1",
+            "subconceptLabel": "subconceptLabel1"
+          }
+        ]
+        """;
 
     mockMvc
         .perform(get("/api/questions/123e4567-e89b-12d3-a456-426614174000/concepts"))
         .andExpect(status().isOk())
-        .andExpect(content().contentType("application/json"));
+        .andExpect(content().contentType("application/json"))
+        .andExpect(content().json(expectedJson));
   }
 }
