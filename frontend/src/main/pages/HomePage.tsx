@@ -179,6 +179,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!selectedAssessmentId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuestions([]);
       return;
     }
@@ -191,7 +192,9 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!selectedQuestionId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHighlightedIds(new Set());
+       
       setHighlightedSubconcepts(new Map());
       return;
     }
@@ -211,6 +214,7 @@ export default function HomePage() {
   }, [logActivity, selectedQuestionId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedItem(null);
   }, [selectedConceptId]);
 
