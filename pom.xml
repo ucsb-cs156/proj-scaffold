@@ -14,7 +14,7 @@
   <groupId>edu.ucsb.cs</groupId>
   <artifactId>scaffold</artifactId>
   <name>scaffold</name>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
   <description>Scaffold backend – Spring Boot + PostgreSQL</description>
 
   <properties>
