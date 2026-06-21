@@ -21,9 +21,9 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "main/*": ["src/main/*"],
-      "fixtures/*": ["src/fixtures/*"],
-      "tests/*": ["src/tests/*"]
+      "main/*": ["./src/main/*"],
+      "fixtures/*": ["./src/fixtures/*"],
+      "tests/*": ["./src/tests/*"]
     }
   },
   "include": ["src"]
