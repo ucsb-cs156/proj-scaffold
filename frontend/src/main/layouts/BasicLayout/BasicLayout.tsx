@@ -7,9 +7,7 @@ interface BasicLayoutProps {
 }
 
 export default function BasicLayout({ children }: BasicLayoutProps) {
-
   const doLogout = useLogout().mutate;
-
 
   return (
     <div

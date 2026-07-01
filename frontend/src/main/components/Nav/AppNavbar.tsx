@@ -4,7 +4,11 @@ import { useSystemInfo } from "../../utils/systemInfo";
 import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import GoogleLogin from "main/components/Nav/GoogleLogin";
 
-export default function AppNavbar({ doLogout }: { doLogout: () => void }): React.JSX.Element {
+export default function AppNavbar({
+  doLogout,
+}: {
+  doLogout: () => void;
+}): React.JSX.Element {
   const currentUser = useCurrentUser();
   const { data: systemInfo } = useSystemInfo();
 
@@ -14,58 +18,54 @@ export default function AppNavbar({ doLogout }: { doLogout: () => void }): React
   };
 
   return (
-     <Navbar
-        expand="md"
-        sticky="top"
-        data-testid="AppNavbar"
-      >
-        <Container>
-          <Navbar.Brand as={Link} to="/">
-            Scaffold
-          </Navbar.Brand>
+    <Navbar expand="md" sticky="top" data-testid="AppNavbar">
+      <Container>
+        <Navbar.Brand as={Link} to="/">
+          Scaffold
+        </Navbar.Brand>
 
-          <Navbar.Toggle />
+        <Navbar.Toggle />
 
-          <>
-            {/* be sure that each NavDropdown has a unique id and data-testid  */}
-          </>
+        <>
+          {/* be sure that each NavDropdown has a unique id and data-testid  */}
+        </>
 
-          <Navbar.Collapse className="justify-content-between">
-            <Nav className="mr-auto">
-              {systemInfo?.showSwaggerUILink && (
-                <>
-                  <Nav.Link href="/swagger-ui/index.html">Swagger</Nav.Link>
-                </>
-              )}
-              {systemInfo?.springH2ConsoleEnabled && (
-                <>
-                  <Nav.Link href="/h2-console">H2Console</Nav.Link>
-                </>
-              )}
-              {hasRole(currentUser, "ROLE_ADMIN") && (
-                <NavDropdown
-                  title="Admin"
-                  id="appnavbar-admin-dropdown"
-                  data-testid="appnavbar-admin-dropdown"
-                >
-                  <NavDropdown.Item as={Link} to="/admin/admins">
-                    Admins
-                  </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/admin/instructors">
-                    Instructors
-                  </NavDropdown.Item>
-                </NavDropdown>
-              )}
-            </Nav>
-            <Nav className="ml-auto">
-              <GoogleLogin
-                currentUser={currentUser}
-                handleLogin={handleLogin}
-                doLogout={doLogout}
-              />
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+        <Navbar.Collapse className="justify-content-between">
+          <Nav className="mr-auto">
+            {systemInfo?.showSwaggerUILink && (
+              <>
+                <Nav.Link href="/swagger-ui/index.html">Swagger</Nav.Link>
+              </>
+            )}
+            {systemInfo?.springH2ConsoleEnabled && (
+              <>
+                <Nav.Link href="/h2-console">H2Console</Nav.Link>
+              </>
+            )}
+            {hasRole(currentUser, "ROLE_ADMIN") && (
+              <NavDropdown
+                title="Admin"
+                id="appnavbar-admin-dropdown"
+                data-testid="appnavbar-admin-dropdown"
+              >
+                <NavDropdown.Item as={Link} to="/admin/admins">
+                  Admins
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/admin/instructors">
+                  Instructors
+                </NavDropdown.Item>
+              </NavDropdown>
+            )}
+          </Nav>
+          <Nav className="ml-auto">
+            <GoogleLogin
+              currentUser={currentUser}
+              handleLogin={handleLogin}
+              doLogout={doLogout}
+            />
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
   );
 }

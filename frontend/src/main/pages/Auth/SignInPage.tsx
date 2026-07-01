@@ -10,9 +10,7 @@ export default function SignInPage(): React.JSX.Element {
     <BasicLayout>
       {searchParams.has("error") && (
         <Row className="p-3">
-          <Alert variant={"danger"}>
-            Sign in failed. Please try again.
-          </Alert>
+          <Alert variant={"danger"}>Sign in failed. Please try again.</Alert>
         </Row>
       )}
       <LoginScreen />

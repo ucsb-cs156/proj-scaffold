@@ -44,9 +44,7 @@ describe("PromptSignInPage tests", () => {
       value: { href: "" },
     });
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Log In with Google" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Log In with Google" }));
 
     expect(sessionStorage.getItem("redirect")).toBe("/example/return");
 

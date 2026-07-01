@@ -49,9 +49,7 @@ describe("SignInPage tests", () => {
       value: { href: "" },
     });
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Log In with Google" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Log In with Google" }));
 
     expect(window.location.href).toBe("/oauth2/authorization/google-test");
   });

@@ -13,11 +13,8 @@ import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
 
 import { useCurrentUser } from "main/utils/currentUser";
 
-
 export default function App() {
-
-    const currentUser = useCurrentUser();
-
+  const currentUser = useCurrentUser();
 
   return (
     <BrowserRouter>

@@ -9,9 +9,7 @@ export default function NotFoundPage(): React.JSX.Element {
     <BasicLayout>
       <h1>Page Not Found</h1>
       <p>Let&apos;s get you back on track.</p>
-      <Button onClick={() => navigate("/")}>
-        Click to Return Home
-      </Button>
+      <Button onClick={() => navigate("/")}>Click to Return Home</Button>
     </BasicLayout>
   );
 }
