@@ -33,6 +33,7 @@ export default function OurTable<T extends object>({
     [newColumns],
   );
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table returns new function references each render; React Compiler correctly skips memoizing this component
   const table = useReactTable({
     data: memoizedData,
     columns: memoizedColumns,
