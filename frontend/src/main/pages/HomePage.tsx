@@ -10,7 +10,7 @@ import {
 } from "../api/client";
 import type { Assessment, Question } from "../api/client";
 import { majorConcepts, prereqEdgeData } from "../data/conceptGraph";
-import ConsentScreen from "../components/ConsentScreen";
+import LoginScreen from "../components/LoginScreen";
 import QuestionSearch from "../components/QuestionSearch";
 import AssessmentSelect from "../components/AssessmentSelect";
 import { conceptContent, type ConceptContent } from "../data/conceptContent";
@@ -313,7 +313,7 @@ export default function HomePage() {
   };
 
   if (!currentUser?.loggedIn) {
-    return <ConsentScreen />;
+    return <LoginScreen />;
   }
 
   return (

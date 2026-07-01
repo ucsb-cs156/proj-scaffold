@@ -1,6 +1,6 @@
 import { useSystemInfo } from "../utils/systemInfo";
 
-export default function ConsentScreen() {
+export default function LoginScreen() {
   const { data: systemInfo } = useSystemInfo();
 
   const handleLogin = () => {
