@@ -1,3 +1,5 @@
+import "bootstrap/dist/css/bootstrap.css";
+
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import BasicLayout from "./main/layouts/BasicLayout/BasicLayout";
 import HomePage from "./main/pages/HomePage";
