@@ -44,4 +44,30 @@ describe("AppNavbar tests", () => {
     );
     expect(screen.getByText("Scaffold")).toBeInTheDocument();
   });
+
+  test("renders UCSB CS concept graph subtitle", () => {
+    renderNavbar(
+      currentUserFixtures.notLoggedIn,
+      systemInfoFixtures.showingNeither,
+    );
+    expect(screen.getByText("UCSB CS concept graph")).toBeInTheDocument();
+  });
+
+  test("renders Admin menu with Developer Info for admins", () => {
+    renderNavbar(
+      currentUserFixtures.adminUser,
+      systemInfoFixtures.showingNeither,
+    );
+    expect(screen.getByText("Admin")).toBeInTheDocument();
+    expect(screen.getByText("Developer Info")).toBeInTheDocument();
+  });
+
+  test("does not render Admin menu for non-admin users", () => {
+    renderNavbar(
+      currentUserFixtures.userOnly,
+      systemInfoFixtures.showingNeither,
+    );
+    expect(screen.queryByText("Admin")).not.toBeInTheDocument();
+    expect(screen.queryByText("Developer Info")).not.toBeInTheDocument();
+  });
 });

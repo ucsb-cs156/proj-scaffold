@@ -1,6 +1,6 @@
 import { Link } from "react-router";
-import { hasRole, useCurrentUser } from "../../utils/currentUser";
-import { useSystemInfo } from "../../utils/systemInfo";
+import { hasRole, useCurrentUser } from "main/utils/currentUser";
+import { useSystemInfo } from "main/utils/systemInfo";
 import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import GoogleLogin from "main/components/Nav/GoogleLogin";
 
