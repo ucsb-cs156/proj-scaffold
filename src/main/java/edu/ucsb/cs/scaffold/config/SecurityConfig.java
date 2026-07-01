@@ -56,7 +56,7 @@ public class SecurityConfig {
                     .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
                     // Existing non-OAuth API endpoints use fetch without CSRF headers;
                     // they will be migrated to axios in the next sprint.
-                    .ignoringRequestMatchers("/api/**"))
+                    .ignoringRequestMatchers("/api/**", "/logout", "/oauth2/**"))
         .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
         .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
         .logout(
