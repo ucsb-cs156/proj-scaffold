@@ -55,13 +55,19 @@ describe("AppNavbar tests", () => {
   });
 
   test("renders Admin menu with Developer Info for admins", () => {
-    renderNavbar(currentUserFixtures.adminUser, systemInfoFixtures.showingNeither);
+    renderNavbar(
+      currentUserFixtures.adminUser,
+      systemInfoFixtures.showingNeither,
+    );
     expect(screen.getByText("Admin")).toBeInTheDocument();
     expect(screen.getByText("Developer Info")).toBeInTheDocument();
   });
 
   test("does not render Admin menu for non-admin users", () => {
-    renderNavbar(currentUserFixtures.userOnly, systemInfoFixtures.showingNeither);
+    renderNavbar(
+      currentUserFixtures.userOnly,
+      systemInfoFixtures.showingNeither,
+    );
     expect(screen.queryByText("Admin")).not.toBeInTheDocument();
     expect(screen.queryByText("Developer Info")).not.toBeInTheDocument();
   });

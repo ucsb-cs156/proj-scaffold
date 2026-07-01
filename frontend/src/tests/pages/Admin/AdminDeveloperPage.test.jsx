@@ -20,7 +20,9 @@ describe("AdminDeveloperPage tests", () => {
     expect(screen.getByText("Developer Information")).toBeInTheDocument();
     expect(screen.getByText("Current Deployed Branch")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Swagger" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "H2 Console" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "H2 Console" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", {
         name: systemInfoFixtures.showingBoth.sourceRepo,
