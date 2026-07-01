@@ -1,16 +1,12 @@
-import React from "react";
 import { useBackend } from "main/utils/useBackend";
 import { Link } from "react-router";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import RoleEmailTable from "main/components/Users/RoleEmailTable";
-import { Button } from "react-bootstrap";
+import RoleEmailTable, {
+  type RoleEmail,
+} from "main/components/Users/RoleEmailTable";
 
-export default function AdminsIndexPage() {
-  const {
-    data: instructors,
-    error: _error,
-    status: _status,
-  } = useBackend(
+export default function AdminsIndexPage(): React.JSX.Element {
+  const { data: instructors } = useBackend<RoleEmail[]>(
     ["/api/admin/all"],
     { method: "GET", url: "/api/admin/all" },
     // Stryker disable next-line all : don't test default value of empty list
@@ -19,14 +15,13 @@ export default function AdminsIndexPage() {
 
   const createButton = () => {
     return (
-      <Button
-        variant="primary"
-        as={Link}
+      <Link
+        className="btn btn-primary"
         to="/admin/admins/create"
         style={{ float: "right" }}
       >
         New Admin
-      </Button>
+      </Link>
     );
   };
 
@@ -36,7 +31,7 @@ export default function AdminsIndexPage() {
         {createButton()}
         <h1>Admins</h1>
         <RoleEmailTable
-          data={instructors}
+          data={instructors ?? []}
           deleteEndpoint="/api/admin/delete"
           getEndpoint="/api/admin/all"
           testIdPrefix="AdminsIndexPage"

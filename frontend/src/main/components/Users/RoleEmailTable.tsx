@@ -1,9 +1,23 @@
-import React from "react";
 import OurTable from "main/components/OurTable";
 
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
 import { Button } from "react-bootstrap";
+import type { Cell } from "@tanstack/react-table";
+import type { AxiosRequestConfig } from "axios";
+
+export type RoleEmail = {
+  email: string;
+  isInAdminEmails?: boolean;
+};
+
+type RoleEmailTableProps = {
+  data: RoleEmail[];
+  deleteEndpoint?: string;
+  getEndpoint?: string;
+  testIdPrefix?: string;
+  customDeleteCallback?: ((cell: Cell<RoleEmail, unknown>) => void) | null;
+};
 
 export default function RoleEmailTable({
   data,
@@ -11,8 +25,11 @@ export default function RoleEmailTable({
   getEndpoint = "/api/admin/all",
   testIdPrefix = "RoleEmailTable",
   customDeleteCallback = null, // optional deleteCallback, used in AdminsIndexPage
-}) {
-  const cellToAxiosParamsDelete = (cell, deleteEndpoint) => {
+}: RoleEmailTableProps): React.JSX.Element {
+  const cellToAxiosParamsDelete = (
+    cell: Cell<RoleEmail, unknown>,
+    deleteEndpoint: string,
+  ): AxiosRequestConfig => {
     return {
       url: deleteEndpoint,
       method: "DELETE",
@@ -22,16 +39,16 @@ export default function RoleEmailTable({
     };
   };
 
-  const onDeleteSuccess = (message) => {
+  const onDeleteSuccess = (message: string) => {
     toast(message);
   };
 
-  const deleteMutation = useBackendMutation(
+  const deleteMutation = useBackendMutation<Cell<RoleEmail, unknown>, string>(
     (cell) => cellToAxiosParamsDelete(cell, deleteEndpoint),
     { onSuccess: onDeleteSuccess },
     [getEndpoint],
   );
-  const defaultDeleteCallback = async (cell) => {
+  const defaultDeleteCallback = async (cell: Cell<RoleEmail, unknown>) => {
     deleteMutation.mutate(cell);
   };
 
@@ -45,7 +62,7 @@ export default function RoleEmailTable({
     {
       header: "Delete",
       accessorKey: "isInAdminEmails",
-      cell: ({ cell }) => {
+      cell: ({ cell }: { cell: Cell<RoleEmail, unknown> }) => {
         if (!cell.row.original.isInAdminEmails) {
           return (
             <Button

@@ -2,13 +2,25 @@ import { Button, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 
-function RoleEmailForm({ submitAction, buttonLabel = "Create" }) {
+export type RoleEmailFormFields = {
+  email: string;
+};
+
+type RoleEmailFormProps = {
+  submitAction: (data: RoleEmailFormFields) => void;
+  buttonLabel?: string;
+};
+
+export default function RoleEmailForm({
+  submitAction,
+  buttonLabel = "Create",
+}: RoleEmailFormProps): React.JSX.Element {
   // Stryker disable all
   const {
     register,
     formState: { errors },
     handleSubmit,
-  } = useForm();
+  } = useForm<RoleEmailFormFields>();
   // Stryker restore all
 
   const navigate = useNavigate();
@@ -51,5 +63,3 @@ function RoleEmailForm({ submitAction, buttonLabel = "Create" }) {
     </Form>
   );
 }
-
-export default RoleEmailForm;

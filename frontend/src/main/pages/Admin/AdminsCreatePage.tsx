@@ -1,11 +1,22 @@
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import RoleEmailForm from "main/components/Users/RoleEmailForm";
+import RoleEmailForm, {
+  type RoleEmailFormFields,
+} from "main/components/Users/RoleEmailForm";
 import { Navigate } from "react-router";
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
+import type { AxiosRequestConfig } from "axios";
 
-export default function AdminsCreatePage({ storybook = false }) {
-  const objectToAxiosParams = (admin) => ({
+type AdminsCreatePageProps = {
+  storybook?: boolean;
+};
+
+export default function AdminsCreatePage({
+  storybook = false,
+}: AdminsCreatePageProps): React.JSX.Element {
+  const objectToAxiosParams = (
+    admin: RoleEmailFormFields,
+  ): AxiosRequestConfig => ({
     url: "/api/admin/post",
     method: "POST",
     params: {
@@ -13,7 +24,7 @@ export default function AdminsCreatePage({ storybook = false }) {
     },
   });
 
-  const onSuccess = (admin) => {
+  const onSuccess = (admin: RoleEmailFormFields) => {
     toast(`New admin added - email: ${admin.email}`);
   };
 
@@ -25,7 +36,7 @@ export default function AdminsCreatePage({ storybook = false }) {
 
   const { isSuccess } = mutation;
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: RoleEmailFormFields) => {
     mutation.mutate(data);
   };
 

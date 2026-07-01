@@ -1,6 +1,17 @@
 import OurTable from "main/components/OurTable";
+import type { Cell } from "@tanstack/react-table";
+import type { LegacyColumn } from "main/components/OurTableUtils";
 
-const columns = [
+export type User = {
+  id: number;
+  givenName: string;
+  familyName: string;
+  email: string;
+  admin: boolean;
+  instructor: boolean;
+};
+
+const columns: LegacyColumn[] = [
   {
     Header: "id",
     accessor: "id", // accessor is the "key" in the data
@@ -21,7 +32,7 @@ const columns = [
     header: "Admin",
     id: "admin",
     accessorKey: "admin",
-    cell: ({ cell }) => {
+    cell: ({ cell }: { cell: Cell<User, unknown> }) => {
       return String(cell.getValue());
     }, // convert boolean to string for display
   },
@@ -29,12 +40,18 @@ const columns = [
     header: "Instructor",
     id: "instructor",
     accessorKey: "instructor",
-    cell: ({ cell }) => {
+    cell: ({ cell }: { cell: Cell<User, unknown> }) => {
       return String(cell.getValue());
     }, // convert boolean to string for display
   },
 ];
 
-export default function UsersTable({ users }) {
+type UsersTableProps = {
+  users: User[];
+};
+
+export default function UsersTable({
+  users,
+}: UsersTableProps): React.JSX.Element {
   return <OurTable data={users} columns={columns} testid={"UsersTable"} />;
 }

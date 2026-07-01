@@ -1,5 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type UseMutationOptions,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
+import axios, { type AxiosRequestConfig } from "axios";
 import { toast } from "react-toastify";
 
 // example
@@ -25,14 +31,14 @@ import { toast } from "react-toastify";
 //     []
 // );
 
-export function useBackend(
-  queryKey,
-  axiosParameters,
-  initialData,
+export function useBackend<T>(
+  queryKey: unknown[],
+  axiosParameters: AxiosRequestConfig,
+  initialData: T,
   suppressToasts = false,
-  options = {},
+  options: Partial<UseQueryOptions<T>> = {},
 ) {
-  return useQuery({
+  return useQuery<T>({
     queryKey: queryKey,
     queryFn: async () => {
       try {
@@ -52,21 +58,22 @@ export function useBackend(
   });
 }
 
-const wrappedParams = async (params) => {
+const wrappedParams = async <TData>(params: AxiosRequestConfig) => {
   // Directly returning the promise allows useMutation to handle rejections.
   const response = await axios(params);
-  return response.data;
+  return response.data as TData;
 };
 
-export function useBackendMutation(
-  objectToAxiosParams,
-  useMutationParams,
-  queryKey = null,
+export function useBackendMutation<TInput, TData = unknown>(
+  objectToAxiosParams: (object: TInput) => AxiosRequestConfig,
+  useMutationParams: Partial<UseMutationOptions<TData, unknown, TInput>>,
+  queryKey: string[] | null = null,
 ) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (object) => wrappedParams(objectToAxiosParams(object)),
+    mutationFn: (object: TInput) =>
+      wrappedParams<TData>(objectToAxiosParams(object)),
     onError: (data) => {
       toast(`${data}`);
     },

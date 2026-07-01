@@ -1,7 +1,7 @@
 import { NavDropdown } from "react-bootstrap";
 import { Link } from "react-router";
 
-export default function HelpMenu() {
+export default function HelpMenu(): React.JSX.Element {
   return (
     <>
       <NavDropdown

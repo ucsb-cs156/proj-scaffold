@@ -1,12 +1,23 @@
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import RoleEmailForm from "main/components/Users/RoleEmailForm";
+import RoleEmailForm, {
+  type RoleEmailFormFields,
+} from "main/components/Users/RoleEmailForm";
 import { useNavigate } from "react-router";
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
+import type { AxiosRequestConfig } from "axios";
 
-export default function InstructorsCreatePage({ storybook = false }) {
+type InstructorsCreatePageProps = {
+  storybook?: boolean;
+};
+
+export default function InstructorsCreatePage({
+  storybook = false,
+}: InstructorsCreatePageProps): React.JSX.Element {
   const navigation = useNavigate();
-  const objectToAxiosParams = (instructor) => ({
+  const objectToAxiosParams = (
+    instructor: RoleEmailFormFields,
+  ): AxiosRequestConfig => ({
     url: "/api/admin/instructors/post",
     method: "POST",
     params: {
@@ -14,7 +25,7 @@ export default function InstructorsCreatePage({ storybook = false }) {
     },
   });
 
-  const onSuccess = (instructor) => {
+  const onSuccess = (instructor: RoleEmailFormFields) => {
     toast(`New instructor added - email: ${instructor.email}`);
     if (!storybook) navigation("/admin/instructors");
   };
@@ -25,7 +36,7 @@ export default function InstructorsCreatePage({ storybook = false }) {
     ["/api/admin/instructors/all"], // mutation makes this key stale so that pages relying on it reload
   );
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: RoleEmailFormFields) => {
     mutation.mutate(data);
   };
 
