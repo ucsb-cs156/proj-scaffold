@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 import AppNavbar from "main/components/Nav/AppNavbar";
@@ -45,13 +45,26 @@ describe("AppNavbar tests", () => {
     expect(screen.getByText("Scaffold")).toBeInTheDocument();
   });
 
-  test("renders Admin menu with Developer Info for admins", () => {
+  test("renders Admin menu for admins", async () => {
     renderNavbar(
       currentUserFixtures.adminUser,
       systemInfoFixtures.showingNeither,
     );
-    expect(screen.getByText("Admin")).toBeInTheDocument();
-    expect(screen.getByText("Developer Info")).toBeInTheDocument();
+    const adminToggle = screen.getByText("Admin");
+    expect(adminToggle).toBeInTheDocument();
+
+    // The Admin menu items aren't rendered into the DOM until the
+    // dropdown toggle is clicked open, so click it first.
+    fireEvent.click(adminToggle);
+
+    // Check that the Admin menu contains the expected items
+    const adminMenuItems = ["Admins", "Instructors", "Developer Info"];
+
+    await waitFor(() => {
+      adminMenuItems.forEach((item) => {
+        expect(screen.getByText(item)).toBeInTheDocument();
+      });
+    });
   });
 
   test("does not render Admin menu for non-admin users", () => {
