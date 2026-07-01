@@ -141,6 +141,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -201,17 +205,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Link } from "react-router";
 import { hasRole, useCurrentUser } from "../../utils/currentUser";
 import { useSystemInfo } from "../../utils/systemInfo";
 import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import GoogleLogin from "main/components/Nav/GoogleLogin";
 &nbsp;
-export default function AppNavbar({ doLogout }: { doLogout: () =&gt; void }): React.JSX.Element {
+export default function AppNavbar({
+  doLogout,
+}: {
+  doLogout: () =&gt; void;
+}): React.JSX.Element {
   const currentUser = useCurrentUser();
   const { data: systemInfo } = useSystemInfo();
 &nbsp;
@@ -221,59 +225,55 @@ export default function AppNavbar({ doLogout }: { doLogout: () =&gt; void }): Re
   };
 &nbsp;
   return (
-     &lt;Navbar
-        expand="md"
-        sticky="top"
-        data-testid="AppNavbar"
-      &gt;
-        &lt;Container&gt;
-          &lt;Navbar.Brand as={Link} to="/"&gt;
-            Scaffold
-          &lt;/Navbar.Brand&gt;
+    &lt;Navbar expand="md" sticky="top" data-testid="AppNavbar"&gt;
+      &lt;Container&gt;
+        &lt;Navbar.Brand as={Link} to="/"&gt;
+          Scaffold
+        &lt;/Navbar.Brand&gt;
 &nbsp;
-          &lt;Navbar.Toggle /&gt;
+        &lt;Navbar.Toggle /&gt;
 &nbsp;
-          &lt;&gt;
-            {/* be sure that each NavDropdown has a unique id and data-testid  */}
-          &lt;/&gt;
+        &lt;&gt;
+          {/* be sure that each NavDropdown has a unique id and data-testid  */}
+        &lt;/&gt;
 &nbsp;
-          &lt;Navbar.Collapse className="justify-content-between"&gt;
-            &lt;Nav className="mr-auto"&gt;
-              {systemInfo?.showSwaggerUILink &amp;&amp; (
-<span class="branch-1 cbranch-no" title="branch not covered" >                &lt;&gt;</span>
-                  &lt;Nav.Link href="/swagger-ui/index.html"&gt;Swagger&lt;/Nav.Link&gt;
-                &lt;/&gt;
-              )}
-              {systemInfo?.springH2ConsoleEnabled &amp;&amp; (
-<span class="branch-1 cbranch-no" title="branch not covered" >                &lt;&gt;</span>
-                  &lt;Nav.Link href="/h2-console"&gt;H2Console&lt;/Nav.Link&gt;
-                &lt;/&gt;
-              )}
-              {hasRole(currentUser, "ROLE_ADMIN") &amp;&amp; (
-<span class="branch-1 cbranch-no" title="branch not covered" >                &lt;NavDropdown</span>
-                  title="Admin"
-                  id="appnavbar-admin-dropdown"
-                  data-testid="appnavbar-admin-dropdown"
-                &gt;
-                  &lt;NavDropdown.Item as={Link} to="/admin/admins"&gt;
-                    Admins
-                  &lt;/NavDropdown.Item&gt;
-                  &lt;NavDropdown.Item as={Link} to="/admin/instructors"&gt;
-                    Instructors
-                  &lt;/NavDropdown.Item&gt;
-                &lt;/NavDropdown&gt;
-              )}
-            &lt;/Nav&gt;
-            &lt;Nav className="ml-auto"&gt;
-              &lt;GoogleLogin
-                currentUser={currentUser}
-                handleLogin={handleLogin}
-                doLogout={doLogout}
-              /&gt;
-            &lt;/Nav&gt;
-          &lt;/Navbar.Collapse&gt;
-        &lt;/Container&gt;
-      &lt;/Navbar&gt;
+        &lt;Navbar.Collapse className="justify-content-between"&gt;
+          &lt;Nav className="mr-auto"&gt;
+            {systemInfo?.showSwaggerUILink &amp;&amp; (
+<span class="branch-1 cbranch-no" title="branch not covered" >              &lt;&gt;</span>
+                &lt;Nav.Link href="/swagger-ui/index.html"&gt;Swagger&lt;/Nav.Link&gt;
+              &lt;/&gt;
+            )}
+            {systemInfo?.springH2ConsoleEnabled &amp;&amp; (
+<span class="branch-1 cbranch-no" title="branch not covered" >              &lt;&gt;</span>
+                &lt;Nav.Link href="/h2-console"&gt;H2Console&lt;/Nav.Link&gt;
+              &lt;/&gt;
+            )}
+            {hasRole(currentUser, "ROLE_ADMIN") &amp;&amp; (
+<span class="branch-1 cbranch-no" title="branch not covered" >              &lt;NavDropdown</span>
+                title="Admin"
+                id="appnavbar-admin-dropdown"
+                data-testid="appnavbar-admin-dropdown"
+              &gt;
+                &lt;NavDropdown.Item as={Link} to="/admin/admins"&gt;
+                  Admins
+                &lt;/NavDropdown.Item&gt;
+                &lt;NavDropdown.Item as={Link} to="/admin/instructors"&gt;
+                  Instructors
+                &lt;/NavDropdown.Item&gt;
+              &lt;/NavDropdown&gt;
+            )}
+          &lt;/Nav&gt;
+          &lt;Nav className="ml-auto"&gt;
+            &lt;GoogleLogin
+              currentUser={currentUser}
+              handleLogin={handleLogin}
+              doLogout={doLogout}
+            /&gt;
+          &lt;/Nav&gt;
+        &lt;/Navbar.Collapse&gt;
+      &lt;/Container&gt;
+    &lt;/Navbar&gt;
   );
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -283,7 +283,7 @@ export default function AppNavbar({ doLogout }: { doLogout: () =&gt; void }): Re
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-01T04:27:23.863Z
+                at 2026-07-01T18:47:14.835Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
