@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for pages/Admin/AdminsCreatePage.jsx</title>
+    <title>Code coverage report for pages/Admin/InstructorsCreatePage.tsx</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,7 +19,7 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">pages/Admin</a> AdminsCreatePage.jsx</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">pages/Admin</a> InstructorsCreatePage.tsx</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>0/3</span>
             </div>
         
             
@@ -107,12 +107,31 @@
 <a name='L42'></a><a href='#L42'>42</a>
 <a name='L43'></a><a href='#L43'>43</a>
 <a name='L44'></a><a href='#L44'>44</a>
-<a name='L45'></a><a href='#L45'>45</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -124,18 +143,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -152,44 +166,51 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import RoleEmailForm from "main/components/Users/RoleEmailForm";
-import { Navigate } from "react-router";
+import RoleEmailForm, {
+  type RoleEmailFormFields,
+} from "main/components/Users/RoleEmailForm";
+import { useNavigate } from "react-router";
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
+import type { AxiosRequestConfig } from "axios";
 &nbsp;
-export default function <span class="fstat-no" title="function not covered" >AdminsCreatePage({</span> storybook = <span class="branch-0 cbranch-no" title="branch not covered" >false }</span>) {
-  const objectToAxiosParams = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(a</span>dmin) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
-    url: "/api/admin/post",
+type InstructorsCreatePageProps = {
+  storybook?: boolean;
+};
+&nbsp;
+export default function <span class="fstat-no" title="function not covered" >InstructorsCreatePage({</span>
+  storybook = <span class="branch-0 cbranch-no" title="branch not covered" >false,</span>
+}: InstructorsCreatePageProps): React.JSX.Element {
+  const <span class="cstat-no" title="statement not covered" >navigation = useNavigate();</span>
+  const objectToAxiosParams = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(</span></span>
+    instructor: RoleEmailFormFields,
+  ): AxiosRequestConfig =&gt; (<span class="cstat-no" title="statement not covered" >{</span>
+    url: "/api/admin/instructors/post",
     method: "POST",
     params: {
-      email: admin.email,
+      email: instructor.email,
     },
   });
 &nbsp;
-  const onSuccess = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(a</span>dmin) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    toast(`New admin added - email: ${admin.email}`);</span>
+  const onSuccess = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(i</span>nstructor: RoleEmailFormFields) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    toast(`New instructor added - email: ${instructor.email}`);</span>
+<span class="cstat-no" title="statement not covered" >    if (!storybook) <span class="cstat-no" title="statement not covered" >navigation("/admin/instructors");</span></span>
   };
 &nbsp;
   const <span class="cstat-no" title="statement not covered" >mutation = useBackendMutation(</span>
     objectToAxiosParams,
     { onSuccess },
-    ["/api/admin/all"], // mutation makes this key stale so that pages relying on it reload
+    ["/api/admin/instructors/all"], // mutation makes this key stale so that pages relying on it reload
   );
 &nbsp;
-  const { isSuccess } = <span class="cstat-no" title="statement not covered" >mutation;</span>
-&nbsp;
-  const onSubmit = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async (d</span>ata) =&gt; {</span>
+  const onSubmit = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async (d</span>ata: RoleEmailFormFields) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    mutation.mutate(data);</span>
   };
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  if (isSuccess &amp;&amp; !storybook) {</span>
-<span class="cstat-no" title="statement not covered" >    return &lt;Navigate to="/admin/admins" /&gt;;</span>
-  }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
     &lt;BasicLayout&gt;
       &lt;div className="pt-2"&gt;
-        &lt;h1&gt;Add New Admin&lt;/h1&gt;
+        &lt;h1&gt;Add New Instructor&lt;/h1&gt;
         &lt;RoleEmailForm submitAction={onSubmit} /&gt;
       &lt;/div&gt;
     &lt;/BasicLayout&gt;
@@ -202,7 +223,7 @@ export default function <span class="fstat-no" title="function not covered" >Adm
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-01T18:47:14.835Z
+                at 2026-07-01T19:11:14.559Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
