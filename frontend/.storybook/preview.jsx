@@ -1,6 +1,6 @@
 import "bootstrap/dist/css/bootstrap.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 
 const queryClient = new QueryClient();
 

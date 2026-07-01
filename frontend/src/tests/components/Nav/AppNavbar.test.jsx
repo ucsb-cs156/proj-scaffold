@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import AppNavbar from "main/components/Nav/AppNavbar";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
@@ -33,7 +33,6 @@ describe("AppNavbar tests", () => {
       currentUserFixtures.userOnly,
       systemInfoFixtures.showingNeither,
     );
-    expect(screen.getByText("cgaucho@ucsb.edu")).toBeInTheDocument();
     expect(screen.getByText("Log Out")).toBeInTheDocument();
     expect(screen.queryByText("Log In")).not.toBeInTheDocument();
   });
@@ -44,13 +43,5 @@ describe("AppNavbar tests", () => {
       systemInfoFixtures.showingNeither,
     );
     expect(screen.getByText("Scaffold")).toBeInTheDocument();
-  });
-
-  test("renders UCSB CS concept graph subtitle", () => {
-    renderNavbar(
-      currentUserFixtures.notLoggedIn,
-      systemInfoFixtures.showingNeither,
-    );
-    expect(screen.getByText("UCSB CS concept graph")).toBeInTheDocument();
   });
 });

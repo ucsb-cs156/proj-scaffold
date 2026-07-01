@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import ConceptGraph from "../components/ConceptGraph";
+
+import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
+
 import {
   fetchAssessments,
   fetchQuestions,
@@ -10,7 +13,7 @@ import {
 } from "../api/client";
 import type { Assessment, Question } from "../api/client";
 import { majorConcepts, prereqEdgeData } from "../data/conceptGraph";
-import ConsentScreen from "../components/ConsentScreen";
+import LoginScreen from "main/components/LoginScreen";
 import QuestionSearch from "../components/QuestionSearch";
 import AssessmentSelect from "../components/AssessmentSelect";
 import { conceptContent, type ConceptContent } from "../data/conceptContent";
@@ -313,435 +316,445 @@ export default function HomePage() {
   };
 
   if (!currentUser?.loggedIn) {
-    return <ConsentScreen />;
+    return (
+      <BasicLayout>
+        <LoginScreen />
+      </BasicLayout>
+    );
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        flex: 1,
-        minHeight: 0,
-        color: "#f7ede1",
-      }}
-    >
-      {/* ── Top bar ── */}
+    <BasicLayout>
       <div
         style={{
-          height: 60,
-          flexShrink: 0,
-          background: "#f4e87b",
           display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "0 20px",
+          flexDirection: "column",
+          width: "100%",
+          flex: 1,
+          minHeight: 0,
+          color: "#f7ede1",
         }}
       >
+        {/* ── Top bar ── */}
         <div
           style={{
-            fontFamily: "Helvetica, Arial, sans-serif",
-            fontWeight: 800,
-            fontSize: 20,
-            color: "#1E293B",
-            background: "#d9f9ff",
-            padding: "4px 12px",
-            borderRadius: 8,
-            borderTop: "1.5px solid #1E293B",
-            borderLeft: "1.5px solid #1E293B",
-            borderRight: "4px solid #1E293B",
-            borderBottom: "4px solid #1E293B",
-          }}
-        >
-          Scaffold
-        </div>
-        <AssessmentSelect
-          assessments={assessments}
-          selectedAssessmentId={selectedAssessmentId}
-          onSelect={(id) => {
-            setSelectedAssessmentId(id);
-            setSelectedQuestionId("");
-          }}
-        />
-        <div style={{ flex: 1, maxWidth: 300 }}>
-          <QuestionSearch
-            questions={questions}
-            selectedQuestionId={selectedQuestionId}
-            onSelect={setSelectedQuestionId}
-            disabled={!selectedAssessmentId || questions.length === 0}
-          />
-        </div>
-        <div
-          style={{
+            height: 60,
+            flexShrink: 0,
+            background: "#f4e87b",
             display: "flex",
             alignItems: "center",
-            gap: 8,
-            marginLeft: "auto",
-            paddingRight: 0,
+            gap: 12,
+            padding: "0 20px",
           }}
         >
           <div
             style={{
-              width: 28,
-              height: 28,
-              borderRadius: 6,
+              fontFamily: "Helvetica, Arial, sans-serif",
+              fontWeight: 800,
+              fontSize: 20,
+              color: "#1E293B",
+              background: "#d9f9ff",
+              padding: "4px 12px",
+              borderRadius: 8,
               borderTop: "1.5px solid #1E293B",
               borderLeft: "1.5px solid #1E293B",
               borderRight: "4px solid #1E293B",
               borderBottom: "4px solid #1E293B",
-              background: "#FACC15",
+            }}
+          >
+            Scaffold
+          </div>
+          <AssessmentSelect
+            assessments={assessments}
+            selectedAssessmentId={selectedAssessmentId}
+            onSelect={(id) => {
+              setSelectedAssessmentId(id);
+              setSelectedQuestionId("");
+            }}
+          />
+          <div style={{ flex: 1, maxWidth: 300 }}>
+            <QuestionSearch
+              questions={questions}
+              selectedQuestionId={selectedQuestionId}
+              onSelect={setSelectedQuestionId}
+              disabled={!selectedAssessmentId || questions.length === 0}
+            />
+          </div>
+          <div
+            style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
+              gap: 8,
+              marginLeft: "auto",
+              paddingRight: 0,
             }}
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="#1E293B"
-              stroke="#1E293B"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                borderTop: "1.5px solid #1E293B",
+                borderLeft: "1.5px solid #1E293B",
+                borderRight: "4px solid #1E293B",
+                borderBottom: "4px solid #1E293B",
+                background: "#FACC15",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
             >
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="#1E293B"
+                stroke="#1E293B"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </div>
+            <span
+              style={{
+                fontFamily: "Helvetica, Arial, sans-serif",
+                fontSize: "clamp(11px, 2vw, 16px)",
+                fontWeight: 700,
+                color: "#1E293B",
+                letterSpacing: "0.03em",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {starredIds.size} / 26
+            </span>
           </div>
-          <span
-            style={{
-              fontFamily: "Helvetica, Arial, sans-serif",
-              fontSize: "clamp(11px, 2vw, 16px)",
-              fontWeight: 700,
-              color: "#1E293B",
-              letterSpacing: "0.03em",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {starredIds.size} / 26
-          </span>
         </div>
-      </div>
 
-      {/* ── Graph ── */}
-      <div style={{ flex: 1, minHeight: 0, background: "#ffffff" }}>
-        <ConceptGraph
-          highlightedIds={highlightedIds}
-          highlightedSubconcepts={highlightedSubconcepts}
-          onConceptClick={handleConceptClick}
-          starredIds={starredIds}
-          onStarClick={handleStarClick}
-          onReset={handleReset}
-          restoredDetailCards={initialDetailCards}
-          onDetailAdded={handleDetailAdded}
-          onDetailDeleted={handleDetailDeleted}
-          onDetailMoved={handleDetailMoved}
-          masteredSubconcepts={masteredSubconcepts}
-          onSubconceptMastered={handleSubconceptMastered}
-          onPaneClick={handlePaneClick}
-        />
-      </div>
+        {/* ── Graph ── */}
+        <div style={{ flex: 1, minHeight: 0, background: "#ffffff" }}>
+          <ConceptGraph
+            highlightedIds={highlightedIds}
+            highlightedSubconcepts={highlightedSubconcepts}
+            onConceptClick={handleConceptClick}
+            starredIds={starredIds}
+            onStarClick={handleStarClick}
+            onReset={handleReset}
+            restoredDetailCards={initialDetailCards}
+            onDetailAdded={handleDetailAdded}
+            onDetailDeleted={handleDetailDeleted}
+            onDetailMoved={handleDetailMoved}
+            masteredSubconcepts={masteredSubconcepts}
+            onSubconceptMastered={handleSubconceptMastered}
+            onPaneClick={handlePaneClick}
+          />
+        </div>
 
-      {/* ── Bottom toolbar ── */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 20,
-          flexShrink: 0,
-          background: "#f4e87b",
-        }}
-      >
-        {/* Main toolbar row */}
+        {/* ── Bottom toolbar ── */}
         <div
           style={{
-            padding: "12px 20px 6px",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            minHeight: 60,
+            position: "relative",
+            zIndex: 20,
+            flexShrink: 0,
+            background: "#f4e87b",
           }}
         >
-          {selectedConcept ? (
-            <>
-              {/* Main concept button */}
-              <button
-                onClick={() =>
-                  setSelectedItem(
-                    selectedItem === selectedConcept.id
-                      ? null
-                      : selectedConcept.id,
-                  )
-                }
-                style={{
-                  background:
-                    selectedItem === selectedConcept.id
-                      ? selectedConcept.color
-                      : "#ffffff",
-                  color: "#000000",
-                  borderTop: "1.5px solid #1E293B",
-                  borderLeft: "1.5px solid #1E293B",
-                  borderRight: "4px solid #1E293B",
-                  borderBottom: "4px solid #1E293B",
-                  borderRadius: 6,
-                  padding: "5px 14px",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  fontFamily: "Helvetica, Arial, sans-serif",
-                  cursor: "pointer",
-                  flexShrink: 0,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {selectedConcept.label.replace(/\n/g, " ")}
-              </button>
-
-              {/* Divider */}
-              <div
-                style={{
-                  width: 1,
-                  alignSelf: "stretch",
-                  background: "#00000033",
-                  flexShrink: 0,
-                }}
-              />
-
-              {/* Subconcept buttons */}
-              <div
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 8,
-                  alignItems: "flex-start",
-                }}
-              >
-                {selectedConcept.subconcepts.map((sub) => (
-                  <button
-                    key={sub}
-                    onClick={() =>
-                      setSelectedItem(selectedItem === sub ? null : sub)
-                    }
-                    style={{
-                      background:
-                        selectedItem === sub
-                          ? selectedConcept.color
-                          : "#ffffff",
-                      color: "#000000",
-                      border: "1px solid #000000",
-                      borderRadius: 6,
-                      padding: "5px 14px",
-                      fontSize: 14,
-                      fontWeight: 500,
-                      fontFamily: "Helvetica, Arial, sans-serif",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {sub.replace(/\n/g, " ")}
-                  </button>
-                ))}
-              </div>
-
-              {/* Close button */}
-              <div
-                onClick={() => {
-                  setSelectedConceptId(null);
-                  setSelectedItem(null);
-                  setCloseHovered(false);
-                  if (!selectedQuestionId) setHighlightedIds(new Set());
-                }}
-                onMouseEnter={() => setCloseHovered(true)}
-                onMouseLeave={() => setCloseHovered(false)}
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  borderTop: "1.5px solid #1E293B",
-                  borderLeft: "1.5px solid #1E293B",
-                  borderRight: "4px solid #1E293B",
-                  borderBottom: "4px solid #1E293B",
-                  background: closeHovered ? "#ef4444" : "#ffffff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  flexShrink: 0,
-                  transition: "background 0.15s",
-                }}
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke={closeHovered ? "#ffffff" : "#1E293B"}
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+          {/* Main toolbar row */}
+          <div
+            style={{
+              padding: "12px 20px 6px",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              minHeight: 60,
+            }}
+          >
+            {selectedConcept ? (
+              <>
+                {/* Main concept button */}
+                <button
+                  onClick={() =>
+                    setSelectedItem(
+                      selectedItem === selectedConcept.id
+                        ? null
+                        : selectedConcept.id,
+                    )
+                  }
+                  style={{
+                    background:
+                      selectedItem === selectedConcept.id
+                        ? selectedConcept.color
+                        : "#ffffff",
+                    color: "#000000",
+                    borderTop: "1.5px solid #1E293B",
+                    borderLeft: "1.5px solid #1E293B",
+                    borderRight: "4px solid #1E293B",
+                    borderBottom: "4px solid #1E293B",
+                    borderRadius: 6,
+                    padding: "5px 14px",
+                    fontSize: 15,
+                    fontWeight: 700,
+                    fontFamily: "Helvetica, Arial, sans-serif",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                    whiteSpace: "nowrap",
+                  }}
                 >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </div>
-            </>
-          ) : (
-            <div style={{ color: "#000000", fontSize: 13, lineHeight: "36px" }}>
-              {selectedQuestionId
-                ? "Click a concept card to explore it."
-                : "Select a question, or click any concept card to explore it."}
-            </div>
-          )}
-        </div>
+                  {selectedConcept.label.replace(/\n/g, " ")}
+                </button>
 
-        {/* Expanded cards — only shown when a button is clicked */}
-        {selectedConcept &&
-          selectedItem !== null &&
-          (() => {
-            const selectedItemLabel =
-              selectedItem === selectedConcept.id
-                ? selectedConcept.label.replace(/\n/g, " ")
-                : (selectedItem ?? "");
-            const contentKey =
-              selectedItem === selectedConcept.id
-                ? selectedConcept.id
-                : `${selectedConcept.id}:${selectedItem}`;
-            const content = conceptContent[contentKey];
-            const isMajorConcept = selectedItem === selectedConcept.id;
+                {/* Divider */}
+                <div
+                  style={{
+                    width: 1,
+                    alignSelf: "stretch",
+                    background: "#00000033",
+                    flexShrink: 0,
+                  }}
+                />
 
-            return (
-              <div style={{ padding: "0 20px 20px", display: "flex", gap: 12 }}>
-                {[
-                  { label: "Description", key: "description" },
-                  { label: "Example", key: "example" },
-                ].map((card) => {
-                  const isAdded = addedDetailKeys.has(
-                    `${card.label}:${selectedItemLabel}`,
-                  );
-                  return (
-                    <div
-                      key={card.key}
-                      draggable={!isAdded}
-                      onDragStart={
-                        isAdded
-                          ? undefined
-                          : (e) => {
-                              e.dataTransfer.setData(
-                                "application/scaffold-card",
-                                JSON.stringify({
-                                  cardType: card.label,
-                                  itemLabel: selectedItemLabel,
-                                  conceptId: selectedConcept.id,
-                                  conceptColor: selectedConcept.color,
-                                  cardContent:
-                                    content?.[
-                                      card.key as keyof ConceptContent
-                                    ] ?? "",
-                                }),
-                              );
-                              e.dataTransfer.effectAllowed = "move";
-                            }
+                {/* Subconcept buttons */}
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 8,
+                    alignItems: "flex-start",
+                  }}
+                >
+                  {selectedConcept.subconcepts.map((sub) => (
+                    <button
+                      key={sub}
+                      onClick={() =>
+                        setSelectedItem(selectedItem === sub ? null : sub)
                       }
                       style={{
-                        flex: 1,
-                        background: toPastel(selectedConcept.color),
-                        borderRadius: 8,
+                        background:
+                          selectedItem === sub
+                            ? selectedConcept.color
+                            : "#ffffff",
+                        color: "#000000",
                         border: "1px solid #000000",
-                        padding: "10px 14px",
-                        textAlign: "left",
-                        cursor: isAdded ? "default" : "grab",
-                        opacity: isAdded ? 0.8 : 1,
+                        borderRadius: 6,
+                        padding: "5px 14px",
+                        fontSize: 14,
+                        fontWeight: 500,
+                        fontFamily: "Helvetica, Arial, sans-serif",
+                        cursor: "pointer",
                       }}
                     >
-                      <span
-                        style={{
-                          background: selectedConcept.color,
-                          borderRadius: 100,
-                          padding: "2px 10px",
-                          border: "1px solid #000000",
-                          fontFamily: "Helvetica, Arial, sans-serif",
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: "#000000",
-                          whiteSpace: "nowrap",
-                          width: "fit-content",
-                          display: "block",
-                          marginBottom: 8,
-                        }}
-                      >
-                        {card.label}
-                      </span>
-                      <div
-                        style={{
-                          fontFamily: "Helvetica, Arial, sans-serif",
-                          fontSize: 15,
-                          color: "#1E293B",
-                          lineHeight: 1.6,
-                          whiteSpace: "pre-wrap",
-                        }}
-                      >
-                        {card.key === "example" ? (
-                          <pre
-                            style={{
-                              fontFamily: "monospace",
-                              border: "1px solid #000000",
-                              fontSize: 13,
-                              background: "#e2e8f0",
-                              borderRadius: 6,
-                              padding: "8px 12px",
-                              margin: 0,
-                              whiteSpace: "pre-wrap",
-                              color: "#1E293B",
-                            }}
-                          >
-                            {content?.[card.key as keyof ConceptContent] ??
-                              `Example for "${selectedItemLabel}" will appear here.`}
-                          </pre>
-                        ) : (
-                          (content?.[card.key as keyof ConceptContent] ??
-                          `${card.label} for "${selectedItemLabel}" will appear here.`)
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                      {sub.replace(/\n/g, " ")}
+                    </button>
+                  ))}
+                </div>
 
-                {isMajorConcept && (
-                  <a
-                    href={content?.practiceUrl ?? "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      flex: "0 0 auto",
-                      alignSelf: "center",
-                      background: selectedConcept.color,
-                      borderRadius: 8,
-                      borderTop: "1.5px solid #1E293B",
-                      borderLeft: "1.5px solid #1E293B",
-                      borderRight: "4px solid #1E293B",
-                      borderBottom: "4px solid #1E293B",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      textAlign: "center",
-                      fontFamily: "Helvetica, Arial, sans-serif",
-                      fontSize: 15,
-                      fontWeight: 700,
-                      color: "#1E293B",
-                      cursor: content?.practiceUrl ? "pointer" : "default",
-                      textDecoration: "none",
-                      padding: "10px 14px",
-                      opacity: content?.practiceUrl ? 1 : 0.4,
-                    }}
+                {/* Close button */}
+                <div
+                  onClick={() => {
+                    setSelectedConceptId(null);
+                    setSelectedItem(null);
+                    setCloseHovered(false);
+                    if (!selectedQuestionId) setHighlightedIds(new Set());
+                  }}
+                  onMouseEnter={() => setCloseHovered(true)}
+                  onMouseLeave={() => setCloseHovered(false)}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 6,
+                    borderTop: "1.5px solid #1E293B",
+                    borderLeft: "1.5px solid #1E293B",
+                    borderRight: "4px solid #1E293B",
+                    borderBottom: "4px solid #1E293B",
+                    background: closeHovered ? "#ef4444" : "#ffffff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                    transition: "background 0.15s",
+                  }}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={closeHovered ? "#ffffff" : "#1E293B"}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    Practice with a <br />
-                    PrairieLearn <br /> question
-                  </a>
-                )}
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </div>
+              </>
+            ) : (
+              <div
+                style={{ color: "#000000", fontSize: 13, lineHeight: "36px" }}
+              >
+                {selectedQuestionId
+                  ? "Click a concept card to explore it."
+                  : "Select a question, or click any concept card to explore it."}
               </div>
-            );
-          })()}
+            )}
+          </div>
+
+          {/* Expanded cards — only shown when a button is clicked */}
+          {selectedConcept &&
+            selectedItem !== null &&
+            (() => {
+              const selectedItemLabel =
+                selectedItem === selectedConcept.id
+                  ? selectedConcept.label.replace(/\n/g, " ")
+                  : (selectedItem ?? "");
+              const contentKey =
+                selectedItem === selectedConcept.id
+                  ? selectedConcept.id
+                  : `${selectedConcept.id}:${selectedItem}`;
+              const content = conceptContent[contentKey];
+              const isMajorConcept = selectedItem === selectedConcept.id;
+
+              return (
+                <div
+                  style={{ padding: "0 20px 20px", display: "flex", gap: 12 }}
+                >
+                  {[
+                    { label: "Description", key: "description" },
+                    { label: "Example", key: "example" },
+                  ].map((card) => {
+                    const isAdded = addedDetailKeys.has(
+                      `${card.label}:${selectedItemLabel}`,
+                    );
+                    return (
+                      <div
+                        key={card.key}
+                        draggable={!isAdded}
+                        onDragStart={
+                          isAdded
+                            ? undefined
+                            : (e) => {
+                                e.dataTransfer.setData(
+                                  "application/scaffold-card",
+                                  JSON.stringify({
+                                    cardType: card.label,
+                                    itemLabel: selectedItemLabel,
+                                    conceptId: selectedConcept.id,
+                                    conceptColor: selectedConcept.color,
+                                    cardContent:
+                                      content?.[
+                                        card.key as keyof ConceptContent
+                                      ] ?? "",
+                                  }),
+                                );
+                                e.dataTransfer.effectAllowed = "move";
+                              }
+                        }
+                        style={{
+                          flex: 1,
+                          background: toPastel(selectedConcept.color),
+                          borderRadius: 8,
+                          border: "1px solid #000000",
+                          padding: "10px 14px",
+                          textAlign: "left",
+                          cursor: isAdded ? "default" : "grab",
+                          opacity: isAdded ? 0.8 : 1,
+                        }}
+                      >
+                        <span
+                          style={{
+                            background: selectedConcept.color,
+                            borderRadius: 100,
+                            padding: "2px 10px",
+                            border: "1px solid #000000",
+                            fontFamily: "Helvetica, Arial, sans-serif",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: "#000000",
+                            whiteSpace: "nowrap",
+                            width: "fit-content",
+                            display: "block",
+                            marginBottom: 8,
+                          }}
+                        >
+                          {card.label}
+                        </span>
+                        <div
+                          style={{
+                            fontFamily: "Helvetica, Arial, sans-serif",
+                            fontSize: 15,
+                            color: "#1E293B",
+                            lineHeight: 1.6,
+                            whiteSpace: "pre-wrap",
+                          }}
+                        >
+                          {card.key === "example" ? (
+                            <pre
+                              style={{
+                                fontFamily: "monospace",
+                                border: "1px solid #000000",
+                                fontSize: 13,
+                                background: "#e2e8f0",
+                                borderRadius: 6,
+                                padding: "8px 12px",
+                                margin: 0,
+                                whiteSpace: "pre-wrap",
+                                color: "#1E293B",
+                              }}
+                            >
+                              {content?.[card.key as keyof ConceptContent] ??
+                                `Example for "${selectedItemLabel}" will appear here.`}
+                            </pre>
+                          ) : (
+                            (content?.[card.key as keyof ConceptContent] ??
+                            `${card.label} for "${selectedItemLabel}" will appear here.`)
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {isMajorConcept && (
+                    <a
+                      href={content?.practiceUrl ?? "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        flex: "0 0 auto",
+                        alignSelf: "center",
+                        background: selectedConcept.color,
+                        borderRadius: 8,
+                        borderTop: "1.5px solid #1E293B",
+                        borderLeft: "1.5px solid #1E293B",
+                        borderRight: "4px solid #1E293B",
+                        borderBottom: "4px solid #1E293B",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        textAlign: "center",
+                        fontFamily: "Helvetica, Arial, sans-serif",
+                        fontSize: 15,
+                        fontWeight: 700,
+                        color: "#1E293B",
+                        cursor: content?.practiceUrl ? "pointer" : "default",
+                        textDecoration: "none",
+                        padding: "10px 14px",
+                        opacity: content?.practiceUrl ? 1 : 0.4,
+                      }}
+                    >
+                      Practice with a <br />
+                      PrairieLearn <br /> question
+                    </a>
+                  )}
+                </div>
+              );
+            })()}
+        </div>
       </div>
-    </div>
+    </BasicLayout>
   );
 }

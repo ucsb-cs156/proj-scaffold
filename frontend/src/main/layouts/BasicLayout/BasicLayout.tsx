@@ -1,12 +1,14 @@
 import type { ReactNode } from "react";
 import AppNavbar from "../../components/Nav/AppNavbar";
 import Footer from "../../components/Nav/Footer";
-
+import { useLogout } from "../../utils/currentUser";
 interface BasicLayoutProps {
   children: ReactNode;
 }
 
 export default function BasicLayout({ children }: BasicLayoutProps) {
+  const doLogout = useLogout().mutate;
+
   return (
     <div
       style={{
@@ -15,7 +17,7 @@ export default function BasicLayout({ children }: BasicLayoutProps) {
         flexDirection: "column",
       }}
     >
-      <AppNavbar />
+      <AppNavbar doLogout={doLogout} />
       <main
         style={{
           width: "1126px",

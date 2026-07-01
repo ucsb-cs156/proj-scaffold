@@ -1,20 +1,39 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
+  type Cell,
+  type ColumnDef,
 } from "@tanstack/react-table";
 import { Button } from "react-bootstrap";
 import SortCaret from "main/components/Common/SortCaret";
-import { convertOldStyleColumnsToNewStyle } from "main/components/OurTableUtils";
+import {
+  convertOldStyleColumnsToNewStyle,
+  type LegacyColumn,
+} from "main/components/OurTableUtils";
 
-function OurTable({ data, columns, testid = "testid" }) {
+type OurTableProps<T extends object> = {
+  data: T[];
+  columns: LegacyColumn[];
+  testid?: string;
+};
+
+export default function OurTable<T extends object>({
+  data,
+  columns,
+  testid = "testid",
+}: OurTableProps<T>): React.JSX.Element {
   const newColumns = convertOldStyleColumnsToNewStyle(columns);
   const memoizedData = useMemo(() => data, [data]);
-  const memoizedColumns = useMemo(() => newColumns, [newColumns]);
+  const memoizedColumns = useMemo(
+    () => newColumns as ColumnDef<T>[],
+    [newColumns],
+  );
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table returns new function references each render; React Compiler correctly skips memoizing this component
   const table = useReactTable({
     data: memoizedData,
     columns: memoizedColumns,
@@ -87,12 +106,15 @@ function OurTable({ data, columns, testid = "testid" }) {
   );
 }
 
-export default OurTable;
+export function ButtonColumn<T extends object>(
+  label: string,
+  variant: string,
+  callback: (cell: Cell<T, unknown>) => void,
+  testid: string,
+): ColumnDef<T> {
+  const columnHelper = createColumnHelper<T>();
 
-export function ButtonColumn(label, variant, callback, testid) {
-  const columnHelper = createColumnHelper();
-
-  const buttonColumn = columnHelper.display({
+  return columnHelper.display({
     id: label, // Unique ID for display columns
     header: label,
     cell: ({ cell }) => (
@@ -105,5 +127,4 @@ export function ButtonColumn(label, variant, callback, testid) {
       </Button>
     ),
   });
-  return buttonColumn;
 }

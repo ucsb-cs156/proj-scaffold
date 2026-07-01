@@ -6,13 +6,13 @@ import {
   currentUserFixtures,
 } from "fixtures/currentUserFixtures";
 import mockConsole from "tests/testutils/mockConsole";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { vi } from "vitest";
 
-vi.mock("react-router-dom");
-const { MemoryRouter } = await vi.importActual("react-router-dom");
+vi.mock("react-router");
+const { MemoryRouter } = await vi.importActual("react-router");
 
 const axiosMock = new AxiosMockAdapter(axios);
 
