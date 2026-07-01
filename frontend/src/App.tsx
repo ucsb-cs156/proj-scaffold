@@ -12,7 +12,7 @@ import SignInPage from "main/pages/Auth/SignInPage";
 import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
 
 import { useCurrentUser } from "main/utils/currentUser";
-import AdminDeveloperPage from "./main/pages/Admin/AdminDeveloperPage";
+import AdminDeveloperPage from "main/pages/Admin/AdminDeveloperPage";
 
 export default function App() {
   const currentUser = useCurrentUser();
