@@ -29,11 +29,9 @@ export default function AdminDeveloperPage() {
           <li>
             <a href="/swagger-ui/index.html">Swagger</a>
           </li>
-          {systemInfo?.springH2ConsoleEnabled && (
-            <li>
-              <a href="/h2-console">H2 Console</a>
-            </li>
-          )}
+          <li>
+            <a href="/h2-console">H2 Console (only on localhost)</a>
+          </li>
         </ul>
 
         <h2>System Info</h2>
