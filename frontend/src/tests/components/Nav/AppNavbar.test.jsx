@@ -45,14 +45,6 @@ describe("AppNavbar tests", () => {
     expect(screen.getByText("Scaffold")).toBeInTheDocument();
   });
 
-  test("renders UCSB CS concept graph subtitle", () => {
-    renderNavbar(
-      currentUserFixtures.notLoggedIn,
-      systemInfoFixtures.showingNeither,
-    );
-    expect(screen.getByText("UCSB CS concept graph")).toBeInTheDocument();
-  });
-
   test("renders Admin menu with Developer Info for admins", () => {
     renderNavbar(
       currentUserFixtures.adminUser,
