@@ -1,22 +1,72 @@
 import "bootstrap/dist/css/bootstrap.css";
 
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import BasicLayout from "./main/layouts/BasicLayout/BasicLayout";
-import HomePage from "./main/pages/HomePage";
+import { BrowserRouter, Route, Routes } from "react-router";
+import AdminsIndexPage from "main/pages/Admin/AdminsIndexPage";
+import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
+import InstructorsIndexPage from "main/pages/Admin/InstructorsIndexPage";
+import InstructorsCreatePage from "main/pages/Admin/InstructorsCreatePage";
+import ProtectedPage from "main/pages/Auth/ProtectedPage";
+import HomePage from "main/pages/HomePage";
+import NotFoundPage from "main/pages/Auth/NotFoundPage";
+import SignInPage from "main/pages/Auth/SignInPage";
+import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
+
+import { useCurrentUser } from "main/utils/currentUser";
+
 
 export default function App() {
+
+    const currentUser = useCurrentUser();
+
+
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<SignInPage />} />
+        <Route path="/login/success" element={<SignInSuccessPage />} />
         <Route
-          path="/"
+          path="/admin/admins"
           element={
-            <BasicLayout>
-              <HomePage />
-            </BasicLayout>
+            <ProtectedPage
+              component={<AdminsIndexPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="/admin/instructors"
+          element={
+            <ProtectedPage
+              component={<InstructorsIndexPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/admins/create"
+          element={
+            <ProtectedPage
+              component={<AdminsCreatePage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/instructors/create"
+          element={
+            <ProtectedPage
+              component={<InstructorsCreatePage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route path="*" element={<NotFoundPage />} />
+        {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
       </Routes>
     </BrowserRouter>
   );

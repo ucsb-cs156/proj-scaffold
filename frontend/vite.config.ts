@@ -10,6 +10,10 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': 'http://localhost:8080',
+      '/logout': 'http://localhost:8080',
+      '/oauth2': 'http://localhost:8080',
+      // Only the OAuth2 callback, not /login/success (an SPA route Vite must serve itself).
+      '/login/oauth2': 'http://localhost:8080',
     },
   },
   build: {

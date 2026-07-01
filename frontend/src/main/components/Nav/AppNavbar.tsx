@@ -1,10 +1,11 @@
-import { Link } from "react-router-dom";
-import { useCurrentUser, useLogout } from "../../utils/currentUser";
+import { Link } from "react-router";
+import { hasRole, useCurrentUser } from "../../utils/currentUser";
 import { useSystemInfo } from "../../utils/systemInfo";
+import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
+import GoogleLogin from "main/components/Nav/GoogleLogin";
 
-export default function AppNavbar() {
+export default function AppNavbar({ doLogout }: { doLogout: () => void }): React.JSX.Element {
   const currentUser = useCurrentUser();
-  const logout = useLogout();
   const { data: systemInfo } = useSystemInfo();
 
   const handleLogin = () => {
@@ -12,99 +13,59 @@ export default function AppNavbar() {
       systemInfo?.oauthLogin ?? "/oauth2/authorization/google";
   };
 
-  const handleLogout = () => {
-    logout.mutate();
-  };
-
   return (
-    <header
-      style={{
-        background: "#ffffff",
-        borderBottom: "1px solid var(--border)",
-      }}
-    >
-      <div
-        style={{
-          width: "1126px",
-          maxWidth: "100%",
-          margin: "0 auto",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "16px",
-          padding: "16px 20px",
-        }}
+     <Navbar
+        expand="md"
+        sticky="top"
+        data-testid="AppNavbar"
       >
-        <Link
-          to="/"
-          style={{
-            color: "#1E293B",
-            fontSize: "1.5rem",
-            fontWeight: 700,
-            textDecoration: "none",
-          }}
-        >
-          Scaffold
-        </Link>
-        <span
-          style={{
-            color: "#475569",
-            fontSize: "0.95rem",
-          }}
-        >
-          UCSB CS concept graph
-        </span>
-        <div
-          style={{
-            marginLeft: "auto",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-          }}
-        >
-          {currentUser?.loggedIn ? (
-            <>
-              <span style={{ color: "#475569", fontSize: "0.9rem" }}>
-                {
-                  (currentUser.root as { user?: { email?: string } })?.user
-                    ?.email
-                }
-              </span>
-              <button
-                onClick={handleLogout}
-                style={{
-                  padding: "6px 14px",
-                  background: "#1E293B",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                }}
-              >
-                Log Out
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={handleLogin}
-              style={{
-                padding: "6px 14px",
-                background: "#1E293B",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "0.875rem",
-                fontWeight: 600,
-              }}
-            >
-              Log In
-            </button>
-          )}
-        </div>
-      </div>
-    </header>
+        <Container>
+          <Navbar.Brand as={Link} to="/">
+            Scaffold
+          </Navbar.Brand>
+
+          <Navbar.Toggle />
+
+          <>
+            {/* be sure that each NavDropdown has a unique id and data-testid  */}
+          </>
+
+          <Navbar.Collapse className="justify-content-between">
+            <Nav className="mr-auto">
+              {systemInfo?.showSwaggerUILink && (
+                <>
+                  <Nav.Link href="/swagger-ui/index.html">Swagger</Nav.Link>
+                </>
+              )}
+              {systemInfo?.springH2ConsoleEnabled && (
+                <>
+                  <Nav.Link href="/h2-console">H2Console</Nav.Link>
+                </>
+              )}
+              {hasRole(currentUser, "ROLE_ADMIN") && (
+                <NavDropdown
+                  title="Admin"
+                  id="appnavbar-admin-dropdown"
+                  data-testid="appnavbar-admin-dropdown"
+                >
+                  <NavDropdown.Item as={Link} to="/admin/admins">
+                    Admins
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/admin/instructors">
+                    Instructors
+                  </NavDropdown.Item>
+                </NavDropdown>
+              )}
+            </Nav>
+            <Nav className="ml-auto">
+              <GoogleLogin
+                currentUser={currentUser}
+                handleLogin={handleLogin}
+                doLogout={doLogout}
+              />
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
   );
 }

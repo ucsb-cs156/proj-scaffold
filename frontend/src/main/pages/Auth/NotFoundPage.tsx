@@ -1,13 +1,15 @@
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import { Link } from "react-router";
+import { useNavigate } from "react-router";
 import { Button } from "react-bootstrap";
 
-export default function NotFoundPage() {
+export default function NotFoundPage(): React.JSX.Element {
+  const navigate = useNavigate();
+
   return (
     <BasicLayout>
       <h1>Page Not Found</h1>
       <p>Let&apos;s get you back on track.</p>
-      <Button as={Link} to="/">
+      <Button onClick={() => navigate("/")}>
         Click to Return Home
       </Button>
     </BasicLayout>

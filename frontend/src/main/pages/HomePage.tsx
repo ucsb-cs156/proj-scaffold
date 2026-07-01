@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import ConceptGraph from "../components/ConceptGraph";
+
+import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
+
 import {
   fetchAssessments,
   fetchQuestions,
@@ -313,10 +316,15 @@ export default function HomePage() {
   };
 
   if (!currentUser?.loggedIn) {
-    return <LoginScreen />;
+    return (
+      <BasicLayout>
+        <LoginScreen />
+      </BasicLayout>
+    );
   }
 
   return (
+    <BasicLayout>
     <div
       style={{
         display: "flex",
@@ -743,5 +751,6 @@ export default function HomePage() {
           })()}
       </div>
     </div>
+    </BasicLayout>
   );
 }
