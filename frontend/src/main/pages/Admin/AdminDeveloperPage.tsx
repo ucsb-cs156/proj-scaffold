@@ -4,13 +4,13 @@ export default function AdminDeveloperPage() {
   const { data: systemInfo } = useSystemInfo();
 
   return (
-    <section style={{ padding: "24px" }}>
+    <main style={{ padding: "24px" }}>
       <h1>Developer Information</h1>
       <h2>Current Deployed Branch</h2>
       <table>
         <tbody>
           <tr>
-            <td>Github Repo:</td>
+            <td>GitHub Repo:</td>
             <td>
               {systemInfo?.sourceRepo ? (
                 <a href={systemInfo.sourceRepo}>{systemInfo.sourceRepo}</a>
@@ -38,6 +38,6 @@ export default function AdminDeveloperPage() {
 
       <h2>System Info</h2>
       <pre>{JSON.stringify(systemInfo, null, 2)}</pre>
-    </section>
+    </main>
   );
 }

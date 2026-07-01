@@ -3,21 +3,22 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AdminDeveloperPage from "main/pages/Admin/AdminDeveloperPage";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false } },
-});
-queryClient.setQueryData(["systemInfo"], systemInfoFixtures.showingBoth);
-
 const meta: Meta<typeof AdminDeveloperPage> = {
   title: "pages/Admin/AdminDeveloperPage",
   component: AdminDeveloperPage,
   tags: ["autodocs"],
   decorators: [
-    (Story) => (
-      <QueryClientProvider client={queryClient}>
-        <Story />
-      </QueryClientProvider>
-    ),
+    (Story) => {
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+      queryClient.setQueryData(["systemInfo"], systemInfoFixtures.showingBoth);
+      return (
+        <QueryClientProvider client={queryClient}>
+          <Story />
+        </QueryClientProvider>
+      );
+    },
   ],
 };
 
