@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useCurrentUser, useLogout } from "../../utils/currentUser";
+import { hasRole, useCurrentUser, useLogout } from "../../utils/currentUser";
 import { useSystemInfo } from "../../utils/systemInfo";
 
 export default function AppNavbar() {
@@ -62,6 +62,32 @@ export default function AppNavbar() {
             gap: "12px",
           }}
         >
+          {hasRole(currentUser, "ROLE_ADMIN") && (
+            <details>
+              <summary
+                style={{
+                  cursor: "pointer",
+                  color: "#1E293B",
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                }}
+              >
+                Admin
+              </summary>
+              <div
+                style={{
+                  position: "absolute",
+                  marginTop: "6px",
+                  background: "#ffffff",
+                  border: "1px solid var(--border)",
+                  borderRadius: "6px",
+                  padding: "8px 10px",
+                }}
+              >
+                <Link to="/admin/developer">Developer Info</Link>
+              </div>
+            </details>
+          )}
           {currentUser?.loggedIn ? (
             <>
               <span style={{ color: "#475569", fontSize: "0.9rem" }}>
