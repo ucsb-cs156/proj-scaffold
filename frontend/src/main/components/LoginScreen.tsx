@@ -1,9 +1,12 @@
 import { useSystemInfo } from "../utils/systemInfo";
 
-export default function LoginScreen() {
+export default function LoginScreen({ onLogin }: { onLogin?: () => void }) {
   const { data: systemInfo } = useSystemInfo();
 
   const handleLogin = () => {
+    if (onLogin) {
+      onLogin();
+    }
     window.location.href =
       systemInfo?.oauthLogin ?? "/oauth2/authorization/google";
   };

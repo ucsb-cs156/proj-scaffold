@@ -10,7 +10,7 @@ import {
 } from "../api/client";
 import type { Assessment, Question } from "../api/client";
 import { majorConcepts, prereqEdgeData } from "../data/conceptGraph";
-import LoginScreen from "../components/LoginScreen";
+import LoginScreen from "main/components/LoginScreen";
 import QuestionSearch from "../components/QuestionSearch";
 import AssessmentSelect from "../components/AssessmentSelect";
 import { conceptContent, type ConceptContent } from "../data/conceptContent";
