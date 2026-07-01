@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for components/Nav/Footer.tsx</title>
+    <title>Code coverage report for components/Nav/HelpMenu.jsx</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,7 +19,7 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Nav</a> Footer.tsx</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Nav</a> HelpMenu.jsx</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
@@ -83,11 +83,11 @@
 <a name='L18'></a><a href='#L18'>18</a>
 <a name='L19'></a><a href='#L19'>19</a>
 <a name='L20'></a><a href='#L20'>20</a>
-<a name='L21'></a><a href='#L21'>21</a>
-<a name='L22'></a><a href='#L22'>22</a>
-<a name='L23'></a><a href='#L23'>23</a>
-<a name='L24'></a><a href='#L24'>24</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
+<a name='L21'></a><a href='#L21'>21</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -103,33 +103,24 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export default function Footer() {
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NavDropdown } from "react-bootstrap";
+import { Link } from "react-router";
+&nbsp;
+export default function HelpMenu() {
   return (
-    &lt;footer
-      style={{
-        background: "#ffffff",
-        borderTop: "1px solid var(--border)",
-      }}
-    &gt;
-      &lt;div
-        style={{
-          width: "1126px",
-          maxWidth: "100%",
-          margin: "0 auto",
-          padding: "16px 20px",
-          color: "#475569",
-          fontSize: "0.95rem",
-        }}
+    &lt;&gt;
+      &lt;NavDropdown
+        title="Help"
+        id="appnavbar-help-dropdown"
+        data-testid="appnavbar-help-dropdown"
+        className="narrow-dropdown" // Add the custom class
+        align="end" // Align the menu to the right
       &gt;
-        Scaffold is a UCSB Computer Science project.
-      &lt;/div&gt;
-    &lt;/footer&gt;
+        &lt;NavDropdown.Item as={Link} to="/help/about"&gt;
+          About Scaffold
+        &lt;/NavDropdown.Item&gt;
+      &lt;/NavDropdown&gt;
+    &lt;/&gt;
   );
 }
 &nbsp;</pre></td></tr></table></pre>

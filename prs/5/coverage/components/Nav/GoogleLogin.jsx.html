@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for components/Nav/Footer.tsx</title>
+    <title>Code coverage report for components/Nav/GoogleLogin.jsx</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,7 +19,7 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Nav</a> Footer.tsx</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Nav</a> GoogleLogin.jsx</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
@@ -86,8 +86,13 @@
 <a name='L21'></a><a href='#L21'>21</a>
 <a name='L22'></a><a href='#L22'>22</a>
 <a name='L23'></a><a href='#L23'>23</a>
-<a name='L24'></a><a href='#L24'>24</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -106,30 +111,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export default function Footer() {
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Button, Navbar } from "react-bootstrap";
+import { Link } from "react-router";
+import HelpMenu from "main/components/Nav/HelpMenu";
+&nbsp;
+export default function GoogleLogin({ currentUser, handleLogin, doLogout }) {
   return (
-    &lt;footer
-      style={{
-        background: "#ffffff",
-        borderTop: "1px solid var(--border)",
-      }}
-    &gt;
-      &lt;div
-        style={{
-          width: "1126px",
-          maxWidth: "100%",
-          margin: "0 auto",
-          padding: "16px 20px",
-          color: "#475569",
-          fontSize: "0.95rem",
-        }}
-      &gt;
-        Scaffold is a UCSB Computer Science project.
-      &lt;/div&gt;
-    &lt;/footer&gt;
+    &lt;&gt;
+      {currentUser &amp;&amp; currentUser.loggedIn ? (
+        &lt;&gt;
+          &lt;Navbar.Text className="me-3" as={Link} to="/profile"&gt;
+            Welcome, {currentUser.root.user.email}
+          &lt;/Navbar.Text&gt;
+          &lt;HelpMenu /&gt;
+          &lt;Button onClick={doLogout}&gt;Log Out&lt;/Button&gt;
+        &lt;/&gt;
+      ) : (
+        &lt;&gt;
+          &lt;HelpMenu /&gt;
+          &lt;Button onClick={handleLogin}&gt;Log In&lt;/Button&gt;
+        &lt;/&gt;
+      )}
+    &lt;/&gt;
   );
 }
 &nbsp;</pre></td></tr></table></pre>
