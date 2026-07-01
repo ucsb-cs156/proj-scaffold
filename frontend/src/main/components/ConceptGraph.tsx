@@ -214,9 +214,11 @@ function MajorNode({ data }: NodeProps) {
   const starred = data.starred as boolean;
   const onStarClick = data.onStarClick as () => void;
   const masteredSubconcepts = data.masteredSubconcepts as
-    Set<string> | undefined;
+    | Set<string>
+    | undefined;
   const onSubconceptMastered = data.onSubconceptMastered as
-    ((sub: string) => void) | undefined;
+    | ((sub: string) => void)
+    | undefined;
 
   const showColor = !hasSelection || highlighted;
 
