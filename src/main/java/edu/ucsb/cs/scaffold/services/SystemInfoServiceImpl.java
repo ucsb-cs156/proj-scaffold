@@ -20,7 +20,7 @@ public class SystemInfoServiceImpl extends SystemInfoService {
   @Value("${app.oauth.login:/oauth2/authorization/google}")
   private String oauthLogin;
 
-  @Value("${app.sourceRepo:https://github.com/ucsb-cs/scaffold}")
+  @Value("${app.sourceRepo:https://github.com/ucsb-cs156/proj-scaffold}")
   private String sourceRepo;
 
   @Override

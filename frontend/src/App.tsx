@@ -12,6 +12,7 @@ import SignInPage from "main/pages/Auth/SignInPage";
 import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
 
 import { useCurrentUser } from "main/utils/currentUser";
+import AdminDeveloperPage from "main/pages/Admin/AdminDeveloperPage";
 
 export default function App() {
   const currentUser = useCurrentUser();
@@ -62,8 +63,17 @@ export default function App() {
             />
           }
         />
+        <Route
+          path="/admin/developer"
+          element={
+            <ProtectedPage
+              component={<AdminDeveloperPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
         <Route path="*" element={<NotFoundPage />} />
-        {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
       </Routes>
     </BrowserRouter>
   );

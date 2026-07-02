@@ -3,12 +3,12 @@ export const systemInfoFixtures = {
     springH2ConsoleEnabled: false,
     showSwaggerUILink: false,
     oauthLogin: "/oauth2/authorization/google",
-    sourceRepo: "",
+    sourceRepo: "https://github.com/ucsb-cs156/proj-scaffold",
   },
   showingBoth: {
     springH2ConsoleEnabled: true,
     showSwaggerUILink: true,
     oauthLogin: "/oauth2/authorization/google",
-    sourceRepo: "https://github.com/ucsb-cs/scaffold",
+    sourceRepo: "https://github.com/ucsb-cs156/proj-scaffold",
   },
 };
