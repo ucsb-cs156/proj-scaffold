@@ -10,6 +10,7 @@ import edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptor;
 import edu.ucsb.cs.scaffold.services.CurrentUserService;
 import edu.ucsb.cs.scaffold.services.GrantedAuthoritiesService;
 import edu.ucsb.cs.scaffold.testconfig.TestConfig;
+import edu.ucsb.cs.scaffold.testconfig.TestCourseSecurity;
 import jakarta.annotation.PostConstruct;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
@@ -26,7 +27,7 @@ import org.springframework.test.web.servlet.MvcResult;
  * AdminRepository/InstructorRepository.
  */
 @ActiveProfiles("test")
-@Import({TestConfig.class, SecurityConfig.class})
+@Import({TestConfig.class, SecurityConfig.class, TestCourseSecurity.class})
 public abstract class ControllerTestCase {
 
   @Autowired public CurrentUserService currentUserService;

@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.ucsb.cs.scaffold.config.SecurityConfig;
-import edu.ucsb.cs.scaffold.controllers.DummyController;
+import edu.ucsb.cs.scaffold.controller.DummyController;
 import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.InstructorRepository;
 import edu.ucsb.cs.scaffold.testconfig.TestConfig;

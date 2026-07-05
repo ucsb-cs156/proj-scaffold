@@ -1,4 +1,4 @@
-package edu.ucsb.cs.scaffold.controllers;
+package edu.ucsb.cs.scaffold.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.ucsb.cs.scaffold.ControllerTestCase;
-import edu.ucsb.cs.scaffold.controller.QuestionController;
 import edu.ucsb.cs.scaffold.model.QuestionConcept;
 import edu.ucsb.cs.scaffold.repository.QuestionConceptRepository;
 import java.util.ArrayList;

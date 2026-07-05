@@ -1,0 +1,37 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "010-add-course-staff-table",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "course_staff" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "course_staff",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGINT",
+                    "autoIncrement": true,
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                { "column": { "name": "user_id", "type": "BIGINT" } },
+                { "column": { "name": "first_name", "type": "VARCHAR(255)" } },
+                { "column": { "name": "last_name", "type": "VARCHAR(255)" } },
+                { "column": { "name": "email", "type": "VARCHAR(255)" } },
+                { "column": { "name": "course_id", "type": "BIGINT" } },
+                { "column": { "name": "role", "type": "VARCHAR(255)" } }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

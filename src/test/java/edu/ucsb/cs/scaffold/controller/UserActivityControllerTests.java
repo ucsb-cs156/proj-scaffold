@@ -1,4 +1,4 @@
-package edu.ucsb.cs.scaffold.controllers;
+package edu.ucsb.cs.scaffold.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.ucsb.cs.scaffold.ControllerTestCase;
-import edu.ucsb.cs.scaffold.controller.UserActivityController;
 import edu.ucsb.cs.scaffold.model.UserActivity;
 import edu.ucsb.cs.scaffold.repository.UserActivityRepository;
 import org.junit.jupiter.api.Test;
