@@ -31,6 +31,10 @@ public class GoogleSignInServiceImpl extends OidcUserService implements GoogleSi
     return processSignIn(oidcUser);
   }
 
+  public void signInUser(OidcUser oidcUser) {
+    processSignIn(oidcUser);
+  }
+
   private OidcUser processSignIn(OidcUser oidcUser) {
     Optional<User> existing = userRepository.findByEmail(oidcUser.getEmail());
     Set<GrantedAuthority> authorities = new HashSet<>();

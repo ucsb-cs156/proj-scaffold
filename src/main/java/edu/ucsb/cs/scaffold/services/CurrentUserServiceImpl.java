@@ -23,9 +23,14 @@ public class CurrentUserServiceImpl extends CurrentUserService {
   @Autowired private GrantedAuthoritiesService grantedAuthoritiesService;
   @Autowired private RoleHierarchy roleHierarchy;
 
+  @Autowired private GoogleSignInService googleSignInService;
+
   @Override
   public CurrentUser getCurrentUser() {
-    CurrentUser cu = CurrentUser.builder().user(getUser()).roles(getRoles()).build();
+    log.info("getCurrentUser called");
+    User user = getUser();
+    log.info("getCurrentUser: user is {}", user);
+    CurrentUser cu = CurrentUser.builder().user(user).roles(getRoles()).build();
     log.info("getCurrentUser returns {}", cu);
     return cu;
   }
@@ -34,10 +39,22 @@ public class CurrentUserServiceImpl extends CurrentUserService {
   public User getUser() {
     SecurityContext securityContext = SecurityContextHolder.getContext();
     Authentication authentication = securityContext.getAuthentication();
+    log.info("getUser: authentication is {}", authentication);
     if (authentication instanceof OAuth2AuthenticationToken) {
       OidcUser oAuthUser = (OidcUser) authentication.getPrincipal();
-      return userRepository.findByEmail(oAuthUser.getEmail()).orElse(null);
+      log.info("getUser: oAuthUser is {}", oAuthUser);
+      User user = userRepository.findByEmail(oAuthUser.getEmail()).orElse(null);
+      if (user != null) {
+        log.info("getUser: user found in repository: {}", user);
+        return user;
+      }
+      googleSignInService.signInUser((OidcUser) oAuthUser);
+      user = userRepository.findByEmail(oAuthUser.getEmail()).orElse(null);
+      log.info("getUser: user after processSignIn is {}", user);
+      return user;
     }
+    log.info("getUser: authentication is not OAuth2AuthenticationToken, returning null");
+    log.info("getUser: authentication class is {}", authentication.getClass().getName());
     return null;
   }
 
