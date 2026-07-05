@@ -2,6 +2,7 @@
 
 import edu.ucsb.cs.scaffold.services.jobs.JobContext;
 import edu.ucsb.cs.scaffold.services.jobs.JobContextConsumer;
+import edu.ucsb.cs.scaffold.utilities.Sleep;
 import lombok.Builder;
 
 @Builder
@@ -12,12 +13,12 @@ public class TestJob implements JobContextConsumer {
 
   @Override
   public void accept(JobContext ctx) throws Exception {
-<span class="fc" id="L15">    ctx.log(&quot;Hello World! from test job!&quot;);</span>
-<span class="fc" id="L16">    Thread.sleep(sleepMs);</span>
-<span class="fc bfc" id="L17" title="All 2 branches covered.">    if (fail) {</span>
-<span class="fc" id="L18">      throw new Exception(&quot;Fail!&quot;);</span>
+<span class="fc" id="L16">    ctx.log(&quot;Hello World! from test job!&quot;);</span>
+<span class="fc" id="L17">    Sleep.sleepQuietly(sleepMs);</span>
+<span class="fc bfc" id="L18" title="All 2 branches covered.">    if (fail) {</span>
+<span class="fc" id="L19">      throw new Exception(&quot;Fail!&quot;);</span>
     }
-<span class="fc" id="L20">    ctx.log(&quot;Goodbye from test job!&quot;);</span>
-<span class="fc" id="L21">  }</span>
+<span class="fc" id="L21">    ctx.log(&quot;Goodbye from test job!&quot;);</span>
+<span class="fc" id="L22">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
