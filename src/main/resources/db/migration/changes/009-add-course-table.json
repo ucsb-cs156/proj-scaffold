@@ -21,21 +21,12 @@
                     "constraints": { "nullable": false, "primaryKey": true }
                   }
                 },
-                { "column": { "name": "installation_id", "type": "VARCHAR(255)" } },
-                { "column": { "name": "org_name", "type": "VARCHAR(255)" } },
                 { "column": { "name": "instructor_email", "type": "VARCHAR(255)" } },
                 { "column": { "name": "course_name", "type": "VARCHAR(255)" } },
                 { "column": { "name": "term", "type": "VARCHAR(255)" } },
                 { "column": { "name": "school", "type": "VARCHAR(255)" } },
                 { "column": { "name": "canvas_api_token", "type": "VARCHAR(255)" } },
-                { "column": { "name": "canvas_course_id", "type": "VARCHAR(255)" } },
-                {
-                  "column": {
-                    "name": "hide_base_permission_warning",
-                    "type": "BOOLEAN",
-                    "constraints": { "nullable": false }
-                  }
-                }
+                { "column": { "name": "canvas_course_id", "type": "VARCHAR(255)" } }
               ]
             }
           }
