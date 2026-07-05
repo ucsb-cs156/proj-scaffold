@@ -34,10 +34,7 @@ public class Job {
   private String status;
   private String jobName;
 
-  // 1048576 is 2^20, which is the max size of a mediumtext in MySQL
-  @Column(
-      columnDefinition = "TEXT",
-      length = 1048576) // needed for long strings, i.e. log entries longer than 255
-  // characters
+  @Lob
+  @Column(columnDefinition = "TEXT")
   private String log;
 }
