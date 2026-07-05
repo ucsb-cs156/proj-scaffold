@@ -315,7 +315,6 @@ public class CoursesController extends ApiController {
   public String getCourseEmails(
       @Parameter(name = "courseId") @RequestParam Long courseId,
       @Parameter(name = "type") @RequestParam(defaultValue = "STUDENTS") EmailTypes type,
-      @Parameter(name = "team") @RequestParam(required = false) String team,
       @Parameter(name = "format") @RequestParam(defaultValue = "ONE_PER_LINE")
           EmailFormats format) {
 
@@ -328,7 +327,6 @@ public class CoursesController extends ApiController {
 
     List<String> studentEmails =
         StreamSupport.stream(rosterStudentRepository.findByCourseId(courseId).spliterator(), false)
-            .filter(student -> team == null || team.isBlank())
             .map(RosterStudent::getEmail)
             .filter(Objects::nonNull)
             .sorted()
