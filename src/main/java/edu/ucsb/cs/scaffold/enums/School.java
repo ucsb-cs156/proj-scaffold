@@ -12,7 +12,8 @@ public enum School {
   UCSB(
       "UCSB",
       List.of("UC Santa Barbara", "University of California, Santa Barbara", "SB"),
-      "https://ucsb.instructure.com/api/graphql");
+      "https://ucsb.instructure.com/api/graphql"),
+  OTHER("Other", List.of("Other"), "");
 
   private School(String displayName, List<String> alternateNames, String canvasImplementation) {
     this.displayName = displayName;

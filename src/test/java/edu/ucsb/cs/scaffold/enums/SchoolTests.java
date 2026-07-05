@@ -16,6 +16,12 @@ public class SchoolTests {
   @Autowired private ObjectMapper mapper;
 
   @Test
+  public void test_Schools() {
+    assert (School.UCSB.toString().equals("UCSB"));
+    assert (School.OTHER.toString().equals("OTHER"));
+  }
+
+  @Test
   public void proper_serialization() throws Exception {
     School ucsb = mapper.convertValue("ucsb", School.class);
     assertEquals(School.UCSB, ucsb);

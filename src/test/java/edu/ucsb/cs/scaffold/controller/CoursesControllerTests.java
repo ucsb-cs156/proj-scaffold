@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -1006,7 +1007,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .id(1L)
             .courseName("NewName")
             .term("NewTerm")
-            .school(School.UCSB)
+            .school(School.OTHER)
             .instructorEmail("rando@example.com")
             .build();
 
@@ -1020,13 +1021,19 @@ public class CoursesControllerTests extends ControllerTestCase {
                     .param("courseId", "1")
                     .param("courseName", "NewName")
                     .param("term", "NewTerm")
-                    .param("school", "UCSB")
+                    .param("school", "OTHER")
                     .with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
 
     verify(courseRepository, times(1)).findById(eq(1L));
-    verify(courseRepository, times(1)).save(any(Course.class));
+
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    verify(courseRepository, times(1)).save(courseCaptor.capture());
+    Course savedCourse = courseCaptor.getValue();
+    assertEquals("NewName", savedCourse.getCourseName());
+    assertEquals("NewTerm", savedCourse.getTerm());
+    assertEquals(School.OTHER, savedCourse.getSchool());
 
     String expectedJson = mapper.writeValueAsString(new InstructorCourseView(updatedCourse));
     assertEquals(expectedJson, result.getResponse().getContentAsString());

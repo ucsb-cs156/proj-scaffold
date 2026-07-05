@@ -2,10 +2,13 @@ package edu.ucsb.cs.scaffold.jobs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mockStatic;
 
 import edu.ucsb.cs.scaffold.entity.Job;
 import edu.ucsb.cs.scaffold.services.jobs.JobContext;
+import edu.ucsb.cs.scaffold.utilities.Sleep;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 public class TestJobTests {
 
@@ -14,8 +17,12 @@ public class TestJobTests {
     Job jobStarted = Job.builder().build();
     JobContext ctx = new JobContext(null, jobStarted);
 
-    TestJob job = TestJob.builder().fail(false).sleepMs(0).build();
-    job.accept(ctx);
+    TestJob job = TestJob.builder().fail(false).sleepMs(42).build();
+
+    try (MockedStatic<Sleep> sleepMock = mockStatic(Sleep.class)) {
+      job.accept(ctx);
+      sleepMock.verify(() -> Sleep.sleepQuietly(42));
+    }
 
     String expected = """
         Hello World! from test job!

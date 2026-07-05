@@ -2,6 +2,7 @@ package edu.ucsb.cs.scaffold.jobs;
 
 import edu.ucsb.cs.scaffold.services.jobs.JobContext;
 import edu.ucsb.cs.scaffold.services.jobs.JobContextConsumer;
+import edu.ucsb.cs.scaffold.utilities.Sleep;
 import lombok.Builder;
 
 @Builder
@@ -13,7 +14,7 @@ public class TestJob implements JobContextConsumer {
   @Override
   public void accept(JobContext ctx) throws Exception {
     ctx.log("Hello World! from test job!");
-    Thread.sleep(sleepMs);
+    Sleep.sleepQuietly(sleepMs);
     if (fail) {
       throw new Exception("Fail!");
     }
