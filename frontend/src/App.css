@@ -182,3 +182,131 @@
     border-right-color: var(--border);
   }
 }
+
+/* ConceptGraph.tsx overlay controls */
+
+.concept-graph-legend,
+.concept-graph-reset-button {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 10px;
+  border-top: 1.5px solid #1e293b;
+  border-left: 1.5px solid #1e293b;
+  border-right: 4px solid #1e293b;
+  border-bottom: 4px solid #1e293b;
+  padding: 8px;
+  display: flex;
+  overflow: hidden;
+  transition: width 0.2s ease;
+}
+
+.concept-graph-legend {
+  flex-direction: column;
+  gap: 6px;
+  width: 44px;
+  cursor: default;
+
+  &:hover {
+    width: 100px;
+  }
+}
+
+.concept-graph-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.concept-graph-legend-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 1.5px solid #1e293b;
+  flex-shrink: 0;
+}
+
+.concept-graph-legend-label,
+.concept-graph-reset-button-label {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 0;
+  opacity: 0;
+  transition:
+    width 0.2s ease,
+    opacity 0.15s ease;
+}
+
+.concept-graph-legend:hover .concept-graph-legend-label {
+  width: 72px;
+  opacity: 1;
+}
+
+.concept-graph-reset-button {
+  align-items: center;
+  gap: 4px;
+  width: 44px;
+  cursor: pointer;
+
+  &:hover {
+    width: 180px;
+
+    .concept-graph-reset-button-label {
+      width: 180px;
+      opacity: 1;
+    }
+  }
+}
+
+.concept-graph-detail-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border-top: 1.5px solid #1e293b;
+  border-left: 1.5px solid #1e293b;
+  border-right: 3px solid #1e293b;
+  border-bottom: 3px solid #1e293b;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  z-index: 1;
+
+  &:hover {
+    background: #ef4444;
+
+    .concept-graph-detail-delete-icon {
+      stroke: #ffffff;
+    }
+  }
+}
+
+.concept-graph-detail-delete-icon {
+  stroke: #1e293b;
+  transition: stroke 0.15s;
+}
+
+/* Shared dropdown option row (AssessmentSelect.tsx, QuestionSearch.tsx) */
+
+.dropdown-option {
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #1e293b;
+  background: #ffffff;
+
+  &.is-selected {
+    background: #eff6ff;
+  }
+
+  &:hover {
+    background: #f8fafc;
+  }
+}

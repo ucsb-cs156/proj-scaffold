@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { Question } from "../api/client";
+import "../../App.css";
 
 interface QuestionSearchProps {
   questions: Question[];
@@ -147,22 +148,14 @@ export default function QuestionSearch({
             <div
               key={q.id}
               onMouseDown={() => handleSelect(q)}
+              className={
+                "dropdown-option" +
+                (q.id === selectedQuestionId ? " is-selected" : "")
+              }
               style={{
-                padding: "4px 8px",
-                fontSize: 12,
-                cursor: "pointer",
-                color: "#1E293B",
-                background: q.id === selectedQuestionId ? "#EFF6FF" : "#fff",
                 borderBottom:
                   i < filtered.length - 1 ? "1px solid #F1F5F9" : "none",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "#F8FAFC")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background =
-                  q.id === selectedQuestionId ? "#EFF6FF" : "#fff")
-              }
             >
               {q.title}
             </div>

@@ -32,4 +32,20 @@ describe("AccessDeniedPage tests", () => {
     await screen.findByText(/You do not have access to this page/);
     expect(screen.getByText("Return")).toBeInTheDocument();
   });
+
+  test("Clicking navigates to home page", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AccessDeniedPage />
+        </BrowserRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText(/You do not have access to this page/);
+    expect(screen.getByText("Return")).toBeInTheDocument();
+    const returnButton = screen.getByText("Return");
+    returnButton.click();
+    expect(window.location.pathname).toBe("/");
+  });
 });

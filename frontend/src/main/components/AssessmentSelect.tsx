@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { Assessment } from "../api/client";
+import "../../App.css";
 
 interface AssessmentSelectProps {
   assessments: Assessment[];
@@ -96,22 +97,14 @@ export default function AssessmentSelect({
                 onSelect(a.id);
                 setIsOpen(false);
               }}
+              className={
+                "dropdown-option" +
+                (a.id === selectedAssessmentId ? " is-selected" : "")
+              }
               style={{
-                padding: "4px 8px",
-                fontSize: 12,
-                cursor: "pointer",
-                color: "#1E293B",
-                background: a.id === selectedAssessmentId ? "#EFF6FF" : "#fff",
                 borderBottom:
                   i < assessments.length - 1 ? "1px solid #F1F5F9" : "none",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "#F8FAFC")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background =
-                  a.id === selectedAssessmentId ? "#EFF6FF" : "#fff")
-              }
             >
               {a.name}
             </div>

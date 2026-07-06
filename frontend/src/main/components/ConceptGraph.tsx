@@ -1,7 +1,6 @@
 import {
   useEffect,
   useCallback,
-  useState,
   useRef,
   createContext,
   useContext,
@@ -24,8 +23,10 @@ import {
   type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import "../../App.css";
 import { buildGraphElements } from "../utils/layout";
 import { majorConcepts, prereqEdgeData } from "../data/conceptGraph";
+import { positions } from "../data/conceptGraphPositions";
 import { conceptContent, type ConceptContent } from "../data/conceptContent";
 
 const cardKeyMap: Record<string, keyof ConceptContent> = {
@@ -92,55 +93,15 @@ const LEVELS = [
 ];
 
 function LevelLegend() {
-  const [hovered, setHovered] = useState(false);
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: "rgba(255,255,255,0.92)",
-        borderRadius: 10,
-        borderTop: "1.5px solid #1E293B",
-        borderLeft: "1.5px solid #1E293B",
-        borderRight: "4px solid #1E293B",
-        borderBottom: "4px solid #1E293B",
-        padding: "8px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 6,
-        width: hovered ? 100 : 44,
-        transition: "width 0.2s ease",
-        overflow: "hidden",
-        cursor: "default",
-      }}
-    >
+    <div className="concept-graph-legend">
       {LEVELS.map((level, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div key={i} className="concept-graph-legend-row">
           <div
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 5,
-              background: level.color,
-              border: "1.5px solid #1E293B",
-              flexShrink: 0,
-            }}
+            className="concept-graph-legend-swatch"
+            style={{ background: level.color }}
           />
-          <span
-            style={{
-              fontFamily: "Helvetica, Arial, sans-serif",
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#1E293B",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              width: hovered ? 72 : 0,
-              opacity: hovered ? 1 : 0,
-              transition: "width 0.2s ease, opacity 0.15s ease",
-            }}
-          >
-            {level.label}
-          </span>
+          <span className="concept-graph-legend-label">{level.label}</span>
         </div>
       ))}
     </div>
@@ -148,29 +109,8 @@ function LevelLegend() {
 }
 
 function ResetButton({ onReset }: { onReset: () => void }) {
-  const [hovered, setHovered] = useState(false);
   return (
-    <div
-      onClick={onReset}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: "rgba(255,255,255,0.92)",
-        borderRadius: 10,
-        borderTop: "1.5px solid #1E293B",
-        borderLeft: "1.5px solid #1E293B",
-        borderRight: "4px solid #1E293B",
-        borderBottom: "4px solid #1E293B",
-        padding: "8px",
-        display: "flex",
-        alignItems: "center",
-        gap: 4,
-        width: hovered ? 180 : 44,
-        transition: "width 0.2s ease",
-        overflow: "hidden",
-        cursor: "pointer",
-      }}
-    >
+    <div className="concept-graph-reset-button" onClick={onReset}>
       <svg
         width="22"
         height="22"
@@ -185,26 +125,14 @@ function ResetButton({ onReset }: { onReset: () => void }) {
         <path d="M23 4v6h-6" />
         <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
       </svg>
-      <span
-        style={{
-          fontFamily: "Helvetica, Arial, sans-serif",
-          fontSize: 13,
-          fontWeight: 600,
-          color: "#1E293B",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          width: hovered ? 180 : 0,
-          opacity: hovered ? 1 : 0,
-          transition: "width 0.2s ease, opacity 0.15s ease",
-        }}
-      >
+      <span className="concept-graph-reset-button-label">
         Click to reset graph
       </span>
     </div>
   );
 }
 
-function MajorNode({ data }: NodeProps) {
+function MajorNode({ data, id }: NodeProps) {
   const color = data.color as string;
   const label = data.label as string;
   const subconcepts = data.subconcepts as string[];
@@ -269,6 +197,7 @@ function MajorNode({ data }: NodeProps) {
       >
         {label}
         <div
+          data-testid={`star-button-${id}`}
           onClick={(e) => {
             e.stopPropagation();
             onStarClick();
@@ -334,6 +263,7 @@ function MajorNode({ data }: NodeProps) {
               }}
             >
               <div
+                data-testid={`subconcept-checkbox-${id}-${i}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSubconceptMastered?.(sub);
@@ -391,7 +321,6 @@ function MajorNode({ data }: NodeProps) {
 
 function DetailNode({ data, id }: NodeProps) {
   const onDelete = useContext(DeleteDetailContext);
-  const [closeHovered, setCloseHovered] = useState(false);
 
   const cardType = data.cardType as string;
   const itemLabel = data.itemLabel as string;
@@ -424,38 +353,19 @@ function DetailNode({ data, id }: NodeProps) {
 
       {/* X button */}
       <div
+        className="concept-graph-detail-delete"
+        data-testid={`detail-delete-${id}`}
         onClick={(e) => {
           e.stopPropagation();
           onDelete(id);
         }}
-        onMouseEnter={() => setCloseHovered(true)}
-        onMouseLeave={() => setCloseHovered(false)}
-        style={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          width: 22,
-          height: 22,
-          borderRadius: 5,
-          borderTop: "1.5px solid #1E293B",
-          borderLeft: "1.5px solid #1E293B",
-          borderRight: "3px solid #1E293B",
-          borderBottom: "3px solid #1E293B",
-          background: closeHovered ? "#ef4444" : "#ffffff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          transition: "background 0.15s",
-          zIndex: 1,
-        }}
       >
         <svg
+          className="concept-graph-detail-delete-icon"
           width="10"
           height="10"
           viewBox="0 0 24 24"
           fill="none"
-          stroke={closeHovered ? "#ffffff" : "#1E293B"}
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -553,7 +463,8 @@ function DetailNode({ data, id }: NodeProps) {
 }
 
 const nodeTypes: NodeTypes = { major: MajorNode, detail: DetailNode };
-const { nodes: initialNodes, edges: initialEdges } = buildGraphElements();
+const { nodes: initialNodes, edges: initialEdges } =
+  buildGraphElements(positions);
 
 export default function ConceptGraph({
   highlightedIds,
