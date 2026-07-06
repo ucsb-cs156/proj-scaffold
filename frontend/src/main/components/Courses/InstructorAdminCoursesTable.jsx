@@ -10,11 +10,11 @@ import CourseModal from "main/components/Courses/CourseModal";
 import Modal from "react-bootstrap/Modal";
 import { useLocation } from "react-router";
 
-export default function InstructorCoursesTable({
+export default function InstructorAdminCoursesTable({
   courses,
   storybook = false,
   currentUser,
-  testId = "InstructorCoursesTable",
+  testId = "InstructorAdminCoursesTable",
   enableInstructorUpdate = false,
   deleteCourseButton = false,
   courseNameLinkPrefix = "/instructor/courses",
@@ -358,7 +358,7 @@ export default function InstructorCoursesTable({
       />
 
       <Modal
-        data-testid="InstructorCoursesTable-delete-modal"
+        data-testid="InstructorAdminCoursesTable-delete-modal"
         show={showDeleteModal}
         onHide={() => setShowDeleteModal(false)}
         centered

@@ -8,9 +8,12 @@ import {
 import coursesFixtures from "fixtures/coursesFixtures";
 import CoursesTable from "main/components/Courses/CoursesTable";
 import { BrowserRouter } from "react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router";
 import { vi } from "vitest";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
+import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 
 import { schoolList } from "fixtures/schoolFixtures";
 
@@ -18,8 +21,13 @@ const joinCallback = vi.fn();
 const isLoading = vi.fn(() => false);
 const axiosMock = new AxiosMockAdapter(axios);
 
+const testId = "CoursesTable";
+
 describe("CoursesTable tests", () => {
+  const queryClient = new QueryClient();
+
   beforeEach(() => {
+    queryClient.clear();
     vi.clearAllMocks();
     axiosMock.reset();
   });
@@ -62,5 +70,39 @@ describe("CoursesTable tests", () => {
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-school`),
     ).toHaveTextContent("UCSB");
+  });
+
+  test("Delete column does not appear when deleteCourseButton is false", async () => {
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
+    axiosMock
+      .onGet("/api/courses/allForAdmins")
+      .reply(200, coursesFixtures.severalCourses);
+
+    const queryClient = new QueryClient();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesTable
+            courses={coursesFixtures.severalCourses}
+            currentUser={apiCurrentUserFixtures.adminUser}
+            enableInstructorUpdate={true}
+            deleteCourseButton={false} // ← forced false
+            testId={testId}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId(`${testId}-cell-row-0-col-id`),
+      ).toBeInTheDocument(),
+    );
+
+    const deleteHeader = screen.queryByTestId(
+      `${testId}-header-delete-sort-header`,
+    );
+    expect(deleteHeader).not.toBeInTheDocument();
   });
 });
