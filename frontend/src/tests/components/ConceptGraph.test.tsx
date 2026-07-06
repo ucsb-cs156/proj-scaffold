@@ -192,4 +192,157 @@ describe("ConceptGraph", () => {
     expect(onDetailDeleted).toHaveBeenCalledWith("Description", "Recursion");
     expect(screen.queryByText("Description")).not.toBeInTheDocument();
   });
+
+  test("greys out non-highlighted concepts and highlights selected ones, and highlights matching subconcepts", () => {
+    const props = baseProps();
+    render(
+      <ConceptGraph
+        {...props}
+        highlightedIds={new Set(["arithmetic-ops", "recursion"])}
+        highlightedSubconcepts={
+          new Map([["recursion", new Set(["Base case"])]])
+        }
+      />,
+    );
+
+    const recursionCard = screen.getByText("Recursion").parentElement!;
+    const loopsCard = screen.getByText("Loops").parentElement!;
+
+    expect(recursionCard.style.opacity).toBe("1");
+    expect(loopsCard.style.opacity).toBe("0.25");
+
+    const highlightedSubconcept = screen.getByText("Base case");
+    expect(highlightedSubconcept.style.background).not.toBe("");
+  });
+
+  test("greys out a detail card when its concept is not in the highlighted set", () => {
+    const props = baseProps();
+    const { container } = render(
+      <ConceptGraph
+        {...props}
+        highlightedIds={new Set(["loops"])}
+        restoredDetailCards={[
+          {
+            cardType: "Description",
+            itemLabel: "Recursion",
+            conceptId: "recursion",
+            conceptColor: "#fe9a71",
+            posX: 100,
+            posY: 100,
+          },
+        ]}
+      />,
+    );
+
+    const detailCard = container.querySelector(
+      '[data-id^="detail-restored-"] > div',
+    ) as HTMLElement;
+    expect(detailCard.style.background).toBe("rgb(241, 245, 249)");
+  });
+
+  test("keeps a detail card at full color when its concept is highlighted", () => {
+    const props = baseProps();
+    const { container } = render(
+      <ConceptGraph
+        {...props}
+        highlightedIds={new Set(["recursion"])}
+        restoredDetailCards={[
+          {
+            cardType: "Description",
+            itemLabel: "Recursion",
+            conceptId: "recursion",
+            conceptColor: "#fe9a71",
+            posX: 100,
+            posY: 100,
+          },
+        ]}
+      />,
+    );
+
+    const detailCard = container.querySelector(
+      '[data-id^="detail-restored-"] > div',
+    ) as HTMLElement;
+    expect(detailCard.style.background).not.toBe("rgb(241, 245, 249)");
+  });
+
+  test("dragging over the canvas allows a drop", () => {
+    const props = baseProps();
+    const { container } = render(<ConceptGraph {...props} />);
+    const flowWrapper = container.querySelector(".react-flow") as Element;
+
+    const event = new Event("dragover", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "dataTransfer", {
+      value: { dropEffect: "" },
+    });
+    flowWrapper.dispatchEvent(event);
+
+    expect((event as DragEvent).dataTransfer!.dropEffect).toBe("move");
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  test("dropping with no card payload does not add a detail card", () => {
+    const props = baseProps();
+    const onDetailAdded = vi.fn();
+    const { container } = render(
+      <ConceptGraph {...props} onDetailAdded={onDetailAdded} />,
+    );
+    const flowWrapper = container.querySelector(".react-flow") as Element;
+
+    fireEvent.drop(flowWrapper, {
+      clientX: 400,
+      clientY: 300,
+      dataTransfer: { getData: () => "" },
+    });
+
+    expect(onDetailAdded).not.toHaveBeenCalled();
+  });
+
+  test("dropping before the flow instance is ready does not add a detail card", () => {
+    const props = baseProps();
+    const onDetailAdded = vi.fn();
+    const { container } = render(
+      <ConceptGraph {...props} onDetailAdded={onDetailAdded} />,
+    );
+    const flowWrapper = container.querySelector(".react-flow") as Element;
+    const payload = {
+      cardType: "Example",
+      itemLabel: "Recursion",
+      conceptId: "recursion",
+      conceptColor: "#fe9a71",
+      cardContent: "def factorial(n): ...",
+    };
+
+    // No await here: dropping immediately after render, before ReactFlow's
+    // onInit (fired via setTimeout) has populated the flow instance.
+    fireEvent.drop(flowWrapper, {
+      clientX: 400,
+      clientY: 300,
+      dataTransfer: { getData: () => JSON.stringify(payload) },
+    });
+
+    expect(onDetailAdded).not.toHaveBeenCalled();
+  });
+
+  test("clicking a detail card does not call onConceptClick", () => {
+    const props = baseProps();
+    render(
+      <ConceptGraph
+        {...props}
+        restoredDetailCards={[
+          {
+            cardType: "Description",
+            itemLabel: "Unique Detail Label",
+            conceptId: "recursion",
+            conceptColor: "#fe9a71",
+            posX: 100,
+            posY: 100,
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Unique Detail Label"));
+
+    expect(props.onConceptClick).not.toHaveBeenCalled();
+  });
 });

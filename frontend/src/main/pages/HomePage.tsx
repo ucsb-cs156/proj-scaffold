@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import ConceptGraph from "../components/ConceptGraph";
+import "../../App.css";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 
@@ -53,7 +54,6 @@ export default function HomePage() {
   >(new Map());
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
-  const [closeHovered, setCloseHovered] = useState(false);
   const [savedDetailCards, setSavedDetailCards] = useState<SavedDetailCard[]>(
     [],
   );
@@ -533,37 +533,19 @@ export default function HomePage() {
 
                 {/* Close button */}
                 <div
+                  className="homepage-toolbar-close"
                   onClick={() => {
                     setSelectedConceptId(null);
                     setSelectedItem(null);
-                    setCloseHovered(false);
                     if (!selectedQuestionId) setHighlightedIds(new Set());
-                  }}
-                  onMouseEnter={() => setCloseHovered(true)}
-                  onMouseLeave={() => setCloseHovered(false)}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 6,
-                    borderTop: "1.5px solid #1E293B",
-                    borderLeft: "1.5px solid #1E293B",
-                    borderRight: "4px solid #1E293B",
-                    borderBottom: "4px solid #1E293B",
-                    background: closeHovered ? "#ef4444" : "#ffffff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    flexShrink: 0,
-                    transition: "background 0.15s",
                   }}
                 >
                   <svg
+                    className="homepage-toolbar-close-icon"
                     width="14"
                     height="14"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke={closeHovered ? "#ffffff" : "#1E293B"}
                     strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
