@@ -2,16 +2,16 @@
   "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "004-create-users",
+        "id": "007-create-sections-table",
         "author": "pc",
         "preConditions": [
           { "onFail": "MARK_RAN" },
-          { "not": { "tableExists": { "tableName": "users" } } }
+          { "not": { "tableExists": { "tableName": "sections" } } }
         ],
         "changes": [
           {
             "createTable": {
-              "tableName": "users",
+              "tableName": "sections",
               "columns": [
                 {
                   "column": {
@@ -23,16 +23,25 @@
                 },
                 {
                   "column": {
-                    "name": "email",
-                    "type": "VARCHAR(255)",
-                    "constraints": { "unique": true }
+                    "name": "course_id",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false }
                   }
                 },
-                { "column": { "name": "google_sub", "type": "VARCHAR(255)" } },
-                { "column": { "name": "picture_url", "type": "VARCHAR(512)" } },
-                { "column": { "name": "full_name", "type": "VARCHAR(255)" } },
-                { "column": { "name": "given_name", "type": "VARCHAR(255)" } },
-                { "column": { "name": "family_name", "type": "VARCHAR(255)" } }
+                {
+                  "column": {
+                    "name": "section",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "label",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                }
               ]
             }
           }

@@ -2,7 +2,7 @@
   "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "009-add-course-table",
+        "id": "004-create-course-table",
         "author": "pc",
         "preConditions": [
           { "onFail": "MARK_RAN" },

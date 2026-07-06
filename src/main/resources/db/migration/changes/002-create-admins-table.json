@@ -2,12 +2,16 @@
   "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "008-add-instructors-table",
+        "id": "002-create-admins-table",
         "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "admins" } } }
+        ],
         "changes": [
           {
             "createTable": {
-              "tableName": "instructors",
+              "tableName": "admins",
               "columns": [
                 {
                   "column": {
