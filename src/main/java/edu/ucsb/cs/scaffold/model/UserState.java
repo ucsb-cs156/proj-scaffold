@@ -20,15 +20,14 @@ public class UserState {
   @Column(nullable = false, unique = true)
   private Long userid;
 
-  @Lob
-  @Column(name = "starred_ids", nullable = false)
+  // length is set well above the default 255 so that Hibernate's schema
+  // validation matches the VARCHAR(1048576) column defined in the migration.
+  @Column(name = "starred_ids", nullable = false, length = 1048576)
   private String starredIds = "[]";
 
-  @Lob
-  @Column(name = "detail_cards", nullable = false)
+  @Column(name = "detail_cards", nullable = false, length = 1048576)
   private String detailCards = "[]";
 
-  @Lob
-  @Column(name = "mastered_subconcepts", nullable = false)
+  @Column(name = "mastered_subconcepts", nullable = false, length = 1048576)
   private String masteredSubconcepts = "[]";
 }

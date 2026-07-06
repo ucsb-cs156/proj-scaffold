@@ -25,8 +25,9 @@ public class UserActivity {
   @Column(name = "event_type", nullable = false)
   private String eventType;
 
-  @Lob
-  @Column(nullable = false)
+  // length is set well above the default 255 so that Hibernate's schema
+  // validation matches the VARCHAR(1048576) column defined in the migration.
+  @Column(nullable = false, length = 1048576)
   private String payload;
 
   @CreationTimestamp
