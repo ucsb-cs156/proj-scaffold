@@ -210,7 +210,7 @@ export default function HomePage() {
   }, [logActivity, selectedConceptId, selectedItem]);
 
   const selectedConcept = selectedConceptId
-    ? majorConcepts.find((c) => c.conceptId === selectedConceptId)
+    ? majorConcepts.find((c) => c.name === selectedConceptId)
     : null;
 
   const handleConceptClick = (id: string) => {
@@ -457,14 +457,14 @@ export default function HomePage() {
                 <button
                   onClick={() =>
                     setSelectedItem(
-                      selectedItem === selectedConcept.conceptId
+                      selectedItem === selectedConcept.name
                         ? null
-                        : selectedConcept.conceptId,
+                        : selectedConcept.name,
                     )
                   }
                   style={{
                     background:
-                      selectedItem === selectedConcept.conceptId
+                      selectedItem === selectedConcept.name
                         ? selectedConcept.color
                         : "#ffffff",
                     color: "#000000",
@@ -571,15 +571,15 @@ export default function HomePage() {
             selectedItem !== null &&
             (() => {
               const selectedItemLabel =
-                selectedItem === selectedConcept.conceptId
+                selectedItem === selectedConcept.name
                   ? selectedConcept.label.replace(/\n/g, " ")
                   : (selectedItem ?? "");
               const contentKey =
-                selectedItem === selectedConcept.conceptId
-                  ? selectedConcept.conceptId
-                  : `${selectedConcept.conceptId}:${selectedItem}`;
+                selectedItem === selectedConcept.name
+                  ? selectedConcept.name
+                  : `${selectedConcept.name}:${selectedItem}`;
               const content = conceptContent[contentKey];
-              const isMajorConcept = selectedItem === selectedConcept.conceptId;
+              const isMajorConcept = selectedItem === selectedConcept.name;
 
               return (
                 <div
@@ -605,7 +605,7 @@ export default function HomePage() {
                                   JSON.stringify({
                                     cardType: card.label,
                                     itemLabel: selectedItemLabel,
-                                    conceptId: selectedConcept.conceptId,
+                                    conceptId: selectedConcept.name,
                                     conceptColor: selectedConcept.color,
                                     cardContent:
                                       content?.[

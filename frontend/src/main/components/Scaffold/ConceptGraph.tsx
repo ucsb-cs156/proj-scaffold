@@ -500,7 +500,7 @@ export default function ConceptGraph({
     restoredRef.current = true;
 
     const newNodes = restoredDetailCards.map((card, i) => {
-      const concept = majorConcepts.find((c) => c.conceptId === card.conceptId);
+      const concept = majorConcepts.find((c) => c.name === card.conceptId);
       const conceptLabel = concept?.label.replace(/\n/g, " ") ?? "";
       const isConceptItself = card.itemLabel === conceptLabel;
       const contentKey = isConceptItself
@@ -696,8 +696,7 @@ export default function ConceptGraph({
         const isHighlighted =
           highlightedIds.has(e.source) && highlightedIds.has(e.target);
         const color =
-          majorConcepts.find((c) => c.conceptId === e.source)?.color ??
-          "#64748B";
+          majorConcepts.find((c) => c.name === e.source)?.color ?? "#64748B";
         return {
           id: `prereq-${e.source}-${e.target}`,
           source: e.source,

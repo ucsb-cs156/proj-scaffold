@@ -14,7 +14,7 @@ describe("utils/layout", () => {
     test("each node carries the concept's id, type, and data", () => {
       const { nodes } = buildGraphElements(positions);
       majorConcepts.forEach((concept) => {
-        const node = nodes.find((n) => n.id === concept.conceptId);
+        const node = nodes.find((n) => n.id === concept.name);
         expect(node).toBeDefined();
         expect(node?.type).toBe("major");
         expect(node?.sourcePosition).toBe(Position.Top);
@@ -55,9 +55,7 @@ describe("utils/layout", () => {
       const edge = edges.find(
         (e) => e.source === source && e.target === target,
       );
-      const sourceColor = majorConcepts.find(
-        (c) => c.conceptId === source,
-      )?.color;
+      const sourceColor = majorConcepts.find((c) => c.name === source)?.color;
 
       expect(edge).toBeDefined();
       expect(edge?.id).toBe(`prereq-${source}-${target}`);
