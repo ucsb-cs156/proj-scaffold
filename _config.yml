@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-add-courses-frontend","number":8,"title":"Pc add courses frontend","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/8"}]
+pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-improve-test-coverage","number":9,"title":"Pc improve test coverage","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/9"},{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-add-courses-frontend","number":8,"title":"Pc add courses frontend","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/8"}]
