@@ -21,7 +21,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,CoursesController,0,502,0,34,0,132,0,39
 scaffold,edu.ucsb.cs.scaffold.controller,ApiController,0,41,0,0,0,11,0,7,0,7
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.EmailFormats,0,15,0,0,0,3,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,CourseStaffController,0,129,0,0,0,33,0,10,0,10
-scaffold,edu.ucsb.cs.scaffold.controller,SystemInfoController,0,7,0,0,0,2,0,2,0,2
+scaffold,edu.ucsb.cs.scaffold.controller,SystemInfoController,0,10,0,0,0,3,0,3,0,3
 scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController,0,9,0,0,0,2,0,2,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateController.UserStateRequest,0,15,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.errors,EntityNotFoundException,0,17,0,0,0,2,0,1,0,1
