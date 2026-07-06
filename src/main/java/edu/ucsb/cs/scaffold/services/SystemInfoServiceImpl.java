@@ -23,6 +23,12 @@ public class SystemInfoServiceImpl extends SystemInfoService {
   @Value("${app.sourceRepo:https://github.com/ucsb-cs156/proj-scaffold}")
   private String sourceRepo;
 
+  @Value("${git.commit.message.short:unknown}")
+  private String commitMessage;
+
+  @Value("${git.commit.id.abbrev:unknown}")
+  private String commitId;
+
   @Override
   public SystemInfo getSystemInfo() {
     SystemInfo si =
@@ -31,6 +37,9 @@ public class SystemInfoServiceImpl extends SystemInfoService {
             .showSwaggerUILink(this.showSwaggerUILink)
             .oauthLogin(this.oauthLogin)
             .sourceRepo(this.sourceRepo)
+            .commitMessage(this.commitMessage)
+            .commitId(this.commitId)
+            .githubUrl(this.sourceRepo + "/commit/" + this.commitId)
             .build();
     log.info("getSystemInfo returns {}", si);
     return si;
