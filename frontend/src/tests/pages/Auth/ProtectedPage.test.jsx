@@ -3,12 +3,22 @@ import { BrowserRouter } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ProtectedPage from "main/pages/Auth/ProtectedPage";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
+import AxiosMockAdapter from "axios-mock-adapter";
+import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import axios from "axios";
+
+const axiosMock = new AxiosMockAdapter(axios);
 
 const queryClient = new QueryClient();
 
 describe("ProtectedPage tests", () => {
   beforeEach(() => {
     queryClient.clear();
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
   });
   test("Renders blank on initialData", () => {
     render(

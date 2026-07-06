@@ -9,16 +9,20 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { schoolFixtures, schoolList } from "fixtures/schoolFixtures";
 import { vi } from "vitest";
 import * as useBackend from "main/utils/useBackend";
+import mockConsole from "tests/testutils/mockConsole";
 
 const queryClient = new QueryClient();
-const axiosMock = new AxiosMockAdapter(axios);
+
+let axiosMock;
 
 describe("SchoolDropdown tests", () => {
   beforeEach(() => {
+    axiosMock = new AxiosMockAdapter(axios);
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
     vi.clearAllMocks();
+    axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
   });
 
   const RHFWrapper = ({ defaultValues = {}, mockSubmit }) => {
@@ -84,7 +88,9 @@ describe("SchoolDropdown tests", () => {
     fireEvent.change(typeahead, { target: { value: "Cal State LA" } });
     await screen.findByText("No matches found.");
   });
+
   test("No misbehavior on no connection", async () => {
+    const restoreConsole = mockConsole();
     axiosMock.onGet("/api/systemInfo/schools").timeout();
     const mockSubmit = vi.fn();
     render(
@@ -96,6 +102,7 @@ describe("SchoolDropdown tests", () => {
     const typeahead = screen.getByTestId("school-typeahead");
     fireEvent.change(typeahead, { target: { value: "UC" } });
     await screen.findByText("No matches found.");
+    restoreConsole();
   });
 
   test("Various useBackend assertions", async () => {

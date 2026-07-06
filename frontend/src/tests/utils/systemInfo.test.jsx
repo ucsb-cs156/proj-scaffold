@@ -15,7 +15,7 @@ describe("utils/systemInfo tests", () => {
   });
 
   describe("useSystemInfo tests", () => {
-    test("useSystemInfo returns initialData when request is pending", () => {
+    test("useSystemInfo returns initialData when request is pending", async () => {
       const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false } },
       });
@@ -24,6 +24,8 @@ describe("utils/systemInfo tests", () => {
           {children}
         </QueryClientProvider>
       );
+
+      const restoreConsole = mockConsole();
 
       axiosMock.onGet("/api/systemInfo").timeout();
 
@@ -35,6 +37,10 @@ describe("utils/systemInfo tests", () => {
         oauthLogin: "/oauth2/authorization/google",
         sourceRepo: "",
       });
+
+      await waitFor(() => expect(result.current.isFetched).toBe(true));
+
+      restoreConsole();
       queryClient.clear();
     });
 

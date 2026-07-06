@@ -4,6 +4,10 @@ import { MemoryRouter } from "react-router";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import AxiosMockAdapter from "axios-mock-adapter";
+import axios from "axios";
+
+const axiosMock = new AxiosMockAdapter(axios);
 
 function makeProviders(currentUser, systemInfo) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -13,6 +17,14 @@ function makeProviders(currentUser, systemInfo) {
 }
 
 describe("BasicLayout tests", () => {
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  });
+
   test("renders children inside the layout", () => {
     const qc = makeProviders(
       currentUserFixtures.notLoggedIn,

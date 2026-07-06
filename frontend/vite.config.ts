@@ -27,6 +27,7 @@ export default defineConfig({
     },
   },
   test: {
+    dangerouslyIgnoreUnhandledErrors: false,
     globals: true,
     environment: 'jsdom',
     setupFiles: './vitest.setup.js',
