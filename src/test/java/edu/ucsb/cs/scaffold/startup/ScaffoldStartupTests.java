@@ -100,11 +100,13 @@ class ScaffoldStartupTests {
     scaffoldStartup.alwaysRunOnStartup();
 
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-    verify(jdbcTemplate, times(210)).execute(captor.capture());
+    verify(jdbcTemplate, times(246)).execute(captor.capture());
     List<String> executed = captor.getAllValues();
     assertEquals(105, executed.stream().filter(s -> s.startsWith("INSERT INTO concepts")).count());
     assertEquals(
         105, executed.stream().filter(s -> s.startsWith("INSERT INTO practice_problems")).count());
+    assertEquals(
+        36, executed.stream().filter(s -> s.startsWith("INSERT INTO concept_edges")).count());
     // Every statement should be a real, complete statement — no leftover comment/blank noise.
     executed.forEach(
         s -> {

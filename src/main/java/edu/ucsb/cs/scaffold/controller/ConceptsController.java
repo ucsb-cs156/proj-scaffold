@@ -1,7 +1,9 @@
 package edu.ucsb.cs.scaffold.controller;
 
 import edu.ucsb.cs.scaffold.entity.Concept;
+import edu.ucsb.cs.scaffold.entity.ConceptEdge;
 import edu.ucsb.cs.scaffold.entity.PracticeProblem;
+import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
 import edu.ucsb.cs.scaffold.repository.ConceptRepository;
 import edu.ucsb.cs.scaffold.repository.PracticeProblemRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +28,7 @@ public class ConceptsController {
 
   private final ConceptRepository conceptRepository;
   private final PracticeProblemRepository practiceProblemRepository;
+  private final ConceptEdgeRepository conceptEdgeRepository;
 
   @Operation(summary = "Get description/example/practiceUrl content for every concept in a course")
   @PreAuthorize("hasRole('ROLE_USER')")
@@ -92,6 +95,18 @@ public class ConceptsController {
     return result;
   }
 
+  @Operation(summary = "Get the prerequisite edges between concepts in a course")
+  @PreAuthorize("hasRole('ROLE_USER')")
+  @GetMapping("/api/concepts/edges")
+  public List<EdgeDTO> getEdges(
+      @Parameter(description = "id of the course") @RequestParam Long courseId) {
+    List<EdgeDTO> result = new ArrayList<>();
+    for (ConceptEdge edge : conceptEdgeRepository.findByCourseId(courseId)) {
+      result.add(new EdgeDTO(edge.getSource().getConceptId(), edge.getTarget().getConceptId()));
+    }
+    return result;
+  }
+
   private Map<Long, String> firstUrlByConceptId(Long courseId) {
     Map<Long, String> result = new LinkedHashMap<>();
     List<PracticeProblem> problems =
@@ -110,4 +125,6 @@ public class ConceptsController {
       String name, String label, String color, List<String> subconcepts) {}
 
   public record PositionDTO(Integer x, Integer y) {}
+
+  public record EdgeDTO(String source, String target) {}
 }

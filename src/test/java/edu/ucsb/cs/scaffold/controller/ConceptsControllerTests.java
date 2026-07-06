@@ -7,8 +7,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import edu.ucsb.cs.scaffold.ControllerTestCase;
 import edu.ucsb.cs.scaffold.entity.Concept;
+import edu.ucsb.cs.scaffold.entity.ConceptEdge;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.PracticeProblem;
+import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
 import edu.ucsb.cs.scaffold.repository.ConceptRepository;
 import edu.ucsb.cs.scaffold.repository.PracticeProblemRepository;
 import java.util.List;
@@ -23,6 +25,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @MockitoBean private ConceptRepository conceptRepository;
 
   @MockitoBean private PracticeProblemRepository practiceProblemRepository;
+
+  @MockitoBean private ConceptEdgeRepository conceptEdgeRepository;
 
   private List<Concept> buildSampleConcepts() {
     Course course = Course.builder().id(42L).courseName("CMPSC 8").build();
@@ -91,6 +95,17 @@ public class ConceptsControllerTests extends ControllerTestCase {
         PracticeProblem.builder().id(12L).concept(baseCase).url("url-basecase").build();
 
     return List.of(pp1, pp2, pp3);
+  }
+
+  private List<ConceptEdge> buildSampleEdges(List<Concept> concepts) {
+    Course course = concepts.get(0).getCourse();
+    Concept recursion = concepts.get(0);
+    Concept loops = concepts.get(3);
+
+    ConceptEdge edge =
+        ConceptEdge.builder().id(20L).course(course).source(loops).target(recursion).build();
+
+    return List.of(edge);
   }
 
   @Test
@@ -169,9 +184,29 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @Test
   @WithMockUser(roles = {"USER"})
+  public void logged_in_user_can_get_concept_edges() throws Exception {
+    List<Concept> concepts = buildSampleConcepts();
+    when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(buildSampleEdges(concepts));
+
+    String expectedJson =
+        """
+        [
+          { "source": "loops", "target": "recursion" }
+        ]
+        """;
+
+    mockMvc
+        .perform(get("/api/concepts/edges").param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(content().json(expectedJson));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
   public void endpoints_return_empty_results_for_a_course_with_no_concepts() throws Exception {
     when(conceptRepository.findByCourseId(99L)).thenReturn(List.of());
     when(practiceProblemRepository.findByCourseId(99L)).thenReturn(List.of());
+    when(conceptEdgeRepository.findByCourseId(99L)).thenReturn(List.of());
 
     mockMvc
         .perform(get("/api/concepts/content").param("courseId", "99"))
@@ -187,6 +222,11 @@ public class ConceptsControllerTests extends ControllerTestCase {
         .perform(get("/api/concepts/positions").param("courseId", "99"))
         .andExpect(status().isOk())
         .andExpect(content().json("{}"));
+
+    mockMvc
+        .perform(get("/api/concepts/edges").param("courseId", "99"))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
   }
 
   @Test
@@ -200,6 +240,13 @@ public class ConceptsControllerTests extends ControllerTestCase {
   public void anonymous_user_cannot_get_concept_graph() throws Exception {
     mockMvc
         .perform(get("/api/concepts/graph").param("courseId", "42"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  public void anonymous_user_cannot_get_concept_edges() throws Exception {
+    mockMvc
+        .perform(get("/api/concepts/edges").param("courseId", "42"))
         .andExpect(status().isForbidden());
   }
 
