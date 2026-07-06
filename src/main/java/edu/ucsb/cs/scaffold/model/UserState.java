@@ -20,15 +20,12 @@ public class UserState {
   @Column(nullable = false, unique = true)
   private Long userid;
 
-  @Lob
   @Column(name = "starred_ids", nullable = false)
   private String starredIds = "[]";
 
-  @Lob
   @Column(name = "detail_cards", nullable = false)
   private String detailCards = "[]";
 
-  @Lob
   @Column(name = "mastered_subconcepts", nullable = false)
   private String masteredSubconcepts = "[]";
 }

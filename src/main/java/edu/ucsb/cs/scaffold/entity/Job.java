@@ -34,7 +34,6 @@ public class Job {
   private String status;
   private String jobName;
 
-  @Lob
   @Column(columnDefinition = "TEXT")
   private String log;
 }

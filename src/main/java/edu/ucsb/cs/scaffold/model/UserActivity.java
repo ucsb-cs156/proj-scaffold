@@ -25,7 +25,6 @@ public class UserActivity {
   @Column(name = "event_type", nullable = false)
   private String eventType;
 
-  @Lob
   @Column(nullable = false)
   private String payload;
 
