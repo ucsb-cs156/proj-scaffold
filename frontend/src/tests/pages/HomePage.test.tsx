@@ -23,7 +23,7 @@ vi.mock("main/api/client", () => ({
   logUserActivity: vi.fn(),
 }));
 
-vi.mock("main/components/ConceptGraph", () => ({
+vi.mock("main/components/Scaffold/ConceptGraph", () => ({
   default: (props: {
     highlightedIds: Set<string>;
     starredIds: Set<string>;

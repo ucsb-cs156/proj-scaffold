@@ -1,7 +1,7 @@
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 import { Alert, Row } from "react-bootstrap";
 import { useLocation } from "react-router";
-import LoginScreen from "main/components/LoginScreen";
+import LoginScreen from "main/components/Auth/LoginScreen";
 
 export default function PromptSignInPage(): React.JSX.Element {
   const location = useLocation();

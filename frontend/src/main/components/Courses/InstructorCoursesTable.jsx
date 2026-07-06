@@ -1,4 +1,4 @@
-import OurTable from "main/components/OurTable";
+import OurTable from "main/components/Common/OurTable";
 import { hasRole } from "main/utils/currentUser";
 import { Tooltip, OverlayTrigger, Button } from "react-bootstrap";
 import { Link } from "react-router";

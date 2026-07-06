@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import ConceptGraph from "../components/ConceptGraph";
-import "../../App.css";
+import ConceptGraph from "main/components/Scaffold/ConceptGraph";
+import "App.css";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 
@@ -11,19 +11,19 @@ import {
   fetchUserState,
   logUserActivity,
   saveUserState,
-} from "../api/client";
-import type { Assessment, Question } from "../api/client";
-import { majorConcepts } from "../data/conceptGraph";
-import LoginScreen from "main/components/LoginScreen";
-import QuestionSearch from "../components/QuestionSearch";
-import AssessmentSelect from "../components/AssessmentSelect";
-import { conceptContent, type ConceptContent } from "../data/conceptContent";
-import { useCurrentUser } from "../utils/currentUser";
+} from "main/api/client";
+import type { Assessment, Question } from "main/api/client";
+import { majorConcepts } from "main/data/conceptGraph";
+import LoginScreen from "main/components/Auth/LoginScreen";
+import QuestionSearch from "main/components/Scaffold/QuestionSearch";
+import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
+import { conceptContent, type ConceptContent } from "main/data/conceptContent";
+import { useCurrentUser } from "main/utils/currentUser";
 import {
   normalize,
   toPastel,
   computeSubgraph,
-} from "../utils/conceptGraphUtils";
+} from "main/utils/conceptGraphUtils";
 
 interface SavedDetailCard {
   cardType: string;

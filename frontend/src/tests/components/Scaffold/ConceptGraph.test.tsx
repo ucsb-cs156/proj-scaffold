@@ -1,6 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import ConceptGraph from "main/components/ConceptGraph";
+import ConceptGraph from "main/components/Scaffold/ConceptGraph";
 
 // @xyflow/react measures its container via ResizeObserver and
 // getBoundingClientRect, neither of which jsdom implements with real

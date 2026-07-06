@@ -1,9 +1,15 @@
-import { describe, test, expect, vi, afterEach } from "vitest";
+import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import LoginScreen from "main/components/LoginScreen";
+import LoginScreen from "main/components/Auth/LoginScreen";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import type { SystemInfo } from "main/utils/systemInfo";
+
+
+import axios from "axios";
+import axiosMockAdapter from "axios-mock-adapter";
+
+const axiosMock = new axiosMockAdapter(axios);
 
 function renderLoginScreen(
   systemInfo: Partial<SystemInfo> | undefined,
@@ -22,6 +28,14 @@ function renderLoginScreen(
 
 describe("LoginScreen", () => {
   const originalLocation = window.location;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+       axiosMock.reset();
+    axiosMock.resetHistory();
+    axiosMock.onGet("/api/systemInfo").reply(200, systemInfoFixtures.showingNeither);
+  });
+
 
   afterEach(() => {
     Object.defineProperty(window, "location", {

@@ -1,4 +1,4 @@
-import OurTable from "main/components/OurTable";
+import OurTable from "main/components/Common/OurTable";
 
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";

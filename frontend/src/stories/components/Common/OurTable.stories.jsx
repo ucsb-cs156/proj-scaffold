@@ -1,4 +1,4 @@
-import OurTable, { ButtonColumn } from "main/components/OurTable";
+import OurTable, { ButtonColumn } from "main/components/Common/OurTable";
 import ourTableFixtures from "fixtures/ourTableFixtures";
 
 export default {

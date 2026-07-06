@@ -1,6 +1,6 @@
 import { describe, test, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import QuestionSearch from "main/components/QuestionSearch";
+import QuestionSearch from "main/components/Scaffold/QuestionSearch";
 import type { Question } from "main/api/client";
 
 const questions: Question[] = [

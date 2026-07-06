@@ -13,7 +13,7 @@ import SortCaret from "main/components/Common/SortCaret";
 import {
   convertOldStyleColumnsToNewStyle,
   type LegacyColumn,
-} from "main/components/OurTableUtils";
+} from "main/components/Common/OurTableUtils";
 
 type OurTableProps<T extends object> = {
   data: T[];

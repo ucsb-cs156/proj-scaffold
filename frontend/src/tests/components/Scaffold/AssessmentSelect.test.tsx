@@ -1,6 +1,6 @@
 import { describe, test, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import AssessmentSelect from "main/components/AssessmentSelect";
+import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
 import type { Assessment } from "main/api/client";
 
 const assessments: Assessment[] = [

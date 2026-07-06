@@ -1,4 +1,4 @@
-import OurTable from "main/components/OurTable";
+import OurTable from "main/components/Common/OurTable";
 import { Tooltip, OverlayTrigger, Button, Spinner } from "react-bootstrap";
 import { Link } from "react-router";
 
