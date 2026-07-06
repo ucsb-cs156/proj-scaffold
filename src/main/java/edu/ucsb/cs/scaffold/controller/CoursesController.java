@@ -345,7 +345,7 @@ public class CoursesController extends ApiController {
   }
 
   @Operation(summary = "Delete a course")
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @DeleteMapping("")
   @Transactional
   public Object deleteCourse(@RequestParam Long courseId)

@@ -59,7 +59,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
 
   const queryClient = new QueryClient();
 
-  test.only("Renders empty table for admin user correctly", async () => {
+  test("Renders empty table for admin user correctly", async () => {
     setupInstructorUser();
     axiosMock.onGet("/api/courses/allForInstructors").reply(200, []);
 
@@ -76,7 +76,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
     });
   });
 
-  test.only("Renders course data correctly for admin user", async () => {
+  test("Renders course data correctly for admin user", async () => {
     setupInstructorUser();
     axiosMock
       .onGet("/api/courses/allForInstructors")
@@ -108,7 +108,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
     expect(instructorEmail).toHaveTextContent("diba@ucsb.edu");
   });
 
-  test.only("renders empty table when backend unavailable, admin only", async () => {
+  test("renders empty table when backend unavailable, admin only", async () => {
     setupInstructorUser();
 
     axiosMock.onGet("/api/courses/allForInstructors").timeout();
@@ -134,7 +134,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
     restoreConsole();
   });
 
-  test.only("Can submit new course", async () => {
+  test("Can submit new course", async () => {
     setupInstructorUser();
     axiosMock
       .onPost("/api/courses/post")
@@ -183,7 +183,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
     );
   });
 
-  test.only("Delete column does appear when deleteCourseButton is true", async () => {
+  test("Delete column does appear when deleteCourseButton is true", async () => {
     setupInstructorUser();
 
     axiosMock
@@ -212,7 +212,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
     expect(deleteHeader).toBeInTheDocument();
   });
 
-  test.only("Delete column does not appear when deleteCourseButton is false", async () => {
+  test("Delete column does not appear when deleteCourseButton is false", async () => {
     setupInstructorUser();
 
     axiosMock
@@ -243,7 +243,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
     );
     expect(deleteHeader).not.toBeInTheDocument();
   });
-  test.only("useBackend and useBackendMutation are called with correct cache query key", async () => {
+  test("useBackend and useBackendMutation are called with correct cache query key", async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
