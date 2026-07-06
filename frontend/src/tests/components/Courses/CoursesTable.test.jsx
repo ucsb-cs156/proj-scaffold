@@ -24,7 +24,7 @@ describe("CoursesTable tests", () => {
     axiosMock.reset();
   });
 
-  test.only("Has the expected column headers and content", () => {
+  test("Has the expected column headers and content", () => {
     axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     render(
       <BrowserRouter>
