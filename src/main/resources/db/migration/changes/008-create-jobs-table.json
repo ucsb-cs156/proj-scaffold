@@ -27,7 +27,7 @@
                 { "column": { "name": "updated_at", "type": "TIMESTAMP" } },
                 { "column": { "name": "status", "type": "VARCHAR(255)" } },
                 { "column": { "name": "job_name", "type": "VARCHAR(255)" } },
-                { "column": { "name": "log", "type": "TEXT" } }
+                { "column": { "name": "log", "type": "VARCHAR(1048576)" } }
               ]
             }
           }

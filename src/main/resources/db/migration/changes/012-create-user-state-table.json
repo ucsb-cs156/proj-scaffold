@@ -30,21 +30,21 @@
                 {
                   "column": {
                     "name": "starred_ids",
-                    "type": "TEXT",
+                    "type": "VARCHAR(1048576)",
                     "constraints": { "nullable": false }
                   }
                 },
                 {
                   "column": {
                     "name": "detail_cards",
-                    "type": "TEXT",
+                    "type": "VARCHAR(1048576)",
                     "constraints": { "nullable": false }
                   }
                 },
                 {
                   "column": {
                     "name": "mastered_subconcepts",
-                    "type": "TEXT",
+                    "type": "VARCHAR(1048576)",
                     "constraints": { "nullable": false }
                   }
                 }

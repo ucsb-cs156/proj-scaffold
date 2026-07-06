@@ -37,7 +37,7 @@
                 {
                   "column": {
                     "name": "payload",
-                    "type": "TEXT",
+                    "type": "VARCHAR(1048576)",
                     "constraints": { "nullable": false }
                   }
                 },
