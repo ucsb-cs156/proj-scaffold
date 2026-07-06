@@ -2,13 +2,14 @@ import React from "react";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
 import { useCurrentUser } from "main/utils/currentUser";
+import CoursesTable from "main/components/Courses/CoursesTable";
 import { Button } from "react-bootstrap";
 import { toast } from "react-toastify";
 import CourseModal from "main/components/Courses/CourseModal";
+import InstructorAdminCoursesTable from "main/components/Courses/InstructorAdminCoursesTable";
 
-export default function CoursesIndexPage() {
+export default function AdminCoursesIndexPage() {
   const currentUser = useCurrentUser();
 
   const {
@@ -66,7 +67,8 @@ export default function CoursesIndexPage() {
           toggleShowModal={setViewModal}
           onSubmitAction={onSubmit}
         />
-        <InstructorCoursesTable
+        <InstructorAdminCoursesTable
+          testId="AdminCoursesTable"
           courses={courses}
           currentUser={currentUser}
           enableInstructorUpdate={true}

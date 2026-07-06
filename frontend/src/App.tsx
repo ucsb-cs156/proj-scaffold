@@ -13,7 +13,8 @@ import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
 
 import { useCurrentUser } from "main/utils/currentUser";
 import AdminDeveloperPage from "main/pages/Admin/AdminDeveloperPage";
-import CoursesIndexPage from "main/pages/Courses/CoursesIndexPage";
+import InstructorCoursesIndexPage from "main/pages/Courses/InstructorCoursesIndexPage";
+import AdminCoursesIndexPage from "main/pages/Admin/AdminCoursesIndexPage";
 
 export default function App() {
   const currentUser = useCurrentUser();
@@ -75,10 +76,20 @@ export default function App() {
           }
         />
         <Route
+          path="/admin/courses"
+          element={
+            <ProtectedPage
+              component={<AdminCoursesIndexPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
           path="/courses"
           element={
             <ProtectedPage
-              component={<CoursesIndexPage />}
+              component={<InstructorCoursesIndexPage />}
               enforceRole={"ROLE_INSTRUCTOR"}
               currentUser={currentUser}
             />

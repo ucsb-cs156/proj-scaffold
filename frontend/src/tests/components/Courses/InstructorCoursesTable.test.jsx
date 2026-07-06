@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import coursesFixtures from "fixtures/coursesFixtures";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
-import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
+import InstructorAdminCoursesTable from "main/components/Courses/InstructorAdminCoursesTable";
 import { BrowserRouter, MemoryRouter } from "react-router";
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
@@ -20,10 +20,10 @@ vi.mock("react-toastify", async (importOriginal) => {
 });
 
 const queryClient = new QueryClient();
-const testId = "InstructorCoursesTable";
+const testId = "InstructorAdminCoursesTable";
 let axiosMock;
-describe("InstructorCoursesTable tests", () => {
-  describe("InstructorCoursesTable basic tests", () => {
+describe("InstructorAdminCoursesTable tests", () => {
+  describe("InstructorAdminCoursesTable basic tests", () => {
     const originalLocation = window.location;
 
     beforeEach(() => {
@@ -45,7 +45,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.instructorUser}
               storybook={true}
@@ -78,7 +78,7 @@ describe("InstructorCoursesTable tests", () => {
         expect(header).toBeInTheDocument();
       });
       const header = screen.getByTestId(
-        "InstructorCoursesTable-header-edit-sort-header",
+        "InstructorAdminCoursesTable-header-edit-sort-header",
       );
       expect(header).toBeInTheDocument();
       expect(header).toHaveTextContent("Edit");
@@ -136,7 +136,7 @@ describe("InstructorCoursesTable tests", () => {
       const { unmount } = render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={[coursesFixtures.severalCourses[2]]}
               currentUser={currentUserFixtures.userOnly}
               canEditCourse={() => true}
@@ -154,7 +154,7 @@ describe("InstructorCoursesTable tests", () => {
       const { unmount: unmountSecond } = render(
         <QueryClientProvider client={new QueryClient()}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={[coursesFixtures.severalCourses[2]]}
               currentUser={currentUserFixtures.userOnly}
               canEditCourse={false}
@@ -172,7 +172,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={new QueryClient()}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={true}
@@ -205,7 +205,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.instructorUser}
               storybook={false}
@@ -224,7 +224,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.instructorUser}
               storybook={false}
@@ -241,7 +241,7 @@ describe("InstructorCoursesTable tests", () => {
     });
   });
 
-  describe("InstructorCoursesTable update instructor modal tests", () => {
+  describe("InstructorAdminCoursesTable update instructor modal tests", () => {
     let invalidateQueriesSpy;
 
     beforeEach(() => {
@@ -261,7 +261,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={true}
@@ -283,7 +283,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={true}
@@ -308,7 +308,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.instructorUser}
               storybook={true}
@@ -333,7 +333,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               enableInstructorUpdate={true}
@@ -362,7 +362,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               enableInstructorUpdate={true}
@@ -394,7 +394,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               enableInstructorUpdate={true}
@@ -438,7 +438,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               enableInstructorUpdate={true}
@@ -471,7 +471,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               enableInstructorUpdate={true}
@@ -519,7 +519,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               enableInstructorUpdate={true}
@@ -562,7 +562,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               enableInstructorUpdate={true}
@@ -603,7 +603,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               enableInstructorUpdate={true}
@@ -655,7 +655,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               enableInstructorUpdate={true}
@@ -680,7 +680,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               enableInstructorUpdate={true}
@@ -716,7 +716,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <MemoryRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.instructorUser}
               testId={testId}
@@ -759,7 +759,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={new QueryClient()}>
           <MemoryRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.instructorUser}
               testId={testId}
@@ -823,7 +823,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={new QueryClient()}>
           <MemoryRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.instructorUser}
               testId={testId}
@@ -872,7 +872,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={new QueryClient()}>
           <MemoryRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.instructorUser}
               testId={testId}
@@ -921,7 +921,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               enableInstructorUpdate={true}
@@ -972,7 +972,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <MemoryRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.instructorUser}
               testId={testId}
@@ -1026,7 +1026,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={true}
@@ -1038,14 +1038,14 @@ describe("InstructorCoursesTable tests", () => {
 
       expect(
         screen.queryByTestId(
-          "InstructorCoursesTable-header-delete-sort-header",
+          "InstructorAdminCoursesTable-header-delete-sort-header",
         ),
       ).not.toBeInTheDocument();
 
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={true}
@@ -1056,7 +1056,7 @@ describe("InstructorCoursesTable tests", () => {
       );
 
       const deleteHeader = screen.queryByTestId(
-        "InstructorCoursesTable-header-delete-sort-header",
+        "InstructorAdminCoursesTable-header-delete-sort-header",
       );
       expect(deleteHeader).toBeInTheDocument();
       expect(deleteHeader).toHaveTextContent("Delete");
@@ -1066,7 +1066,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={true}
@@ -1077,7 +1077,7 @@ describe("InstructorCoursesTable tests", () => {
 
       expect(
         screen.queryByTestId(
-          "InstructorCoursesTable-header-delete-sort-header",
+          "InstructorAdminCoursesTable-header-delete-sort-header",
         ),
       ).not.toBeInTheDocument();
 
@@ -1093,7 +1093,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={true}
@@ -1114,7 +1114,7 @@ describe("InstructorCoursesTable tests", () => {
       });
 
       const enabledDeleteButton = screen.getByTestId(
-        "InstructorCoursesTable-cell-row-2-col-delete-button",
+        "InstructorAdminCoursesTable-cell-row-2-col-delete-button",
       );
 
       expect(enabledDeleteButton).toBeEnabled();
@@ -1146,7 +1146,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={mixedCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={true}
@@ -1163,7 +1163,7 @@ describe("InstructorCoursesTable tests", () => {
     });
   });
 
-  describe("InstructorCoursesTable delete course API call tests", () => {
+  describe("InstructorAdminCoursesTable delete course API call tests", () => {
     beforeEach(() => {
       axiosMock = new AxiosMockAdapter(axios);
       axiosMock.reset();
@@ -1177,7 +1177,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={false}
@@ -1188,7 +1188,7 @@ describe("InstructorCoursesTable tests", () => {
       );
 
       const deleteButton = screen.getByTestId(
-        "InstructorCoursesTable-cell-row-2-col-delete-button",
+        "InstructorAdminCoursesTable-cell-row-2-col-delete-button",
       );
       fireEvent.click(deleteButton);
 
@@ -1215,7 +1215,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={false}
@@ -1227,7 +1227,7 @@ describe("InstructorCoursesTable tests", () => {
 
       fireEvent.click(
         screen.getByTestId(
-          "InstructorCoursesTable-cell-row-2-col-delete-button",
+          "InstructorAdminCoursesTable-cell-row-2-col-delete-button",
         ),
       );
 
@@ -1253,7 +1253,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               deleteCourseButton={true}
@@ -1266,7 +1266,7 @@ describe("InstructorCoursesTable tests", () => {
       // Open the delete modal
       fireEvent.click(
         screen.getByTestId(
-          "InstructorCoursesTable-cell-row-2-col-delete-button",
+          "InstructorAdminCoursesTable-cell-row-2-col-delete-button",
         ),
       );
 
@@ -1298,7 +1298,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={false}
@@ -1309,7 +1309,7 @@ describe("InstructorCoursesTable tests", () => {
       );
 
       const deleteButton = screen.getByTestId(
-        "InstructorCoursesTable-cell-row-2-col-delete-button",
+        "InstructorAdminCoursesTable-cell-row-2-col-delete-button",
       );
       fireEvent.click(deleteButton);
 
@@ -1331,7 +1331,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={false}
@@ -1342,7 +1342,7 @@ describe("InstructorCoursesTable tests", () => {
       );
 
       const deleteButton = screen.getByTestId(
-        "InstructorCoursesTable-cell-row-2-col-delete-button",
+        "InstructorAdminCoursesTable-cell-row-2-col-delete-button",
       );
       fireEvent.click(deleteButton);
 
@@ -1362,7 +1362,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={false}
@@ -1373,7 +1373,7 @@ describe("InstructorCoursesTable tests", () => {
       );
 
       const deleteButton = screen.getByTestId(
-        "InstructorCoursesTable-cell-row-2-col-delete-button",
+        "InstructorAdminCoursesTable-cell-row-2-col-delete-button",
       );
       fireEvent.click(deleteButton);
 
@@ -1401,7 +1401,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               storybook={false}
@@ -1412,7 +1412,7 @@ describe("InstructorCoursesTable tests", () => {
       );
 
       const deleteButton = screen.getByTestId(
-        "InstructorCoursesTable-cell-row-2-col-delete-button",
+        "InstructorAdminCoursesTable-cell-row-2-col-delete-button",
       );
       fireEvent.click(deleteButton);
 
@@ -1430,7 +1430,7 @@ describe("InstructorCoursesTable tests", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <InstructorCoursesTable
+            <InstructorAdminCoursesTable
               courses={coursesFixtures.severalCourses}
               currentUser={currentUserFixtures.adminUser}
               deleteCourseButton={true}
@@ -1442,7 +1442,7 @@ describe("InstructorCoursesTable tests", () => {
       // Open modal
       fireEvent.click(
         screen.getByTestId(
-          "InstructorCoursesTable-cell-row-2-col-delete-button",
+          "InstructorAdminCoursesTable-cell-row-2-col-delete-button",
         ),
       );
 

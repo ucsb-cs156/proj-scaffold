@@ -1,6 +1,6 @@
 import React from "react";
 
-import InstructorCoursesTable from "main/components/Courses/InstructorCoursesTable";
+import InstructorAdminCoursesTable from "main/components/Courses/InstructorAdminCoursesTable";
 import coursesFixtures from "fixtures/coursesFixtures";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { http, HttpResponse } from "msw";
@@ -8,8 +8,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { schoolList } from "fixtures/schoolFixtures";
 
 export default {
-  title: "components/Courses/InstructorCoursesTable",
-  component: InstructorCoursesTable,
+  title: "components/Courses/InstructorAdminCoursesTable",
+  component: InstructorAdminCoursesTable,
 };
 
 const QueryWrapper = ({ children }) => {
@@ -28,7 +28,7 @@ const QueryWrapper = ({ children }) => {
 const Template = (args) => {
   return (
     <QueryWrapper>
-      <InstructorCoursesTable {...args} />
+      <InstructorAdminCoursesTable {...args} />
     </QueryWrapper>
   );
 };
