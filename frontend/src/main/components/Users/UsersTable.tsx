@@ -1,6 +1,6 @@
-import OurTable from "main/components/OurTable";
+import OurTable from "main/components/Common/OurTable";
 import type { Cell } from "@tanstack/react-table";
-import type { LegacyColumn } from "main/components/OurTableUtils";
+import type { LegacyColumn } from "main/components/Common/OurTableUtils";
 
 export type User = {
   id: number;

@@ -6,6 +6,7 @@
     "module": "esnext",
     "types": ["vite/client"],
     "skipLibCheck": true,
+    "allowJs": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -21,9 +22,7 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "main/*": ["./src/main/*"],
-      "fixtures/*": ["./src/fixtures/*"],
-      "tests/*": ["./src/tests/*"]
+      "*": ["./src/*"]
     }
   },
   "include": ["src"]

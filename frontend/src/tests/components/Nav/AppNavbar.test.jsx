@@ -23,12 +23,50 @@ function renderNavbar(currentUser, systemInfo) {
 const axiosMock = new AxiosMockAdapter(axios);
 
 describe("AppNavbar tests", () => {
+  const originalLocation = window.location;
+
   beforeEach(() => {
     axiosMock.reset();
     axiosMock.resetHistory();
     axiosMock
       .onGet("/api/systemInfo")
       .reply(200, systemInfoFixtures.showingNeither);
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: originalLocation,
+    });
+  });
+
+  test("clicking Log In navigates to the systemInfo oauthLogin url", () => {
+    renderNavbar(currentUserFixtures.notLoggedIn, {
+      ...systemInfoFixtures.showingNeither,
+      oauthLogin: "/oauth2/authorization/google-test",
+    });
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { href: "" },
+    });
+
+    fireEvent.click(screen.getByText("Log In"));
+
+    expect(window.location.href).toBe("/oauth2/authorization/google-test");
+  });
+
+  test("clicking Log In falls back to the default oauth url when systemInfo has none", () => {
+    const { oauthLogin: _oauthLogin, ...systemInfoWithoutOauthLogin } =
+      systemInfoFixtures.showingNeither;
+    renderNavbar(currentUserFixtures.notLoggedIn, systemInfoWithoutOauthLogin);
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { href: "" },
+    });
+
+    fireEvent.click(screen.getByText("Log In"));
+
+    expect(window.location.href).toBe("/oauth2/authorization/google");
   });
 
   test("renders Log In button when not logged in", () => {
@@ -47,6 +85,15 @@ describe("AppNavbar tests", () => {
     );
     expect(screen.getByText("Log Out")).toBeInTheDocument();
     expect(screen.queryByText("Log In")).not.toBeInTheDocument();
+  });
+
+  test("renders Swagger and H2Console links when systemInfo enables them", () => {
+    renderNavbar(
+      currentUserFixtures.notLoggedIn,
+      systemInfoFixtures.showingBoth,
+    );
+    expect(screen.getByText("Swagger")).toBeInTheDocument();
+    expect(screen.getByText("H2Console")).toBeInTheDocument();
   });
 
   test("renders Scaffold brand link", () => {

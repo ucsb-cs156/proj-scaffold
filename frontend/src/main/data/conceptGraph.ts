@@ -227,7 +227,6 @@ export const prereqEdgeData = [
 
   // Up from Level 3
   { source: "conditionals", target: "main-fn" },
-  { source: "conditionals", target: "main-fn" },
   { source: "conditionals", target: "recursion" },
   { source: "functions", target: "testing" },
   { source: "functions", target: "main-fn" },
@@ -243,7 +242,6 @@ export const prereqEdgeData = [
 
   // Up from Level 4
   { source: "loops", target: "nested-loops" },
-  { source: "dictionaries", target: "mutability" },
   { source: "built-in-fns", target: "input-output" },
   { source: "built-in-fns", target: "files" },
   { source: "methods", target: "string-methods" },

@@ -1,4 +1,4 @@
-import { useSystemInfo } from "../utils/systemInfo";
+import { useSystemInfo } from "../../utils/systemInfo";
 
 export default function LoginScreen({ onLogin }: { onLogin?: () => void }) {
   const { data: systemInfo } = useSystemInfo();
