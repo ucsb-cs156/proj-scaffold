@@ -2,11 +2,14 @@ edu.ucsb.cs.scaffold
 edu.ucsb.cs.scaffold.config
 edu.ucsb.cs.scaffold.controller
 edu.ucsb.cs.scaffold.entity
+edu.ucsb.cs.scaffold.enums
 edu.ucsb.cs.scaffold.errors
 edu.ucsb.cs.scaffold.interceptors
+edu.ucsb.cs.scaffold.jobs
 edu.ucsb.cs.scaffold.model
 edu.ucsb.cs.scaffold.repository
 edu.ucsb.cs.scaffold.services
+edu.ucsb.cs.scaffold.services.jobs
 edu.ucsb.cs.scaffold.services.wiremock
 edu.ucsb.cs.scaffold.startup
 edu.ucsb.cs.scaffold.utilities
