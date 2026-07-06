@@ -2,16 +2,16 @@
   "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "010-add-course-staff-table",
+        "id": "008-create-jobs-table",
         "author": "pc",
         "preConditions": [
           { "onFail": "MARK_RAN" },
-          { "not": { "tableExists": { "tableName": "course_staff" } } }
+          { "not": { "tableExists": { "tableName": "jobs" } } }
         ],
         "changes": [
           {
             "createTable": {
-              "tableName": "course_staff",
+              "tableName": "jobs",
               "columns": [
                 {
                   "column": {
@@ -21,12 +21,13 @@
                     "constraints": { "nullable": false, "primaryKey": true }
                   }
                 },
-                { "column": { "name": "user_id", "type": "BIGINT" } },
-                { "column": { "name": "first_name", "type": "VARCHAR(255)" } },
-                { "column": { "name": "last_name", "type": "VARCHAR(255)" } },
-                { "column": { "name": "email", "type": "VARCHAR(255)" } },
+                { "column": { "name": "created_by_id", "type": "BIGINT" } },
                 { "column": { "name": "course_id", "type": "BIGINT" } },
-                { "column": { "name": "role", "type": "VARCHAR(255)" } }
+                { "column": { "name": "created_at", "type": "TIMESTAMP" } },
+                { "column": { "name": "updated_at", "type": "TIMESTAMP" } },
+                { "column": { "name": "status", "type": "VARCHAR(255)" } },
+                { "column": { "name": "job_name", "type": "VARCHAR(255)" } },
+                { "column": { "name": "log", "type": "TEXT" } }
               ]
             }
           }

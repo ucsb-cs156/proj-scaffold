@@ -2,46 +2,39 @@
   "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "012-add-sections-table",
+        "id": "011-create-question-concepts-table",
         "author": "pc",
         "preConditions": [
           { "onFail": "MARK_RAN" },
-          { "not": { "tableExists": { "tableName": "sections" } } }
+          { "not": { "tableExists": { "tableName": "question_concepts" } } }
         ],
         "changes": [
           {
             "createTable": {
-              "tableName": "sections",
+              "tableName": "question_concepts",
               "columns": [
                 {
                   "column": {
                     "name": "id",
-                    "type": "BIGINT",
-                    "autoIncrement": true,
+                    "type": "UUID",
                     "constraints": { "nullable": false, "primaryKey": true }
                   }
                 },
                 {
                   "column": {
-                    "name": "course_id",
-                    "type": "BIGINT",
+                    "name": "question_id",
+                    "type": "UUID",
                     "constraints": { "nullable": false }
                   }
                 },
                 {
                   "column": {
-                    "name": "section",
+                    "name": "concept_id",
                     "type": "VARCHAR(255)",
                     "constraints": { "nullable": false }
                   }
                 },
-                {
-                  "column": {
-                    "name": "label",
-                    "type": "VARCHAR(255)",
-                    "constraints": { "nullable": false }
-                  }
-                }
+                { "column": { "name": "subconcept_label", "type": "VARCHAR(255)" } }
               ]
             }
           }

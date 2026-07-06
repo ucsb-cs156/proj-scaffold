@@ -1,0 +1,58 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "012-create-user-state-table",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "user_state" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "user_state",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "UUID",
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "userid",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false, "unique": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "starred_ids",
+                    "type": "TEXT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "detail_cards",
+                    "type": "TEXT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "mastered_subconcepts",
+                    "type": "TEXT",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

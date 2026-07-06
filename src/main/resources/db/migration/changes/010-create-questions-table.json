@@ -1,0 +1,45 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "010-create-questions-table",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "questions" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "questions",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "UUID",
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "assessment_id",
+                    "type": "UUID",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                { "column": { "name": "pl_question_uuid", "type": "VARCHAR(255)" } },
+                {
+                  "column": {
+                    "name": "title",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

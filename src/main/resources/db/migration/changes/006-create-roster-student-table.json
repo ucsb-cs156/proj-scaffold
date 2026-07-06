@@ -2,7 +2,7 @@
   "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "011-add-roster-student-table",
+        "id": "006-create-roster-student-table",
         "author": "pc",
         "preConditions": [
           { "onFail": "MARK_RAN" },
