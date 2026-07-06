@@ -5,9 +5,9 @@ export function buildGraphElements(
   positions: Record<string, { x: number; y: number }>,
 ): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = majorConcepts.map((concept) => ({
-    id: concept.id,
+    id: concept.conceptId,
     type: "major",
-    position: positions[concept.id] ?? { x: 0, y: 0 },
+    position: positions[concept.conceptId] ?? { x: 0, y: 0 },
     data: {
       label: concept.label,
       color: concept.color,
@@ -25,12 +25,12 @@ export function buildGraphElements(
     targetHandle: "bottom",
     type: "smooth",
     style: {
-      stroke: majorConcepts.find((c) => c.id === e.source)?.color,
+      stroke: majorConcepts.find((c) => c.conceptId === e.source)?.color,
       strokeWidth: 4,
     },
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      color: majorConcepts.find((c) => c.id === e.source)?.color,
+      color: majorConcepts.find((c) => c.conceptId === e.source)?.color,
     },
   }));
 

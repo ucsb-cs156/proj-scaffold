@@ -1,5 +1,5 @@
 export interface MajorConcept {
-  id: string;
+  conceptId: string;
   label: string;
   color: string;
   subconcepts: string[];
@@ -7,25 +7,25 @@ export interface MajorConcept {
 
 export const majorConcepts: MajorConcept[] = [
   {
-    id: "data-types",
+    conceptId: "data-types",
     label: "Basic \n Data Types",
     color: "#c99ffe",
     subconcepts: ["Numeric (integers, floats)", "Strings", "Booleans"],
   },
   {
-    id: "data-rep",
+    conceptId: "data-rep",
     label: "Data \n Representation",
     color: "#feaef2",
     subconcepts: ["Binary", "Hex", "Decimal", "Converting between bases"],
   },
   {
-    id: "variables",
+    conceptId: "variables",
     label: "Variables",
     color: "#feaef2",
     subconcepts: ["Variable names", "Variable assignment", "+= and -="],
   },
   {
-    id: "arithmetic-ops",
+    conceptId: "arithmetic-ops",
     label: "Arithmetic \n Operations",
     color: "#feaef2",
     subconcepts: [
@@ -36,7 +36,7 @@ export const majorConcepts: MajorConcept[] = [
     ],
   },
   {
-    id: "string-ops",
+    conceptId: "string-ops",
     label: "String \n Operations",
     color: "#93ebff",
     subconcepts: [
@@ -47,7 +47,7 @@ export const majorConcepts: MajorConcept[] = [
     ],
   },
   {
-    id: "boolean-expr",
+    conceptId: "boolean-expr",
     label: "Boolean \n Expressions",
     color: "#feaef2",
     subconcepts: [
@@ -57,13 +57,13 @@ export const majorConcepts: MajorConcept[] = [
     ],
   },
   {
-    id: "conditionals",
+    conceptId: "conditionals",
     label: "Conditional \n Statements",
     color: "#93ebff",
     subconcepts: ["if", "else", "elif"],
   },
   {
-    id: "functions",
+    conceptId: "functions",
     label: "Functions",
     color: "#93ebff",
     subconcepts: [
@@ -74,19 +74,19 @@ export const majorConcepts: MajorConcept[] = [
     ],
   },
   {
-    id: "built-in-fns",
+    conceptId: "built-in-fns",
     label: "Built-in \n Functions",
     color: "#fe9a71",
     subconcepts: ["len()", "min() and max()", "range()", "Type casting"],
   },
   {
-    id: "main-fn",
+    conceptId: "main-fn",
     label: 'if __name__ \n == "__main__":',
     color: "#fe9a71",
     subconcepts: ["Program structure", 'Using if __name__ == "__main__"'],
   },
   {
-    id: "dictionaries",
+    conceptId: "dictionaries",
     label: "Dictionaries",
     color: "#93ebff",
     subconcepts: [
@@ -96,13 +96,13 @@ export const majorConcepts: MajorConcept[] = [
     ],
   },
   {
-    id: "input-output",
+    conceptId: "input-output",
     label: "Input \n & Output",
     color: "#2bcd9c",
     subconcepts: ["input()", "print()"],
   },
   {
-    id: "loops",
+    conceptId: "loops",
     label: "Loops",
     color: "#fe9a71",
     subconcepts: [
@@ -115,43 +115,43 @@ export const majorConcepts: MajorConcept[] = [
     ],
   },
   {
-    id: "lists",
+    conceptId: "lists",
     label: "Lists",
     color: "#93ebff",
     subconcepts: ["Creating a list", "Accessing a value", "List slicing"],
   },
   {
-    id: "nested-lists",
+    conceptId: "nested-lists",
     label: "Nested \n Lists",
     color: "#fe9a71",
     subconcepts: ["Creating a nested list", "Accessing values"],
   },
   {
-    id: "nested-loops",
+    conceptId: "nested-loops",
     label: "Nested \n Loops",
     color: "#2bcd9c",
     subconcepts: ["Creating a nested loop", "Iterating over a nested list"],
   },
   {
-    id: "tuples",
+    conceptId: "tuples",
     label: "Tuples",
     color: "#93ebff",
     subconcepts: ["Creating a tuple", "Accessing a value"],
   },
   {
-    id: "sets",
+    conceptId: "sets",
     label: "Sets",
     color: "#93ebff",
     subconcepts: ["Creating a set", "Adding an element"],
   },
   {
-    id: "recursion",
+    conceptId: "recursion",
     label: "Recursion",
     color: "#fe9a71",
     subconcepts: ["Base case", "State change", "Recursive step"],
   },
   {
-    id: "files",
+    conceptId: "files",
     label: "Files",
     color: "#2bcd9c",
     subconcepts: [
@@ -161,37 +161,37 @@ export const majorConcepts: MajorConcept[] = [
     ],
   },
   {
-    id: "methods",
+    conceptId: "methods",
     label: "Built-in \n Methods",
     color: "#fe9a71",
     subconcepts: ["Calling a method", "List methods"],
   },
   {
-    id: "string-methods",
+    conceptId: "string-methods",
     label: "String \n Methods",
     color: "#2bcd9c",
     subconcepts: ["upper() and lower()", "replace()", "split()"],
   },
   {
-    id: "modules",
+    conceptId: "modules",
     label: "Imports & Modules",
     color: "#2bcd9c",
     subconcepts: ["Importing modules", "random", "math"],
   },
   {
-    id: "mutability",
+    conceptId: "mutability",
     label: "Mutability",
     color: "#fe9a71",
     subconcepts: ["Mutable objects", "Immutable objects"],
   },
   {
-    id: "testing",
+    conceptId: "testing",
     label: "Testing",
     color: "#fe9a71",
     subconcepts: ["assert statements", "Writing test functions", "Edge cases"],
   },
   {
-    id: "errors-debugging",
+    conceptId: "errors-debugging",
     label: "Errors & \n Debugging",
     color: "#93ebff",
     subconcepts: [
