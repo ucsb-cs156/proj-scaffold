@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -150,20 +150,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -185,7 +182,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -206,26 +206,26 @@ type RoleEmailFormProps = {
   buttonLabel?: string;
 };
 &nbsp;
-export default function <span class="fstat-no" title="function not covered" >RoleEmailForm({</span>
+export default function RoleEmailForm({
   submitAction,
-  buttonLabel = <span class="branch-0 cbranch-no" title="branch not covered" >"Create",</span>
+  buttonLabel = "Create",
 }: RoleEmailFormProps): React.JSX.Element {
   // Stryker disable all
   const {
     register,
     formState: { errors },
     handleSubmit,
-<span class="cstat-no" title="statement not covered" >  } = useForm&lt;RoleEmailFormFields&gt;();</span>
+  } = useForm&lt;RoleEmailFormFields&gt;();
   // Stryker restore all
 &nbsp;
-  const <span class="cstat-no" title="statement not covered" >navigate = useNavigate();</span>
+  const navigate = useNavigate();
 &nbsp;
-  const testIdPrefix = <span class="cstat-no" title="statement not covered" >"RoleEmailForm";</span>
+  const testIdPrefix = "RoleEmailForm";
 &nbsp;
   // Stryker disable next-line Regex
-  const emailRegex = <span class="cstat-no" title="statement not covered" >/^[^\s@]+@[^\s@]+\.[^\s@]+$/;</span>
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;Form onSubmit={handleSubmit(submitAction)}&gt;
       &lt;Form.Group className="mb-3"&gt;
         &lt;Form.Label htmlFor="email"&gt;Email&lt;/Form.Label&gt;
@@ -250,7 +250,7 @@ export default function <span class="fstat-no" title="function not covered" >Rol
       &lt;/Button&gt;
       &lt;Button
         variant="Secondary"
-        onClick={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >n</span>avigate(-1)}</span>
+        onClick={() =&gt; navigate(-1)}
         data-testid={testIdPrefix + "-cancel"}
       &gt;
         Cancel
@@ -265,7 +265,7 @@ export default function <span class="fstat-no" title="function not covered" >Rol
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-02T21:18:47.127Z
+                at 2026-07-06T02:45:51.556Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
