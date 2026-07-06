@@ -4,6 +4,10 @@ import { MemoryRouter } from "react-router";
 import PromptSignInPage from "main/pages/Auth/PromptSignInPage";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import AxiosMockAdapter from "axios-mock-adapter";
+import axios from "axios";
+
+const axiosMock = new AxiosMockAdapter(axios);
 
 function renderPromptSignInPage(initialEntries = ["/"]) {
   const queryClient = new QueryClient({
@@ -21,6 +25,14 @@ function renderPromptSignInPage(initialEntries = ["/"]) {
 }
 
 describe("PromptSignInPage tests", () => {
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  });
+
   afterEach(() => {
     sessionStorage.clear();
   });

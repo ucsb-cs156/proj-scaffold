@@ -4,6 +4,8 @@ import { MemoryRouter } from "react-router";
 import AppNavbar from "main/components/Nav/AppNavbar";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import AxiosMockAdapter from "axios-mock-adapter";
+import axios from "axios";
 
 function renderNavbar(currentUser, systemInfo) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -18,7 +20,17 @@ function renderNavbar(currentUser, systemInfo) {
   );
 }
 
+const axiosMock = new AxiosMockAdapter(axios);
+
 describe("AppNavbar tests", () => {
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  });
+
   test("renders Log In button when not logged in", () => {
     renderNavbar(
       currentUserFixtures.notLoggedIn,

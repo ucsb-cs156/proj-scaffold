@@ -4,6 +4,10 @@ import { MemoryRouter } from "react-router";
 import SignInPage from "main/pages/Auth/SignInPage";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import AxiosMockAdapter from "axios-mock-adapter";
+import axios from "axios";
+
+const axiosMock = new AxiosMockAdapter(axios);
 
 function renderSignInPage(systemInfo) {
   const queryClient = new QueryClient({
@@ -22,6 +26,14 @@ function renderSignInPage(systemInfo) {
 
 describe("SignInPage tests", () => {
   const originalLocation = window.location;
+
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  });
 
   afterEach(() => {
     Object.defineProperty(window, "location", {

@@ -14,9 +14,7 @@ describe("OurTable tests", () => {
         },
       ];
 
-      console.log("columns", columns);
       const newColumns = convertOldStyleColumnsToNewStyle(columns);
-      console.log("newColumns", newColumns);
       const expected = [
         {
           id: "col1",

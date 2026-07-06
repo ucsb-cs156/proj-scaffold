@@ -7,6 +7,7 @@ const config = {
     "@storybook/addon-links",
     "@storybook/addon-docs",
     "@chromatic-com/storybook",
+    'msw-storybook-addon',
   ],
   framework: {
     name: "@storybook/react-vite",

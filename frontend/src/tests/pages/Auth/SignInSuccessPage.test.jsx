@@ -5,6 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import mockConsole from "tests/testutils/mockConsole";
 import { vi } from "vitest";
 
+import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import axios from "axios";
+import AxiosMockAdapter from "axios-mock-adapter";
+
+const axiosMock = new AxiosMockAdapter(axios);
+
 const queryClient = new QueryClient();
 
 const mockedNavigate = vi.fn();
@@ -16,6 +22,11 @@ describe("SignInSuccessPage tests", () => {
   beforeEach(() => {
     queryClient.clear();
     sessionStorage.clear();
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
   });
   test("Page redirects correctly on set value", async () => {
     const restoreConsole = mockConsole();
