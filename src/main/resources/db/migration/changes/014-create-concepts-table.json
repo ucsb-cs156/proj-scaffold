@@ -44,6 +44,7 @@
                 },
                 { "column": { "name": "description", "type": "VARCHAR(1048576)" } },
                 { "column": { "name": "example", "type": "VARCHAR(1048576)" } },
+                { "column": { "name": "color", "type": "VARCHAR(255)" } },
                 { "column": { "name": "x", "type": "INT" } },
                 { "column": { "name": "y", "type": "INT" } },
                 { "column": { "name": "parent_id", "type": "BIGINT" } }

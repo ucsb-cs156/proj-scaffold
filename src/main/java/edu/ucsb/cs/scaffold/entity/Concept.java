@@ -39,6 +39,8 @@ public class Concept {
   @Column(length = 1048576)
   private String example;
 
+  private String color;
+
   private Integer x;
   private Integer y;
 
