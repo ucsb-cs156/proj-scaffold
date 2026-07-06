@@ -2,14 +2,16 @@
 
 import edu.ucsb.cs.scaffold.model.SystemInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.info.GitProperties;
 import org.springframework.stereotype.Service;
 
-<span class="fc" id="L9">@Slf4j</span>
+<span class="fc" id="L11">@Slf4j</span>
 @Service(&quot;systemInfo&quot;)
 @ConfigurationProperties
-<span class="fc" id="L12">public class SystemInfoServiceImpl extends SystemInfoService {</span>
+<span class="fc" id="L14">public class SystemInfoServiceImpl extends SystemInfoService {</span>
 
   @Value(&quot;${spring.h2.console.enabled:false}&quot;)
   private boolean springH2ConsoleEnabled;
@@ -23,26 +25,28 @@ import org.springframework.stereotype.Service;
   @Value(&quot;${app.sourceRepo:https://github.com/ucsb-cs156/proj-scaffold}&quot;)
   private String sourceRepo;
 
-  @Value(&quot;${git.commit.message.short:unknown}&quot;)
-  private String commitMessage;
-
-  @Value(&quot;${git.commit.id.abbrev:unknown}&quot;)
-  private String commitId;
+  @Autowired(required = false)
+  private GitProperties gitProperties;
 
   @Override
   public SystemInfo getSystemInfo() {
+    String commitMessage =
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        this.gitProperties != null ? this.gitProperties.get(&quot;commit.message.short&quot;) : &quot;unknown&quot;;</span>
+    String commitId =
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        this.gitProperties != null ? this.gitProperties.getShortCommitId() : &quot;unknown&quot;;</span>
+
     SystemInfo si =
-<span class="fc" id="L35">        SystemInfo.builder()</span>
-<span class="fc" id="L36">            .springH2ConsoleEnabled(this.springH2ConsoleEnabled)</span>
-<span class="fc" id="L37">            .showSwaggerUILink(this.showSwaggerUILink)</span>
-<span class="fc" id="L38">            .oauthLogin(this.oauthLogin)</span>
-<span class="fc" id="L39">            .sourceRepo(this.sourceRepo)</span>
-<span class="fc" id="L40">            .commitMessage(this.commitMessage)</span>
-<span class="fc" id="L41">            .commitId(this.commitId)</span>
-<span class="fc" id="L42">            .githubUrl(this.sourceRepo + &quot;/commit/&quot; + this.commitId)</span>
-<span class="fc" id="L43">            .build();</span>
-<span class="fc" id="L44">    log.info(&quot;getSystemInfo returns {}&quot;, si);</span>
-<span class="fc" id="L45">    return si;</span>
+<span class="fc" id="L39">        SystemInfo.builder()</span>
+<span class="fc" id="L40">            .springH2ConsoleEnabled(this.springH2ConsoleEnabled)</span>
+<span class="fc" id="L41">            .showSwaggerUILink(this.showSwaggerUILink)</span>
+<span class="fc" id="L42">            .oauthLogin(this.oauthLogin)</span>
+<span class="fc" id="L43">            .sourceRepo(this.sourceRepo)</span>
+<span class="fc" id="L44">            .commitMessage(commitMessage)</span>
+<span class="fc" id="L45">            .commitId(commitId)</span>
+<span class="fc" id="L46">            .githubUrl(this.sourceRepo + &quot;/commit/&quot; + commitId)</span>
+<span class="fc" id="L47">            .build();</span>
+<span class="fc" id="L48">    log.info(&quot;getSystemInfo returns {}&quot;, si);</span>
+<span class="fc" id="L49">    return si;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
