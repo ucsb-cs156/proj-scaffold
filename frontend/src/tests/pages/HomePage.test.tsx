@@ -14,6 +14,11 @@ import type {
 } from "main/api/client";
 import * as client from "main/api/client";
 
+import axios from "axios";
+import axiosMockAdapter from "axios-mock-adapter";
+
+const axiosMock = new axiosMockAdapter(axios);
+
 vi.mock("main/api/client", () => ({
   fetchAssessments: vi.fn(),
   fetchQuestions: vi.fn(),
@@ -165,6 +170,12 @@ describe("HomePage", () => {
     mockedClient.fetchUserState.mockResolvedValue(userState);
     mockedClient.saveUserState.mockResolvedValue(undefined);
     mockedClient.logUserActivity.mockResolvedValue(undefined);
+
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
   });
 
   afterEach(() => {

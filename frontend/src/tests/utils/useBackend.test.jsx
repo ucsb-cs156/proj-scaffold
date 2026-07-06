@@ -339,7 +339,6 @@ describe("utils/useBackend tests", () => {
         "Error: Request failed with status code 404",
       );
 
-      console.log(console.error.mock.calls);
       expect(console.error).toHaveBeenCalledTimes(1);
       const errorMessage1 = console.error.mock.calls[0][1];
       expect(errorMessage1).toMatch(/Request failed with status code 404/);

@@ -5,7 +5,6 @@ import LoginScreen from "main/components/Auth/LoginScreen";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import type { SystemInfo } from "main/utils/systemInfo";
 
-
 import axios from "axios";
 import axiosMockAdapter from "axios-mock-adapter";
 
@@ -31,11 +30,12 @@ describe("LoginScreen", () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-       axiosMock.reset();
+    axiosMock.reset();
     axiosMock.resetHistory();
-    axiosMock.onGet("/api/systemInfo").reply(200, systemInfoFixtures.showingNeither);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
   });
-
 
   afterEach(() => {
     Object.defineProperty(window, "location", {
