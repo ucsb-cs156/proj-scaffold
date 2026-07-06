@@ -12,7 +12,6 @@ const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
 
 describe("NotFoundPage tests", () => {
-  
   beforeEach(() => {
     queryClient.clear();
     axiosMock.reset();
@@ -21,7 +20,6 @@ describe("NotFoundPage tests", () => {
       .onGet("/api/systemInfo")
       .reply(200, systemInfoFixtures.showingNeither);
   });
-
 
   test("Not Found Page static checks", async () => {
     render(
