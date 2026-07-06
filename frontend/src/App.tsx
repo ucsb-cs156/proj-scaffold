@@ -13,6 +13,7 @@ import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
 
 import { useCurrentUser } from "main/utils/currentUser";
 import AdminDeveloperPage from "main/pages/Admin/AdminDeveloperPage";
+import CoursesIndexPage from "main/pages/Courses/CoursesIndexPage";
 
 export default function App() {
   const currentUser = useCurrentUser();
@@ -69,6 +70,16 @@ export default function App() {
             <ProtectedPage
               component={<AdminDeveloperPage />}
               enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/courses"
+          element={
+            <ProtectedPage
+              component={<CoursesIndexPage />}
+              enforceRole={"ROLE_INSTRUCTOR"}
               currentUser={currentUser}
             />
           }
