@@ -32,6 +32,8 @@ describe("InstructorCoursesTable tests", () => {
       window.location = { href: "", reload: vi.fn() }; // Add reload mock
       // Reset mocks
       window.alert.mockClear();
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     });
 
     afterEach(() => {
@@ -248,6 +250,7 @@ describe("InstructorCoursesTable tests", () => {
       axiosMock.resetHistory();
       mockToast.mockClear();
       invalidateQueriesSpy = vi.spyOn(queryClient, "invalidateQueries");
+      axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     });
 
     afterEach(() => {
@@ -706,7 +709,6 @@ describe("InstructorCoursesTable tests", () => {
     });
 
     test("Edit course modal opens and closes properly", async () => {
-      axiosMock = new AxiosMockAdapter(axios);
       axiosMock
         .onPut("/api/courses")
         .reply(200, coursesFixtures.severalCourses[0]);
@@ -751,9 +753,6 @@ describe("InstructorCoursesTable tests", () => {
     });
 
     test("Makes successful course update API call and shows success toast", async () => {
-      axiosMock = new AxiosMockAdapter(axios);
-      axiosMock.reset();
-      axiosMock.resetHistory();
       axiosMock.onPut("/api/courses").reply(200, {});
       axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
 
@@ -816,9 +815,6 @@ describe("InstructorCoursesTable tests", () => {
     });
 
     test("Shows error toast when course update API call fails with message", async () => {
-      axiosMock = new AxiosMockAdapter(axios);
-      axiosMock.reset();
-      axiosMock.resetHistory();
       axiosMock.onPut("/api/courses").reply(400, {
         message: "Course name already exists",
         type: "ValidationException",
@@ -871,9 +867,6 @@ describe("InstructorCoursesTable tests", () => {
     });
 
     test("Shows error toast when course update API call fails without message", async () => {
-      axiosMock = new AxiosMockAdapter(axios);
-      axiosMock.reset();
-      axiosMock.resetHistory();
       axiosMock.onPut("/api/courses").reply(400, {});
 
       render(
@@ -974,11 +967,7 @@ describe("InstructorCoursesTable tests", () => {
     });
 
     test("Course update mutation uses correct cache keys for invalidation", async () => {
-      axiosMock = new AxiosMockAdapter(axios);
-      axiosMock.reset();
-      axiosMock.resetHistory();
       axiosMock.onPut("/api/courses").reply(200, {});
-      axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
 
       render(
         <QueryClientProvider client={queryClient}>
@@ -1026,6 +1015,13 @@ describe("InstructorCoursesTable tests", () => {
   });
 
   describe("InstructorCourseTable delete course tests", () => {
+    beforeEach(() => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
+    });
+
     test("Delete column appears only when deleteCourseButton=true", async () => {
       render(
         <QueryClientProvider client={queryClient}>
@@ -1167,281 +1163,298 @@ describe("InstructorCoursesTable tests", () => {
     });
   });
 
-  test("Clicking the enabled delete button calls the correct axios DELETE request", async () => {
-    axiosMock.onDelete("/api/courses").reply(200);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <InstructorCoursesTable
-            courses={coursesFixtures.severalCourses}
-            currentUser={currentUserFixtures.adminUser}
-            storybook={false}
-            deleteCourseButton={true}
-          />
-        </BrowserRouter>
-      </QueryClientProvider>,
-    );
-
-    const deleteButton = screen.getByTestId(
-      "InstructorCoursesTable-cell-row-2-col-delete-button",
-    );
-    fireEvent.click(deleteButton);
-
-    const confirmButton = await screen.findByRole("button", {
-      name: "Yes, Delete",
-    });
-    fireEvent.click(confirmButton);
-
-    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
-
-    const request = axiosMock.history.delete[0];
-
-    expect(request.url).toBe("/api/courses");
-    expect(request.params).toEqual({ courseId: 3 });
-  });
-
-  test("Successful delete shows toast and closes modal", async () => {
-    axiosMock = new AxiosMockAdapter(axios);
-    axiosMock.reset();
-    axiosMock.resetHistory();
-    mockToast.mockClear();
-    axiosMock.onDelete("/api/courses").reply(200);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <InstructorCoursesTable
-            courses={coursesFixtures.severalCourses}
-            currentUser={currentUserFixtures.adminUser}
-            storybook={false}
-            deleteCourseButton={true}
-          />
-        </BrowserRouter>
-      </QueryClientProvider>,
-    );
-
-    fireEvent.click(
-      screen.getByTestId("InstructorCoursesTable-cell-row-2-col-delete-button"),
-    );
-
-    const confirmButton = await screen.findByRole("button", {
-      name: "Yes, Delete",
-    });
-    fireEvent.click(confirmButton);
-
-    await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith("Course deleted successfully");
+  describe("InstructorCoursesTable delete course API call tests", () => {
+    beforeEach(() => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     });
 
-    await waitFor(() => {
-      expect(screen.queryByText("Confirm Delete")).not.toBeInTheDocument();
-    });
-  });
+    test("Clicking the enabled delete button calls the correct axios DELETE request", async () => {
+      axiosMock.onDelete("/api/courses").reply(200);
 
-  test("Delete mutation uses correct cache keys for invalidation", async () => {
-    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              storybook={false}
+              deleteCourseButton={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
 
-    axiosMock.onDelete("/api/courses").reply(200, {});
+      const deleteButton = screen.getByTestId(
+        "InstructorCoursesTable-cell-row-2-col-delete-button",
+      );
+      fireEvent.click(deleteButton);
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <InstructorCoursesTable
-            courses={coursesFixtures.severalCourses}
-            currentUser={currentUserFixtures.adminUser}
-            deleteCourseButton={true}
-            storybook={false}
-          />
-        </BrowserRouter>
-      </QueryClientProvider>,
-    );
+      const confirmButton = await screen.findByRole("button", {
+        name: "Yes, Delete",
+      });
+      fireEvent.click(confirmButton);
 
-    // Open the delete modal
-    fireEvent.click(
-      screen.getByTestId("InstructorCoursesTable-cell-row-2-col-delete-button"),
-    );
+      await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
 
-    // Confirm delete
-    const yesButton = await screen.findByRole("button", {
-      name: "Yes, Delete",
-    });
-    fireEvent.click(yesButton);
+      const request = axiosMock.history.delete[0];
 
-    // Wait for request
-    await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
-
-    // EXPECT BOTH CACHE INVALIDATIONS TO FIRE
-    expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: ["/api/courses/allForAdmins"],
-    });
-    expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: ["/api/courses/allForInstructors"],
+      expect(request.url).toBe("/api/courses");
+      expect(request.params).toEqual({ courseId: 3 });
     });
 
-    invalidateSpy.mockRestore();
-  });
+    test("Successful delete shows toast and closes modal", async () => {
+      axiosMock = new AxiosMockAdapter(axios);
+      axiosMock.reset();
+      axiosMock.resetHistory();
+      mockToast.mockClear();
+      axiosMock.onDelete("/api/courses").reply(200);
 
-  test("Shows error toast when delete course API call fails with message", async () => {
-    axiosMock.onDelete("/api/courses").reply(400, {
-      message: "Cannot delete: course has active instructors",
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              storybook={false}
+              deleteCourseButton={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      fireEvent.click(
+        screen.getByTestId(
+          "InstructorCoursesTable-cell-row-2-col-delete-button",
+        ),
+      );
+
+      const confirmButton = await screen.findByRole("button", {
+        name: "Yes, Delete",
+      });
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith("Course deleted successfully");
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByText("Confirm Delete")).not.toBeInTheDocument();
+      });
     });
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <InstructorCoursesTable
-            courses={coursesFixtures.severalCourses}
-            currentUser={currentUserFixtures.adminUser}
-            storybook={false}
-            deleteCourseButton={true}
-          />
-        </BrowserRouter>
-      </QueryClientProvider>,
-    );
+    test("Delete mutation uses correct cache keys for invalidation", async () => {
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
-    const deleteButton = screen.getByTestId(
-      "InstructorCoursesTable-cell-row-2-col-delete-button",
-    );
-    fireEvent.click(deleteButton);
+      axiosMock.onDelete("/api/courses").reply(200, {});
 
-    const confirmButton = await screen.findByRole("button", {
-      name: "Yes, Delete",
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              deleteCourseButton={true}
+              storybook={false}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      // Open the delete modal
+      fireEvent.click(
+        screen.getByTestId(
+          "InstructorCoursesTable-cell-row-2-col-delete-button",
+        ),
+      );
+
+      // Confirm delete
+      const yesButton = await screen.findByRole("button", {
+        name: "Yes, Delete",
+      });
+      fireEvent.click(yesButton);
+
+      // Wait for request
+      await waitFor(() => expect(axiosMock.history.delete.length).toBe(1));
+
+      // EXPECT BOTH CACHE INVALIDATIONS TO FIRE
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ["/api/courses/allForAdmins"],
+      });
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ["/api/courses/allForInstructors"],
+      });
+
+      invalidateSpy.mockRestore();
     });
-    fireEvent.click(confirmButton);
 
-    await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
-        "Could not delete course:\nCannot delete: course has active instructors",
+    test("Shows error toast when delete course API call fails with message", async () => {
+      axiosMock.onDelete("/api/courses").reply(400, {
+        message: "Cannot delete: course has active instructors",
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              storybook={false}
+              deleteCourseButton={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      const deleteButton = screen.getByTestId(
+        "InstructorCoursesTable-cell-row-2-col-delete-button",
+      );
+      fireEvent.click(deleteButton);
+
+      const confirmButton = await screen.findByRole("button", {
+        name: "Yes, Delete",
+      });
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith(
+          "Could not delete course:\nCannot delete: course has active instructors",
+        );
+      });
+    });
+
+    test("Shows fallback error toast when delete course API call fails without message", async () => {
+      axiosMock.onDelete("/api/courses").reply(400, {});
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              storybook={false}
+              deleteCourseButton={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      const deleteButton = screen.getByTestId(
+        "InstructorCoursesTable-cell-row-2-col-delete-button",
+      );
+      fireEvent.click(deleteButton);
+
+      const confirmButton = await screen.findByRole("button", {
+        name: "Yes, Delete",
+      });
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(mockToast).toHaveBeenCalledWith(
+          "Could not delete course:\nRequest failed with status code 400",
+        );
+      });
+    });
+
+    test("Delete modal opens when delete is clicked and closes when 'Do not delete' is clicked", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              storybook={false}
+              deleteCourseButton={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
+
+      const deleteButton = screen.getByTestId(
+        "InstructorCoursesTable-cell-row-2-col-delete-button",
+      );
+      fireEvent.click(deleteButton);
+
+      expect(await screen.findByText("Confirm Delete")).toBeInTheDocument();
+
+      expect(
+        screen.getByText(
+          (content, element) =>
+            element.tagName === "P" &&
+            element.textContent.includes("delete course CMPSC 5B"),
+        ),
+      ).toBeInTheDocument();
+
+      const cancelButton = screen.getByRole("button", {
+        name: "Do not delete",
+      });
+      fireEvent.click(cancelButton);
+
+      await waitFor(() =>
+        expect(screen.queryByText("Confirm Delete")).not.toBeInTheDocument(),
       );
     });
-  });
 
-  test("Shows fallback error toast when delete course API call fails without message", async () => {
-    axiosMock.onDelete("/api/courses").reply(400, {});
+    test("Delete modal closes when clicking the onHide handler", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              storybook={false}
+              deleteCourseButton={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <InstructorCoursesTable
-            courses={coursesFixtures.severalCourses}
-            currentUser={currentUserFixtures.adminUser}
-            storybook={false}
-            deleteCourseButton={true}
-          />
-        </BrowserRouter>
-      </QueryClientProvider>,
-    );
+      const deleteButton = screen.getByTestId(
+        "InstructorCoursesTable-cell-row-2-col-delete-button",
+      );
+      fireEvent.click(deleteButton);
 
-    const deleteButton = screen.getByTestId(
-      "InstructorCoursesTable-cell-row-2-col-delete-button",
-    );
-    fireEvent.click(deleteButton);
+      expect(await screen.findByText("Confirm Delete")).toBeInTheDocument();
 
-    const confirmButton = await screen.findByRole("button", {
-      name: "Yes, Delete",
-    });
-    fireEvent.click(confirmButton);
+      const closeButton = screen.getByRole("button", { name: /close/i });
+      fireEvent.click(closeButton);
 
-    await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
-        "Could not delete course:\nRequest failed with status code 400",
+      await waitFor(() =>
+        expect(screen.queryByText("Confirm Delete")).not.toBeInTheDocument(),
       );
     });
-  });
 
-  test("Delete modal opens when delete is clicked and closes when 'Do not delete' is clicked", async () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <InstructorCoursesTable
-            courses={coursesFixtures.severalCourses}
-            currentUser={currentUserFixtures.adminUser}
-            storybook={false}
-            deleteCourseButton={true}
-          />
-        </BrowserRouter>
-      </QueryClientProvider>,
-    );
+    test("Delete modal hides text when courseToDelete becomes null", async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <InstructorCoursesTable
+              courses={coursesFixtures.severalCourses}
+              currentUser={currentUserFixtures.adminUser}
+              deleteCourseButton={true}
+            />
+          </BrowserRouter>
+        </QueryClientProvider>,
+      );
 
-    const deleteButton = screen.getByTestId(
-      "InstructorCoursesTable-cell-row-2-col-delete-button",
-    );
-    fireEvent.click(deleteButton);
+      // Open modal
+      fireEvent.click(
+        screen.getByTestId(
+          "InstructorCoursesTable-cell-row-2-col-delete-button",
+        ),
+      );
 
-    expect(await screen.findByText("Confirm Delete")).toBeInTheDocument();
+      // Text should appear
+      expect(await screen.findByText(/Please confirm/)).toBeInTheDocument();
 
-    expect(
-      screen.getByText(
-        (content, element) =>
-          element.tagName === "P" &&
-          element.textContent.includes("delete course CMPSC 5B"),
-      ),
-    ).toBeInTheDocument();
+      // Close modal -> triggers setShowDeleteModal(false) AND courseToDelete(null)
+      fireEvent.click(screen.getByRole("button", { name: "Do not delete" }));
 
-    const cancelButton = screen.getByRole("button", { name: "Do not delete" });
-    fireEvent.click(cancelButton);
-
-    await waitFor(() =>
-      expect(screen.queryByText("Confirm Delete")).not.toBeInTheDocument(),
-    );
-  });
-
-  test("Delete modal closes when clicking the onHide handler", async () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <InstructorCoursesTable
-            courses={coursesFixtures.severalCourses}
-            currentUser={currentUserFixtures.adminUser}
-            storybook={false}
-            deleteCourseButton={true}
-          />
-        </BrowserRouter>
-      </QueryClientProvider>,
-    );
-
-    const deleteButton = screen.getByTestId(
-      "InstructorCoursesTable-cell-row-2-col-delete-button",
-    );
-    fireEvent.click(deleteButton);
-
-    expect(await screen.findByText("Confirm Delete")).toBeInTheDocument();
-
-    const closeButton = screen.getByRole("button", { name: /close/i });
-    fireEvent.click(closeButton);
-
-    await waitFor(() =>
-      expect(screen.queryByText("Confirm Delete")).not.toBeInTheDocument(),
-    );
-  });
-
-  test("Delete modal hides text when courseToDelete becomes null", async () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <InstructorCoursesTable
-            courses={coursesFixtures.severalCourses}
-            currentUser={currentUserFixtures.adminUser}
-            deleteCourseButton={true}
-          />
-        </BrowserRouter>
-      </QueryClientProvider>,
-    );
-
-    // Open modal
-    fireEvent.click(
-      screen.getByTestId("InstructorCoursesTable-cell-row-2-col-delete-button"),
-    );
-
-    // Text should appear
-    expect(await screen.findByText(/Please confirm/)).toBeInTheDocument();
-
-    // Close modal -> triggers setShowDeleteModal(false) AND courseToDelete(null)
-    fireEvent.click(screen.getByRole("button", { name: "Do not delete" }));
-
-    await waitFor(() =>
-      expect(screen.queryByText(/Please confirm/)).not.toBeInTheDocument(),
-    );
+      await waitFor(() =>
+        expect(screen.queryByText(/Please confirm/)).not.toBeInTheDocument(),
+      );
+    });
   });
 });
