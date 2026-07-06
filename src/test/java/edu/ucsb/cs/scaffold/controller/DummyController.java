@@ -1,6 +1,5 @@
-package edu.ucsb.cs.scaffold.controllers;
+package edu.ucsb.cs.scaffold.controller;
 
-import edu.ucsb.cs.scaffold.controller.ApiController;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,0 +1,39 @@
+package edu.ucsb.cs.scaffold.jobs;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.*;
+
+import edu.ucsb.cs.scaffold.entity.Job;
+import edu.ucsb.cs.scaffold.services.UpdateUserService;
+import edu.ucsb.cs.scaffold.services.jobs.JobContext;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+public class UpdateAllJobTests {
+  @Mock private UpdateUserService updateUserService;
+  Job jobStarted = Job.builder().build();
+  JobContext ctx = new JobContext(null, jobStarted);
+
+  @Test
+  public void test_getCourse_returnsNull() {
+    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();
+    assertNull(job.getCourse());
+  }
+
+  @Test
+  void test_UpdateAllJob() throws Exception {
+    var job = spy(UpdateAllJob.builder().updateUserService(updateUserService).build());
+
+    job.accept(ctx);
+    String expected = """
+                Processing...
+                Done""";
+
+    assertEquals(expected, jobStarted.getLog());
+    verify(updateUserService, times(1)).attachRosterStudentsAllUsers();
+  }
+}

@@ -228,6 +228,7 @@
         <configuration>
           <excludes>
             <exclude>**/${app.packagePath}/config/*</exclude>
+            <exclude>**/${app.packagePath}/utilities/Sleep.*</exclude>
             <exclude>**/${app.packagePath}/services/wiremock/*</exclude>
             <exclude>**/${app.packagePath}/controller/FrontendController.*</exclude>
             <exclude>**/${app.packagePath}/controller/FrontendProxyController.*</exclude>
@@ -328,7 +329,7 @@
             <param>${app.package}.services.wiremock.WiremockService</param>
             <param>${app.package}.services.wiremock.WiremockServiceDummy</param>
             <param>${app.package}.services.wiremock.WiremockServiceImpl</param>
-
+            <param>${app.package}.utilities.Sleep</param>
           </excludedClasses>
           <excludedTestClasses>
             <param>${app.package}.web.*</param>
@@ -442,7 +443,8 @@
                           <srcfiles dir="${project.basedir}/frontend/src" includes="**/*" />
                           <srcfiles dir="${project.basedir}/frontend/build" includes="**/*" />
                           <srcfiles file="${project.basedir}/frontend/vite.config.js" />
-                          <mapper type="merge" to="${project.build.outputDirectory}/public/index.html" />
+                          <mapper type="merge"
+                            to="${project.build.outputDirectory}/public/index.html" />
                         </uptodate>
                       </and>
                     </condition>

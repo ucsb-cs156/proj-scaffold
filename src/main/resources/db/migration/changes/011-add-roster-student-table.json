@@ -1,0 +1,53 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "011-add-roster-student-table",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "roster_student" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "roster_student",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGINT",
+                    "autoIncrement": true,
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                { "column": { "name": "course_id", "type": "BIGINT" } },
+                { "column": { "name": "student_id", "type": "VARCHAR(255)" } },
+                { "column": { "name": "first_name", "type": "VARCHAR(255)" } },
+                { "column": { "name": "last_name", "type": "VARCHAR(255)" } },
+                { "column": { "name": "email", "type": "VARCHAR(255)" } },
+                { "column": { "name": "section", "type": "VARCHAR(255)" } },
+                { "column": { "name": "user_id", "type": "BIGINT" } },
+                { "column": { "name": "roster_status", "type": "VARCHAR(255)" } }
+              ]
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "roster_student",
+              "columnNames": "course_id, student_id",
+              "constraintName": "UK_ROSTER_STUDENT_COURSE_STUDENT"
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "roster_student",
+              "columnNames": "course_id, email",
+              "constraintName": "UK_ROSTER_STUDENT_COURSE_EMAIL"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

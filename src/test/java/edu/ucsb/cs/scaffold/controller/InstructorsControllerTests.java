@@ -1,4 +1,4 @@
-package edu.ucsb.cs.scaffold.controllers;
+package edu.ucsb.cs.scaffold.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
