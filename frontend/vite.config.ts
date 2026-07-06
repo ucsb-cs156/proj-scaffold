@@ -1,10 +1,10 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
-import path from 'path'
+import tsconfigPaths from 'vite-tsconfig-paths'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tsconfigPaths()],
   server: {
     host: '127.0.0.1',
     port: 3000,
@@ -18,13 +18,6 @@ export default defineConfig({
   },
   build: {
     outDir: 'build',
-  },
-  resolve: {
-    alias: {
-      main: path.resolve(__dirname, './src/main'),
-      fixtures: path.resolve(__dirname, './src/fixtures'),
-      tests: path.resolve(__dirname, './src/tests'),
-    },
   },
   test: {
     dangerouslyIgnoreUnhandledErrors: false,

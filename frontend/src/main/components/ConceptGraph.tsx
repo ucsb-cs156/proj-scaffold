@@ -23,11 +23,11 @@ import {
   type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import "../../App.css";
-import { buildGraphElements } from "../utils/layout";
-import { majorConcepts, prereqEdgeData } from "../data/conceptGraph";
-import { positions } from "../data/conceptGraphPositions";
-import { conceptContent, type ConceptContent } from "../data/conceptContent";
+import "App.css";
+import { buildGraphElements } from "main/utils/layout";
+import { majorConcepts, prereqEdgeData } from "main/data/conceptGraph";
+import { positions } from "main/data/conceptGraphPositions";
+import { conceptContent, type ConceptContent } from "main/data/conceptContent";
 
 const cardKeyMap: Record<string, keyof ConceptContent> = {
   Description: "description",
