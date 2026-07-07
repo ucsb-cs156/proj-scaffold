@@ -48,7 +48,7 @@ public abstract class WebTestCase {
     wireMockServer =
         new WireMockServer(
             options().port(8090).globalTemplating(true).extensions(new JwtExtensionFactory()));
-    WiremockServiceImpl.setupOauthMocks(wireMockServer, false);
+    WiremockServiceImpl.setupOauthMocks(wireMockServer, "cgaucho@ucsb.edu");
     wireMockServer.start();
   }
 
@@ -76,10 +76,10 @@ public abstract class WebTestCase {
 
   @SuppressWarnings("null")
   private void setupUser(boolean isAdmin, boolean isInstructor) {
-    WiremockServiceImpl.setupOauthMocks(wireMockServer, isAdmin);
-
     String email = isInstructor ? "instructor@ucsb.edu" : "cgaucho@ucsb.edu";
     email = isAdmin ? "admin@ucsb.edu" : email;
+
+    WiremockServiceImpl.setupOauthMocks(wireMockServer, email);
 
     User user =
         User.builder()

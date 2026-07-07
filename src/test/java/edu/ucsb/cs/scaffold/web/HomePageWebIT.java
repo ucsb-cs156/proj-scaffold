@@ -23,8 +23,17 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
  * that {@code target/classes/public/index.html} exists. Run with:
  *
  * <pre>
- * INTEGRATION=true mvn test
+ * INTEGRATION=true mvn -ntp -B test-compile failsafe:integration-test failsafe:verify
  * </pre>
+ *
+ * To see what's happeening, use:
+ *
+ * <pre>
+ * HEADLESS=false INTEGRATION=true mvn -ntp -B test-compile failsafe:integration-test failsafe:verify
+ * </pre>
+ *
+ * You can put <code>page.pause()</code> in the test to pause the test and see what is on the page
+ * at that point.
  */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
