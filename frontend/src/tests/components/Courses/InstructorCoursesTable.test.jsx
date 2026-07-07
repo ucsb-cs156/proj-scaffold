@@ -108,7 +108,7 @@ describe("InstructorAdminCoursesTable tests", () => {
       const firstCourseLink = screen.getByTestId(
         "CoursesTable-cell-row-0-col-courseName-link",
       );
-      expect(firstCourseLink).toHaveAttribute("href", "/instructor/courses/1");
+      expect(firstCourseLink).toHaveAttribute("href", "/course/1");
 
       // Modal should not appear; this kills mutations of this line:
       //   const [showModal, setShowModal] = useState(true);

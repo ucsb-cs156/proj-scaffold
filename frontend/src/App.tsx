@@ -7,6 +7,8 @@ import InstructorsIndexPage from "main/pages/Admin/InstructorsIndexPage";
 import InstructorsCreatePage from "main/pages/Admin/InstructorsCreatePage";
 import ProtectedPage from "main/pages/Auth/ProtectedPage";
 import HomePage from "main/pages/HomePage";
+import LegacyHomePage from "main/pages/LegacyHomePage";
+import ConceptGraphPage from "main/pages/ConceptGraphPage";
 import NotFoundPage from "main/pages/Auth/NotFoundPage";
 import SignInPage from "main/pages/Auth/SignInPage";
 import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
@@ -23,6 +25,17 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/LegacyHomePage" element={<LegacyHomePage />} />
+        <Route
+          path="/course/:courseId"
+          element={
+            <ProtectedPage
+              component={<ConceptGraphPage />}
+              enforceRole={"ROLE_USER"}
+              currentUser={currentUser}
+            />
+          }
+        />
         <Route path="/login" element={<SignInPage />} />
         <Route path="/login/success" element={<SignInSuccessPage />} />
         <Route

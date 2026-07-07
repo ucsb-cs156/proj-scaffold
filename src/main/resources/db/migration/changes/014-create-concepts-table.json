@@ -1,0 +1,83 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "014-create-concepts-table",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "concepts" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "concepts",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGINT",
+                    "autoIncrement": true,
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "course_id",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "concept_id",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "label",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                { "column": { "name": "description", "type": "VARCHAR(1048576)" } },
+                { "column": { "name": "example", "type": "VARCHAR(1048576)" } },
+                { "column": { "name": "color", "type": "VARCHAR(255)" } },
+                { "column": { "name": "x", "type": "INT" } },
+                { "column": { "name": "y", "type": "INT" } },
+                { "column": { "name": "parent_id", "type": "BIGINT" } }
+              ]
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "concepts",
+              "columnNames": "course_id, concept_id",
+              "constraintName": "UK_CONCEPTS_COURSE_CONCEPT"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "concepts",
+              "baseColumnNames": "course_id",
+              "referencedTableName": "course",
+              "referencedColumnNames": "id",
+              "constraintName": "FK_CONCEPTS_COURSE_ID"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "concepts",
+              "baseColumnNames": "parent_id",
+              "referencedTableName": "concepts",
+              "referencedColumnNames": "id",
+              "constraintName": "FK_CONCEPTS_PARENT_ID"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

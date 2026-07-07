@@ -1,6 +1,7 @@
 import {
   useEffect,
   useCallback,
+  useMemo,
   useRef,
   createContext,
   useContext,
@@ -24,12 +25,21 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import "App.css";
-import { buildGraphElements } from "main/utils/layout";
-import { majorConcepts, prereqEdgeData } from "main/data/conceptGraph";
-import { positions } from "main/data/conceptGraphPositions";
-import { conceptContent, type ConceptContent } from "main/data/conceptContent";
+import {
+  buildGraphElementsV2,
+  type MajorConceptLike,
+  type EdgeLike,
+} from "main/utils/layout";
+import type { ConceptContentDTO } from "main/api/client";
 
-const cardKeyMap: Record<string, keyof ConceptContent> = {
+// This is a parallel, database-driven version of ConceptGraph.tsx: instead of
+// importing majorConcepts/prereqEdgeData/positions/conceptContent from the
+// hardcoded frontend/src/main/data files, it takes them as props so it can
+// render a concept graph fetched from the backend for any course. The
+// original ConceptGraph.tsx (used by LegacyHomePage.tsx) is left completely
+// untouched; once this version is proven out, one of the two can be retired.
+
+const cardKeyMap: Record<string, keyof ConceptContentDTO> = {
   Description: "description",
   Example: "example",
   "PrairieLearn Practice": "practiceUrl",
@@ -44,7 +54,11 @@ interface SavedDetailCard {
   posY: number;
 }
 
-interface ConceptGraphProps {
+interface ConceptGraphV2Props {
+  majorConcepts: MajorConceptLike[];
+  positions: Record<string, { x: number; y: number }>;
+  conceptContent: Record<string, ConceptContentDTO>;
+  prereqEdgeData: EdgeLike[];
   highlightedIds: Set<string>;
   highlightedSubconcepts: Map<string, Set<string>>;
   onConceptClick: (id: string) => void;
@@ -463,10 +477,12 @@ function DetailNode({ data, id }: NodeProps) {
 }
 
 const nodeTypes: NodeTypes = { major: MajorNode, detail: DetailNode };
-const { nodes: initialNodes, edges: initialEdges } =
-  buildGraphElements(positions);
 
-export default function ConceptGraph({
+export default function ConceptGraphV2({
+  majorConcepts,
+  positions,
+  conceptContent,
+  prereqEdgeData,
   highlightedIds,
   highlightedSubconcepts,
   onConceptClick,
@@ -480,7 +496,16 @@ export default function ConceptGraph({
   masteredSubconcepts,
   onSubconceptMastered,
   onPaneClick,
-}: ConceptGraphProps) {
+}: ConceptGraphV2Props) {
+  // majorConcepts/positions/prereqEdgeData are only expected to be stable for
+  // the lifetime of a mounted instance (the page that renders this component
+  // waits for all backend fetches to resolve before rendering it at all), so
+  // computing these once via useMemo is safe.
+  const { nodes: initialNodes, edges: initialEdges } = useMemo(
+    () => buildGraphElementsV2(positions, majorConcepts, prereqEdgeData),
+    [positions, majorConcepts, prereqEdgeData],
+  );
+
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const hasSelection = highlightedIds.size > 0;
@@ -539,7 +564,7 @@ export default function ConceptGraph({
 
     setNodes((prev) => [...prev, ...newNodes]);
     setEdges((prev) => [...prev, ...newEdges]);
-  }, [restoredDetailCards, setNodes, setEdges]);
+  }, [restoredDetailCards, setNodes, setEdges, majorConcepts, conceptContent]);
 
   const rfInstance = useRef<ReactFlowInstance<Node, Edge> | null>(null);
 
@@ -548,7 +573,7 @@ export default function ConceptGraph({
     setEdges(initialEdges);
     onReset();
     setTimeout(() => rfInstance.current?.fitView({ padding: 0.08 }), 50);
-  }, [onReset, setNodes, setEdges]);
+  }, [onReset, setNodes, setEdges, initialNodes, initialEdges]);
 
   const handleDeleteDetail = useCallback(
     (id: string) => {
@@ -740,7 +765,14 @@ export default function ConceptGraph({
           };
         }),
     ]);
-  }, [highlightedIds, hasSelection, setEdges]);
+  }, [
+    highlightedIds,
+    hasSelection,
+    setEdges,
+    initialEdges,
+    prereqEdgeData,
+    majorConcepts,
+  ]);
 
   const onNodeClick = useCallback(
     (_e: React.MouseEvent, node: Node) => {

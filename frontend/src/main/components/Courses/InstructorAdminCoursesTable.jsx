@@ -17,7 +17,7 @@ export default function InstructorAdminCoursesTable({
   testId = "InstructorAdminCoursesTable",
   enableInstructorUpdate = false,
   deleteCourseButton = false,
-  courseNameLinkPrefix = "/instructor/courses",
+  courseNameLinkPrefix = "/course",
   canEditCourse,
   mutationQueryKeys = [
     "/api/courses/allForAdmins",

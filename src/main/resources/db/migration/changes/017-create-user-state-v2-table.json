@@ -1,0 +1,81 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "017-create-user-state-v2-table",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "user_state_v2" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "user_state_v2",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "UUID",
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "userid",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "course_id",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "starred_ids",
+                    "type": "VARCHAR(1048576)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "detail_cards",
+                    "type": "VARCHAR(1048576)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "mastered_subconcepts",
+                    "type": "VARCHAR(1048576)",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "user_state_v2",
+              "columnNames": "userid, course_id",
+              "constraintName": "UK_USER_STATE_V2_USER_COURSE"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "user_state_v2",
+              "baseColumnNames": "course_id",
+              "referencedTableName": "course",
+              "referencedColumnNames": "id",
+              "constraintName": "FK_USER_STATE_V2_COURSE_ID"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

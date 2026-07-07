@@ -60,6 +60,9 @@ export default function AppNavbar({
                 <NavDropdown.Item as={Link} to="/admin/developer">
                   Developer Info
                 </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/LegacyHomePage">
+                  LegacyHomePage
+                </NavDropdown.Item>
               </NavDropdown>
             )}
             {hasRole(currentUser, "ROLE_INSTRUCTOR") && (

@@ -83,3 +83,122 @@ export async function logUserActivity(body: {
   if (!res.ok)
     throw new Error(`Failed to log user activity for userid ${body.userid}`);
 }
+
+// ── Database-driven concept graph (per-course) ──────────────────────────────
+
+export interface MajorConceptDTO {
+  name: string;
+  label: string;
+  color: string;
+  subconcepts: string[];
+}
+
+export interface ConceptContentDTO {
+  description: string | null;
+  example: string | null;
+  practiceUrl: string | null;
+}
+
+export interface PositionDTO {
+  x: number;
+  y: number;
+}
+
+export interface EdgeDTO {
+  source: string;
+  target: string;
+}
+
+export async function fetchConceptGraph(
+  courseId: number,
+): Promise<MajorConceptDTO[]> {
+  const res = await fetch(`${API_BASE}/concepts/graph?courseId=${courseId}`);
+  if (!res.ok)
+    throw new Error(`Failed to fetch concept graph for course ${courseId}`);
+  return res.json();
+}
+
+export async function fetchConceptContent(
+  courseId: number,
+): Promise<Record<string, ConceptContentDTO>> {
+  const res = await fetch(`${API_BASE}/concepts/content?courseId=${courseId}`);
+  if (!res.ok)
+    throw new Error(`Failed to fetch concept content for course ${courseId}`);
+  return res.json();
+}
+
+export async function fetchConceptPositions(
+  courseId: number,
+): Promise<Record<string, PositionDTO>> {
+  const res = await fetch(
+    `${API_BASE}/concepts/positions?courseId=${courseId}`,
+  );
+  if (!res.ok)
+    throw new Error(`Failed to fetch concept positions for course ${courseId}`);
+  return res.json();
+}
+
+export async function fetchConceptEdges(courseId: number): Promise<EdgeDTO[]> {
+  const res = await fetch(`${API_BASE}/concepts/edges?courseId=${courseId}`);
+  if (!res.ok)
+    throw new Error(`Failed to fetch concept edges for course ${courseId}`);
+  return res.json();
+}
+
+// ── Course-scoped user state / activity (V2) ────────────────────────────────
+
+export interface UserStateV2Response {
+  starred_ids: string[];
+  detail_cards: unknown[];
+  mastered_subconcepts: string[];
+}
+
+export async function fetchUserStateV2(
+  userid: number,
+  courseId: number,
+): Promise<UserStateV2Response | null> {
+  const res = await fetch(
+    `${API_BASE}/user-state-v2?userid=${userid}&courseId=${courseId}`,
+  );
+  if (res.status === 404) return null;
+  if (!res.ok)
+    throw new Error(
+      `Failed to fetch user state for userid ${userid} in course ${courseId}`,
+    );
+  return res.json();
+}
+
+export async function saveUserStateV2(body: {
+  userid: number;
+  courseId: number;
+  starred_ids: string[];
+  detail_cards: unknown[];
+  mastered_subconcepts: string[];
+}): Promise<void> {
+  const res = await fetch(`${API_BASE}/user-state-v2`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok)
+    throw new Error(
+      `Failed to save user state for userid ${body.userid} in course ${body.courseId}`,
+    );
+}
+
+export async function logUserActivityV2(body: {
+  userid: number;
+  courseId: number;
+  event_type: string;
+  payload: object;
+}): Promise<void> {
+  const res = await fetch(`${API_BASE}/user-activity-v2`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok)
+    throw new Error(
+      `Failed to log user activity for userid ${body.userid} in course ${body.courseId}`,
+    );
+}

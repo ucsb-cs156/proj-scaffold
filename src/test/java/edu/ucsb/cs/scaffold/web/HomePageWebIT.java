@@ -38,8 +38,9 @@ public class HomePageWebIT extends WebTestCase {
   public void logged_in_user_sees_concept_graph() throws Exception {
     setupUser(false);
 
-    // Navigate to home after login
-    page.navigate(page.url().replaceAll("(http://localhost:\\d+).*", "$1/"));
+    // Navigate to the database-driven concept graph page for course 1, which the
+    // application always seeds on startup.
+    page.navigate(page.url().replaceAll("(http://localhost:\\d+).*", "$1/course/1"));
     assertThat(
             page.locator("div")
                 .filter(
