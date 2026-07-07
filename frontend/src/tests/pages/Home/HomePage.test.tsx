@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach } from "vitest";
 import { BrowserRouter } from "react-router";
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import HomePage from "main/pages/HomePage";
+import HomePage from "main/pages/Home/HomePage";
 
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import axios from "axios";

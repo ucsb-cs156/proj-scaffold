@@ -49,11 +49,6 @@ Default.parameters = {
       http.get("/api/courses/list", () => {
         return HttpResponse.json(coursesFixtures.severalCourses);
       }),
-      http.put("/api/rosterstudents/joinCourse", () => {
-        return HttpResponse.json("Joining course successful", {
-          status: 202,
-        });
-      }),
     ],
   },
 };

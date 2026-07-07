@@ -6,8 +6,8 @@ import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 import InstructorsIndexPage from "main/pages/Admin/InstructorsIndexPage";
 import InstructorsCreatePage from "main/pages/Admin/InstructorsCreatePage";
 import ProtectedPage from "main/pages/Auth/ProtectedPage";
-import HomePage from "main/pages/HomePage";
-import LegacyHomePage from "main/pages/LegacyHomePage";
+import HomePage from "main/pages/Home/HomePage";
+import LegacyHomePage from "main/pages/Home/LegacyHomePage";
 import ConceptGraphPage from "main/pages/ConceptGraphPage";
 import NotFoundPage from "main/pages/Auth/NotFoundPage";
 import SignInPage from "main/pages/Auth/SignInPage";
@@ -18,13 +18,22 @@ import AdminDeveloperPage from "main/pages/Admin/AdminDeveloperPage";
 import InstructorCoursesIndexPage from "main/pages/Courses/InstructorCoursesIndexPage";
 import AdminCoursesIndexPage from "main/pages/Admin/AdminCoursesIndexPage";
 
+import HomePageLoggedIn from "main/pages/Home/HomePageLoggedIn";
+import HomePageLoggedOut from "main/pages/Home/HomePageLoggedOut";
+
 export default function App() {
   const currentUser = useCurrentUser();
+
+  const homePage = currentUser.loggedIn ? (
+    <HomePageLoggedIn />
+  ) : (
+    <HomePageLoggedOut />
+  );
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={homePage} />
         <Route path="/LegacyHomePage" element={<LegacyHomePage />} />
         <Route
           path="/course/:courseId"
