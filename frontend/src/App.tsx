@@ -6,7 +6,6 @@ import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 import InstructorsIndexPage from "main/pages/Admin/InstructorsIndexPage";
 import InstructorsCreatePage from "main/pages/Admin/InstructorsCreatePage";
 import ProtectedPage from "main/pages/Auth/ProtectedPage";
-import HomePage from "main/pages/Home/HomePage";
 import LegacyHomePage from "main/pages/Home/LegacyHomePage";
 import ConceptGraphPage from "main/pages/ConceptGraphPage";
 import NotFoundPage from "main/pages/Auth/NotFoundPage";
