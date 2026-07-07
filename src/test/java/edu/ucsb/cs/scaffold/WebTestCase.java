@@ -9,8 +9,10 @@ import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import edu.ucsb.cs.scaffold.entity.Admin;
+import edu.ucsb.cs.scaffold.entity.Instructor;
 import edu.ucsb.cs.scaffold.entity.User;
 import edu.ucsb.cs.scaffold.repository.AdminRepository;
+import edu.ucsb.cs.scaffold.repository.InstructorRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
 import edu.ucsb.cs.scaffold.services.wiremock.WiremockServiceImpl;
 import org.junit.jupiter.api.AfterAll;
@@ -29,6 +31,7 @@ public abstract class WebTestCase {
 
   @Autowired UserRepository userRepository;
   @Autowired AdminRepository adminRepository;
+  @Autowired InstructorRepository instructorRepository;
 
   @LocalServerPort private int port;
 
@@ -59,10 +62,24 @@ public abstract class WebTestCase {
     browser.close();
   }
 
-  public void setupUser(boolean isAdmin) {
+  public void setupRegularUser() {
+    setupUser(false, false);
+  }
+
+  public void setupAdminUser() {
+    setupUser(true, false);
+  }
+
+  public void setupInstructorUser() {
+    setupUser(false, true);
+  }
+
+  @SuppressWarnings("null")
+  private void setupUser(boolean isAdmin, boolean isInstructor) {
     WiremockServiceImpl.setupOauthMocks(wireMockServer, isAdmin);
 
-    String email = isAdmin ? "admingaucho@ucsb.edu" : "cgaucho@ucsb.edu";
+    String email = isInstructor ? "instructor@ucsb.edu" : "cgaucho@ucsb.edu";
+    email = isAdmin ? "admin@ucsb.edu" : email;
 
     User user =
         User.builder()
@@ -75,7 +92,12 @@ public abstract class WebTestCase {
             .build();
 
     userRepository.save(user);
-    adminRepository.save(Admin.builder().email("admingaucho@ucsb.edu").build());
+    if (isInstructor) {
+      instructorRepository.save(Instructor.builder().email(email).build());
+    }
+    if (isAdmin) {
+      adminRepository.save(Admin.builder().email(email).build());
+    }
 
     browser =
         Playwright.create()
