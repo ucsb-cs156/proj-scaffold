@@ -29,6 +29,10 @@ public class OauthWebIT extends WebTestCase {
     assertThat(page.getByText("Log Out")).isVisible();
     page.getByText("Log Out").click();
 
+    // "/" is now an empty placeholder, so navigate to a protected page (course 1 is
+    // always seeded on startup) to see the full login screen a logged-out user gets.
+    page.navigate(page.url().replaceAll("(http://localhost:\\d+).*", "$1/course/1"));
+
     assertThat(
             page.getByRole(
                 AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Log In").setExact(true)))

@@ -30,7 +30,7 @@ import {
   type MajorConceptLike,
   type EdgeLike,
 } from "main/utils/layout";
-import type { ConceptContent } from "main/data/conceptContent";
+import type { ConceptContentDTO } from "main/api/client";
 
 // This is a parallel, database-driven version of ConceptGraph.tsx: instead of
 // importing majorConcepts/prereqEdgeData/positions/conceptContent from the
@@ -39,7 +39,7 @@ import type { ConceptContent } from "main/data/conceptContent";
 // original ConceptGraph.tsx (used by LegacyHomePage.tsx) is left completely
 // untouched; once this version is proven out, one of the two can be retired.
 
-const cardKeyMap: Record<string, keyof ConceptContent> = {
+const cardKeyMap: Record<string, keyof ConceptContentDTO> = {
   Description: "description",
   Example: "example",
   "PrairieLearn Practice": "practiceUrl",
@@ -57,7 +57,7 @@ interface SavedDetailCard {
 interface ConceptGraphV2Props {
   majorConcepts: MajorConceptLike[];
   positions: Record<string, { x: number; y: number }>;
-  conceptContent: Record<string, ConceptContent>;
+  conceptContent: Record<string, ConceptContentDTO>;
   prereqEdgeData: EdgeLike[];
   highlightedIds: Set<string>;
   highlightedSubconcepts: Map<string, Set<string>>;
