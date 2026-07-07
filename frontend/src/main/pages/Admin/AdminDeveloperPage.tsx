@@ -9,13 +9,43 @@ export default function AdminDeveloperPage() {
       <main style={{ padding: "24px" }}>
         <h1>Developer Information</h1>
         <h2>Current Deployed Branch</h2>
-        <table>
+        <table className="table table-striped">
           <tbody>
             <tr>
-              <td>GitHub Repo:</td>
+              <th>GitHub Repo</th>
               <td>
                 {systemInfo?.sourceRepo ? (
                   <a href={systemInfo.sourceRepo}>{systemInfo.sourceRepo}</a>
+                ) : (
+                  "Not available"
+                )}
+              </td>
+            </tr>
+            <tr>
+              <th>Commit</th>
+              <td>
+                {systemInfo?.commitId ? (
+                  <code>{systemInfo.commitId}</code>
+                ) : (
+                  "Not available"
+                )}
+              </td>
+            </tr>
+            <tr>
+              <th>Commit Message</th>
+              <td>
+                {systemInfo?.commitMessage ? (
+                  <code>{systemInfo.commitMessage}</code>
+                ) : (
+                  "Not available"
+                )}
+              </td>
+            </tr>
+            <tr>
+              <th>Commit Url</th>
+              <td>
+                {systemInfo?.githubUrl ? (
+                  <a href={systemInfo.githubUrl}>{systemInfo.githubUrl}</a>
                 ) : (
                   "Not available"
                 )}

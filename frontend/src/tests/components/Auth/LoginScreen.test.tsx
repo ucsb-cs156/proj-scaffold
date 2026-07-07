@@ -47,7 +47,7 @@ describe("LoginScreen", () => {
   test("renders the Scaffold branding, prompt, and login button", () => {
     renderLoginScreen(systemInfoFixtures.showingNeither);
 
-    expect(screen.getByText("Scaffold")).toBeInTheDocument();
+    expect(screen.getByText("Welcome to Scaffold")).toBeInTheDocument();
     expect(screen.getByText("Sign in to continue.")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Log In with Google" }),

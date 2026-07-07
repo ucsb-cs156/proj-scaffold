@@ -30,7 +30,7 @@ public class WiremockServiceImpl extends WiremockService {
     return wireMockServer;
   }
 
-  public static void setupOauthMocks(Stubbing s, boolean isAdmin) {
+  public static void setupOauthMocks(Stubbing s, String emailAddress) {
     s.stubFor(
         get(urlPathMatching("/oauth/authorize.*"))
             .willReturn(
@@ -45,8 +45,6 @@ public class WiremockServiceImpl extends WiremockService {
             .willReturn(
                 temporaryRedirect(
                     "{{formData request.body 'form' urlDecode=true}}{{{form.redirectUri}}}?code={{{request.cookies.nonce}}}&state={{{form.state}}}")));
-
-    String emailAddress = isAdmin ? "admingaucho@ucsb.edu" : "cgaucho@ucsb.edu";
 
     s.stubFor(
         post(urlPathEqualTo("/oauth/token"))
@@ -111,7 +109,7 @@ public class WiremockServiceImpl extends WiremockService {
                 .globalTemplating(true)
                 .extensions(new JwtExtensionFactory())
                 .notifier(new ConsoleNotifier(true)));
-    setupOauthMocks(server, true);
+    setupOauthMocks(server, "admingaucho@ucsb.edu");
     server.start();
     this.wireMockServer = server;
     log.info("WiremockServiceImpl.init() completed");

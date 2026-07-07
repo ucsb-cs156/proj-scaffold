@@ -23,8 +23,17 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
  * that {@code target/classes/public/index.html} exists. Run with:
  *
  * <pre>
- * INTEGRATION=true mvn test
+ * INTEGRATION=true mvn -ntp -B test-compile failsafe:integration-test failsafe:verify
  * </pre>
+ *
+ * To see what's happeening, use:
+ *
+ * <pre>
+ * HEADLESS=false INTEGRATION=true mvn -ntp -B test-compile failsafe:integration-test failsafe:verify
+ * </pre>
+ *
+ * You can put <code>page.pause()</code> in the test to pause the test and see what is on the page
+ * at that point.
  */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -35,18 +44,71 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 public class HomePageWebIT extends WebTestCase {
 
   @Test
-  public void logged_in_user_sees_concept_graph() throws Exception {
-    setupUser(false);
-
+  public void logged_in_user_sees_legacy_home_page() throws Exception {
+    setupRegularUser();
     // Navigate to the database-driven concept graph page for course 1, which the
     // application always seeds on startup.
-    page.navigate(page.url().replaceAll("(http://localhost:\\d+).*", "$1/course/1"));
+    page.navigate(page.url().replaceAll("(http://localhost:\\d+).*", "$1/LegacyHomePage"));
     assertThat(
             page.locator("div")
                 .filter(
                     new Locator.FilterOptions()
                         .setHasText(Pattern.compile("^ScaffoldSelect assessment…0 \\/ 26$")))
                 .getByRole(AriaRole.IMG)
+                .first())
+        .isVisible();
+  }
+
+  @Test
+  public void logged_in_regular_user_sees_home_page() throws Exception {
+
+    setupRegularUser();
+    // Navigate to the database-driven concept graph page for course 1, which the
+    // application always seeds on startup.
+    page.navigate(page.url().replaceAll("(http://localhost:\\d+).*", "$1/"));
+    // Verify that there is an h1 element with the text "Your Student Courses"
+    assertThat(
+            page.locator("h1")
+                .filter(new Locator.FilterOptions().setHasText("Your Student Courses"))
+                .first())
+        .isVisible();
+    assertThat(
+            page.locator("h1")
+                .filter(new Locator.FilterOptions().setHasText("Your Staff Courses"))
+                .first())
+        .isVisible();
+
+    // Verify that there the text "Your Instructor Courses" is not visble on the
+    // page in ANY kind of element
+    assertThat(
+            page.locator("*")
+                .filter(new Locator.FilterOptions().setHasText("Your Instructor Courses"))
+                .first())
+        .not()
+        .isVisible();
+  }
+
+  @Test
+  public void logged_in_instructor_user_sees_home_page() throws Exception {
+
+    setupInstructorUser();
+    // Navigate to the database-driven concept graph page for course 1, which the
+    // application always seeds on startup.
+    page.navigate(page.url().replaceAll("(http://localhost:\\d+).*", "$1/"));
+    // Verify that there is an h1 element with the text "Your Student Courses"
+    assertThat(
+            page.locator("h1")
+                .filter(new Locator.FilterOptions().setHasText("Your Instructor Courses"))
+                .first())
+        .isVisible();
+    assertThat(
+            page.locator("h1")
+                .filter(new Locator.FilterOptions().setHasText("Your Student Courses"))
+                .first())
+        .isVisible();
+    assertThat(
+            page.locator("h1")
+                .filter(new Locator.FilterOptions().setHasText("Your Staff Courses"))
                 .first())
         .isVisible();
   }
