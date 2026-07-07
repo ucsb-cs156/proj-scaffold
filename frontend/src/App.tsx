@@ -1,5 +1,3 @@
-import "bootstrap/dist/css/bootstrap.css";
-
 import { BrowserRouter, Route, Routes } from "react-router";
 import AdminsIndexPage from "main/pages/Admin/AdminsIndexPage";
 import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";

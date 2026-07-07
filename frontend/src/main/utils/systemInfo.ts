@@ -6,6 +6,9 @@ export interface SystemInfo {
   showSwaggerUILink: boolean;
   oauthLogin: string;
   sourceRepo: string;
+  commitId?: string;
+  commitMessage?: string;
+  githubUrl?: string;
 }
 
 export function useSystemInfo() {
