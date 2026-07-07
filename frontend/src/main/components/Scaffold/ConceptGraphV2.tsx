@@ -36,7 +36,7 @@ import type { ConceptContent } from "main/data/conceptContent";
 // importing majorConcepts/prereqEdgeData/positions/conceptContent from the
 // hardcoded frontend/src/main/data files, it takes them as props so it can
 // render a concept graph fetched from the backend for any course. The
-// original ConceptGraph.tsx (used by HomePage.tsx) is left completely
+// original ConceptGraph.tsx (used by LegacyHomePage.tsx) is left completely
 // untouched; once this version is proven out, one of the two can be retired.
 
 const cardKeyMap: Record<string, keyof ConceptContent> = {

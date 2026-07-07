@@ -117,7 +117,12 @@ describe("AppNavbar tests", () => {
     fireEvent.click(adminToggle);
 
     // Check that the Admin menu contains the expected items
-    const adminMenuItems = ["Admins", "Instructors", "Developer Info"];
+    const adminMenuItems = [
+      "Admins",
+      "Instructors",
+      "Developer Info",
+      "LegacyHomePage",
+    ];
 
     await waitFor(() => {
       adminMenuItems.forEach((item) => {

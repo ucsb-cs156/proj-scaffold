@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "react-router";
-import { Spinner } from "react-bootstrap";
-import ConceptGraphV2 from "main/components/Scaffold/ConceptGraphV2";
+import ConceptGraph from "main/components/Scaffold/ConceptGraph";
 import "App.css";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
@@ -10,33 +8,22 @@ import {
   fetchAssessments,
   fetchQuestions,
   fetchQuestionConcepts,
-  fetchConceptGraph,
-  fetchConceptContent,
-  fetchConceptPositions,
-  fetchConceptEdges,
-  fetchUserStateV2,
-  logUserActivityV2,
-  saveUserStateV2,
-  type MajorConceptDTO,
-  type ConceptContentDTO,
-  type EdgeDTO,
+  fetchUserState,
+  logUserActivity,
+  saveUserState,
 } from "main/api/client";
 import type { Assessment, Question } from "main/api/client";
+import { majorConcepts } from "main/data/conceptGraph";
 import LoginScreen from "main/components/Auth/LoginScreen";
 import QuestionSearch from "main/components/Scaffold/QuestionSearch";
 import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
+import { conceptContent, type ConceptContent } from "main/data/conceptContent";
 import { useCurrentUser } from "main/utils/currentUser";
 import {
   normalize,
   toPastel,
   computeSubgraph,
 } from "main/utils/conceptGraphUtils";
-
-// Database-driven counterpart to LegacyHomePage.tsx, rendered at /course/{courseId}.
-// Everything here is fetched from the concepts/* and user-state-v2/
-// user-activity-v2 backend endpoints instead of the hardcoded data files, so
-// this page can eventually support any course, not just the one LegacyHomePage.tsx
-// has baked in. LegacyHomePage.tsx itself is untouched.
 
 interface SavedDetailCard {
   cardType: string;
@@ -47,12 +34,7 @@ interface SavedDetailCard {
   posY: number;
 }
 
-export default function ConceptGraphPage() {
-  const { courseId: courseIdParam } = useParams<{ courseId: string }>();
-  const courseId = Number(courseIdParam);
-  const courseIdIsValid =
-    courseIdParam !== undefined && !Number.isNaN(courseId);
-
+export default function LegacyHomePage() {
   const currentUser = useCurrentUser();
   // Derive the numeric id from the users table; null when not logged in.
   const userId: number | null = currentUser?.loggedIn
@@ -85,18 +67,6 @@ export default function ConceptGraphPage() {
     new Set(),
   );
 
-  // Graph data fetched from the backend for this course.
-  const [majorConcepts, setMajorConcepts] = useState<MajorConceptDTO[]>([]);
-  const [positions, setPositions] = useState<
-    Record<string, { x: number; y: number }>
-  >({});
-  const [conceptContent, setConceptContent] = useState<
-    Record<string, ConceptContentDTO>
-  >({});
-  const [prereqEdgeData, setPrereqEdgeData] = useState<EdgeDTO[]>([]);
-  const [graphDataLoaded, setGraphDataLoaded] = useState(false);
-  const [graphDataError, setGraphDataError] = useState<string | null>(null);
-
   const masteredSubconceptsRef = useRef<Set<string>>(masteredSubconcepts);
   useEffect(() => {
     masteredSubconceptsRef.current = masteredSubconcepts;
@@ -112,51 +82,19 @@ export default function ConceptGraphPage() {
     savedDetailCardsRef.current = savedDetailCards;
   }, [savedDetailCards]);
 
-  // Fetch the concept graph data for this course once on mount.
-  useEffect(() => {
-    if (!courseIdIsValid) return;
-    let cancelled = false;
-
-    Promise.all([
-      fetchConceptGraph(courseId),
-      fetchConceptContent(courseId),
-      fetchConceptPositions(courseId),
-      fetchConceptEdges(courseId),
-    ])
-      .then(([graph, content, positionsData, edges]) => {
-        if (cancelled) return;
-        setMajorConcepts(graph);
-        setConceptContent(content);
-        setPositions(positionsData);
-        setPrereqEdgeData(edges);
-        setGraphDataLoaded(true);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setGraphDataError(
-          `Failed to load concept graph data for course ${courseId}.`,
-        );
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [courseId, courseIdIsValid]);
-
-  // Load the user's saved state once on login (and once graph data is ready).
+  // Load the user's saved state once on login.
   const userStateLoadedRef = useRef(false);
   useEffect(() => {
-    if (!userId || !courseIdIsValid || userStateLoadedRef.current) return;
+    if (!userId || userStateLoadedRef.current) return;
     userStateLoadedRef.current = true;
 
-    logUserActivityV2({
+    logUserActivity({
       userid: userId,
-      courseId,
       event_type: "login",
       payload: { consented: true },
     });
 
-    fetchUserStateV2(userId, courseId).then((data) => {
+    fetchUserState(userId).then((data) => {
       if (data) {
         setStarredIds(new Set(data.starred_ids as string[]));
         const cards = (data.detail_cards as SavedDetailCard[]) ?? [];
@@ -170,7 +108,7 @@ export default function ConceptGraphPage() {
         );
       }
     });
-  }, [userId, courseId, courseIdIsValid]);
+  }, [userId]);
 
   const persistState = useCallback(
     async (
@@ -178,16 +116,15 @@ export default function ConceptGraphPage() {
       cards: SavedDetailCard[],
       mastered: Set<string> = masteredSubconceptsRef.current,
     ) => {
-      if (!userId || !courseIdIsValid) return;
-      await saveUserStateV2({
+      if (!userId) return;
+      await saveUserState({
         userid: userId,
-        courseId,
         starred_ids: Array.from(stars),
         detail_cards: cards,
         mastered_subconcepts: Array.from(mastered),
       });
     },
-    [userId, courseId, courseIdIsValid],
+    [userId],
   );
 
   const handleSubconceptMastered = (sub: string) => {
@@ -205,15 +142,10 @@ export default function ConceptGraphPage() {
 
   const logActivity = useCallback(
     async (eventType: string, payload: object) => {
-      if (!userId || !courseIdIsValid) return;
-      await logUserActivityV2({
-        userid: userId,
-        courseId,
-        event_type: eventType,
-        payload,
-      });
+      if (!userId) return;
+      await logUserActivity({ userid: userId, event_type: eventType, payload });
     },
-    [userId, courseId, courseIdIsValid],
+    [userId],
   );
 
   const handlePaneClick = () => {
@@ -371,43 +303,6 @@ export default function ConceptGraphPage() {
     );
   }
 
-  if (!courseIdIsValid) {
-    return (
-      <BasicLayout>
-        <div style={{ padding: 20 }}>Invalid course id.</div>
-      </BasicLayout>
-    );
-  }
-
-  if (graphDataError) {
-    return (
-      <BasicLayout>
-        <div style={{ padding: 20 }}>{graphDataError}</div>
-      </BasicLayout>
-    );
-  }
-
-  if (!graphDataLoaded) {
-    return (
-      <BasicLayout>
-        <div
-          data-testid="concept-graph-page-loading"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-            minHeight: "50vh",
-          }}
-        >
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </Spinner>
-        </div>
-      </BasicLayout>
-    );
-  }
-
   return (
     <BasicLayout>
       <div
@@ -513,18 +408,14 @@ export default function ConceptGraphPage() {
                 whiteSpace: "nowrap",
               }}
             >
-              {starredIds.size} / {majorConcepts.length}
+              {starredIds.size} / 26
             </span>
           </div>
         </div>
 
         {/* ── Graph ── */}
         <div style={{ flex: 1, minHeight: 0, background: "#ffffff" }}>
-          <ConceptGraphV2
-            majorConcepts={majorConcepts}
-            positions={positions}
-            conceptContent={conceptContent}
-            prereqEdgeData={prereqEdgeData}
+          <ConceptGraph
             highlightedIds={highlightedIds}
             highlightedSubconcepts={highlightedSubconcepts}
             onConceptClick={handleConceptClick}
@@ -718,7 +609,7 @@ export default function ConceptGraphPage() {
                                     conceptColor: selectedConcept.color,
                                     cardContent:
                                       content?.[
-                                        card.key as keyof ConceptContentDTO
+                                        card.key as keyof ConceptContent
                                       ] ?? "",
                                   }),
                                 );
@@ -777,11 +668,11 @@ export default function ConceptGraphPage() {
                                 color: "#1E293B",
                               }}
                             >
-                              {content?.[card.key as keyof ConceptContentDTO] ??
+                              {content?.[card.key as keyof ConceptContent] ??
                                 `Example for "${selectedItemLabel}" will appear here.`}
                             </pre>
                           ) : (
-                            (content?.[card.key as keyof ConceptContentDTO] ??
+                            (content?.[card.key as keyof ConceptContent] ??
                             `${card.label} for "${selectedItemLabel}" will appear here.`)
                           )}
                         </div>

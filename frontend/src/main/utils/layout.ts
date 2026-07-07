@@ -52,7 +52,7 @@ export interface EdgeLike {
 // Same shape as buildGraphElements, but fully parameterized so it can build a
 // graph from database-fetched data instead of the hardcoded conceptGraph.ts
 // imports. Kept separate (rather than changing buildGraphElements itself) so
-// the original, hardcoded-data code path used by HomePage.tsx / ConceptGraph.tsx
+// the original, hardcoded-data code path used by LegacyHomePage.tsx / ConceptGraph.tsx
 // is completely untouched.
 export function buildGraphElementsV2(
   positions: Record<string, { x: number; y: number }>,
