@@ -8,7 +8,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   globalIgnores(['dist', 'coverage', 'public/mockServiceWorker.js']),
   {
-    ignores: ["public/mockServiceWorker.js"],
+    ignores: ["public/mockServiceWorker.js",".stryker-tmp/**"],
     files: ['**/*.{ts,tsx}'],
     extends: [
       js.configs.recommended,
