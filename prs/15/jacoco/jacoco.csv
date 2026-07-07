@@ -1,10 +1,12 @@
 GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
 scaffold,edu.ucsb.cs.scaffold.controller,AdminsController,0,82,0,2,0,16,0,8,0,7
+scaffold,edu.ucsb.cs.scaffold.controller,UserStateV2Controller.UserStateV2Request,0,18,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,UserActivityController.UserActivityRequest,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,HealthController,0,7,0,0,0,2,0,2,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateController.UserStateResponse,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.RosterStudentCoursesDTO,0,18,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,AdminsController.AdminDTO,0,18,0,0,0,3,0,2,0,2
+scaffold,edu.ucsb.cs.scaffold.controller,UserStateV2Controller,0,153,0,10,0,37,0,13,0,8
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController,0,502,0,34,0,132,0,39,0,22
 scaffold,edu.ucsb.cs.scaffold.controller,ApiController,0,41,0,0,0,11,0,7,0,7
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController,0,222,0,14,0,50,0,16,0,9
@@ -20,12 +22,16 @@ scaffold,edu.ucsb.cs.scaffold.controller,CourseStaffCSVController,0,169,0,12,0,3
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.InstructorCourseView,0,53,0,4,0,10,0,4,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.MajorConceptDTO,0,15,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,UserInfoController,0,6,0,0,0,2,0,2,0,2
+scaffold,edu.ucsb.cs.scaffold.controller,UserActivityV2Controller,0,65,0,10,0,16,0,7,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,QuestionController,0,5,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.EmailTypes,0,21,0,0,0,4,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.controller,UserActivityV2Controller.UserActivityV2Request,0,15,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.controller,UserStateV2Controller.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,UserActivityController,0,58,0,8,0,12,0,6,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.EmailFormats,0,15,0,0,0,3,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,SystemInfoController,0,10,0,0,0,3,0,3,0,3
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.PositionDTO,0,9,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.controller,UserStateV2Controller.UserStateV2Response,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.ConceptContentDTO,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.EdgeDTO,0,9,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateController.UserStateRequest,0,15,0,0,0,1,0,1,0,1
