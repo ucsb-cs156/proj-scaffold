@@ -1,8 +1,11 @@
 package edu.ucsb.cs.scaffold.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -17,6 +20,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.ResponseEntity;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("unchecked")
@@ -55,5 +60,25 @@ class UserStateV2ControllerExceptionTests {
 
     var request = new UserStateV2Controller.UserStateV2Request(1L, 2L, null, null, null);
     assertThrows(IllegalArgumentException.class, () -> controller.upsertUserState(request));
+  }
+
+  @Test
+  void upsertUserStateRetriesOnceAfterAConcurrentDuplicateInsert() throws JsonProcessingException {
+    UserStateV2 insertedByConcurrentRequest = new UserStateV2();
+    // First lookup finds nothing (so the first attempt tries to insert); the retry's lookup
+    // finds the row a concurrent request just inserted (so the retry updates it instead).
+    when(repository.findByUseridAndCourseId(1L, 2L))
+        .thenReturn(Optional.empty())
+        .thenReturn(Optional.of(insertedByConcurrentRequest));
+    when(objectMapper.writeValueAsString(any())).thenReturn("[]");
+    when(repository.save(any()))
+        .thenThrow(new DataIntegrityViolationException("duplicate key"))
+        .thenReturn(insertedByConcurrentRequest);
+
+    var request = new UserStateV2Controller.UserStateV2Request(1L, 2L, null, null, null);
+    ResponseEntity<Void> response = controller.upsertUserState(request);
+
+    assertEquals(204, response.getStatusCode().value());
+    verify(repository, times(2)).save(any());
   }
 }

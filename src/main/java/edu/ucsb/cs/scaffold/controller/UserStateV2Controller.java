@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,6 +48,20 @@ public class UserStateV2Controller {
       return ResponseEntity.badRequest().build();
     }
 
+    try {
+      upsert(body);
+    } catch (DataIntegrityViolationException e) {
+      // Two near-simultaneous saves for a brand new (userid, courseId) pair (e.g. React
+      // StrictMode double-invoking a state updater in dev) can both find no existing row and
+      // both attempt an insert; the second violates the unique constraint. Retry once as an
+      // update against the row the other request just inserted.
+      upsert(body);
+    }
+
+    return ResponseEntity.noContent().build();
+  }
+
+  private void upsert(UserStateV2Request body) {
     UserStateV2 state =
         userStateV2Repository
             .findByUseridAndCourseId(body.userid(), body.courseId())
@@ -60,8 +75,6 @@ public class UserStateV2Controller {
     state.setMasteredSubconcepts(
         writeJson(body.masteredSubconcepts() == null ? List.of() : body.masteredSubconcepts()));
     userStateV2Repository.save(state);
-
-    return ResponseEntity.noContent().build();
   }
 
   private List<String> parseStringList(String json) {
