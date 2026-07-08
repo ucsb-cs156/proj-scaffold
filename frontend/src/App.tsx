@@ -17,6 +17,7 @@ import AdminCoursesIndexPage from "main/pages/Admin/AdminCoursesIndexPage";
 
 import HomePageLoggedIn from "main/pages/Home/HomePageLoggedIn";
 import HomePageLoggedOut from "main/pages/Home/HomePageLoggedOut";
+import InstructorCourseShowPage from "main/pages/Courses/InstructorCourseShowPage";
 
 export default function App() {
   const currentUser = useCurrentUser();
@@ -109,6 +110,16 @@ export default function App() {
           element={
             <ProtectedPage
               component={<InstructorCoursesIndexPage />}
+              enforceRole={"ROLE_INSTRUCTOR"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/course/:id/settings"
+          element={
+            <ProtectedPage
+              component={<InstructorCourseShowPage />}
               enforceRole={"ROLE_INSTRUCTOR"}
               currentUser={currentUser}
             />

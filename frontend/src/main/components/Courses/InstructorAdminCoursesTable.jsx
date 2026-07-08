@@ -1,6 +1,6 @@
 import OurTable from "main/components/Common/OurTable";
 import { hasRole } from "main/utils/currentUser";
-import { Tooltip, OverlayTrigger, Button } from "react-bootstrap";
+import { Tooltip, OverlayTrigger, Button, Fade } from "react-bootstrap";
 import { Link } from "react-router";
 import { useState } from "react";
 import { useBackendMutation } from "main/utils/useBackend";
@@ -9,6 +9,7 @@ import UpdateInstructorForm from "main/components/Courses/UpdateInstructorForm";
 import CourseModal from "main/components/Courses/CourseModal";
 import Modal from "react-bootstrap/Modal";
 import { useLocation } from "react-router";
+import { GraphIcon, UserListIcon } from "main/components/Common/Icons";
 
 export default function InstructorAdminCoursesTable({
   courses,
@@ -76,7 +77,7 @@ export default function InstructorAdminCoursesTable({
             placement="right"
             overlay={
               <Tooltip id={`tooltip-coursename-${cell.row.index}`}>
-                View course details
+                View scaffold for {cell.row.original.courseName}
               </Tooltip>
             }
           >
@@ -84,7 +85,31 @@ export default function InstructorAdminCoursesTable({
               to={`${courseNameLinkPrefix}/${cell.row.original.id}`}
               data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
             >
+              <GraphIcon className="me-2" />
               {cell.row.original.courseName}
+            </Link>
+          </OverlayTrigger>
+        );
+      },
+    },
+    {
+      header: "Settings",
+      id: "settings",
+      cell: ({ cell }) => {
+        return (
+          <OverlayTrigger
+            placement="right"
+            overlay={
+              <Tooltip id={`tooltip-coursename-${cell.row.index}`}>
+                Settings and Course Roster for {cell.row.original.courseName}
+              </Tooltip>
+            }
+          >
+            <Link
+              to={`${courseNameLinkPrefix}/${cell.row.original.id}/settings`}
+              data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+            >
+              <UserListIcon />
             </Link>
           </OverlayTrigger>
         );

@@ -1,0 +1,467 @@
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import InstructorCourseShowPage from "main/pages/Courses/InstructorCourseShowPage";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter, Route, Routes } from "react-router";
+import coursesFixtures from "fixtures/coursesFixtures";
+
+import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
+import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import axios from "axios";
+import AxiosMockAdapter from "axios-mock-adapter";
+import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
+import { courseStaffFixtures } from "fixtures/courseStaffFixtures";
+import { expect, vi } from "vitest";
+
+const mockedNavigate = vi.fn();
+vi.mock("react-router", async (importOriginal) => ({
+  ...(await importOriginal()),
+  useNavigate: () => mockedNavigate,
+}));
+const axiosMock = new AxiosMockAdapter(axios);
+const queryClient = new QueryClient();
+
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
+  return {
+    ...(await importOriginal()),
+    toast: (x) => mockToast(x),
+  };
+});
+
+describe("InstructorCourseShowPage tests", () => {
+  beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    queryClient.clear();
+    axiosMock.onGet(/\/api\/courses\/getCanvasInfo/).reply(200, {
+      courseId: "",
+      canvasApiToken: "",
+      canvasCourseId: "",
+    });
+    axiosMock.onGet("/api/jobs/course").reply(200, []);
+    axiosMock.onGet("/api/course/options").reply(200, {
+      ENABLE_CANVAS: false,
+      TRANSLATE_SECTIONS: false,
+    });
+  });
+
+  const setupInstructorUser = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.instructorUser);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
+  const setupAdminUser = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.adminUser);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
+  const setupUserOnly = () => {
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.userOnly);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
+  };
+
+  test("renders correctly for instructor user", async () => {
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+      toFake: ["setTimeout", "clearTimeout"],
+    });
+    setupInstructorUser();
+    const theCourse = {
+      ...coursesFixtures.severalCourses[0],
+      id: 1,
+      createdByEmail: "phtcon@ucsb.edu",
+    };
+    axiosMock.onGet("/api/courses/1").reply(200, theCourse);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/1"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const testId = "InstructorCourseShowPage";
+
+    await waitFor(() => {
+      expect(screen.getByTestId(`${testId}-title`)).toHaveTextContent(
+        "CMPSC 8",
+      );
+    });
+
+    expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument();
+    vi.advanceTimersByTime(3000);
+    expect(mockedNavigate).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  test("Returns to course page on timeout", async () => {
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+      toFake: ["setTimeout", "clearTimeout"],
+    });
+    axiosMock.onGet("/api/courses/7").timeout();
+    axiosMock.onGet("/api/rosterstudents/course/7").timeout();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    //Great time to also check initial values
+    expect(queryClient.getQueryData(["/api/courses/7"])).toBe(null);
+    const testId = "InstructorCourseShowPage";
+
+    await screen.findByTestId(`${testId}-loading`);
+
+    const courseName = screen.getByTestId(`${testId}-loading`);
+    expect(courseName).toHaveTextContent("Course: Loading...");
+
+    await screen.findByText(
+      "Course not found. You will be returned to the course list in 3 seconds.",
+    );
+    expect(mockToast).not.toHaveBeenCalled();
+    expect(screen.getByText("Course Not Found")).toBeInTheDocument();
+    expect(screen.getByText("Close")).toHaveClass("btn-primary");
+    fireEvent.click(screen.getByText("Close"));
+    await waitFor(() =>
+      expect(screen.queryByText("Course Not Found")).not.toBeInTheDocument(),
+    );
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(mockedNavigate).toHaveBeenCalledWith("/", {
+      replace: true,
+    });
+    expect(mockedNavigate).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  test("Cleans up correctly on unmount", async () => {
+    vi.useFakeTimers({
+      shouldAdvanceTime: true,
+      toFake: ["setTimeout", "clearTimeout"],
+    });
+    axiosMock.onGet("/api/courses/7").timeout();
+    axiosMock.onGet("/api/rosterstudents/course/7").timeout();
+    const specificQueryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+    const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+    const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+    render(
+      <QueryClientProvider client={specificQueryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText(
+      "Course not found. You will be returned to the course list in 3 seconds.",
+    );
+    expect(
+      screen.queryByTestId(`InstructorCourseShowPage-cell-row-0-col-id`),
+    ).not.toBeInTheDocument();
+    fireEvent.keyPress(screen.getByText("Course Not Found"), {
+      key: "Escape",
+      code: 27,
+      charCode: 27,
+    });
+    fireEvent.click(
+      within(screen.getByTestId("AppNavbar")).getByText("Scaffold"),
+    );
+    await waitFor(() =>
+      expect(clearTimeoutSpy.mock.results.length).toBeGreaterThanOrEqual(12),
+    );
+    setTimeoutSpy.mockRestore();
+    clearTimeoutSpy.mockRestore();
+    vi.useRealTimers();
+    specificQueryClient.clear();
+  });
+
+  test("Tab assertions", () => {
+    setupInstructorUser();
+
+    const theCourse = {
+      ...coursesFixtures.severalCourses[0],
+      id: 1,
+      createdByEmail: "phtcon@ucsb.edu",
+    };
+
+    axiosMock.onGet("/api/courses/7").reply(200, theCourse);
+
+    axiosMock
+      .onGet("/api/rosterstudents/course/7")
+      .reply(200, rosterStudentFixtures.threeStudents);
+
+    //here
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("Students")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "students",
+    );
+    expect(screen.getByRole("tab", { name: "Staff" })).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "staff",
+    );
+    expect(screen.getByText("Jobs")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "jobs",
+    );
+    expect(screen.getByText("Settings")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "settings",
+    );
+    expect(screen.getByText("Downloads")).toHaveAttribute(
+      "data-rr-ui-event-key",
+      "downloads",
+    );
+    const changeTabs = screen.getByText("Students");
+    fireEvent.click(changeTabs);
+
+    const downloadsTab = screen.getByText("Downloads");
+    fireEvent.click(downloadsTab);
+    expect(downloadsTab).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("Tab Components are Present", async () => {
+    const queryClientSpecific = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+      },
+    });
+    setupInstructorUser();
+    const theCourse = {
+      ...coursesFixtures.severalCourses[0],
+      id: 1,
+      createdByEmail: "phtcon@ucsb.edu",
+    };
+
+    axiosMock.onGet("/api/courses/7").reply(200, theCourse);
+    render(
+      <QueryClientProvider client={queryClientSpecific}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId(
+      "InstructorCourseShowPage-EnrollmentTabComponent",
+    );
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-EnrollmentTabComponent"),
+    ).toBeInTheDocument();
+  });
+  test("staff tab defaults to instructor controls", async () => {
+    setupInstructorUser();
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=7")
+      .reply(200, courseStaffFixtures.sixStaff);
+    axiosMock.onGet("/api/courses/warnings/7").reply(200, {
+      showOrganizationAgeWarning: false,
+    });
+    axiosMock.onGet("/api/rosterstudents/course/7").reply(200, []);
+    axiosMock.onGet("/api/teams/all?courseId=7").reply(200, []);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Staff" }));
+
+    const postButtons = await screen.findAllByTestId(
+      "InstructorCourseShowPage-post-button",
+    );
+    expect(
+      postButtons.some((button) => button.textContent === "Add Staff Member"),
+    ).toBe(true);
+    expect(
+      screen.getByTestId(
+        "InstructorCourseShowPage-CourseStaffTable-cell-row-0-col-Edit-button",
+      ),
+    ).toBeInTheDocument();
+  });
+  test("does not show error modal on initial render", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("CMPSC 8");
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  test("instructor assigned to course can edit course option toggles", async () => {
+    setupInstructorUser();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      instructorEmail: "diba@ucsb.edu",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
+    const toggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_CANVAS",
+    );
+    expect(toggle).not.toBeDisabled();
+  });
+
+  test("admin can edit course option toggles for non-owned course", async () => {
+    setupAdminUser();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      instructorEmail: "someoneelse@ucsb.edu",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
+    const toggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_CANVAS",
+    );
+    expect(toggle).not.toBeDisabled();
+  });
+
+  test("non-admin non-instructor cannot edit course option toggles", async () => {
+    setupUserOnly();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.severalCourses[0],
+      instructorEmail: "someoneelse@ucsb.edu",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Settings" }));
+    const toggle = await screen.findByTestId(
+      "CourseOptionsForm-toggle-ENABLE_CANVAS",
+    );
+    expect(toggle).toBeDisabled();
+  });
+});
