@@ -243,15 +243,14 @@ describe("CourseStaffTable tests", () => {
     );
     fireEvent.click(deleteButton);
     await screen.findByTestId("CourseStaffDeleteModal");
-    fireEvent.click(screen.getByText("Delete Staff"));
+    fireEvent.click(screen.getByText("Delete Staff Member"));
     await waitFor(() => axiosMock.history.delete.length === 1);
     expect(axiosMock.history.delete[0].params).toEqual({
       id: 1,
       courseId: 7,
-      removeFromOrg: "false",
     });
     await waitFor(() =>
-      expect(screen.queryByText("Delete Staff")).not.toBeInTheDocument(),
+      expect(screen.queryByText("Delete Staff Member")).not.toBeInTheDocument(),
     );
     expect(mockToast).toBeCalledWith("Staff member deleted successfully.");
   });

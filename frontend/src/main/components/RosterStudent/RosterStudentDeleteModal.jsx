@@ -26,23 +26,6 @@ export default function RosterStudentDeleteModal({
           <Form.Text>
             Are you sure you want to delete this roster student?
           </Form.Text>
-          <Form.Group>
-            <Form.Check
-              type="radio"
-              label="Yes, I'd like to remove them from the GitHub Organization"
-              value="true"
-              id="remove-yes"
-              {...register("removeFromOrg")}
-            />
-            <Form.Check
-              type="radio"
-              label="No, I'd like to keep them in the GitHub Organization"
-              value="false"
-              id="remove-no"
-              defaultChecked
-              {...register("removeFromOrg")}
-            />
-          </Form.Group>
         </Modal.Body>
         <Modal.Footer>
           <button type="submit" className="btn btn-primary">

@@ -49,6 +49,12 @@ describe("StaffTabComponent Tests", () => {
     queryClient.clear();
     mockToast.mockClear();
     mockToastError.mockClear();
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=1")
+      .reply(200, courseStaffFixtures.threeStaff);
+    axiosMock
+      .onGet("/api/coursestaff/course?courseId=7")
+      .reply(200, courseStaffFixtures.threeStaff);
   });
 
   afterEach(() => {
@@ -175,7 +181,11 @@ describe("StaffTabComponent Tests", () => {
       );
       expect(fieldElement).not.toBeInTheDocument();
     });
-    expect(screen.queryByTestId(`${testId}-csv-modal`)).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId(`${testId}-csv-modal`),
+      ).not.toBeInTheDocument();
+    });
     await waitFor(() => {
       expect(
         screen.queryByTestId(`${testId}-post-modal`),
@@ -209,9 +219,13 @@ describe("StaffTabComponent Tests", () => {
     );
 
     //Great time to check initial values
-    expect(
-      queryClientSpecific.getQueryData(["/api/coursestaff/course?courseId=7"]),
-    ).toStrictEqual([]);
+    await waitFor(() => {
+      expect(
+        queryClientSpecific.getQueryData([
+          "/api/coursestaff/course?courseId=7",
+        ]),
+      ).toStrictEqual([]);
+    });
 
     const openModal = await screen.findByTestId(`${testId}-post-button`);
     const arbitraryUpdateCount = queryClientSpecific.getQueryState([
@@ -230,7 +244,10 @@ describe("StaffTabComponent Tests", () => {
     // Get the search input and set a search term
     const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
     fireEvent.change(searchInput, { target: { value: "test search" } });
-    expect(searchInput.value).toBe("test search");
+
+    await waitFor(() => {
+      expect(searchInput.value).toBe("test search");
+    });
 
     expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("First Name"), {
@@ -264,9 +281,11 @@ describe("StaffTabComponent Tests", () => {
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
-    expect(
-      screen.queryByTestId(`${testId}-post-modal`),
-    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId(`${testId}-post-modal`),
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe("Search filter works correctly", () => {
@@ -355,9 +374,12 @@ describe("StaffTabComponent Tests", () => {
         },
       });
 
-      expect(
-        screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
-      ).toHaveTextContent(fullNameStaff.firstName);
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+        ).toHaveTextContent(fullNameStaff.firstName);
+      });
+
       expect(
         screen.getByTestId(`${rsTestId}-cell-row-0-col-lastName`),
       ).toHaveTextContent(fullNameStaff.lastName);
@@ -367,9 +389,11 @@ describe("StaffTabComponent Tests", () => {
 
       fireEvent.change(searchInput, { target: { value: "" } });
 
-      expect(
-        screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+        ).toBeInTheDocument();
+      });
       expect(
         screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`),
       ).toBeInTheDocument();
@@ -382,10 +406,11 @@ describe("StaffTabComponent Tests", () => {
           value: courseStaffFixtures.sixStaff[1].email.toUpperCase(),
         },
       });
-
-      expect(
-        screen.getByTestId(`${rsTestId}-cell-row-0-col-email`),
-      ).toHaveTextContent(courseStaffFixtures.sixStaff[1].email);
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-0-col-email`),
+        ).toHaveTextContent(courseStaffFixtures.sixStaff[1].email);
+      });
       expect(
         screen.queryByTestId(`${rsTestId}-cell-row-1-col-email`),
       ).not.toBeInTheDocument();

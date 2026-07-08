@@ -15,7 +15,6 @@ describe("rosterStudentUtils", () => {
       // arrange
       const formReturn = {
         id: 2,
-        removeFromOrg: false,
       };
 
       // act
@@ -25,7 +24,7 @@ describe("rosterStudentUtils", () => {
       expect(result).toEqual({
         url: "/api/rosterstudents/delete",
         method: "DELETE",
-        params: { id: 2, removeFromOrg: false },
+        params: { id: 2 },
       });
     });
   });

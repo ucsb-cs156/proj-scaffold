@@ -1,0 +1,53 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "019-create-course-option-table",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "course_option" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "course_option",
+              "columns": [
+                {
+                  "column": {
+                    "name": "course",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "option",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "enabled",
+                    "type": "BOOLEAN",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "course_option",
+              "baseColumnNames": "course",
+              "referencedTableName": "course",
+              "referencedColumnNames": "id",
+              "constraintName": "FK_COURSE_OPTION_COURSE_ID"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -29,7 +29,6 @@ export default function CourseStaffTable({
       params: {
         id: formData.id,
         courseId: courseId,
-        removeFromOrg: formData.removeFromOrg,
       },
     };
   }
@@ -117,92 +116,6 @@ export default function CourseStaffTable({
       accessorKey: "email",
     },
   ];
-
-  const renderTooltip = (orgStatus) =>
-    function TooltipWrapper(props) {
-      let set_message;
-
-      switch (orgStatus) {
-        case "PENDING":
-          set_message =
-            "Staff member cannot join the course until it has been completely set up.";
-          break;
-        case "JOINCOURSE":
-          set_message =
-            "Staff member has been prompted to join, but hasn't yet clicked the 'Join Course' button to generate an invite to the organization.";
-          break;
-        case "INVITED":
-          set_message =
-            "Staff member has generated an invite, but has not yet accepted or declined the invitation.";
-          break;
-        case "OWNER":
-          set_message =
-            "Staff member is an owner of the GitHub organization associated with this course.";
-          break;
-        case "MEMBER":
-          set_message =
-            "Staff member is a member of the GitHub organization associated with this course.";
-          break;
-        default:
-          set_message = "Tooltip for illegal status that will never occur";
-          break;
-      }
-      return (
-        <Tooltip id={`${orgStatus.toLowerCase()}-tooltip`} {...props}>
-          {set_message}
-        </Tooltip>
-      );
-    };
-
-  columns.push({
-    header: "Status",
-    accessorKey: "orgStatus",
-    cell: ({ cell }) => {
-      const status = cell.row.original.orgStatus;
-      if (status === "PENDING") {
-        return (
-          <OverlayTrigger placement="right" overlay={renderTooltip("PENDING")}>
-            <span className="text-warning">Pending</span>
-          </OverlayTrigger>
-        );
-      } else if (status === "JOINCOURSE") {
-        return (
-          <OverlayTrigger
-            placement="right"
-            overlay={renderTooltip("JOINCOURSE")}
-          >
-            <span className="text-primary">Join Course</span>
-          </OverlayTrigger>
-        );
-      } else if (status === "INVITED") {
-        return (
-          <OverlayTrigger placement="right" overlay={renderTooltip("INVITED")}>
-            <span className="text-primary">Invited</span>
-          </OverlayTrigger>
-        );
-      } else if (status === "OWNER") {
-        return (
-          <OverlayTrigger placement="right" overlay={renderTooltip("OWNER")}>
-            <span className="text-info">Owner</span>
-          </OverlayTrigger>
-        );
-      } else if (status === "MEMBER") {
-        return (
-          <OverlayTrigger placement="right" overlay={renderTooltip("MEMBER")}>
-            <span className="text-primary">Member</span>
-          </OverlayTrigger>
-        );
-      }
-      return (
-        <OverlayTrigger
-          placement="right"
-          overlay={renderTooltip(cell.row.original.orgStatus)}
-        >
-          <span>{status}</span>
-        </OverlayTrigger>
-      );
-    },
-  });
 
   if (
     isInstructor &&

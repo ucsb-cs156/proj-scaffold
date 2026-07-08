@@ -8,7 +8,6 @@ const rosterStudentFixtures = {
       email: "bobsmith@ucsb.edu",
     },
   ],
-
   threeStudents: [
     {
       id: 3,
@@ -34,15 +33,13 @@ const rosterStudentFixtures = {
       email: "emmawatson@ucsb.edu",
     },
   ],
-  studentsWithEachStatus: [
+  sixStudents: [
     {
       id: 1,
       studentId: "A123456",
       firstName: "Alice",
       lastName: "Brown",
       email: "alicebrown@ucsb.edu",
-      githubLogin: null,
-      orgStatus: "PENDING",
     },
 
     {
@@ -51,8 +48,6 @@ const rosterStudentFixtures = {
       firstName: "Tom",
       lastName: "Hanks",
       email: "tomhanks@ucsb.edu",
-      githubLogin: null,
-      orgStatus: "JOINCOURSE",
     },
 
     {
@@ -61,8 +56,6 @@ const rosterStudentFixtures = {
       firstName: "Emma",
       lastName: "Watson",
       email: "emmawatson@ucsb.edu",
-      githubLogin: null,
-      orgStatus: "INVITED",
     },
     {
       id: 4,
@@ -70,10 +63,6 @@ const rosterStudentFixtures = {
       firstName: "Jon",
       lastName: "Snow",
       email: "jonsnow@ucsb.edu",
-      githubLogin: "jonsnow",
-      teams: ["Team A", "Team B"],
-      githubId: 12345,
-      orgStatus: "OWNER",
     },
     {
       id: 5,
@@ -81,10 +70,6 @@ const rosterStudentFixtures = {
       firstName: "Bob",
       lastName: "Smith",
       email: "bobsmith@ucsb.edu",
-      githubLogin: "bobsmith",
-      teams: "Team A",
-      githubId: 12346,
-      orgStatus: "MEMBER",
     },
     {
       id: 6,
@@ -92,10 +77,6 @@ const rosterStudentFixtures = {
       firstName: "Arya",
       lastName: "Sue",
       email: "aryasue@ucsb.edu",
-      githubLogin: "aryasue",
-      teams: "Team A",
-      githubId: 12347,
-      orgStatus: "Illegal status that will never occur",
     },
   ],
   fourStudentsOneDropped: [
@@ -128,9 +109,6 @@ const rosterStudentFixtures = {
       firstName: "Arya",
       lastName: "Sue",
       email: "aryasue@ucsb.edu",
-      githubLogin: "aryasue",
-      teams: "Team A",
-      orgStatus: "Illegal status that will never occur",
       rosterStatus: "DROPPED",
     },
   ],

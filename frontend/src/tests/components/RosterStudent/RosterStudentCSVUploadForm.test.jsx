@@ -1,4 +1,4 @@
-import { render, fireEvent, screen } from "@testing-library/react";
+import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RosterStudentCSVUploadForm from "main/components/RosterStudent/RosterStudentCSVUploadForm";
 import { vi } from "vitest";
@@ -28,7 +28,10 @@ describe("RosterStudentCSVUploadForm Tests", () => {
     );
     await user.upload(upload, file);
     fireEvent.click(submitButton);
-    expect(screen.queryByText(/Roster is required/)).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Roster is required/)).not.toBeInTheDocument();
+    });
 
     expect(upload.files).toHaveLength(1);
     expect(upload.files[0]).toStrictEqual(file);

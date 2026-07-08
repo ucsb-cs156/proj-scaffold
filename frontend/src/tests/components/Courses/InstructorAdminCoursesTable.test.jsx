@@ -108,12 +108,12 @@ describe("InstructorAdminCoursesTable tests", () => {
       ).toHaveTextContent("diba@ucsb.edu");
 
       const firstCourseLink = screen.getByTestId(
-        "CoursesTable-cell-row-0-col-courseName-link",
+        "InstructorAdminCoursesTable-cell-row-0-col-courseName-link",
       );
       expect(firstCourseLink).toHaveAttribute("href", "/course/1");
 
       const firstCourseSettingsLink = screen.getByTestId(
-        "CoursesTable-cell-row-0-col-settings-link",
+        "InstructorAdminCoursesTable-cell-row-0-col-settings-link",
       );
       expect(firstCourseSettingsLink).toHaveAttribute(
         "href",
