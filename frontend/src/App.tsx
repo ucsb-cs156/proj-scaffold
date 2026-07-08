@@ -17,6 +17,8 @@ import AdminCoursesIndexPage from "main/pages/Admin/AdminCoursesIndexPage";
 
 import HomePageLoggedIn from "main/pages/Home/HomePageLoggedIn";
 import HomePageLoggedOut from "main/pages/Home/HomePageLoggedOut";
+import AdminJobsPage from "main/pages/Admin/AdminJobsPage";
+import InstructorCourseShowPage from "main/pages/Courses/InstructorCourseShowPage";
 
 export default function App() {
   const currentUser = useCurrentUser();
@@ -114,6 +116,27 @@ export default function App() {
             />
           }
         />
+        <Route
+          path="/course/:id/settings"
+          element={
+            <ProtectedPage
+              component={<InstructorCourseShowPage />}
+              enforceRole={"ROLE_INSTRUCTOR"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/jobs"
+          element={
+            <ProtectedPage
+              component={<AdminJobsPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>

@@ -1,6 +1,6 @@
 import OurTable from "main/components/Common/OurTable";
 import { hasRole } from "main/utils/currentUser";
-import { Tooltip, OverlayTrigger, Button } from "react-bootstrap";
+import { Tooltip, OverlayTrigger, Button, Fade } from "react-bootstrap";
 import { Link } from "react-router";
 import { useState } from "react";
 import { useBackendMutation } from "main/utils/useBackend";
@@ -9,6 +9,8 @@ import UpdateInstructorForm from "main/components/Courses/UpdateInstructorForm";
 import CourseModal from "main/components/Courses/CourseModal";
 import Modal from "react-bootstrap/Modal";
 import { useLocation } from "react-router";
+import { GraphIcon, UserListIcon } from "main/components/Common/Icons";
+import LinkToScaffold from "main/components/Courses/LinkToScaffold";
 
 export default function InstructorAdminCoursesTable({
   courses,
@@ -72,19 +74,33 @@ export default function InstructorAdminCoursesTable({
       id: "courseName",
       cell: ({ cell }) => {
         return (
+          <LinkToScaffold
+            courseName={cell.row.original.courseName}
+            rowIndex={cell.row.index}
+            courseId={cell.row.original.id}
+            testId={`InstructorAdminCoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+          />
+        );
+      },
+    },
+    {
+      header: "Settings",
+      id: "settings",
+      cell: ({ cell }) => {
+        return (
           <OverlayTrigger
             placement="right"
             overlay={
               <Tooltip id={`tooltip-coursename-${cell.row.index}`}>
-                View course details
+                Settings and Course Roster for {cell.row.original.courseName}
               </Tooltip>
             }
           >
             <Link
-              to={`${courseNameLinkPrefix}/${cell.row.original.id}`}
-              data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+              to={`${courseNameLinkPrefix}/${cell.row.original.id}/settings`}
+              data-testid={`InstructorAdminCoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
             >
-              {cell.row.original.courseName}
+              <UserListIcon />
             </Link>
           </OverlayTrigger>
         );

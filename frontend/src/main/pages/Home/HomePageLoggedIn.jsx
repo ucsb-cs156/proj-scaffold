@@ -92,12 +92,10 @@ export default function HomePageLoggedIn() {
             )}
             {instructorCourses.length > 0 && (
               <>
-                <>
-                  <InstructorAdminCoursesTable
-                    courses={instructorCourses}
-                    currentUser={currentUser}
-                  />
-                </>
+                <InstructorAdminCoursesTable
+                  courses={instructorCourses}
+                  currentUser={currentUser}
+                />
               </>
             )}
           </>
@@ -107,10 +105,9 @@ export default function HomePageLoggedIn() {
         <h1>Your Staff Courses</h1>
         {staffCourses.length === 0 && <p>No staff courses yet.</p>}
         {staffCourses.length > 0 && (
-          <CoursesTable
+          <InstructorAdminCoursesTable
             courses={staffCourses}
-            testId={"StaffCoursesTable"}
-            courseNameLinkPrefix="/staff/courses"
+            currentUser={currentUser}
           />
         )}
       </div>

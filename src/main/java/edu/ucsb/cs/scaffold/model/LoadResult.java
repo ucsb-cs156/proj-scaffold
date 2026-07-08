@@ -1,0 +1,7 @@
+package edu.ucsb.cs.scaffold.model;
+
+import edu.ucsb.cs.scaffold.entity.RosterStudent;
+import java.util.List;
+
+public record LoadResult(
+    Integer created, Integer updated, Integer dropped, List<RosterStudent> rejected) {}

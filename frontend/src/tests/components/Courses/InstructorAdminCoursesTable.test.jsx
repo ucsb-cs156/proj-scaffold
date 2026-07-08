@@ -57,6 +57,7 @@ describe("InstructorAdminCoursesTable tests", () => {
       const expectedHeaders = [
         "id",
         "Course Name",
+        "Settings",
         "Term",
         "School",
         "Instructor",
@@ -66,6 +67,7 @@ describe("InstructorAdminCoursesTable tests", () => {
       const expectedFields = [
         "id",
         "courseName",
+        "settings",
         "term",
         "school",
         "instructorEmail",
@@ -106,9 +108,17 @@ describe("InstructorAdminCoursesTable tests", () => {
       ).toHaveTextContent("diba@ucsb.edu");
 
       const firstCourseLink = screen.getByTestId(
-        "CoursesTable-cell-row-0-col-courseName-link",
+        "InstructorAdminCoursesTable-cell-row-0-col-courseName-link",
       );
       expect(firstCourseLink).toHaveAttribute("href", "/course/1");
+
+      const firstCourseSettingsLink = screen.getByTestId(
+        "InstructorAdminCoursesTable-cell-row-0-col-settings-link",
+      );
+      expect(firstCourseSettingsLink).toHaveAttribute(
+        "href",
+        "/course/1/settings",
+      );
 
       // Modal should not appear; this kills mutations of this line:
       //   const [showModal, setShowModal] = useState(true);
@@ -236,7 +246,9 @@ describe("InstructorAdminCoursesTable tests", () => {
       fireEvent.mouseOver(screen.getByText("CMPSC 5A"));
 
       await waitFor(() => {
-        expect(screen.getByText("View course details")).toBeInTheDocument();
+        expect(
+          screen.getByText("View scaffold for CMPSC 5A"),
+        ).toBeInTheDocument();
       });
     });
   });

@@ -18,6 +18,7 @@ import { React } from "react";
 import { vi } from "vitest";
 import * as useBackendModule from "main/utils/useBackend";
 import { schoolList } from "fixtures/schoolFixtures";
+import mockConsole from "tests/testutils/mockConsole";
 
 const axiosMock = new AxiosMockAdapter(axios);
 const queryClient = new QueryClient();
@@ -39,6 +40,15 @@ describe("HomePageLoggedIn tests", () => {
     axiosMock.resetHistory();
     queryClient.clear();
     mockToast.mockReset();
+    axiosMock.onGet("/api/courses/staffCourses").reply(200, []);
+    axiosMock.onGet("/api/courses/list").reply(200, []);
+    axiosMock.onGet("/api/courses/allForInstructors").reply(200, []);
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.userOnly);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
   });
   afterEach(() => {
     useBackendSpy.mockClear();
@@ -82,29 +92,33 @@ describe("HomePageLoggedIn tests", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByTestId("CoursesTable-cell-row-0-col-id"),
+        screen.getByTestId("InstructorAdminCoursesTable-cell-row-0-col-id"),
       ).toHaveTextContent("1");
     });
     expect(
-      screen.getByTestId(`StaffCoursesTable-cell-row-0-col-id`),
+      screen.getByTestId("InstructorAdminCoursesTable-cell-row-0-col-id"),
     ).toHaveTextContent("1");
     expect(
-      screen.getByTestId(`StaffCoursesTable-cell-row-1-col-id`),
+      screen.getByTestId("InstructorAdminCoursesTable-cell-row-1-col-id"),
     ).toHaveTextContent("2");
     expect(
-      screen.getByTestId(`StaffCoursesTable-cell-row-2-col-id`),
+      screen.getByTestId("InstructorAdminCoursesTable-cell-row-2-col-id"),
     ).toHaveTextContent("3");
     expect(
-      screen.getByTestId(`StaffCoursesTable-cell-row-0-col-courseName`),
+      screen.getByTestId(
+        "InstructorAdminCoursesTable-cell-row-0-col-courseName",
+      ),
     ).toHaveTextContent("CMPSC 8");
     expect(
-      screen.getByTestId(`StaffCoursesTable-cell-row-0-col-courseName-link`),
-    ).toHaveAttribute("href", "/staff/courses/1");
+      screen.getByTestId(
+        "InstructorAdminCoursesTable-cell-row-0-col-courseName-link",
+      ),
+    ).toHaveAttribute("href", "/course/1");
     expect(
-      screen.getByTestId(`StaffCoursesTable-cell-row-0-col-term`),
+      screen.getByTestId("InstructorAdminCoursesTable-cell-row-0-col-term"),
     ).toHaveTextContent("S26");
     expect(
-      screen.getByTestId(`StaffCoursesTable-cell-row-0-col-school`),
+      screen.getByTestId(`InstructorAdminCoursesTable-cell-row-0-col-school`),
     ).toHaveTextContent("UCSB");
     expect(screen.queryByText("No staff courses yet.")).not.toBeInTheDocument();
   });
@@ -126,7 +140,7 @@ describe("HomePageLoggedIn tests", () => {
     expect(screen.getByText("No staff courses yet.")).toBeInTheDocument();
     expect(screen.queryByTestId("StaffCoursesTable")).not.toBeInTheDocument();
     expect(
-      screen.queryByTestId(`StaffCoursesTable-cell-row-0-col-id`),
+      screen.queryByTestId("InstructorAdminCoursesTable-cell-row-0-col-id"),
     ).not.toBeInTheDocument();
   });
 
@@ -294,14 +308,15 @@ describe("HomePageLoggedIn tests", () => {
   });
 
   test("toast called on instructor error", async () => {
+    const restoreConsole = mockConsole();
     setupInstructorUser();
     axiosMock.onGet("/api/courses/allForInstructors").reply(500);
     axiosMock
       .onGet("/api/courses/staffCourses")
-      .reply(200, coursesFixtures.oneCourseWithEachStatus);
+      .reply(200, coursesFixtures.severalCourses);
     axiosMock
       .onGet("/api/courses/list")
-      .reply(200, coursesFixtures.oneCourseWithEachStatus);
+      .reply(200, coursesFixtures.severalCourses);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -312,6 +327,7 @@ describe("HomePageLoggedIn tests", () => {
     );
 
     await waitFor(() => expect(mockToast).toHaveBeenCalled());
+    restoreConsole();
   });
   test("useBackend and useBackendMutation are called with correct cache query key", async () => {
     render(
