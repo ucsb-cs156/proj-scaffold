@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConceptsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.controller</a> &gt; <span class="el_source">ConceptsController.java</span></div><h1>ConceptsController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.controller;
+
+import edu.ucsb.cs.scaffold.entity.Concept;
+import edu.ucsb.cs.scaffold.entity.ConceptEdge;
+import edu.ucsb.cs.scaffold.entity.PracticeProblem;
+import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
+import edu.ucsb.cs.scaffold.repository.ConceptRepository;
+import edu.ucsb.cs.scaffold.repository.PracticeProblemRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@Tag(name = &quot;Concepts&quot;)
+@RestController
+@RequiredArgsConstructor
+public class ConceptsController {
+
+  private final ConceptRepository conceptRepository;
+  private final PracticeProblemRepository practiceProblemRepository;
+  private final ConceptEdgeRepository conceptEdgeRepository;
+
+  @Operation(summary = &quot;Get description/example/practiceUrl content for every concept in a course&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+  @GetMapping(&quot;/api/concepts/content&quot;)
+  public Map&lt;String, ConceptContentDTO&gt; getContent(
+      @Parameter(description = &quot;id of the course&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L38">    Map&lt;Long, String&gt; urlByConceptId = firstUrlByConceptId(courseId);</span>
+
+<span class="fc" id="L40">    Map&lt;String, ConceptContentDTO&gt; result = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">    for (Concept concept : conceptRepository.findByCourseId(courseId)) {</span>
+<span class="fc" id="L42">      result.put(</span>
+<span class="fc" id="L43">          concept.getConceptId(),</span>
+          new ConceptContentDTO(
+<span class="fc" id="L45">              concept.getDescription(), concept.getExample(), urlByConceptId.get(concept.getId())));</span>
+<span class="fc" id="L46">    }</span>
+<span class="fc" id="L47">    return result;</span>
+  }
+
+  @Operation(summary = &quot;Get the major concepts and their subconcepts for a course&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+  @GetMapping(&quot;/api/concepts/graph&quot;)
+  public List&lt;MajorConceptDTO&gt; getGraph(
+      @Parameter(description = &quot;id of the course&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L55">    List&lt;Concept&gt; concepts = conceptRepository.findByCourseId(courseId);</span>
+
+<span class="fc" id="L57">    Map&lt;Long, List&lt;Concept&gt;&gt; subconceptsByParentId =</span>
+<span class="fc" id="L58">        concepts.stream()</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">            .filter(concept -&gt; concept.getParent() != null)</span>
+<span class="fc" id="L60">            .sorted(Comparator.comparing(Concept::getId))</span>
+<span class="fc" id="L61">            .collect(</span>
+<span class="fc" id="L62">                Collectors.groupingBy(</span>
+<span class="fc" id="L63">                    concept -&gt; concept.getParent().getId(),</span>
+                    LinkedHashMap::new,
+<span class="fc" id="L65">                    Collectors.toList()));</span>
+
+<span class="fc" id="L67">    List&lt;MajorConceptDTO&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L68">    concepts.stream()</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        .filter(concept -&gt; concept.getParent() == null)</span>
+<span class="fc" id="L70">        .sorted(Comparator.comparing(Concept::getId))</span>
+<span class="fc" id="L71">        .forEach(</span>
+            major -&gt; {
+<span class="fc" id="L73">              List&lt;String&gt; subconceptLabels =</span>
+<span class="fc" id="L74">                  subconceptsByParentId.getOrDefault(major.getId(), List.of()).stream()</span>
+<span class="fc" id="L75">                      .map(Concept::getLabel)</span>
+<span class="fc" id="L76">                      .toList();</span>
+<span class="fc" id="L77">              result.add(</span>
+                  new MajorConceptDTO(
+<span class="fc" id="L79">                      major.getConceptId(), major.getLabel(), major.getColor(), subconceptLabels));</span>
+<span class="fc" id="L80">            });</span>
+<span class="fc" id="L81">    return result;</span>
+  }
+
+  @Operation(summary = &quot;Get the graph positions of the top-level concepts in a course&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+  @GetMapping(&quot;/api/concepts/positions&quot;)
+  public Map&lt;String, PositionDTO&gt; getPositions(
+      @Parameter(description = &quot;id of the course&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L89">    Map&lt;String, PositionDTO&gt; result = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">    for (Concept concept : conceptRepository.findByCourseId(courseId)) {</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">      if (concept.getParent() == null) {</span>
+<span class="fc" id="L92">        result.put(concept.getConceptId(), new PositionDTO(concept.getX(), concept.getY()));</span>
+      }
+<span class="fc" id="L94">    }</span>
+<span class="fc" id="L95">    return result;</span>
+  }
+
+  @Operation(summary = &quot;Get the prerequisite edges between concepts in a course&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+  @GetMapping(&quot;/api/concepts/edges&quot;)
+  public List&lt;EdgeDTO&gt; getEdges(
+      @Parameter(description = &quot;id of the course&quot;) @RequestParam Long courseId) {
+<span class="fc" id="L103">    List&lt;EdgeDTO&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">    for (ConceptEdge edge : conceptEdgeRepository.findByCourseId(courseId)) {</span>
+<span class="fc" id="L105">      result.add(new EdgeDTO(edge.getSource().getConceptId(), edge.getTarget().getConceptId()));</span>
+<span class="fc" id="L106">    }</span>
+<span class="fc" id="L107">    return result;</span>
+  }
+
+  private Map&lt;Long, String&gt; firstUrlByConceptId(Long courseId) {
+<span class="fc" id="L111">    Map&lt;Long, String&gt; result = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L112">    List&lt;PracticeProblem&gt; problems =</span>
+<span class="fc" id="L113">        practiceProblemRepository.findByCourseId(courseId).stream()</span>
+<span class="fc" id="L114">            .sorted(Comparator.comparing(PracticeProblem::getId))</span>
+<span class="fc" id="L115">            .toList();</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">    for (PracticeProblem problem : problems) {</span>
+<span class="fc" id="L117">      result.putIfAbsent(problem.getConcept().getId(), problem.getUrl());</span>
+<span class="fc" id="L118">    }</span>
+<span class="fc" id="L119">    return result;</span>
+  }
+
+<span class="fc" id="L122">  public record ConceptContentDTO(String description, String example, String practiceUrl) {}</span>
+
+<span class="fc" id="L124">  public record MajorConceptDTO(</span>
+      String name, String label, String color, List&lt;String&gt; subconcepts) {}
+
+<span class="fc" id="L127">  public record PositionDTO(Integer x, Integer y) {}</span>
+
+<span class="fc" id="L129">  public record EdgeDTO(String source, String target) {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

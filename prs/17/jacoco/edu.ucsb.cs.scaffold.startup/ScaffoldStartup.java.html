@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScaffoldStartup.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.startup</a> &gt; <span class="el_source">ScaffoldStartup.java</span></div><h1>ScaffoldStartup.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.startup;
+
+import edu.ucsb.cs.scaffold.entity.Admin;
+import edu.ucsb.cs.scaffold.entity.Course;
+import edu.ucsb.cs.scaffold.enums.School;
+import edu.ucsb.cs.scaffold.repository.AdminRepository;
+import edu.ucsb.cs.scaffold.repository.CourseRepository;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StreamUtils;
+
+<span class="fc" id="L22">@Slf4j</span>
+@Component
+<span class="fc" id="L24">public class ScaffoldStartup {</span>
+
+<span class="fc" id="L26">  static final Long SEED_COURSE_ID = 1L;</span>
+  static final String SEED_DATA_RESOURCE = &quot;db/seed/concepts.sql&quot;;
+
+  @Value(&quot;#{'${app.admin.emails}'.split(',')}&quot;)
+  List&lt;String&gt; adminEmails;
+
+  @Autowired AdminRepository adminRepository;
+
+  @Autowired CourseRepository courseRepository;
+
+  @Autowired JdbcTemplate jdbcTemplate;
+
+  public void alwaysRunOnStartup() {
+<span class="fc" id="L39">    log.info(&quot;ScaffoldStartup.alwaysRunOnStartup called&quot;);</span>
+
+    try {
+<span class="fc" id="L42">      adminEmails.forEach(</span>
+          (email) -&gt; {
+<span class="fc" id="L44">            Admin admin = new Admin(email.strip());</span>
+<span class="fc" id="L45">            adminRepository.save(admin);</span>
+<span class="fc" id="L46">          });</span>
+<span class="fc" id="L47">    } catch (Exception e) {</span>
+<span class="fc" id="L48">      log.error(&quot;Error loading ADMIN_EMAILS into admins table:&quot;, e);</span>
+<span class="fc" id="L49">    }</span>
+
+    // Temporary demo/test seed data for the concept graph feature. This creates course 1
+    // (if it doesn't already exist) and loads db/seed/concepts.sql, ignoring errors for
+    // records that already exist. Remove this once the app is past the demo/testing stage.
+    try {
+<span class="fc" id="L55">      seedCourseOne();</span>
+<span class="fc" id="L56">      seedConceptsSqlFile();</span>
+<span class="fc" id="L57">    } catch (Exception e) {</span>
+<span class="fc" id="L58">      log.error(&quot;Error seeding concept graph demo data:&quot;, e);</span>
+<span class="fc" id="L59">    }</span>
+<span class="fc" id="L60">  }</span>
+
+  private void seedCourseOne() {
+<span class="fc bfc" id="L63" title="All 2 branches covered.">    if (courseRepository.existsById(SEED_COURSE_ID)) {</span>
+<span class="fc" id="L64">      return;</span>
+    }
+    Course course =
+<span class="fc" id="L67">        Course.builder()</span>
+<span class="fc" id="L68">            .courseName(&quot;CMPSC 8&quot;)</span>
+<span class="fc" id="L69">            .instructorEmail(&quot;phtcon@ucsb.edu&quot;)</span>
+<span class="fc" id="L70">            .term(&quot;S26&quot;)</span>
+<span class="fc" id="L71">            .school(School.UCSB)</span>
+<span class="fc" id="L72">            .build();</span>
+<span class="fc" id="L73">    courseRepository.save(course);</span>
+<span class="fc" id="L74">    log.info(&quot;Created seed course: CMPSC 8&quot;);</span>
+<span class="fc" id="L75">  }</span>
+
+  private void seedConceptsSqlFile() throws IOException {
+<span class="fc" id="L78">    String sql =</span>
+<span class="fc" id="L79">        StreamUtils.copyToString(</span>
+<span class="fc" id="L80">            new ClassPathResource(SEED_DATA_RESOURCE).getInputStream(), StandardCharsets.UTF_8);</span>
+<span class="fc" id="L81">    executeSeedStatements(sql);</span>
+<span class="fc" id="L82">  }</span>
+
+  void executeSeedStatements(String sql) {
+<span class="fc bfc" id="L85" title="All 2 branches covered.">    for (String rawStatement : splitSqlStatements(sql)) {</span>
+<span class="fc" id="L86">      String cleaned = stripLeadingCommentsAndBlankLines(rawStatement);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">      if (cleaned.isEmpty()) {</span>
+<span class="fc" id="L88">        continue;</span>
+      }
+      try {
+<span class="fc" id="L91">        jdbcTemplate.execute(cleaned);</span>
+<span class="fc" id="L92">      } catch (DataAccessException e) {</span>
+<span class="fc" id="L93">        log.debug(&quot;Skipping seed statement (likely already applied): {}&quot;, e.getMessage());</span>
+<span class="fc" id="L94">      }</span>
+<span class="fc" id="L95">    }</span>
+<span class="fc" id="L96">  }</span>
+
+  /**
+   * Removes leading blank and &quot;--&quot; comment lines from a single SQL statement, since those aren't
+   * separated from the following real statement by their own semicolon and would otherwise end up
+   * glued to the front of it. Only LEADING lines are removed (stopping at the first line of real
+   * content) so that a blank line inside a multi-paragraph string value later in the same statement
+   * is left untouched.
+   */
+  static String stripLeadingCommentsAndBlankLines(String statement) {
+<span class="fc" id="L106">    String[] lines = statement.split(&quot;\n&quot;, -1);</span>
+<span class="fc" id="L107">    int start = 0;</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">    while (start &lt; lines.length) {</span>
+<span class="fc" id="L109">      String trimmedLine = lines[start].strip();</span>
+<span class="fc bfc" id="L110" title="All 4 branches covered.">      if (trimmedLine.isEmpty() || trimmedLine.startsWith(&quot;--&quot;)) {</span>
+<span class="fc" id="L111">        start++;</span>
+      } else {
+        break;
+      }
+<span class="fc" id="L115">    }</span>
+<span class="fc" id="L116">    String result = String.join(&quot;\n&quot;, Arrays.copyOfRange(lines, start, lines.length));</span>
+<span class="fc" id="L117">    return result.strip();</span>
+  }
+
+  /**
+   * Splits a SQL script into individual statements on top-level semicolons, ignoring semicolons
+   * that appear inside single-quoted string literals (including '' escaped quotes, since a pair of
+   * quote-toggles cancels out and leaves the parser in the correct state).
+   */
+  static List&lt;String&gt; splitSqlStatements(String sql) {
+<span class="fc" id="L126">    List&lt;String&gt; statements = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L127">    StringBuilder current = new StringBuilder();</span>
+<span class="fc" id="L128">    boolean inSingleQuotedString = false;</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">    for (int i = 0; i &lt; sql.length(); i++) {</span>
+<span class="fc" id="L130">      char c = sql.charAt(i);</span>
+<span class="fc" id="L131">      current.append(c);</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">      if (c == '\'') {</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        inSingleQuotedString = !inSingleQuotedString;</span>
+<span class="fc bfc" id="L134" title="All 4 branches covered.">      } else if (c == ';' &amp;&amp; !inSingleQuotedString) {</span>
+<span class="fc" id="L135">        statements.add(current.toString());</span>
+<span class="fc" id="L136">        current.setLength(0);</span>
+      }
+    }
+<span class="fc bfc" id="L139" title="All 2 branches covered.">    if (!current.toString().isBlank()) {</span>
+<span class="fc" id="L140">      statements.add(current.toString());</span>
+    }
+<span class="fc" id="L142">    return statements;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

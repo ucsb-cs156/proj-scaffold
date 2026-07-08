@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RosterStudentsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.controller</a> &gt; <span class="el_source">RosterStudentsController.java</span></div><h1>RosterStudentsController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.controller;
+
+import edu.ucsb.cs.scaffold.entity.Course;
+import edu.ucsb.cs.scaffold.entity.RosterStudent;
+import edu.ucsb.cs.scaffold.entity.User;
+import edu.ucsb.cs.scaffold.enums.InsertStatus;
+import edu.ucsb.cs.scaffold.enums.RosterStatus;
+import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.model.RosterStudentDTO;
+import edu.ucsb.cs.scaffold.model.UpsertResponse;
+import edu.ucsb.cs.scaffold.repository.CourseRepository;
+import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
+import edu.ucsb.cs.scaffold.services.CurrentUserService;
+import edu.ucsb.cs.scaffold.services.UpdateUserService;
+import edu.ucsb.cs.scaffold.utilities.CanonicalFormConverter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+@Tag(name = &quot;RosterStudents&quot;)
+@RequestMapping(&quot;/api/rosterstudents&quot;)
+@RestController
+<span class="fc" id="L39">@Slf4j</span>
+<span class="fc" id="L40">public class RosterStudentsController extends ApiController {</span>
+
+  @Autowired private RosterStudentRepository rosterStudentRepository;
+
+  @Autowired private CourseRepository courseRepository;
+
+  @Autowired private UpdateUserService updateUserService;
+
+  @Autowired private CurrentUserService currentUserService;
+
+  /**
+   * This method creates a new RosterStudent. It is important to keep the code in this method
+   * consistent with the code for adding multiple roster students from a CSV
+   *
+   * @return the created RosterStudent
+   */
+  @Operation(summary = &quot;Create a new roster student&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/post&quot;)
+  public ResponseEntity&lt;UpsertResponse&gt; postRosterStudent(
+      @Parameter(name = &quot;studentId&quot;) @RequestParam String studentId,
+      @Parameter(name = &quot;firstName&quot;) @RequestParam String firstName,
+      @Parameter(name = &quot;lastName&quot;) @RequestParam String lastName,
+      @Parameter(name = &quot;email&quot;) @RequestParam String email,
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;section&quot;) @RequestParam(required = false) String section)
+      throws EntityNotFoundException {
+
+    // Get Course or else throw an error
+
+<span class="nc" id="L70">    Course course =</span>
+        courseRepository
+<span class="nc" id="L72">            .findById(courseId)</span>
+<span class="nc" id="L73">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+    RosterStudent rosterStudent =
+<span class="nc" id="L76">        RosterStudent.builder()</span>
+<span class="nc" id="L77">            .studentId(studentId)</span>
+<span class="nc" id="L78">            .firstName(firstName)</span>
+<span class="nc" id="L79">            .lastName(lastName)</span>
+<span class="nc" id="L80">            .email(email.strip())</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            .section(section != null ? section : &quot;&quot;)</span>
+<span class="nc" id="L82">            .build();</span>
+
+<span class="nc" id="L84">    UpsertResponse upsertResponse = upsertStudent(rosterStudent, course, RosterStatus.MANUAL);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">    if (upsertResponse.getInsertStatus() == InsertStatus.REJECTED) {</span>
+<span class="nc" id="L86">      return ResponseEntity.status(HttpStatus.CONFLICT).body(upsertResponse);</span>
+    } else {
+<span class="nc" id="L88">      rosterStudent = rosterStudentRepository.save(upsertResponse.rosterStudent());</span>
+<span class="nc" id="L89">      updateUserService.attachUserToRosterStudent(rosterStudent);</span>
+<span class="nc" id="L90">      return ResponseEntity.ok(upsertResponse);</span>
+    }
+  }
+
+  /**
+   * This method returns a list of roster students for a given course.
+   *
+   * @return a list of all courses.
+   */
+  @Operation(summary = &quot;List all roster students for a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @GetMapping(&quot;/course/{courseId}&quot;)
+  public Iterable&lt;RosterStudentDTO&gt; rosterStudentForCourse(
+      @Parameter(name = &quot;courseId&quot;) @PathVariable Long courseId) throws EntityNotFoundException {
+<span class="nc" id="L104">    courseRepository</span>
+<span class="nc" id="L105">        .findById(courseId)</span>
+<span class="nc" id="L106">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="nc" id="L107">    Iterable&lt;RosterStudent&gt; rosterStudents =</span>
+<span class="nc" id="L108">        rosterStudentRepository.findByCourseIdOrderByFirstNameAscLastNameAscIgnoreCase(courseId);</span>
+<span class="nc" id="L109">    Iterable&lt;RosterStudentDTO&gt; rosterStudentDTOs =</span>
+        () -&gt;
+<span class="nc" id="L111">            java.util.stream.StreamSupport.stream(rosterStudents.spliterator(), false)</span>
+<span class="nc" id="L112">                .map(RosterStudentDTO::new)</span>
+<span class="nc" id="L113">                .iterator();</span>
+<span class="nc" id="L114">    return rosterStudentDTOs;</span>
+  }
+
+  public static UpsertResponse upsertStudent(
+      RosterStudent student, Course course, RosterStatus rosterStatus) {
+<span class="nc" id="L119">    String convertedEmail = CanonicalFormConverter.convertToValidEmail(student.getEmail()).strip();</span>
+<span class="nc" id="L120">    Optional&lt;RosterStudent&gt; existingStudent =</span>
+<span class="nc" id="L121">        course.getRosterStudents().stream()</span>
+<span class="nc" id="L122">            .filter(</span>
+<span class="nc" id="L123">                filteringStudent -&gt; student.getStudentId().equals(filteringStudent.getStudentId()))</span>
+<span class="nc" id="L124">            .findFirst();</span>
+<span class="nc" id="L125">    Optional&lt;RosterStudent&gt; existingStudentByEmail =</span>
+<span class="nc" id="L126">        course.getRosterStudents().stream()</span>
+<span class="nc" id="L127">            .filter(filteringStudent -&gt; convertedEmail.equals(filteringStudent.getEmail()))</span>
+<span class="nc" id="L128">            .findFirst();</span>
+<span class="nc bnc" id="L129" title="All 4 branches missed.">    if (existingStudent.isPresent() &amp;&amp; existingStudentByEmail.isPresent()) {</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">      if (existingStudent.get().getId().equals(existingStudentByEmail.get().getId())) {</span>
+<span class="nc" id="L131">        RosterStudent existingStudentObj = existingStudent.get();</span>
+<span class="nc" id="L132">        existingStudentObj.setRosterStatus(rosterStatus);</span>
+<span class="nc" id="L133">        existingStudentObj.setFirstName(student.getFirstName());</span>
+<span class="nc" id="L134">        existingStudentObj.setLastName(student.getLastName());</span>
+<span class="nc" id="L135">        existingStudentObj.setSection(student.getSection());</span>
+<span class="nc" id="L136">        return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);</span>
+      } else {
+<span class="nc" id="L138">        return new UpsertResponse(InsertStatus.REJECTED, student);</span>
+      }
+<span class="nc bnc" id="L140" title="All 4 branches missed.">    } else if (existingStudent.isPresent() || existingStudentByEmail.isPresent()) {</span>
+      RosterStudent existingStudentObj =
+<span class="nc bnc" id="L142" title="All 2 branches missed.">          existingStudent.isPresent() ? existingStudent.get() : existingStudentByEmail.get();</span>
+<span class="nc" id="L143">      existingStudentObj.setRosterStatus(rosterStatus);</span>
+<span class="nc" id="L144">      existingStudentObj.setFirstName(student.getFirstName());</span>
+<span class="nc" id="L145">      existingStudentObj.setLastName(student.getLastName());</span>
+<span class="nc" id="L146">      existingStudentObj.setSection(student.getSection());</span>
+<span class="nc" id="L147">      existingStudentObj.setEmail(convertedEmail);</span>
+<span class="nc" id="L148">      existingStudentObj.setStudentId(student.getStudentId());</span>
+<span class="nc" id="L149">      return new UpsertResponse(InsertStatus.UPDATED, existingStudentObj);</span>
+    } else {
+<span class="nc" id="L151">      student.setCourse(course);</span>
+<span class="nc" id="L152">      student.setEmail(convertedEmail);</span>
+<span class="nc" id="L153">      student.setRosterStatus(rosterStatus);</span>
+<span class="nc" id="L154">      return new UpsertResponse(InsertStatus.INSERTED, student);</span>
+    }
+  }
+
+  @Operation(summary = &quot;Get Associated Roster Students with a User&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
+  @GetMapping(&quot;/associatedRosterStudents&quot;)
+  public Iterable&lt;RosterStudent&gt; getAssociatedRosterStudents() {
+<span class="nc" id="L162">    User currentUser = currentUserService.getUser();</span>
+<span class="nc" id="L163">    Iterable&lt;RosterStudent&gt; rosterStudents = rosterStudentRepository.findAllByUser((currentUser));</span>
+<span class="nc" id="L164">    return rosterStudents;</span>
+  }
+
+  @Operation(summary = &quot;Update a roster student&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)&quot;)
+  @PutMapping(&quot;/update&quot;)
+  public RosterStudent updateRosterStudent(
+      @Parameter(name = &quot;id&quot;) @RequestParam Long id,
+      @Parameter(name = &quot;firstName&quot;) @RequestParam(required = false) String firstName,
+      @Parameter(name = &quot;lastName&quot;) @RequestParam(required = false) String lastName,
+      @Parameter(name = &quot;studentId&quot;) @RequestParam(required = false) String studentId,
+      @Parameter(name = &quot;section&quot;) @RequestParam(required = false) String section)
+      throws EntityNotFoundException {
+
+<span class="nc bnc" id="L178" title="All 6 branches missed.">    if (firstName == null</span>
+        || lastName == null
+        || studentId == null
+<span class="nc bnc" id="L181" title="All 2 branches missed.">        || firstName.trim().isEmpty()</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        || lastName.trim().isEmpty()</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">        || studentId.trim().isEmpty()) {</span>
+<span class="nc" id="L184">      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Required fields cannot be empty&quot;);</span>
+    }
+
+<span class="nc" id="L187">    RosterStudent rosterStudent =</span>
+        rosterStudentRepository
+<span class="nc" id="L189">            .findById(id)</span>
+<span class="nc" id="L190">            .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
+
+<span class="nc bnc" id="L192" title="All 2 branches missed.">    if (!rosterStudent.getStudentId().trim().equals(studentId.trim())) {</span>
+<span class="nc" id="L193">      Optional&lt;RosterStudent&gt; existingStudent =</span>
+<span class="nc" id="L194">          rosterStudentRepository.findByCourseIdAndStudentId(</span>
+<span class="nc" id="L195">              rosterStudent.getCourse().getId(), studentId.trim());</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">      if (existingStudent.isPresent()) {</span>
+<span class="nc" id="L197">        throw new ResponseStatusException(</span>
+            HttpStatus.BAD_REQUEST, &quot;Student ID already exists in this course&quot;);
+      }
+    }
+
+<span class="nc" id="L202">    rosterStudent.setFirstName(firstName.trim());</span>
+<span class="nc" id="L203">    rosterStudent.setLastName(lastName.trim());</span>
+<span class="nc" id="L204">    rosterStudent.setStudentId(studentId.trim());</span>
+
+<span class="nc bnc" id="L206" title="All 2 branches missed.">    if (section != null) {</span>
+<span class="nc" id="L207">      rosterStudent.setSection(section.trim());</span>
+    }
+
+<span class="nc" id="L210">    return rosterStudentRepository.save(rosterStudent);</span>
+  }
+
+  @Operation(
+      summary = &quot;Restore a roster student&quot;,
+      description = &quot;Restores a student who previously was dropped from the course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)&quot;)
+  @PutMapping(&quot;/restore&quot;)
+  public RosterStudent restoreRosterStudent(@Parameter(name = &quot;id&quot;) @RequestParam Long id)
+      throws EntityNotFoundException {
+<span class="nc" id="L220">    RosterStudent rosterStudent =</span>
+        rosterStudentRepository
+<span class="nc" id="L222">            .findById(id)</span>
+<span class="nc" id="L223">            .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
+<span class="nc" id="L224">    rosterStudent.setRosterStatus(RosterStatus.MANUAL);</span>
+<span class="nc" id="L225">    return rosterStudentRepository.save(rosterStudent);</span>
+  }
+
+  @Operation(summary = &quot;Delete a roster student&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasRosterStudentManagementPermissions(#root, #id)&quot;)
+  @DeleteMapping(&quot;/delete&quot;)
+  @Transactional
+  public ResponseEntity&lt;String&gt; deleteRosterStudent(@Parameter(name = &quot;id&quot;) @RequestParam Long id)
+      throws EntityNotFoundException {
+<span class="nc" id="L234">    RosterStudent rosterStudent =</span>
+        rosterStudentRepository
+<span class="nc" id="L236">            .findById(id)</span>
+<span class="nc" id="L237">            .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
+
+<span class="nc" id="L239">    rosterStudent.getCourse().getRosterStudents().remove(rosterStudent);</span>
+<span class="nc" id="L240">    rosterStudent.setCourse(null);</span>
+<span class="nc" id="L241">    rosterStudentRepository.delete(rosterStudent);</span>
+
+<span class="nc" id="L243">    return ResponseEntity.ok(</span>
+        &quot;Successfully deleted roster student and removed him/her from the course list&quot;);
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
