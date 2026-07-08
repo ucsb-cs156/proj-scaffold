@@ -1,6 +1,7 @@
 import {
   useEffect,
   useCallback,
+  useMemo,
   useRef,
   createContext,
   useContext,
@@ -148,19 +149,23 @@ function MajorNode({ data, id }: NodeProps) {
     ((sub: string) => void) | undefined;
 
   const { debugMode } = useDebugMode();
-  const debugTitle = debugMode
-    ? JSON.stringify(
-        {
-          id,
-          label,
-          color,
-          subconcepts,
-          conceptContent: conceptContent[id],
-        },
-        null,
-        2,
-      )
-    : undefined;
+  const debugTitle = useMemo(
+    () =>
+      debugMode
+        ? JSON.stringify(
+            {
+              id,
+              label,
+              color,
+              subconcepts,
+              conceptContent: conceptContent[id],
+            },
+            null,
+            2,
+          )
+        : undefined,
+    [debugMode, id, label, color, subconcepts],
+  );
 
   const showColor = !hasSelection || highlighted;
 

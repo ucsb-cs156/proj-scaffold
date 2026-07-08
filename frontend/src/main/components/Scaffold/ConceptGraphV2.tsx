@@ -166,19 +166,23 @@ function MajorNode({ data, id }: NodeProps) {
 
   const { debugMode } = useDebugMode();
   const allConceptContent = useContext(ConceptContentContext);
-  const debugTitle = debugMode
-    ? JSON.stringify(
-        {
-          id,
-          label,
-          color,
-          subconcepts,
-          conceptContent: allConceptContent[id],
-        },
-        null,
-        2,
-      )
-    : undefined;
+  const debugTitle = useMemo(
+    () =>
+      debugMode
+        ? JSON.stringify(
+            {
+              id,
+              label,
+              color,
+              subconcepts,
+              conceptContent: allConceptContent[id],
+            },
+            null,
+            2,
+          )
+        : undefined,
+    [debugMode, id, label, color, subconcepts, allConceptContent],
+  );
 
   const showColor = !hasSelection || highlighted;
 
