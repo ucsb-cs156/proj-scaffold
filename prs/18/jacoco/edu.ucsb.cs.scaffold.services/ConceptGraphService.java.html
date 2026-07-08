@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConceptGraphService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.services</a> &gt; <span class="el_source">ConceptGraphService.java</span></div><h1>ConceptGraphService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.services;
+
+import edu.ucsb.cs.scaffold.entity.Concept;
+import edu.ucsb.cs.scaffold.entity.ConceptEdge;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+
+/**
+ * Graph algorithms for the prerequisite structure of a course's top-level concepts (subconcepts
+ * have no position in this graph). Prerequisite edges only ever connect top-level concepts, so
+ * every method here operates on that subgraph.
+ *
+ * &lt;p&gt;{@link #reset} is the analysis run by {@code POST /api/course/scaffold/reset}: it detects
+ * cycles (flagging their edges rather than processing them further), removes edges that are
+ * redundant given the graph's transitive structure, ranks concepts by longest path from a root, and
+ * lays out each level's x,y position. It is a pure function of its inputs — no repository access —
+ * so the controller owns loading input and persisting the result.
+ */
+@Service
+<span class="fc" id="L29">public class ConceptGraphService {</span>
+
+  // Index i holds the color for level i+1; levels beyond the palette reuse the last color.
+<span class="fc" id="L32">  public static final List&lt;String&gt; LEVEL_COLORS =</span>
+<span class="fc" id="L33">      List.of(&quot;#c99ffe&quot;, &quot;#feaef2&quot;, &quot;#93ebff&quot;, &quot;#fe9a71&quot;, &quot;#2bcd9c&quot;);</span>
+
+  public static final String CYCLE_EDGE_COLOR = &quot;#FF0000&quot;;
+
+  // Initial guesses; revisit if the resulting layout looks too cramped or too sparse.
+  public static final int MIN_HORIZONTAL_SEPARATION = 350;
+  public static final int VERTICAL_LEVEL_SEPARATION = 300;
+
+  /** The color assigned to a top-level concept at the given longest-path level (1-based). */
+  public String colorForLevel(int level) {
+<span class="fc" id="L43">    int index = Math.min(Math.max(level, 1), LEVEL_COLORS.size()) - 1;</span>
+<span class="fc" id="L44">    return LEVEL_COLORS.get(index);</span>
+  }
+
+  /**
+   * True if adding an edge sourceId -&amp;gt; targetId would create a cycle, i.e. targetId can already
+   * reach sourceId via existingEdges. Used to reject new prerequisite edges at creation time,
+   * before a cycle can ever be persisted.
+   */
+  public boolean wouldCreateCycle(List&lt;ConceptEdge&gt; existingEdges, Long sourceId, Long targetId) {
+<span class="fc" id="L53">    Map&lt;Long, List&lt;Long&gt;&gt; adjacency = buildAdjacency(existingEdges);</span>
+<span class="fc" id="L54">    Set&lt;Long&gt; visited = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L55">    Deque&lt;Long&gt; queue = new ArrayDeque&lt;&gt;();</span>
+<span class="fc" id="L56">    visited.add(targetId);</span>
+<span class="fc" id="L57">    queue.add(targetId);</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">    while (!queue.isEmpty()) {</span>
+<span class="fc" id="L59">      Long current = queue.poll();</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">      if (current.equals(sourceId)) {</span>
+<span class="fc" id="L61">        return true;</span>
+      }
+<span class="fc bfc" id="L63" title="All 2 branches covered.">      for (Long next : adjacency.getOrDefault(current, List.of())) {</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (visited.add(next)) {</span>
+<span class="fc" id="L65">          queue.add(next);</span>
+        }
+<span class="fc" id="L67">      }</span>
+<span class="fc" id="L68">    }</span>
+<span class="fc" id="L69">    return false;</span>
+  }
+
+<span class="fc" id="L72">  public record Position(int x, int y) {}</span>
+
+<span class="fc" id="L74">  public record ResetResult(</span>
+      Set&lt;Long&gt; cycleEdgeIds,
+      Set&lt;Long&gt; removedEdgeIds,
+      Map&lt;Long, Integer&gt; levelByConceptId,
+      Map&lt;Long, Position&gt; positionByConceptId) {}
+
+  /**
+   * Runs the full scaffold reset analysis: cycle detection, transitive reduction, longest-path
+   * leveling, and layout. Does not mutate concepts or edges or read/write any repository; the
+   * caller applies {@link ResetResult} to persistent entities.
+   *
+   * @param topLevelConcepts every top-level concept in the course (used for their id/x, to sort and
+   *     lay out concepts with no edges at all, and as the node set for the graph algorithms)
+   * @param edges every prerequisite edge in the course
+   */
+  public ResetResult reset(List&lt;Concept&gt; topLevelConcepts, List&lt;ConceptEdge&gt; edges) {
+<span class="fc" id="L90">    Map&lt;Long, Integer&gt; priorXByConceptId =</span>
+<span class="fc" id="L91">        topLevelConcepts.stream().collect(Collectors.toMap(Concept::getId, Concept::getX));</span>
+<span class="fc" id="L92">    return reset(topLevelConcepts, edges, priorXByConceptId);</span>
+  }
+
+  /**
+   * Like {@link #reset(List, List)}, but sorts each level by the given prior x values instead of
+   * each concept's own x column. Used by the controller to sort by the requesting user's private,
+   * unsaved drag positions where they exist, falling back to the concept's persisted x otherwise —
+   * see {@code POST /api/course/scaffold/reset}.
+   */
+  public ResetResult reset(
+      List&lt;Concept&gt; topLevelConcepts,
+      List&lt;ConceptEdge&gt; edges,
+      Map&lt;Long, Integer&gt; priorXByConceptId) {
+<span class="fc" id="L105">    Set&lt;Long&gt; nodeIds = topLevelConcepts.stream().map(Concept::getId).collect(Collectors.toSet());</span>
+
+<span class="fc" id="L107">    Map&lt;Long, Integer&gt; sccId = computeStronglyConnectedComponents(buildAdjacency(edges), nodeIds);</span>
+<span class="fc" id="L108">    Map&lt;Integer, Long&gt; sccSize =</span>
+<span class="fc" id="L109">        sccId.values().stream().collect(Collectors.groupingBy(id -&gt; id, Collectors.counting()));</span>
+
+<span class="fc" id="L111">    Set&lt;Long&gt; cycleEdgeIds = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L112">    List&lt;ConceptEdge&gt; acyclicEdges = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">    for (ConceptEdge edge : edges) {</span>
+<span class="fc" id="L114">      Long sourceId = edge.getSource().getId();</span>
+<span class="fc" id="L115">      Long targetId = edge.getTarget().getId();</span>
+<span class="fc" id="L116">      boolean inCycle =</span>
+<span class="fc bfc" id="L117" title="All 4 branches covered.">          sccId.get(sourceId).equals(sccId.get(targetId)) &amp;&amp; sccSize.get(sccId.get(sourceId)) &gt; 1;</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">      if (inCycle) {</span>
+<span class="fc" id="L119">        cycleEdgeIds.add(edge.getId());</span>
+      } else {
+<span class="fc" id="L121">        acyclicEdges.add(edge);</span>
+      }
+<span class="fc" id="L123">    }</span>
+
+<span class="fc" id="L125">    Set&lt;Long&gt; removedEdgeIds = computeTransitiveReductionRemovals(nodeIds, acyclicEdges);</span>
+<span class="fc" id="L126">    List&lt;ConceptEdge&gt; keptEdges =</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        acyclicEdges.stream().filter(e -&gt; !removedEdgeIds.contains(e.getId())).toList();</span>
+
+<span class="fc" id="L129">    Map&lt;Long, Integer&gt; levelByConceptId = computeLongestPathLevels(nodeIds, keptEdges);</span>
+<span class="fc" id="L130">    Map&lt;Long, Position&gt; positionByConceptId =</span>
+<span class="fc" id="L131">        computeLayout(topLevelConcepts, levelByConceptId, priorXByConceptId);</span>
+
+<span class="fc" id="L133">    return new ResetResult(cycleEdgeIds, removedEdgeIds, levelByConceptId, positionByConceptId);</span>
+  }
+
+  /**
+   * Lays each level out left to right, sorted by each concept's prior x (then id to break ties),
+   * centered horizontally at x=0. Each level sits {@link #VERTICAL_LEVEL_SEPARATION} above the
+   * previous one, with level 1 at y=0.
+   */
+  private Map&lt;Long, Position&gt; computeLayout(
+      List&lt;Concept&gt; topLevelConcepts,
+      Map&lt;Long, Integer&gt; levelByConceptId,
+      Map&lt;Long, Integer&gt; priorXByConceptId) {
+<span class="fc" id="L145">    Map&lt;Integer, List&lt;Concept&gt;&gt; byLevel =</span>
+<span class="fc" id="L146">        topLevelConcepts.stream()</span>
+<span class="fc" id="L147">            .collect(Collectors.groupingBy(c -&gt; levelByConceptId.get(c.getId())));</span>
+
+<span class="fc" id="L149">    Map&lt;Long, Position&gt; positions = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">    for (Map.Entry&lt;Integer, List&lt;Concept&gt;&gt; entry : byLevel.entrySet()) {</span>
+<span class="fc" id="L151">      int level = entry.getKey();</span>
+<span class="fc" id="L152">      List&lt;Concept&gt; sorted =</span>
+<span class="fc" id="L153">          entry.getValue().stream()</span>
+<span class="fc" id="L154">              .sorted(</span>
+<span class="fc" id="L155">                  Comparator.comparing((Concept c) -&gt; priorXByConceptId.get(c.getId()))</span>
+<span class="fc" id="L156">                      .thenComparing(Concept::getId))</span>
+<span class="fc" id="L157">              .toList();</span>
+<span class="fc" id="L158">      int n = sorted.size();</span>
+<span class="fc" id="L159">      int y = -(level - 1) * VERTICAL_LEVEL_SEPARATION;</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">      for (int i = 0; i &lt; n; i++) {</span>
+<span class="fc" id="L161">        int x = (int) Math.round((i - (n - 1) / 2.0) * MIN_HORIZONTAL_SEPARATION);</span>
+<span class="fc" id="L162">        positions.put(sorted.get(i).getId(), new Position(x, y));</span>
+      }
+<span class="fc" id="L164">    }</span>
+<span class="fc" id="L165">    return positions;</span>
+  }
+
+  /**
+   * Tarjan's algorithm: maps each node id to an integer id shared by its strongly connected
+   * component (a nontrivial cycle iff more than one node shares it).
+   */
+  private Map&lt;Long, Integer&gt; computeStronglyConnectedComponents(
+      Map&lt;Long, List&lt;Long&gt;&gt; adjacency, Set&lt;Long&gt; nodeIds) {
+<span class="fc" id="L174">    TarjanState state = new TarjanState(adjacency);</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">    for (Long node : nodeIds) {</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">      if (!state.index.containsKey(node)) {</span>
+<span class="fc" id="L177">        state.strongConnect(node);</span>
+      }
+<span class="fc" id="L179">    }</span>
+<span class="fc" id="L180">    return state.sccId;</span>
+  }
+
+  private static final class TarjanState {
+    private final Map&lt;Long, List&lt;Long&gt;&gt; adjacency;
+<span class="fc" id="L185">    private final Map&lt;Long, Integer&gt; index = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L186">    private final Map&lt;Long, Integer&gt; lowlink = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L187">    private final Set&lt;Long&gt; onStack = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L188">    private final Deque&lt;Long&gt; stack = new ArrayDeque&lt;&gt;();</span>
+<span class="fc" id="L189">    private final Map&lt;Long, Integer&gt; sccId = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L190">    private int counter = 0;</span>
+<span class="fc" id="L191">    private int sccCounter = 0;</span>
+
+<span class="fc" id="L193">    TarjanState(Map&lt;Long, List&lt;Long&gt;&gt; adjacency) {</span>
+<span class="fc" id="L194">      this.adjacency = adjacency;</span>
+<span class="fc" id="L195">    }</span>
+
+    void strongConnect(Long v) {
+<span class="fc" id="L198">      index.put(v, counter);</span>
+<span class="fc" id="L199">      lowlink.put(v, counter);</span>
+<span class="fc" id="L200">      counter++;</span>
+<span class="fc" id="L201">      stack.push(v);</span>
+<span class="fc" id="L202">      onStack.add(v);</span>
+
+<span class="fc bfc" id="L204" title="All 2 branches covered.">      for (Long w : adjacency.getOrDefault(v, List.of())) {</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">        if (!index.containsKey(w)) {</span>
+<span class="fc" id="L206">          strongConnect(w);</span>
+<span class="fc" id="L207">          lowlink.put(v, Math.min(lowlink.get(v), lowlink.get(w)));</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">        } else if (onStack.contains(w)) {</span>
+<span class="fc" id="L209">          lowlink.put(v, Math.min(lowlink.get(v), index.get(w)));</span>
+        }
+<span class="fc" id="L211">      }</span>
+
+<span class="fc bfc" id="L213" title="All 2 branches covered.">      if (lowlink.get(v).equals(index.get(v))) {</span>
+        Long w;
+        do {
+<span class="fc" id="L216">          w = stack.pop();</span>
+<span class="fc" id="L217">          onStack.remove(w);</span>
+<span class="fc" id="L218">          sccId.put(w, sccCounter);</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        } while (!w.equals(v));</span>
+<span class="fc" id="L220">        sccCounter++;</span>
+      }
+<span class="fc" id="L222">    }</span>
+  }
+
+  /**
+   * An edge u-&amp;gt;v is redundant if some other direct successor w of u can also reach v; such an
+   * edge is a &quot;shortcut&quot; whose removal does not change reachability. Requires an acyclic edge set.
+   */
+  private Set&lt;Long&gt; computeTransitiveReductionRemovals(
+      Set&lt;Long&gt; nodeIds, List&lt;ConceptEdge&gt; acyclicEdges) {
+<span class="fc" id="L231">    Map&lt;Long, List&lt;Long&gt;&gt; adjacency = buildAdjacency(acyclicEdges);</span>
+<span class="fc" id="L232">    Map&lt;Long, Set&lt;Long&gt;&gt; reachable = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">    for (Long node : nodeIds) {</span>
+<span class="fc" id="L234">      reachable.put(node, bfsReachable(node, adjacency));</span>
+<span class="fc" id="L235">    }</span>
+
+<span class="fc" id="L237">    Set&lt;Long&gt; removed = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">    for (ConceptEdge edge : acyclicEdges) {</span>
+<span class="fc" id="L239">      Long u = edge.getSource().getId();</span>
+<span class="fc" id="L240">      Long v = edge.getTarget().getId();</span>
+<span class="fc" id="L241">      boolean redundant =</span>
+<span class="fc" id="L242">          adjacency.getOrDefault(u, List.of()).stream()</span>
+<span class="fc bfc" id="L243" title="All 4 branches covered.">              .anyMatch(w -&gt; !w.equals(v) &amp;&amp; reachable.getOrDefault(w, Set.of()).contains(v));</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">      if (redundant) {</span>
+<span class="fc" id="L245">        removed.add(edge.getId());</span>
+      }
+<span class="fc" id="L247">    }</span>
+<span class="fc" id="L248">    return removed;</span>
+  }
+
+  /**
+   * Longest path from any root (no incoming edge) to each node; roots are level 1. Requires an
+   * acyclic edge set.
+   */
+  private Map&lt;Long, Integer&gt; computeLongestPathLevels(Set&lt;Long&gt; nodeIds, List&lt;ConceptEdge&gt; edges) {
+<span class="fc" id="L256">    Map&lt;Long, List&lt;Long&gt;&gt; outNeighbors = buildAdjacency(edges);</span>
+<span class="fc" id="L257">    Map&lt;Long, Integer&gt; inDegree = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">    for (Long node : nodeIds) {</span>
+<span class="fc" id="L259">      inDegree.put(node, 0);</span>
+<span class="fc" id="L260">    }</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">    for (ConceptEdge edge : edges) {</span>
+<span class="fc" id="L262">      inDegree.merge(edge.getTarget().getId(), 1, Integer::sum);</span>
+<span class="fc" id="L263">    }</span>
+
+<span class="fc" id="L265">    Map&lt;Long, Integer&gt; level = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L266">    Deque&lt;Long&gt; queue = new ArrayDeque&lt;&gt;();</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">    for (Long node : nodeIds) {</span>
+<span class="fc" id="L268">      level.put(node, 1);</span>
+<span class="fc bfc" id="L269" title="All 2 branches covered.">      if (inDegree.get(node) == 0) {</span>
+<span class="fc" id="L270">        queue.add(node);</span>
+      }
+<span class="fc" id="L272">    }</span>
+
+<span class="fc bfc" id="L274" title="All 2 branches covered.">    while (!queue.isEmpty()) {</span>
+<span class="fc" id="L275">      Long u = queue.poll();</span>
+<span class="fc bfc" id="L276" title="All 2 branches covered.">      for (Long v : outNeighbors.getOrDefault(u, List.of())) {</span>
+<span class="fc" id="L277">        level.put(v, Math.max(level.get(v), level.get(u) + 1));</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">        if (inDegree.merge(v, -1, Integer::sum) == 0) {</span>
+<span class="fc" id="L279">          queue.add(v);</span>
+        }
+<span class="fc" id="L281">      }</span>
+<span class="fc" id="L282">    }</span>
+<span class="fc" id="L283">    return level;</span>
+  }
+
+  private Set&lt;Long&gt; bfsReachable(Long start, Map&lt;Long, List&lt;Long&gt;&gt; adjacency) {
+<span class="fc" id="L287">    Set&lt;Long&gt; visited = new HashSet&lt;&gt;(adjacency.getOrDefault(start, List.of()));</span>
+<span class="fc" id="L288">    Deque&lt;Long&gt; queue = new ArrayDeque&lt;&gt;(visited);</span>
+<span class="fc bfc" id="L289" title="All 2 branches covered.">    while (!queue.isEmpty()) {</span>
+<span class="fc" id="L290">      Long current = queue.poll();</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">      for (Long next : adjacency.getOrDefault(current, List.of())) {</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">        if (visited.add(next)) {</span>
+<span class="fc" id="L293">          queue.add(next);</span>
+        }
+<span class="fc" id="L295">      }</span>
+<span class="fc" id="L296">    }</span>
+<span class="fc" id="L297">    return visited;</span>
+  }
+
+  private Map&lt;Long, List&lt;Long&gt;&gt; buildAdjacency(List&lt;ConceptEdge&gt; edges) {
+<span class="fc" id="L301">    Map&lt;Long, List&lt;Long&gt;&gt; adjacency = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">    for (ConceptEdge edge : edges) {</span>
+<span class="fc" id="L303">      adjacency</span>
+<span class="fc" id="L304">          .computeIfAbsent(edge.getSource().getId(), k -&gt; new ArrayList&lt;&gt;())</span>
+<span class="fc" id="L305">          .add(edge.getTarget().getId());</span>
+<span class="fc" id="L306">    }</span>
+<span class="fc" id="L307">    return adjacency;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

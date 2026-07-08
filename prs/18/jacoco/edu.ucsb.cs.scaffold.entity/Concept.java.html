@@ -45,13 +45,17 @@ public class Concept {
   private Integer x;
   private Integer y;
 
+  // Longest-path rank from a root (no-prerequisite) concept, 1-based. Top-level only,
+  // recomputed by ConceptGraphService.reset(); see /api/course/scaffold/reset.
+  private Integer level;
+
   @ManyToOne
   @JoinColumn(name = &quot;parent_id&quot;)
   @ToString.Exclude
   private Concept parent;
 
   public boolean isSubconcept() {
-<span class="fc bfc" id="L54" title="All 2 branches covered.">    return parent != null;</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">    return parent != null;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

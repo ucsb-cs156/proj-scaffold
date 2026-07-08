@@ -152,13 +152,13 @@ import org.springframework.stereotype.Service;
    */
   public String toInlineHtml(String markdown) {
 <span class="fc" id="L154">    String html = toHtml(markdown);</span>
-<span class="pc bpc" id="L155" title="1 of 2 branches missed.">    if (html != null</span>
-<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        &amp;&amp; html.startsWith(&quot;&lt;p&gt;&quot;)</span>
-<span class="pc bpc" id="L157" title="1 of 2 branches missed.">        &amp;&amp; html.endsWith(&quot;&lt;/p&gt;&quot;)</span>
-<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        &amp;&amp; html.indexOf(&quot;&lt;p&gt;&quot;, &quot;&lt;p&gt;&quot;.length()) &lt; 0) {</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">    if (html != null</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        &amp;&amp; html.startsWith(&quot;&lt;p&gt;&quot;)</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        &amp;&amp; html.endsWith(&quot;&lt;/p&gt;&quot;)</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        &amp;&amp; html.indexOf(&quot;&lt;p&gt;&quot;, &quot;&lt;p&gt;&quot;.length()) &lt; 0) {</span>
 <span class="fc" id="L159">      return html.substring(&quot;&lt;p&gt;&quot;.length(), html.length() - &quot;&lt;/p&gt;&quot;.length());</span>
     }
-<span class="nc" id="L161">    return html;</span>
+<span class="fc" id="L161">    return html;</span>
   }
 
   /**
