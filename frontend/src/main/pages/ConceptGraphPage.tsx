@@ -29,7 +29,7 @@ import { useCurrentUser } from "main/utils/currentUser";
 import {
   normalize,
   toPastel,
-  computeSubgraph,
+  computeSubgraphV2,
 } from "main/utils/conceptGraphUtils";
 
 // Database-driven counterpart to LegacyHomePage.tsx, rendered at /course/{courseId}.
@@ -287,7 +287,12 @@ export default function ConceptGraphPage() {
       return;
     }
     fetchQuestionConcepts(selectedQuestionId).then((concepts) => {
-      setHighlightedIds(computeSubgraph(concepts.map((c) => c.concept_id)));
+      setHighlightedIds(
+        computeSubgraphV2(
+          concepts.map((c) => c.concept_id),
+          prereqEdgeData,
+        ),
+      );
       const subMap = new Map<string, Set<string>>();
       concepts.forEach((c) => {
         if (c.subconcept_label) {
@@ -299,7 +304,10 @@ export default function ConceptGraphPage() {
     });
     setSelectedConceptId(null);
     logActivity("question_viewed", { questionId: selectedQuestionId });
-  }, [logActivity, selectedQuestionId]);
+    // Including prereqEdgeData also re-runs this when the edges finish loading,
+    // so a question selected before that point still gets its full
+    // prerequisite chain highlighted rather than only the tagged concepts.
+  }, [logActivity, selectedQuestionId, prereqEdgeData]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -315,13 +323,13 @@ export default function ConceptGraphPage() {
   }, [logActivity, selectedConceptId, selectedItem]);
 
   const selectedConcept = selectedConceptId
-    ? majorConcepts.find((c) => c.name === selectedConceptId)
+    ? majorConcepts.find((c) => String(c.id) === selectedConceptId)
     : null;
 
   const handleConceptClick = (id: string) => {
     setSelectedConceptId(id);
     if (!selectedQuestionId) {
-      setHighlightedIds(computeSubgraph([id]));
+      setHighlightedIds(computeSubgraphV2([id], prereqEdgeData));
     }
     logActivity("concept_clicked", { conceptId: id });
   };
@@ -605,14 +613,14 @@ export default function ConceptGraphPage() {
                 <button
                   onClick={() =>
                     setSelectedItem(
-                      selectedItem === selectedConcept.name
+                      selectedItem === String(selectedConcept.id)
                         ? null
-                        : selectedConcept.name,
+                        : String(selectedConcept.id),
                     )
                   }
                   style={{
                     background:
-                      selectedItem === selectedConcept.name
+                      selectedItem === String(selectedConcept.id)
                         ? selectedConcept.color
                         : "#ffffff",
                     color: "#000000",
@@ -728,21 +736,21 @@ export default function ConceptGraphPage() {
           {selectedConcept &&
             selectedItem !== null &&
             (() => {
-              // selectedItem holds a subconcept's labelHtml (or the major
-              // concept's name); contentKey below must line up with the
-              // backend's parentName:label keys in conceptContent, which
-              // holds as long as the label contains no Markdown formatting
-              // (the common case — see MarkdownService.toInlineHtml).
-              const selectedItemLabel =
-                selectedItem === selectedConcept.name
-                  ? selectedConcept.labelHtml.replace(/\n/g, " ")
-                  : (selectedItem ?? "");
-              const contentKey =
-                selectedItem === selectedConcept.name
-                  ? selectedConcept.name
-                  : `${selectedConcept.name}:${selectedItem}`;
+              // selectedItem holds a subconcept's labelHtml, or the major
+              // concept's node id (its numeric id as a string). Content is
+              // keyed by each concept's own numeric id.
+              const isMajorConcept =
+                selectedItem === String(selectedConcept.id);
+              const selectedItemLabel = isMajorConcept
+                ? selectedConcept.labelHtml.replace(/\n/g, " ")
+                : (selectedItem ?? "");
+              const subconceptId = selectedConcept.subconcepts.find(
+                (s) => s.labelHtml === selectedItem,
+              )?.id;
+              const contentKey = isMajorConcept
+                ? String(selectedConcept.id)
+                : String(subconceptId);
               const content = conceptContent[contentKey];
-              const isMajorConcept = selectedItem === selectedConcept.name;
 
               return (
                 <div
@@ -773,7 +781,7 @@ export default function ConceptGraphPage() {
                                   JSON.stringify({
                                     cardType: card.label,
                                     itemLabel: selectedItemLabel,
-                                    conceptId: selectedConcept.name,
+                                    conceptId: String(selectedConcept.id),
                                     conceptColor: selectedConcept.color,
                                     cardContent: content?.[card.key] ?? "",
                                   }),

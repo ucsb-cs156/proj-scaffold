@@ -63,7 +63,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
         Concept.builder()
             .id(1L)
             .course(course)
-            .name("recursion")
             .label("Recursion")
             .description("d1")
             .example("e1")
@@ -96,7 +95,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
         Concept.builder()
             .id(4L)
             .course(course)
-            .name("loops")
             .label("Loops")
             .description("d4")
             .example("e4")
@@ -145,22 +143,22 @@ public class ConceptsControllerTests extends ControllerTestCase {
     String expectedJson =
         """
         {
-          "recursion": {
+          "1": {
             "id": 1, "parentId": null,
             "descriptionHtml": "<p>d1</p>", "exampleHtml": "<p>e1</p>",
             "practiceUrl": "url-recursion-1"
           },
-          "recursion:Base case": {
+          "2": {
             "id": 2, "parentId": 1,
             "descriptionHtml": "<p>d2</p>", "exampleHtml": "<p>e2</p>",
             "practiceUrl": "url-basecase"
           },
-          "recursion:State change": {
+          "3": {
             "id": 3, "parentId": 1,
             "descriptionHtml": "<p>d3</p>", "exampleHtml": null,
             "practiceUrl": null
           },
-          "loops": {
+          "4": {
             "id": 4, "parentId": null,
             "descriptionHtml": "<p>d4</p>", "exampleHtml": "<p>e4</p>",
             "practiceUrl": null
@@ -185,7 +183,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
         [
           {
             "id": 1,
-            "name": "recursion",
             "labelHtml": "Recursion",
             "color": "#fe9a71",
             "subconcepts": [
@@ -195,7 +192,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
           },
           {
             "id": 4,
-            "name": "loops",
             "labelHtml": "Loops",
             "color": "#fe9a71",
             "subconcepts": []
@@ -218,8 +214,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
     String expectedJson =
         """
         {
-          "recursion": { "x": 800, "y": 300 },
-          "loops": { "x": 490, "y": 300 }
+          "1": { "x": 800, "y": 300 },
+          "4": { "x": 490, "y": 300 }
         }
         """;
 
@@ -238,7 +234,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
     String expectedJson =
         """
         [
-          { "id": 20, "source": "loops", "target": "recursion", "color": null }
+          { "id": 20, "sourceId": 4, "targetId": 1, "color": null }
         ]
         """;
 
@@ -259,7 +255,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
     String expectedJson =
         """
         [
-          { "id": 20, "source": "loops", "target": "recursion", "color": "#FF0000" }
+          { "id": 20, "sourceId": 4, "targetId": 1, "color": "#FF0000" }
         ]
         """;
 
@@ -349,14 +345,12 @@ public class ConceptsControllerTests extends ControllerTestCase {
   public void instructor_can_post_a_top_level_concept() throws Exception {
     Course course = Course.builder().id(42L).courseName("CMPSC 8").build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-    when(conceptRepository.findByCourseIdAndName(42L, "recursion")).thenReturn(Optional.empty());
     when(conceptRepository.save(any(Concept.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     String body =
         """
         courseId: 42
-        name: recursion
         label: "**Recursion**"
         description: |-
           before
@@ -376,14 +370,12 @@ public class ConceptsControllerTests extends ControllerTestCase {
     mockMvc
         .perform(post("/api/concept").with(csrf()).contentType(YAML).content(body))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.name").value("recursion"))
         .andExpect(jsonPath("$.label").value("**Recursion**"));
 
     ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
     verify(conceptRepository).save(captor.capture());
     Concept saved = captor.getValue();
     assertEquals(course, saved.getCourse());
-    assertEquals("recursion", saved.getName());
     assertEquals("**Recursion**", saved.getLabel());
     assertEquals("before\n\nafter", saved.getDescription());
     assertEquals("```python\nif a < b:\n    print('x')\n```", saved.getExample());
@@ -399,7 +391,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
   public void instructor_can_post_a_top_level_concept_with_a_json_body() throws Exception {
     Course course = Course.builder().id(42L).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
     when(conceptRepository.save(any(Concept.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -408,10 +399,9 @@ public class ConceptsControllerTests extends ControllerTestCase {
             post("/api/concept")
                 .with(csrf())
                 .contentType("application/json")
-                .content(
-                    "{\"courseId\": 42, \"name\": \"loops\", \"label\": \"Loops\", \"x\": 1, \"y\": 2}"))
+                .content("{\"courseId\": 42, \"label\": \"Loops\", \"x\": 1, \"y\": 2}"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.name").value("loops"));
+        .andExpect(jsonPath("$.label").value("Loops"));
   }
 
   @Test
@@ -419,14 +409,12 @@ public class ConceptsControllerTests extends ControllerTestCase {
   public void instructor_can_post_a_top_level_concept_without_optional_markdown() throws Exception {
     Course course = Course.builder().id(42L).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
     when(conceptRepository.save(any(Concept.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     String body =
         """
         courseId: 42
-        name: loops
         label: Loops
         x: 1
         y: 2
@@ -452,7 +440,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
     // matching Spring Boot's default JSON leniency.
     Course course = Course.builder().id(42L).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
     when(conceptRepository.save(any(Concept.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -532,7 +519,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
     String body =
         """
         courseId: 42
-        name: loops
         label: "<script>alert('x')</script>"
         x: 1
         y: 2
@@ -554,11 +540,10 @@ public class ConceptsControllerTests extends ControllerTestCase {
       throws Exception {
     Course course = Course.builder().id(42L).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
     when(conceptRepository.save(any(Concept.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    String body = "courseId: 42\nname: loops\nlabel: \"" + "x".repeat(32) + "\"\nx: 1\ny: 2";
+    String body = "courseId: 42\nlabel: \"" + "x".repeat(32) + "\"\nx: 1\ny: 2";
     mockMvc
         .perform(post("/api/concept").with(csrf()).contentType(YAML).content(body))
         .andExpect(status().isOk());
@@ -571,7 +556,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
 
     // 33 rendered characters, even though the Markdown source is longer still.
-    String body = "courseId: 42\nname: loops\nlabel: \"**" + "x".repeat(33) + "**\"\nx: 1\ny: 2";
+    String body = "courseId: 42\nlabel: \"**" + "x".repeat(33) + "**\"\nx: 1\ny: 2";
     MvcResult response =
         mockMvc
             .perform(post("/api/concept").with(csrf()).contentType(YAML).content(body))
@@ -583,69 +568,9 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void post_concept_requires_a_name() throws Exception {
-    Course course = Course.builder().id(42L).build();
-    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                post("/api/concept")
-                    .with(csrf())
-                    .contentType(YAML)
-                    .content("courseId: 42\nlabel: Loops\nx: 1\ny: 2"))
-            .andExpect(status().isBadRequest())
-            .andReturn();
-    Map<String, Object> json = responseToJson(response);
-    assertEquals(
-        "name is required for a top-level concept and may contain only lowercase letters,"
-            + " digits, and hyphens",
-        json.get("message"));
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void post_concept_rejects_a_badly_formatted_name() throws Exception {
-    Course course = Course.builder().id(42L).build();
-    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-
-    mockMvc
-        .perform(
-            post("/api/concept")
-                .with(csrf())
-                .contentType(YAML)
-                .content("courseId: 42\nname: Not A Slug\nlabel: Loops\nx: 1\ny: 2"))
-        .andExpect(status().isBadRequest());
-    verify(conceptRepository, never()).save(any(Concept.class));
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void post_concept_rejects_a_duplicate_name() throws Exception {
-    Course course = Course.builder().id(42L).build();
-    Concept existing = Concept.builder().id(1L).course(course).name("loops").build();
-    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.of(existing));
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                post("/api/concept")
-                    .with(csrf())
-                    .contentType(YAML)
-                    .content("courseId: 42\nname: loops\nlabel: Loops\nx: 1\ny: 2"))
-            .andExpect(status().isBadRequest())
-            .andReturn();
-    Map<String, Object> json = responseToJson(response);
-    assertEquals("a concept named loops already exists in course 42", json.get("message"));
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
   public void post_concept_requires_x() throws Exception {
     Course course = Course.builder().id(42L).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
 
     MvcResult response =
         mockMvc
@@ -653,7 +578,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
                 post("/api/concept")
                     .with(csrf())
                     .contentType(YAML)
-                    .content("courseId: 42\nname: loops\nlabel: Loops\ny: 2"))
+                    .content("courseId: 42\nlabel: Loops\ny: 2"))
             .andExpect(status().isBadRequest())
             .andReturn();
     Map<String, Object> json = responseToJson(response);
@@ -665,14 +590,13 @@ public class ConceptsControllerTests extends ControllerTestCase {
   public void post_concept_requires_y() throws Exception {
     Course course = Course.builder().id(42L).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
 
     mockMvc
         .perform(
             post("/api/concept")
                 .with(csrf())
                 .contentType(YAML)
-                .content("courseId: 42\nname: loops\nlabel: Loops\nx: 1"))
+                .content("courseId: 42\nlabel: Loops\nx: 1"))
         .andExpect(status().isBadRequest());
     verify(conceptRepository, never()).save(any(Concept.class));
   }
@@ -709,7 +633,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void instructor_can_post_a_subconcept() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept parent = Concept.builder().id(1L).course(course).name("recursion").build();
+    Concept parent = Concept.builder().id(1L).course(course).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
     when(conceptRepository.findByParentIdAndLabel(1L, "Base case")).thenReturn(Optional.empty());
@@ -736,7 +660,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
     assertEquals(parent, saved.getParent());
     assertEquals("Base case", saved.getLabel());
     assertEquals("The condition that stops the recursion.", saved.getDescription());
-    assertNull(saved.getName());
     assertNull(saved.getX());
     assertNull(saved.getY());
     assertNull(saved.getColor());
@@ -819,7 +742,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   public void post_subconcept_rejects_a_parent_from_a_different_course() throws Exception {
     Course course = Course.builder().id(42L).build();
     Course otherCourse = Course.builder().id(43L).build();
-    Concept parent = Concept.builder().id(1L).course(otherCourse).name("recursion").build();
+    Concept parent = Concept.builder().id(1L).course(otherCourse).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
 
@@ -840,7 +763,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void post_subconcept_rejects_a_parent_that_is_itself_a_subconcept() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept grandparent = Concept.builder().id(1L).course(course).name("recursion").build();
+    Concept grandparent = Concept.builder().id(1L).course(course).build();
     Concept parent = Concept.builder().id(2L).course(course).parent(grandparent).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(parent));
@@ -864,7 +787,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void post_subconcept_rejects_a_duplicate_label_under_the_same_parent() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept parent = Concept.builder().id(1L).course(course).name("recursion").build();
+    Concept parent = Concept.builder().id(1L).course(course).build();
     Concept existing = Concept.builder().id(2L).course(course).parent(parent).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
@@ -890,7 +813,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
     // name, x, and y are not part of CreateSubconceptDTO; a body that includes them is
     // accepted and they are ignored (subconcepts never get a name or position).
     Course course = Course.builder().id(42L).build();
-    Concept parent = Concept.builder().id(1L).course(course).name("recursion").build();
+    Concept parent = Concept.builder().id(1L).course(course).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
     when(conceptRepository.findByParentIdAndLabel(1L, "Base case")).thenReturn(Optional.empty());
@@ -913,7 +836,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
     ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
     verify(conceptRepository).save(captor.capture());
-    assertNull(captor.getValue().getName());
     assertNull(captor.getValue().getX());
     assertNull(captor.getValue().getY());
   }
@@ -947,7 +869,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void instructor_can_add_a_practice_problem_url() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept concept = Concept.builder().id(1L).course(course).name("recursion").build();
+    Concept concept = Concept.builder().id(1L).course(course).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
     when(practiceProblemRepository.findByCourseIdAndConceptIdAndUrl(
             42L, 1L, "https://example.com/p1"))
@@ -994,7 +916,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void post_practice_problem_rejects_a_blank_url() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept concept = Concept.builder().id(1L).course(course).name("recursion").build();
+    Concept concept = Concept.builder().id(1L).course(course).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
 
     MvcResult response =
@@ -1015,7 +937,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void post_practice_problem_rejects_a_duplicate_url() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept concept = Concept.builder().id(1L).course(course).name("recursion").build();
+    Concept concept = Concept.builder().id(1L).course(course).build();
     PracticeProblem existing =
         PracticeProblem.builder()
             .id(10L)
@@ -1075,13 +997,12 @@ public class ConceptsControllerTests extends ControllerTestCase {
         Concept.builder()
             .id(1L)
             .course(course)
-            .name("recursion")
             .label("Recursion")
             .color("#111111")
             .x(800)
             .y(300)
             .build();
-    Concept c2 = Concept.builder().id(2L).course(course).name("loops").color("#222222").build();
+    Concept c2 = Concept.builder().id(2L).course(course).color("#222222").build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(c1));
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(c2));
     when(conceptRepository.findByParentId(1L)).thenReturn(List.of());
@@ -1104,7 +1025,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
     verify(conceptRepository).save(captor.capture());
     Concept saved = captor.getValue();
     assertEquals(c2, saved.getParent());
-    assertNull(saved.getName());
     assertEquals("#222222", saved.getColor());
     assertEquals(800, saved.getX());
     assertEquals(300, saved.getY());
@@ -1132,7 +1052,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void designate_returns_404_when_parent_does_not_exist() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept c1 = Concept.builder().id(1L).course(course).name("recursion").build();
+    Concept c1 = Concept.builder().id(1L).course(course).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(c1));
     when(conceptRepository.findById(2L)).thenReturn(Optional.empty());
 
@@ -1153,7 +1073,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void designate_rejects_making_a_concept_its_own_parent() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept c1 = Concept.builder().id(1L).course(course).name("recursion").build();
+    Concept c1 = Concept.builder().id(1L).course(course).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(c1));
 
     MvcResult response =
@@ -1174,8 +1094,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   public void designate_rejects_a_parent_from_a_different_course() throws Exception {
     Course course = Course.builder().id(42L).build();
     Course otherCourse = Course.builder().id(43L).build();
-    Concept c1 = Concept.builder().id(1L).course(course).name("recursion").build();
-    Concept c2 = Concept.builder().id(2L).course(otherCourse).name("loops").build();
+    Concept c1 = Concept.builder().id(1L).course(course).build();
+    Concept c2 = Concept.builder().id(2L).course(otherCourse).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(c1));
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(c2));
 
@@ -1196,8 +1116,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void designate_rejects_a_parent_that_is_itself_a_subconcept() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept top = Concept.builder().id(3L).course(course).name("top").build();
-    Concept c1 = Concept.builder().id(1L).course(course).name("recursion").build();
+    Concept top = Concept.builder().id(3L).course(course).build();
+    Concept c1 = Concept.builder().id(1L).course(course).build();
     Concept c2 = Concept.builder().id(2L).course(course).parent(top).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(c1));
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(c2));
@@ -1221,8 +1141,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void designate_rejects_a_concept_that_has_subconcepts() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept c1 = Concept.builder().id(1L).course(course).name("recursion").build();
-    Concept c2 = Concept.builder().id(2L).course(course).name("loops").build();
+    Concept c1 = Concept.builder().id(1L).course(course).build();
+    Concept c2 = Concept.builder().id(2L).course(course).build();
     Concept child = Concept.builder().id(3L).course(course).parent(c1).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(c1));
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(c2));
@@ -1247,8 +1167,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void designate_rejects_a_concept_that_has_prerequisite_edges() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept c1 = Concept.builder().id(1L).course(course).name("recursion").build();
-    Concept c2 = Concept.builder().id(2L).course(course).name("loops").build();
+    Concept c1 = Concept.builder().id(1L).course(course).build();
+    Concept c2 = Concept.builder().id(2L).course(course).build();
     ConceptEdge edge = ConceptEdge.builder().id(20L).course(course).source(c1).target(c2).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(c1));
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(c2));
@@ -1275,9 +1195,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void designate_rejects_a_duplicate_label_under_the_new_parent() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept c1 =
-        Concept.builder().id(1L).course(course).name("recursion").label("Recursion").build();
-    Concept c2 = Concept.builder().id(2L).course(course).name("loops").build();
+    Concept c1 = Concept.builder().id(1L).course(course).label("Recursion").build();
+    Concept c2 = Concept.builder().id(2L).course(course).build();
     Concept existing = Concept.builder().id(3L).course(course).parent(c2).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(c1));
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(c2));
@@ -1308,7 +1227,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
             put("/api/concepts/splitoff")
                 .with(csrf())
                 .param("conceptId", "1")
-                .param("name", "base-case")
                 .param("x", "1")
                 .param("y", "2"))
         .andExpect(status().isForbidden());
@@ -1322,7 +1240,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
             put("/api/concepts/splitoff")
                 .with(csrf())
                 .param("conceptId", "1")
-                .param("name", "base-case")
                 .param("x", "1")
                 .param("y", "2"))
         .andExpect(status().isForbidden());
@@ -1332,11 +1249,9 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void instructor_can_split_off_a_subconcept() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept parent =
-        Concept.builder().id(1L).course(course).name("recursion").color("#111111").build();
+    Concept parent = Concept.builder().id(1L).course(course).color("#111111").build();
     Concept sub = Concept.builder().id(2L).course(course).parent(parent).label("Base case").build();
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(sub));
-    when(conceptRepository.findByCourseIdAndName(42L, "base-case")).thenReturn(Optional.empty());
     when(conceptRepository.save(any(Concept.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -1345,17 +1260,15 @@ public class ConceptsControllerTests extends ControllerTestCase {
             put("/api/concepts/splitoff")
                 .with(csrf())
                 .param("conceptId", "2")
-                .param("name", "base-case")
                 .param("x", "500")
                 .param("y", "600"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.name").value("base-case"));
+        .andExpect(jsonPath("$.label").value("Base case"));
 
     ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
     verify(conceptRepository).save(captor.capture());
     Concept saved = captor.getValue();
     assertNull(saved.getParent());
-    assertEquals("base-case", saved.getName());
     assertEquals(500, saved.getX());
     assertEquals(600, saved.getY());
     // No color of its own, so it inherits its former parent's color.
@@ -1366,8 +1279,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void split_off_keeps_the_subconcepts_own_color_when_it_has_one() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept parent =
-        Concept.builder().id(1L).course(course).name("recursion").color("#111111").build();
+    Concept parent = Concept.builder().id(1L).course(course).color("#111111").build();
     Concept sub =
         Concept.builder()
             .id(2L)
@@ -1377,7 +1289,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
             .color("#333333")
             .build();
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(sub));
-    when(conceptRepository.findByCourseIdAndName(42L, "base-case")).thenReturn(Optional.empty());
     when(conceptRepository.save(any(Concept.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -1386,7 +1297,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
             put("/api/concepts/splitoff")
                 .with(csrf())
                 .param("conceptId", "2")
-                .param("name", "base-case")
                 .param("x", "500")
                 .param("y", "600"))
         .andExpect(status().isOk());
@@ -1407,7 +1317,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
                 put("/api/concepts/splitoff")
                     .with(csrf())
                     .param("conceptId", "2")
-                    .param("name", "base-case")
                     .param("x", "1")
                     .param("y", "2"))
             .andExpect(status().isNotFound())
@@ -1420,7 +1329,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void split_off_rejects_a_concept_that_is_already_top_level() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept concept = Concept.builder().id(2L).course(course).name("recursion").build();
+    Concept concept = Concept.builder().id(2L).course(course).build();
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(concept));
 
     MvcResult response =
@@ -1429,59 +1338,12 @@ public class ConceptsControllerTests extends ControllerTestCase {
                 put("/api/concepts/splitoff")
                     .with(csrf())
                     .param("conceptId", "2")
-                    .param("name", "base-case")
                     .param("x", "1")
                     .param("y", "2"))
             .andExpect(status().isBadRequest())
             .andReturn();
     Map<String, Object> json = responseToJson(response);
     assertEquals("concept 2 is already a top-level concept", json.get("message"));
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void split_off_rejects_a_badly_formatted_name() throws Exception {
-    Course course = Course.builder().id(42L).build();
-    Concept parent = Concept.builder().id(1L).course(course).name("recursion").build();
-    Concept sub = Concept.builder().id(2L).course(course).parent(parent).build();
-    when(conceptRepository.findById(2L)).thenReturn(Optional.of(sub));
-
-    mockMvc
-        .perform(
-            put("/api/concepts/splitoff")
-                .with(csrf())
-                .param("conceptId", "2")
-                .param("name", "Not A Slug")
-                .param("x", "1")
-                .param("y", "2"))
-        .andExpect(status().isBadRequest());
-    verify(conceptRepository, never()).save(any(Concept.class));
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void split_off_rejects_a_duplicate_name() throws Exception {
-    Course course = Course.builder().id(42L).build();
-    Concept parent = Concept.builder().id(1L).course(course).name("recursion").build();
-    Concept sub = Concept.builder().id(2L).course(course).parent(parent).build();
-    Concept existing = Concept.builder().id(3L).course(course).name("base-case").build();
-    when(conceptRepository.findById(2L)).thenReturn(Optional.of(sub));
-    when(conceptRepository.findByCourseIdAndName(42L, "base-case"))
-        .thenReturn(Optional.of(existing));
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                put("/api/concepts/splitoff")
-                    .with(csrf())
-                    .param("conceptId", "2")
-                    .param("name", "base-case")
-                    .param("x", "1")
-                    .param("y", "2"))
-            .andExpect(status().isBadRequest())
-            .andReturn();
-    Map<String, Object> json = responseToJson(response);
-    assertEquals("a concept named base-case already exists in course 42", json.get("message"));
   }
 
   // ---------- POST /api/concepts/edges/post ----------
@@ -1513,8 +1375,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void instructor_can_post_a_concept_edge() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept source = Concept.builder().id(1L).course(course).name("loops").build();
-    Concept target = Concept.builder().id(2L).course(course).name("recursion").build();
+    Concept source = Concept.builder().id(1L).course(course).build();
+    Concept target = Concept.builder().id(2L).course(course).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(source));
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(target));
     when(conceptEdgeRepository.findBySourceIdAndTargetId(1L, 2L)).thenReturn(Optional.empty());
@@ -1528,8 +1390,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
                 .param("sourceConceptId", "1")
                 .param("targetConceptId", "2"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.source.name").value("loops"))
-        .andExpect(jsonPath("$.target.name").value("recursion"));
+        .andExpect(jsonPath("$.source.id").value(1))
+        .andExpect(jsonPath("$.target.id").value(2));
 
     ArgumentCaptor<ConceptEdge> captor = ArgumentCaptor.forClass(ConceptEdge.class);
     verify(conceptEdgeRepository).save(captor.capture());
@@ -1543,8 +1405,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void post_edge_rejects_an_edge_that_would_create_a_cycle() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept loops = Concept.builder().id(1L).course(course).name("loops").build();
-    Concept recursion = Concept.builder().id(2L).course(course).name("recursion").build();
+    Concept loops = Concept.builder().id(1L).course(course).build();
+    Concept recursion = Concept.builder().id(2L).course(course).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(loops));
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(recursion));
     when(conceptEdgeRepository.findBySourceIdAndTargetId(1L, 2L)).thenReturn(Optional.empty());
@@ -1589,7 +1451,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void post_edge_returns_404_when_target_does_not_exist() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept source = Concept.builder().id(1L).course(course).name("loops").build();
+    Concept source = Concept.builder().id(1L).course(course).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(source));
     when(conceptRepository.findById(2L)).thenReturn(Optional.empty());
 
@@ -1610,7 +1472,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void post_edge_rejects_a_self_edge() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept source = Concept.builder().id(1L).course(course).name("loops").build();
+    Concept source = Concept.builder().id(1L).course(course).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(source));
 
     MvcResult response =
@@ -1631,8 +1493,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   public void post_edge_rejects_concepts_from_different_courses() throws Exception {
     Course course = Course.builder().id(42L).build();
     Course otherCourse = Course.builder().id(43L).build();
-    Concept source = Concept.builder().id(1L).course(course).name("loops").build();
-    Concept target = Concept.builder().id(2L).course(otherCourse).name("recursion").build();
+    Concept source = Concept.builder().id(1L).course(course).build();
+    Concept target = Concept.builder().id(2L).course(otherCourse).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(source));
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(target));
 
@@ -1653,9 +1515,9 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void post_edge_rejects_a_subconcept_source() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept top = Concept.builder().id(3L).course(course).name("top").build();
+    Concept top = Concept.builder().id(3L).course(course).build();
     Concept source = Concept.builder().id(1L).course(course).parent(top).build();
-    Concept target = Concept.builder().id(2L).course(course).name("recursion").build();
+    Concept target = Concept.builder().id(2L).course(course).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(source));
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(target));
 
@@ -1676,8 +1538,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void post_edge_rejects_a_subconcept_target() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept top = Concept.builder().id(3L).course(course).name("top").build();
-    Concept source = Concept.builder().id(1L).course(course).name("loops").build();
+    Concept top = Concept.builder().id(3L).course(course).build();
+    Concept source = Concept.builder().id(1L).course(course).build();
     Concept target = Concept.builder().id(2L).course(course).parent(top).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(source));
     when(conceptRepository.findById(2L)).thenReturn(Optional.of(target));
@@ -1699,8 +1561,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void post_edge_rejects_a_duplicate_edge() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept source = Concept.builder().id(1L).course(course).name("loops").build();
-    Concept target = Concept.builder().id(2L).course(course).name("recursion").build();
+    Concept source = Concept.builder().id(1L).course(course).build();
+    Concept target = Concept.builder().id(2L).course(course).build();
     ConceptEdge existing =
         ConceptEdge.builder().id(20L).course(course).source(source).target(target).build();
     when(conceptRepository.findById(1L)).thenReturn(Optional.of(source));
@@ -1742,8 +1604,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void instructor_can_delete_a_concept_edge() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept source = Concept.builder().id(1L).course(course).name("loops").build();
-    Concept target = Concept.builder().id(2L).course(course).name("recursion").build();
+    Concept source = Concept.builder().id(1L).course(course).build();
+    Concept target = Concept.builder().id(2L).course(course).build();
     ConceptEdge edge =
         ConceptEdge.builder().id(20L).course(course).source(source).target(target).build();
     when(conceptEdgeRepository.findById(20L)).thenReturn(Optional.of(edge));
@@ -1808,8 +1670,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void reset_ranks_and_lays_out_a_simple_chain() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(999).y(999).build();
-    Concept b = Concept.builder().id(2L).course(course).name("b").label("B").x(999).y(999).build();
+    Concept a = Concept.builder().id(1L).course(course).label("A").x(999).y(999).build();
+    Concept b = Concept.builder().id(2L).course(course).label("B").x(999).y(999).build();
     ConceptEdge edge = ConceptEdge.builder().id(10L).course(course).source(a).target(b).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a, b));
@@ -1820,12 +1682,13 @@ public class ConceptsControllerTests extends ControllerTestCase {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.report.cycleEdges").isEmpty())
         .andExpect(jsonPath("$.report.removedEdges").isEmpty())
-        .andExpect(jsonPath("$.report.levels[0].name").value("a"))
+        .andExpect(jsonPath("$.report.levels[0].id").value(1))
+        .andExpect(jsonPath("$.report.levels[0].label").value("A"))
         .andExpect(jsonPath("$.report.levels[0].level").value(1))
         .andExpect(jsonPath("$.report.levels[0].color").value("#c99ffe"))
         .andExpect(jsonPath("$.report.levels[0].x").value(0))
         .andExpect(jsonPath("$.report.levels[0].y").value(0))
-        .andExpect(jsonPath("$.report.levels[1].name").value("b"))
+        .andExpect(jsonPath("$.report.levels[1].label").value("B"))
         .andExpect(jsonPath("$.report.levels[1].level").value(2))
         .andExpect(jsonPath("$.report.levels[1].color").value("#feaef2"))
         .andExpect(jsonPath("$.report.levels[1].x").value(0))
@@ -1845,14 +1708,14 @@ public class ConceptsControllerTests extends ControllerTestCase {
       throws Exception {
     Course course = Course.builder().id(42L).build();
     // Saved x would order b before a; the caller's private drag reverses that.
-    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(500).y(0).build();
-    Concept b = Concept.builder().id(2L).course(course).name("b").label("B").x(0).y(0).build();
+    Concept a = Concept.builder().id(1L).course(course).label("A").x(500).y(0).build();
+    Concept b = Concept.builder().id(2L).course(course).label("B").x(0).y(0).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a, b));
     when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
 
     UserStateV2 callerState = new UserStateV2();
-    callerState.setTopLevelPositions("{\"a\": {\"x\": -500, \"y\": 0}}");
+    callerState.setTopLevelPositions("{\"1\": {\"x\": -500, \"y\": 0}}");
     when(userStateV2Repository.findByUseridAndCourseId(1L, 42L))
         .thenReturn(Optional.of(callerState));
 
@@ -1869,8 +1732,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void reset_falls_back_to_saved_x_when_the_override_has_no_x_value() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(500).y(0).build();
-    Concept b = Concept.builder().id(2L).course(course).name("b").label("B").x(0).y(0).build();
+    Concept a = Concept.builder().id(1L).course(course).label("A").x(500).y(0).build();
+    Concept b = Concept.builder().id(2L).course(course).label("B").x(0).y(0).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a, b));
     when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
@@ -1878,7 +1741,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
     // The override entry for "a" exists but has no x (only y is set), so its saved x (500)
     // is still used for sorting, keeping it to the right of b.
     UserStateV2 callerState = new UserStateV2();
-    callerState.setTopLevelPositions("{\"a\": {\"y\": 50}}");
+    callerState.setTopLevelPositions("{\"1\": {\"y\": 50}}");
     when(userStateV2Repository.findByUseridAndCourseId(1L, 42L))
         .thenReturn(Optional.of(callerState));
 
@@ -1894,7 +1757,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void reset_throws_when_the_callers_stored_positions_are_malformed() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(0).y(0).build();
+    Concept a = Concept.builder().id(1L).course(course).label("A").x(0).y(0).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a));
     when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
@@ -1917,7 +1780,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void reset_excludes_subconcepts_from_the_top_level_analysis() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(0).y(0).build();
+    Concept a = Concept.builder().id(1L).course(course).label("A").x(0).y(0).build();
     Concept sub = Concept.builder().id(2L).course(course).parent(a).label("Sub").build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a, sub));
@@ -1927,7 +1790,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
         .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.report.levels", hasSize(1)))
-        .andExpect(jsonPath("$.report.levels[0].name").value("a"));
+        .andExpect(jsonPath("$.report.levels[0].label").value("A"));
 
     assertNull(sub.getLevel());
   }
@@ -1936,15 +1799,15 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void reset_clears_every_users_private_top_level_position_overrides() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(0).y(0).build();
+    Concept a = Concept.builder().id(1L).course(course).label("A").x(0).y(0).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a));
     when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
 
     UserStateV2 instructorState = new UserStateV2();
-    instructorState.setTopLevelPositions("{\"a\": {\"x\": 999, \"y\": 0}}");
+    instructorState.setTopLevelPositions("{\"1\": {\"x\": 999, \"y\": 0}}");
     UserStateV2 studentState = new UserStateV2();
-    studentState.setTopLevelPositions("{\"a\": {\"x\": -999, \"y\": 0}}");
+    studentState.setTopLevelPositions("{\"1\": {\"x\": -999, \"y\": 0}}");
     when(userStateV2Repository.findByUseridAndCourseId(1L, 42L))
         .thenReturn(Optional.of(instructorState));
     when(userStateV2Repository.findByCourseId(42L))
@@ -1966,8 +1829,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   public void reset_colors_a_two_node_cycle_red_and_falls_both_concepts_back_to_level_one()
       throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(0).y(0).build();
-    Concept b = Concept.builder().id(2L).course(course).name("b").label("B").x(0).y(0).build();
+    Concept a = Concept.builder().id(1L).course(course).label("A").x(0).y(0).build();
+    Concept b = Concept.builder().id(2L).course(course).label("B").x(0).y(0).build();
     ConceptEdge ab = ConceptEdge.builder().id(10L).course(course).source(a).target(b).build();
     ConceptEdge ba = ConceptEdge.builder().id(11L).course(course).source(b).target(a).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
@@ -1979,11 +1842,11 @@ public class ConceptsControllerTests extends ControllerTestCase {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.report.cycleEdges", hasSize(2)))
         .andExpect(jsonPath("$.report.cycleEdges[0].edgeId").value(10))
-        .andExpect(jsonPath("$.report.cycleEdges[0].source").value("a"))
-        .andExpect(jsonPath("$.report.cycleEdges[0].target").value("b"))
+        .andExpect(jsonPath("$.report.cycleEdges[0].sourceId").value(1))
+        .andExpect(jsonPath("$.report.cycleEdges[0].targetId").value(2))
         .andExpect(jsonPath("$.report.cycleEdges[1].edgeId").value(11))
-        .andExpect(jsonPath("$.report.cycleEdges[1].source").value("b"))
-        .andExpect(jsonPath("$.report.cycleEdges[1].target").value("a"))
+        .andExpect(jsonPath("$.report.cycleEdges[1].sourceId").value(2))
+        .andExpect(jsonPath("$.report.cycleEdges[1].targetId").value(1))
         .andExpect(jsonPath("$.report.removedEdges").isEmpty());
 
     assertEquals(1, a.getLevel());
@@ -1996,9 +1859,9 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithInstructorCoursePermissions
   public void reset_deletes_an_edge_made_redundant_by_a_longer_path() throws Exception {
     Course course = Course.builder().id(42L).build();
-    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(0).y(0).build();
-    Concept b = Concept.builder().id(2L).course(course).name("b").label("B").x(0).y(0).build();
-    Concept c = Concept.builder().id(3L).course(course).name("c").label("C").x(0).y(0).build();
+    Concept a = Concept.builder().id(1L).course(course).label("A").x(0).y(0).build();
+    Concept b = Concept.builder().id(2L).course(course).label("B").x(0).y(0).build();
+    Concept c = Concept.builder().id(3L).course(course).label("C").x(0).y(0).build();
     ConceptEdge shortcut = ConceptEdge.builder().id(10L).course(course).source(a).target(c).build();
     ConceptEdge ab = ConceptEdge.builder().id(11L).course(course).source(a).target(b).build();
     ConceptEdge bc = ConceptEdge.builder().id(12L).course(course).source(b).target(c).build();
@@ -2011,9 +1874,9 @@ public class ConceptsControllerTests extends ControllerTestCase {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.report.removedEdges", hasSize(1)))
         .andExpect(jsonPath("$.report.removedEdges[0].edgeId").value(10))
-        .andExpect(jsonPath("$.report.removedEdges[0].source").value("a"))
-        .andExpect(jsonPath("$.report.removedEdges[0].target").value("c"))
-        .andExpect(jsonPath("$.report.levels[2].name").value("c"))
+        .andExpect(jsonPath("$.report.removedEdges[0].sourceId").value(1))
+        .andExpect(jsonPath("$.report.removedEdges[0].targetId").value(3))
+        .andExpect(jsonPath("$.report.levels[2].label").value("C"))
         .andExpect(jsonPath("$.report.levels[2].level").value(3));
 
     ArgumentCaptor<List<ConceptEdge>> captor = ArgumentCaptor.forClass(List.class);

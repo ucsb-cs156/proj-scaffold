@@ -361,14 +361,12 @@
 }
 
 .tabComponent {
- background-color: #fefeff;;
-
+  background-color: #fefeff;
 }
 
 .tabsGroup {
- background-color: #fefeff;
- padding: 12px 12px 12px 12px;
-
+  background-color: #fefeff;
+  padding: 12px 12px 12px 12px;
 }
 
 .table {

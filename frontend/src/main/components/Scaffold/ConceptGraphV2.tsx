@@ -539,12 +539,20 @@ export default function ConceptGraphV2({
     restoredRef.current = true;
 
     const newNodes = restoredDetailCards.map((card, i) => {
-      const concept = majorConcepts.find((c) => c.name === card.conceptId);
+      // card.conceptId is the parent concept's numeric id as a string (the React
+      // Flow node id). Content is keyed by each concept's own numeric id, so a
+      // subconcept card resolves its subconcept id via its label.
+      const concept = majorConcepts.find(
+        (c) => String(c.id) === card.conceptId,
+      );
       const conceptLabel = concept?.labelHtml.replace(/\n/g, " ") ?? "";
       const isConceptItself = card.itemLabel === conceptLabel;
+      const subconceptId = concept?.subconcepts.find(
+        (s) => s.labelHtml === card.itemLabel,
+      )?.id;
       const contentKey = isConceptItself
         ? card.conceptId
-        : `${card.conceptId}:${card.itemLabel}`;
+        : String(subconceptId);
       const cardContent =
         conceptContent[contentKey]?.[cardKeyMap[card.cardType]] ?? "";
 
@@ -732,14 +740,18 @@ export default function ConceptGraphV2({
     }
     setEdges((eds) => [
       ...prereqEdgeData.map((e) => {
+        const source = String(e.sourceId);
+        const target = String(e.targetId);
         const isHighlighted =
-          highlightedIds.has(e.source) && highlightedIds.has(e.target);
+          highlightedIds.has(source) && highlightedIds.has(target);
         const color =
-          majorConcepts.find((c) => c.name === e.source)?.color ?? "#64748B";
+          e.color ??
+          majorConcepts.find((c) => c.id === e.sourceId)?.color ??
+          "#64748B";
         return {
-          id: `prereq-${e.source}-${e.target}`,
-          source: e.source,
-          target: e.target,
+          id: `prereq-${e.id}`,
+          source,
+          target,
           sourceHandle: "top",
           targetHandle: "bottom",
           type: "dashed",

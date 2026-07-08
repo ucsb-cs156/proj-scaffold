@@ -20,7 +20,7 @@ public class ConceptGraphServiceTests {
   private final Course course = Course.builder().id(1L).build();
 
   private Concept concept(long id, int x) {
-    return Concept.builder().id(id).course(course).name("c" + id).x(x).y(0).build();
+    return Concept.builder().id(id).course(course).x(x).y(0).build();
   }
 
   private ConceptEdge edge(long id, Concept source, Concept target) {

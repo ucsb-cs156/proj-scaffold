@@ -25,12 +25,6 @@ public class CreateConceptDTO {
       requiredMode = Schema.RequiredMode.REQUIRED)
   private String label;
 
-  @Schema(
-      description = "Slug name (lowercase letters, digits, hyphens; unique within the course)",
-      example = "arrays",
-      requiredMode = Schema.RequiredMode.REQUIRED)
-  private String name;
-
   @Schema(description = "Markdown description of the concept")
   private String description;
 

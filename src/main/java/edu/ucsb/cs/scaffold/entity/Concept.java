@@ -8,13 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(
-    name = "concepts",
-    uniqueConstraints = {
-      @UniqueConstraint(
-          name = "UK_CONCEPTS_COURSE_CONCEPT",
-          columnNames = {"course_id", "name"})
-    })
+@Table(name = "concepts")
 public class Concept {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,10 +18,6 @@ public class Concept {
   @JoinColumn(name = "course_id", nullable = false)
   @ToString.Exclude
   private Course course;
-
-  // Human-readable slug (lowercase letters, digits, hyphens). Non-null exactly for
-  // top-level concepts; subconcepts are identified by (parent, label) instead.
-  private String name;
 
   @Column(nullable = false)
   private String label;

@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -53,9 +52,6 @@ public class ConceptsController extends ApiController {
   // invisible). Matches the "Level 1" swatch in the frontend's concept-graph legend.
   public static final String DEFAULT_TOP_LEVEL_COLOR = "#c99ffe";
 
-  // Top-level concept names are slugs: lowercase letters, digits, and hyphens.
-  public static final Pattern NAME_PATTERN = Pattern.compile("^[a-z0-9-]+$");
-
   private final ConceptRepository conceptRepository;
   private final PracticeProblemRepository practiceProblemRepository;
   private final ConceptEdgeRepository conceptEdgeRepository;
@@ -68,15 +64,15 @@ public class ConceptsController extends ApiController {
   @Operation(summary = "Get description/example/practiceUrl content for every concept in a course")
   @PreAuthorize("hasRole('ROLE_USER')")
   @GetMapping("/api/concepts/content")
-  public Map<String, ConceptContentDTO> getContent(
+  public Map<Long, ConceptContentDTO> getContent(
       @Parameter(description = "id of the course") @RequestParam Long courseId) {
     Map<Long, String> urlByConceptId = firstUrlByConceptId(courseId);
 
-    Map<String, ConceptContentDTO> result = new LinkedHashMap<>();
+    Map<Long, ConceptContentDTO> result = new LinkedHashMap<>();
     for (Concept concept : conceptRepository.findByCourseId(courseId)) {
       Long parentId = concept.isSubconcept() ? concept.getParent().getId() : null;
       result.put(
-          contentKey(concept),
+          concept.getId(),
           new ConceptContentDTO(
               concept.getId(),
               parentId,
@@ -122,7 +118,6 @@ public class ConceptsController extends ApiController {
               result.add(
                   new MajorConceptDTO(
                       major.getId(),
-                      major.getName(),
                       markdownService.toInlineHtml(major.getLabel()),
                       major.getColor(),
                       subconceptDtos));
@@ -133,12 +128,12 @@ public class ConceptsController extends ApiController {
   @Operation(summary = "Get the graph positions of the top-level concepts in a course")
   @PreAuthorize("hasRole('ROLE_USER')")
   @GetMapping("/api/concepts/positions")
-  public Map<String, PositionDTO> getPositions(
+  public Map<Long, PositionDTO> getPositions(
       @Parameter(description = "id of the course") @RequestParam Long courseId) {
-    Map<String, PositionDTO> result = new LinkedHashMap<>();
+    Map<Long, PositionDTO> result = new LinkedHashMap<>();
     for (Concept concept : conceptRepository.findByCourseId(courseId)) {
       if (!concept.isSubconcept()) {
-        result.put(concept.getName(), new PositionDTO(concept.getX(), concept.getY()));
+        result.put(concept.getId(), new PositionDTO(concept.getX(), concept.getY()));
       }
     }
     return result;
@@ -153,10 +148,7 @@ public class ConceptsController extends ApiController {
     for (ConceptEdge edge : conceptEdgeRepository.findByCourseId(courseId)) {
       result.add(
           new EdgeDTO(
-              edge.getId(),
-              edge.getSource().getName(),
-              edge.getTarget().getName(),
-              edge.getColor()));
+              edge.getId(), edge.getSource().getId(), edge.getTarget().getId(), edge.getColor()));
     }
     return result;
   }
@@ -165,11 +157,12 @@ public class ConceptsController extends ApiController {
       summary = "Create a new top-level concept",
       description =
           """
-          Accepts a YAML (or JSON) request body. name, x, and y are required; color and level
-          are not user-settable (every new top-level concept starts at level 1 with the
-          default color, until a scaffold reset recomputes them). label, description, and
-          example are Markdown; they are sanitized and canonicalized before being stored.
-          YAML block scalars (|) make multi-line Markdown easy to enter through Swagger.
+          Accepts a YAML (or JSON) request body. label, x, and y are required; color and
+          level are not user-settable (every new top-level concept starts at level 1 with
+          the default color, until a scaffold reset recomputes them). label, description,
+          and example are Markdown; they are sanitized and canonicalized before being
+          stored. YAML block scalars (|) make multi-line Markdown easy to enter through
+          Swagger.
           """)
   @io.swagger.v3.oas.annotations.parameters.RequestBody(
       content =
@@ -183,7 +176,6 @@ public class ConceptsController extends ApiController {
                       value =
                           """
                           courseId: 1
-                          name: arrays
                           label: Arrays
                           description: |
                             An *array* is a fixed-size collection of elements.
@@ -208,7 +200,6 @@ public class ConceptsController extends ApiController {
             .orElseThrow(() -> new EntityNotFoundException(Course.class, dto.getCourseId()));
 
     String cleanLabel = cleanAndValidateLabel(dto.getLabel());
-    validateNewTopLevelName(dto.getCourseId(), dto.getName());
     if (dto.getX() == null || dto.getY() == null) {
       throw new IllegalArgumentException("x and y are required for a top-level concept");
     }
@@ -219,7 +210,6 @@ public class ConceptsController extends ApiController {
             .label(cleanLabel)
             .description(markdownService.clean(dto.getDescription()))
             .example(markdownService.clean(dto.getExample()))
-            .name(dto.getName())
             .color(DEFAULT_TOP_LEVEL_COLOR)
             .level(1)
             .x(dto.getX())
@@ -346,7 +336,7 @@ public class ConceptsController extends ApiController {
           Sets the parent of concept conceptId to parentConceptId. The concept must have no
           subconcepts of its own and no prerequisite edges (delete those first). The parent
           must be a top-level concept in the same course. The concept keeps its x,y position
-          (if any), its name is cleared, and it takes on the parent's color.
+          (if any) and takes on the parent's color.
           """)
   @PreAuthorize("@CourseSecurity.hasConceptManagementPermissions(#root, #conceptId)")
   @PutMapping("/api/concepts/designate")
@@ -389,7 +379,6 @@ public class ConceptsController extends ApiController {
     rejectDuplicateLabelUnderParent(parent, concept.getLabel());
 
     concept.setParent(parent);
-    concept.setName(null);
     concept.setColor(parent.getColor());
     return conceptRepository.save(concept);
   }
@@ -399,14 +388,13 @@ public class ConceptsController extends ApiController {
       description =
           """
           Severs the concept's relationship with its parent, making it a top-level concept
-          with the given name and x,y position. If the concept has no color, it inherits its
-          former parent's color.
+          at the given x,y position. If the concept has no color, it inherits its former
+          parent's color.
           """)
   @PreAuthorize("@CourseSecurity.hasConceptManagementPermissions(#root, #conceptId)")
   @PutMapping("/api/concepts/splitoff")
   public Concept splitOffSubconcept(
       @Parameter(name = "conceptId") @RequestParam Long conceptId,
-      @Parameter(name = "name") @RequestParam String name,
       @Parameter(name = "x") @RequestParam Integer x,
       @Parameter(name = "y") @RequestParam Integer y)
       throws EntityNotFoundException {
@@ -420,13 +408,11 @@ public class ConceptsController extends ApiController {
       throw new IllegalArgumentException(
           "concept %d is already a top-level concept".formatted(conceptId));
     }
-    validateNewTopLevelName(concept.getCourse().getId(), name);
 
     if (concept.getColor() == null) {
       concept.setColor(concept.getParent().getColor());
     }
     concept.setParent(null);
-    concept.setName(name);
     concept.setX(x);
     concept.setY(y);
     return conceptRepository.save(concept);
@@ -520,7 +506,7 @@ public class ConceptsController extends ApiController {
     List<ConceptEdge> edges = conceptEdgeRepository.findByCourseId(courseId);
 
     Map<Long, Integer> priorXByConceptId =
-        priorXByConceptId(topLevelConcepts, callerPrivatePositionsByName(courseId));
+        priorXByConceptId(topLevelConcepts, callerPrivatePositions(courseId));
     ConceptGraphService.ResetResult result =
         conceptGraphService.reset(topLevelConcepts, edges, priorXByConceptId);
 
@@ -553,14 +539,14 @@ public class ConceptsController extends ApiController {
             .map(
                 edge ->
                     new CycleEdgeDTO(
-                        edge.getId(), edge.getSource().getName(), edge.getTarget().getName()))
+                        edge.getId(), edge.getSource().getId(), edge.getTarget().getId()))
             .toList();
     List<RemovedEdgeDTO> removedEdgeDtos =
         removedEdges.stream()
             .map(
                 edge ->
                     new RemovedEdgeDTO(
-                        edge.getId(), edge.getSource().getName(), edge.getTarget().getName()))
+                        edge.getId(), edge.getSource().getId(), edge.getTarget().getId()))
             .toList();
     List<LevelAssignmentDTO> levelDtos =
         topLevelConcepts.stream()
@@ -568,7 +554,8 @@ public class ConceptsController extends ApiController {
             .map(
                 concept ->
                     new LevelAssignmentDTO(
-                        concept.getName(),
+                        concept.getId(),
+                        concept.getLabel(),
                         concept.getLevel(),
                         concept.getColor(),
                         concept.getX(),
@@ -578,18 +565,6 @@ public class ConceptsController extends ApiController {
     ScaffoldResetReportDTO report =
         new ScaffoldResetReportDTO(cycleEdgeDtos, removedEdgeDtos, levelDtos);
     return new ScaffoldResetResponseDTO(report, getGraph(courseId), getEdges(courseId));
-  }
-
-  /**
-   * The key under which a concept's content appears in the map returned by getContent. Top-level
-   * concepts use their name; subconcepts have no name and use the derived key "parentName:label",
-   * which is the same key the frontend builds for them.
-   */
-  static String contentKey(Concept concept) {
-    if (concept.isSubconcept()) {
-      return concept.getParent().getName() + ":" + concept.getLabel();
-    }
-    return concept.getName();
   }
 
   private String cleanAndValidateLabel(String label) {
@@ -606,18 +581,6 @@ public class ConceptsController extends ApiController {
     return cleanLabel;
   }
 
-  private void validateNewTopLevelName(Long courseId, String name) {
-    if (name == null || !NAME_PATTERN.matcher(name).matches()) {
-      throw new IllegalArgumentException(
-          "name is required for a top-level concept and may contain only lowercase letters,"
-              + " digits, and hyphens");
-    }
-    if (conceptRepository.findByCourseIdAndName(courseId, name).isPresent()) {
-      throw new IllegalArgumentException(
-          "a concept named %s already exists in course %d".formatted(name, courseId));
-    }
-  }
-
   private void rejectDuplicateLabelUnderParent(Concept parent, String label) {
     if (conceptRepository.findByParentIdAndLabel(parent.getId(), label).isPresent()) {
       throw new IllegalArgumentException(
@@ -627,10 +590,10 @@ public class ConceptsController extends ApiController {
 
   /**
    * The requesting user's own private, unsaved top-level position overrides for the course (see
-   * {@link UserStateV2#getTopLevelPositions()}), keyed by concept name. Empty if the user has never
-   * dragged a top-level node or has no saved state for the course.
+   * {@link UserStateV2#getTopLevelPositions()}), keyed by the concept's numeric id as a string.
+   * Empty if the user has never dragged a top-level node or has no saved state for the course.
    */
-  private Map<String, StoredPosition> callerPrivatePositionsByName(Long courseId) {
+  private Map<String, StoredPosition> callerPrivatePositions(Long courseId) {
     Long userId = getCurrentUser().getUser().getId();
     return userStateV2Repository
         .findByUseridAndCourseId(userId, courseId)
@@ -648,14 +611,13 @@ public class ConceptsController extends ApiController {
 
   /**
    * The x value {@link ConceptGraphService#reset} should sort each concept by: the caller's private
-   * override for that concept's name if they have dragged it, otherwise the concept's own persisted
-   * x.
+   * override for that concept if they have dragged it, otherwise the concept's own persisted x.
    */
   private Map<Long, Integer> priorXByConceptId(
-      List<Concept> topLevelConcepts, Map<String, StoredPosition> privatePositionsByName) {
+      List<Concept> topLevelConcepts, Map<String, StoredPosition> privatePositions) {
     Map<Long, Integer> result = new HashMap<>();
     for (Concept concept : topLevelConcepts) {
-      StoredPosition override = privatePositionsByName.get(concept.getName());
+      StoredPosition override = privatePositions.get(String.valueOf(concept.getId()));
       Integer x = override != null && override.x() != null ? override.x() : concept.getX();
       result.put(concept.getId(), x);
     }
@@ -693,20 +655,20 @@ public class ConceptsController extends ApiController {
       Long id, Long parentId, String descriptionHtml, String exampleHtml, String practiceUrl) {}
 
   public record MajorConceptDTO(
-      Long id, String name, String labelHtml, String color, List<SubconceptDTO> subconcepts) {}
+      Long id, String labelHtml, String color, List<SubconceptDTO> subconcepts) {}
 
   public record SubconceptDTO(Long id, Long parentId, String labelHtml) {}
 
   public record PositionDTO(Integer x, Integer y) {}
 
-  public record EdgeDTO(Long id, String source, String target, String color) {}
+  public record EdgeDTO(Long id, Long sourceId, Long targetId, String color) {}
 
-  public record CycleEdgeDTO(Long edgeId, String source, String target) {}
+  public record CycleEdgeDTO(Long edgeId, Long sourceId, Long targetId) {}
 
-  public record RemovedEdgeDTO(Long edgeId, String source, String target) {}
+  public record RemovedEdgeDTO(Long edgeId, Long sourceId, Long targetId) {}
 
   public record LevelAssignmentDTO(
-      String name, Integer level, String color, Integer x, Integer y) {}
+      Long id, String label, Integer level, String color, Integer x, Integer y) {}
 
   public record ScaffoldResetReportDTO(
       List<CycleEdgeDTO> cycleEdges,

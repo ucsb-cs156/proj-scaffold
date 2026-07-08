@@ -11,8 +11,8 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
@@ -31,7 +31,7 @@
 }
 
 input::placeholder {
-  color: #94A3B8;
+  color: #94a3b8;
 }
 
 #root {
@@ -94,11 +94,15 @@ code {
   background: var(--code-bg);
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -108,11 +112,11 @@ html, body, #root {
 
 .react-flow__controls {
   --xy-controls-button-background-color: #ffffff;
-  --xy-controls-button-background-color-hover: #1E293B;
-  --xy-controls-button-color: #1E293B;
-  --xy-controls-button-border-color: #1E293B;
-  --xy-controls-box-shadow: 2px 4px 0px #1E293B;
-  border: 1.5px solid #1E293B;
+  --xy-controls-button-background-color-hover: #1e293b;
+  --xy-controls-button-color: #1e293b;
+  --xy-controls-button-border-color: #1e293b;
+  --xy-controls-box-shadow: 2px 4px 0px #1e293b;
+  border: 1.5px solid #1e293b;
   border-radius: 8px;
   overflow: hidden;
 }

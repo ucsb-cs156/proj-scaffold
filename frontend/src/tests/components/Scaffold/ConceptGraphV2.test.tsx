@@ -29,7 +29,7 @@ beforeEach(() => {
 
 const sampleMajorConcepts = [
   {
-    name: "recursion",
+    id: 1,
     labelHtml: "Recursion",
     color: "#fe9a71",
     subconcepts: [
@@ -38,17 +38,19 @@ const sampleMajorConcepts = [
     ],
   },
   {
-    name: "loops",
+    id: 4,
     labelHtml: "Loops",
     color: "#93ebff",
     subconcepts: [{ id: 5, parentId: 4, labelHtml: "For loops" }],
   },
 ];
 const samplePositions = {
-  recursion: { x: 100, y: 100 },
-  loops: { x: 300, y: 100 },
+  "1": { x: 100, y: 100 },
+  "4": { x: 300, y: 100 },
 };
-const samplePrereqEdgeData = [{ source: "loops", target: "recursion" }];
+const samplePrereqEdgeData = [
+  { id: 20, sourceId: 4, targetId: 1, color: null },
+];
 
 function baseProps() {
   return {
@@ -80,7 +82,7 @@ describe("ConceptGraphV2", () => {
 
     fireEvent.click(screen.getByText("Recursion"));
 
-    expect(props.onConceptClick).toHaveBeenCalledWith("recursion");
+    expect(props.onConceptClick).toHaveBeenCalledWith("1");
   });
 
   test("clicking the reset control calls onReset", () => {
@@ -115,7 +117,7 @@ describe("ConceptGraphV2", () => {
           {
             cardType: "Description",
             itemLabel: "Recursion",
-            conceptId: "recursion",
+            conceptId: "1",
             conceptColor: "#fe9a71",
             posX: 100,
             posY: 100,
@@ -133,9 +135,9 @@ describe("ConceptGraphV2", () => {
     const props = baseProps();
     render(<ConceptGraphV2 {...props} />);
 
-    fireEvent.click(screen.getByTestId("star-button-recursion"));
+    fireEvent.click(screen.getByTestId("star-button-1"));
 
-    expect(props.onStarClick).toHaveBeenCalledWith("recursion");
+    expect(props.onStarClick).toHaveBeenCalledWith("1");
     expect(props.onConceptClick).not.toHaveBeenCalled();
   });
 
@@ -143,8 +145,8 @@ describe("ConceptGraphV2", () => {
     const props = baseProps();
     render(<ConceptGraphV2 {...props} />);
 
-    // "recursion" node's first subconcept is "Base case".
-    fireEvent.click(screen.getByTestId("subconcept-checkbox-recursion-0"));
+    // The "Recursion" node (id 1) has "Base case" as its first subconcept.
+    fireEvent.click(screen.getByTestId("subconcept-checkbox-1-0"));
 
     expect(props.onSubconceptMastered).toHaveBeenCalledWith("Base case");
   });
@@ -165,7 +167,7 @@ describe("ConceptGraphV2", () => {
     const payload = {
       cardType: "Example",
       itemLabel: "Recursion",
-      conceptId: "recursion",
+      conceptId: "1",
       conceptColor: "#fe9a71",
       cardContent: "def factorial(n): ...",
     };
@@ -181,7 +183,7 @@ describe("ConceptGraphV2", () => {
       expect.objectContaining({
         cardType: "Example",
         itemLabel: "Recursion",
-        conceptId: "recursion",
+        conceptId: "1",
         conceptColor: "#fe9a71",
       }),
     );
@@ -199,7 +201,7 @@ describe("ConceptGraphV2", () => {
           {
             cardType: "Description",
             itemLabel: "Recursion",
-            conceptId: "recursion",
+            conceptId: "1",
             conceptColor: "#fe9a71",
             posX: 100,
             posY: 100,
@@ -225,22 +227,18 @@ describe("ConceptGraphV2", () => {
     render(
       <ConceptGraphV2
         {...props}
-        highlightedIds={new Set(["recursion"])}
-        highlightedSubconcepts={
-          new Map([["recursion", new Set(["Base case"])]])
-        }
+        highlightedIds={new Set(["1"])}
+        highlightedSubconcepts={new Map([["1", new Set(["Base case"])]])}
       />,
     );
 
-    const recursionCard = screen.getByTestId("major-node-recursion");
-    const loopsCard = screen.getByTestId("major-node-loops");
+    const recursionCard = screen.getByTestId("major-node-1");
+    const loopsCard = screen.getByTestId("major-node-4");
 
     expect(recursionCard.style.opacity).toBe("1");
     expect(loopsCard.style.opacity).toBe("0.25");
 
-    const highlightedSubconcept = screen.getByTestId(
-      "subconcept-row-recursion-0",
-    );
+    const highlightedSubconcept = screen.getByTestId("subconcept-row-1-0");
     expect(highlightedSubconcept.style.background).not.toBe("");
   });
 
@@ -249,12 +247,12 @@ describe("ConceptGraphV2", () => {
     const { container } = render(
       <ConceptGraphV2
         {...props}
-        highlightedIds={new Set(["loops"])}
+        highlightedIds={new Set(["4"])}
         restoredDetailCards={[
           {
             cardType: "Description",
             itemLabel: "Recursion",
-            conceptId: "recursion",
+            conceptId: "1",
             conceptColor: "#fe9a71",
             posX: 100,
             posY: 100,
@@ -274,12 +272,12 @@ describe("ConceptGraphV2", () => {
     const { container } = render(
       <ConceptGraphV2
         {...props}
-        highlightedIds={new Set(["recursion"])}
+        highlightedIds={new Set(["1"])}
         restoredDetailCards={[
           {
             cardType: "Description",
             itemLabel: "Recursion",
-            conceptId: "recursion",
+            conceptId: "1",
             conceptColor: "#fe9a71",
             posX: 100,
             posY: 100,
@@ -336,7 +334,7 @@ describe("ConceptGraphV2", () => {
     const payload = {
       cardType: "Example",
       itemLabel: "Recursion",
-      conceptId: "recursion",
+      conceptId: "1",
       conceptColor: "#fe9a71",
       cardContent: "def factorial(n): ...",
     };
@@ -361,7 +359,7 @@ describe("ConceptGraphV2", () => {
           {
             cardType: "Description",
             itemLabel: "Unique Detail Label",
-            conceptId: "recursion",
+            conceptId: "1",
             conceptColor: "#fe9a71",
             posX: 100,
             posY: 100,

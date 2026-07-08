@@ -8,8 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ConceptRepository extends JpaRepository<Concept, Long> {
   List<Concept> findByCourseId(Long courseId);
 
-  Optional<Concept> findByCourseIdAndName(Long courseId, String name);
-
   List<Concept> findByParentId(Long parentId);
 
   Optional<Concept> findByParentIdAndLabel(Long parentId, String label);

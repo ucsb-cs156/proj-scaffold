@@ -152,10 +152,12 @@ public class MarkdownService {
    */
   public String toInlineHtml(String markdown) {
     String html = toHtml(markdown);
+    // == -1 rather than < 0: indexOf with a fromIndex of 3 can only return -1 or >= 3, so the
+    // two are equivalent, but < 0 leaves an unkillable "boundary" mutant (<= 0) for pitest.
     if (html != null
         && html.startsWith("<p>")
         && html.endsWith("</p>")
-        && html.indexOf("<p>", "<p>".length()) < 0) {
+        && html.indexOf("<p>", "<p>".length()) == -1) {
       return html.substring("<p>".length(), html.length() - "</p>".length());
     }
     return html;

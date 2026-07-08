@@ -69,13 +69,11 @@ vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
         {props.restoredDetailCards?.length ?? 0}
       </div>
       <div data-testid="mastered-count">{props.masteredSubconcepts.size}</div>
-      <button onClick={() => props.onConceptClick("recursion")}>
+      <button onClick={() => props.onConceptClick("1")}>
         trigger-concept-click
       </button>
-      <button onClick={() => props.onStarClick("recursion")}>
-        trigger-star-click
-      </button>
-      <button onClick={() => props.onStarClick("loops")}>
+      <button onClick={() => props.onStarClick("1")}>trigger-star-click</button>
+      <button onClick={() => props.onStarClick("4")}>
         trigger-unstar-click
       </button>
       <button onClick={props.onReset}>trigger-reset</button>
@@ -84,7 +82,7 @@ vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
           props.onDetailAdded?.({
             cardType: "Description",
             itemLabel: "Recursion",
-            conceptId: "recursion",
+            conceptId: "1",
             conceptColor: "#fe9a71",
             posX: 1,
             posY: 2,
@@ -101,7 +99,7 @@ vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
       >
         trigger-detail-moved
       </button>
-      <button onClick={() => props.onMajorMoved?.("recursion", 30, 40)}>
+      <button onClick={() => props.onMajorMoved?.("1", 30, 40)}>
         trigger-major-moved
       </button>
       <button onClick={() => props.onSubconceptMastered("Base case")}>
@@ -129,7 +127,7 @@ const questionConcepts: QuestionConcept[] = [
   {
     id: "qc1",
     question_id: "q1",
-    concept_id: "recursion",
+    concept_id: "1",
     subconcept_label: "Base case",
   },
 ];
@@ -137,7 +135,6 @@ const questionConcepts: QuestionConcept[] = [
 const majorConcepts: MajorConceptDTO[] = [
   {
     id: 1,
-    name: "recursion",
     labelHtml: "Recursion",
     color: "#fe9a71",
     subconcepts: [
@@ -147,7 +144,6 @@ const majorConcepts: MajorConceptDTO[] = [
   },
   {
     id: 4,
-    name: "loops",
     labelHtml: "Loops",
     color: "#93ebff",
     subconcepts: [{ id: 5, parentId: 4, labelHtml: "For loops" }],
@@ -155,12 +151,12 @@ const majorConcepts: MajorConceptDTO[] = [
 ];
 
 const positions: Record<string, { x: number; y: number }> = {
-  recursion: { x: 100, y: 100 },
-  loops: { x: 300, y: 100 },
+  "1": { x: 100, y: 100 },
+  "4": { x: 300, y: 100 },
 };
 
 const conceptContent: Record<string, ConceptContentDTO> = {
-  recursion: {
+  "1": {
     id: 1,
     parentId: null,
     descriptionHtml: "<p>Recursion description</p>",
@@ -170,15 +166,17 @@ const conceptContent: Record<string, ConceptContentDTO> = {
   },
 };
 
-const prereqEdgeData: EdgeDTO[] = [{ source: "loops", target: "recursion" }];
+const prereqEdgeData: EdgeDTO[] = [
+  { id: 20, sourceId: 4, targetId: 1, color: null },
+];
 
 const userState: UserStateV2Response = {
-  starred_ids: ["loops"],
+  starred_ids: ["4"],
   detail_cards: [
     {
       cardType: "Description",
       itemLabel: "Loops",
-      conceptId: "loops",
+      conceptId: "4",
       conceptColor: "#fe9a71",
       posX: 10,
       posY: 20,
@@ -424,7 +422,7 @@ describe("ConceptGraphPage", () => {
 
     expect(setData).toHaveBeenCalledWith(
       "application/scaffold-card",
-      expect.stringContaining('"conceptId":"recursion"'),
+      expect.stringContaining('"conceptId":"1"'),
     );
   });
 
@@ -440,7 +438,7 @@ describe("ConceptGraphPage", () => {
         expect.objectContaining({
           userid: 42,
           courseId: 1,
-          starred_ids: expect.arrayContaining(["loops", "recursion"]),
+          starred_ids: expect.arrayContaining(["4", "1"]),
         }),
       ),
     );
@@ -493,7 +491,7 @@ describe("ConceptGraphPage", () => {
         payload: {
           cardType: "Description",
           itemLabel: "Recursion",
-          conceptId: "recursion",
+          conceptId: "1",
         },
       }),
     );
@@ -545,7 +543,7 @@ describe("ConceptGraphPage", () => {
     await waitFor(() =>
       expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
         expect.objectContaining({
-          top_level_positions: { recursion: { x: 30, y: 40 } },
+          top_level_positions: { "1": { x: 30, y: 40 } },
         }),
       ),
     );

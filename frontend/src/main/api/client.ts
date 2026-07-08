@@ -102,7 +102,6 @@ export interface SubconceptDTO {
 
 export interface MajorConceptDTO {
   id: number;
-  name: string;
   labelHtml: SafeHtml;
   color: string;
   subconcepts: SubconceptDTO[];
@@ -122,8 +121,11 @@ export interface PositionDTO {
 }
 
 export interface EdgeDTO {
-  source: string;
-  target: string;
+  id: number;
+  sourceId: number;
+  targetId: number;
+  // Set (bright red) when the edge is part of a prerequisite cycle; null otherwise.
+  color: string | null;
 }
 
 export async function fetchConceptGraph(
