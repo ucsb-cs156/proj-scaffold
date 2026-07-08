@@ -67,6 +67,12 @@ public class CourseSecurity {
   @PreAuthorize("hasRole('ROLE_USER')")
   public Boolean hasManagePermissions(
       MethodSecurityExpressionOperations operations, Long courseId) {
+    if (courseId == null) {
+      // A null id can reach here from endpoints that take the courseId from a request body
+      // (e.g. @PreAuthorize("... #dto.courseId")). Grant access so the controller can reject
+      // the request with a proper validation error, mirroring the course-not-found case below.
+      return true;
+    }
     Optional<Course> course = courseRepository.findById(courseId);
     if (course.isEmpty()) {
       return true;

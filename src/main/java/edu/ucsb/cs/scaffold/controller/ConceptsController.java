@@ -8,6 +8,8 @@ import edu.ucsb.cs.scaffold.entity.ConceptEdge;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.PracticeProblem;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.model.CreateConceptDTO;
+import edu.ucsb.cs.scaffold.model.CreateSubconceptDTO;
 import edu.ucsb.cs.scaffold.model.UserStateV2;
 import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
 import edu.ucsb.cs.scaffold.repository.ConceptRepository;
@@ -33,6 +35,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -159,74 +162,146 @@ public class ConceptsController extends ApiController {
   }
 
   @Operation(
-      summary = "Create a new concept or subconcept",
+      summary = "Create a new top-level concept",
       description =
           """
-          With no parentConceptId, creates a top-level concept: name, x, and y are required;
-          color is not user-settable and is always assigned a default. With a parentConceptId
-          (which must be an existing top-level concept in the same course), creates a
-          subconcept: name and x,y must be omitted. label, description, and example are
-          Markdown; they are sanitized and canonicalized before being stored.
+          Accepts a YAML (or JSON) request body. name, x, and y are required; color and level
+          are not user-settable (every new top-level concept starts at level 1 with the
+          default color, until a scaffold reset recomputes them). label, description, and
+          example are Markdown; they are sanitized and canonicalized before being stored.
+          YAML block scalars (|) make multi-line Markdown easy to enter through Swagger.
           """)
-  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
-  @PostMapping("/api/concepts/post")
-  public Concept postConcept(
-      @Parameter(name = "courseId") @RequestParam Long courseId,
-      @Parameter(name = "label") @RequestParam String label,
-      @Parameter(name = "name") @RequestParam(required = false) String name,
-      @Parameter(name = "parentConceptId") @RequestParam(required = false) Long parentConceptId,
-      @Parameter(name = "description") @RequestParam(required = false) String description,
-      @Parameter(name = "example") @RequestParam(required = false) String example,
-      @Parameter(name = "x") @RequestParam(required = false) Integer x,
-      @Parameter(name = "y") @RequestParam(required = false) Integer y)
-      throws EntityNotFoundException {
-
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      content =
+          @io.swagger.v3.oas.annotations.media.Content(
+              mediaType = "application/yaml",
+              schema =
+                  @io.swagger.v3.oas.annotations.media.Schema(
+                      implementation = CreateConceptDTO.class),
+              examples =
+                  @io.swagger.v3.oas.annotations.media.ExampleObject(
+                      value =
+                          """
+                          courseId: 1
+                          name: arrays
+                          label: Arrays
+                          description: |
+                            An *array* is a fixed-size collection of elements.
+                          example: |
+                            ```java
+                            int[] arr = new int[5];
+                            ```
+                          x: 0
+                          y: 0
+                          """)))
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #dto.courseId)")
+  @PostMapping(
+      value = "/api/concept",
+      consumes = {"application/yaml", "application/x-yaml", "application/json"})
+  public Concept postConcept(@RequestBody CreateConceptDTO dto) throws EntityNotFoundException {
+    if (dto.getCourseId() == null) {
+      throw new IllegalArgumentException("courseId is required");
+    }
     Course course =
         courseRepository
-            .findById(courseId)
-            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+            .findById(dto.getCourseId())
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, dto.getCourseId()));
 
-    String cleanLabel = cleanAndValidateLabel(label);
+    String cleanLabel = cleanAndValidateLabel(dto.getLabel());
+    validateNewTopLevelName(dto.getCourseId(), dto.getName());
+    if (dto.getX() == null || dto.getY() == null) {
+      throw new IllegalArgumentException("x and y are required for a top-level concept");
+    }
 
     Concept concept =
         Concept.builder()
             .course(course)
             .label(cleanLabel)
-            .description(markdownService.clean(description))
-            .example(markdownService.clean(example))
+            .description(markdownService.clean(dto.getDescription()))
+            .example(markdownService.clean(dto.getExample()))
+            .name(dto.getName())
+            .color(DEFAULT_TOP_LEVEL_COLOR)
+            .level(1)
+            .x(dto.getX())
+            .y(dto.getY())
             .build();
+    return conceptRepository.save(concept);
+  }
 
-    if (parentConceptId != null) {
-      Concept parent =
-          conceptRepository
-              .findById(parentConceptId)
-              .orElseThrow(() -> new EntityNotFoundException(Concept.class, parentConceptId));
-      if (!parent.getCourse().getId().equals(courseId)) {
-        throw new IllegalArgumentException(
-            "parentConceptId %d belongs to a different course".formatted(parentConceptId));
-      }
-      if (parent.isSubconcept()) {
-        throw new IllegalArgumentException(
-            "parentConceptId %d is a subconcept; concepts can only be nested one level deep"
-                .formatted(parentConceptId));
-      }
-      if (name != null || x != null || y != null) {
-        throw new IllegalArgumentException("name, x, and y may not be specified for a subconcept");
-      }
-      rejectDuplicateLabelUnderParent(parent, cleanLabel);
-      concept.setParent(parent);
-    } else {
-      validateNewTopLevelName(courseId, name);
-      if (x == null || y == null) {
-        throw new IllegalArgumentException("x and y are required for a top-level concept");
-      }
-      concept.setName(name);
-      concept.setColor(DEFAULT_TOP_LEVEL_COLOR);
-      concept.setLevel(1);
-      concept.setX(x);
-      concept.setY(y);
+  @Operation(
+      summary = "Create a new subconcept of a top-level concept",
+      description =
+          """
+          Accepts a YAML (or JSON) request body. The parent must be an existing top-level
+          concept in the same course, and the label must be unique among the parent's
+          subconcepts. Subconcepts have no name, position, or color of their own. label,
+          description, and example are Markdown; they are sanitized and canonicalized before
+          being stored.
+          """)
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      content =
+          @io.swagger.v3.oas.annotations.media.Content(
+              mediaType = "application/yaml",
+              schema =
+                  @io.swagger.v3.oas.annotations.media.Schema(
+                      implementation = CreateSubconceptDTO.class),
+              examples =
+                  @io.swagger.v3.oas.annotations.media.ExampleObject(
+                      value =
+                          """
+                          courseId: 1
+                          parentConceptId: 42
+                          label: Accessing a value
+                          description: |
+                            Use square brackets with an index.
+                          example: |
+                            ```java
+                            int first = arr[0];
+                            ```
+                          """)))
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #dto.courseId)")
+  @PostMapping(
+      value = "/api/concept/subconcept",
+      consumes = {"application/yaml", "application/x-yaml", "application/json"})
+  public Concept postSubconcept(@RequestBody CreateSubconceptDTO dto)
+      throws EntityNotFoundException {
+    if (dto.getCourseId() == null) {
+      throw new IllegalArgumentException("courseId is required");
     }
+    if (dto.getParentConceptId() == null) {
+      throw new IllegalArgumentException("parentConceptId is required");
+    }
+    Course course =
+        courseRepository
+            .findById(dto.getCourseId())
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, dto.getCourseId()));
 
+    String cleanLabel = cleanAndValidateLabel(dto.getLabel());
+
+    Concept parent =
+        conceptRepository
+            .findById(dto.getParentConceptId())
+            .orElseThrow(
+                () -> new EntityNotFoundException(Concept.class, dto.getParentConceptId()));
+    if (!parent.getCourse().getId().equals(dto.getCourseId())) {
+      throw new IllegalArgumentException(
+          "parentConceptId %d belongs to a different course".formatted(dto.getParentConceptId()));
+    }
+    if (parent.isSubconcept()) {
+      throw new IllegalArgumentException(
+          "parentConceptId %d is a subconcept; concepts can only be nested one level deep"
+              .formatted(dto.getParentConceptId()));
+    }
+    rejectDuplicateLabelUnderParent(parent, cleanLabel);
+
+    Concept concept =
+        Concept.builder()
+            .course(course)
+            .label(cleanLabel)
+            .description(markdownService.clean(dto.getDescription()))
+            .example(markdownService.clean(dto.getExample()))
+            .parent(parent)
+            .build();
     return conceptRepository.save(concept);
   }
 
@@ -519,7 +594,7 @@ public class ConceptsController extends ApiController {
 
   private String cleanAndValidateLabel(String label) {
     String cleanLabel = markdownService.clean(label);
-    if (cleanLabel.isEmpty()) {
+    if (cleanLabel == null || cleanLabel.isEmpty()) {
       throw new IllegalArgumentException("label may not be empty");
     }
     int renderedLength = markdownService.renderedLength(cleanLabel);

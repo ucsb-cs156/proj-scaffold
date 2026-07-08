@@ -369,6 +369,33 @@ public class CourseSecurityTests {
   }
 
   @Nested
+  public class NullCourseId {
+
+    @BeforeEach
+    public void setup() {
+      // A non-owner instructor: if the null guard were absent, this user would be denied
+      // (or findById(null) would throw); with the guard, access is granted so the
+      // controller can produce a proper validation error for the missing courseId.
+      User user = User.builder().id(1L).email("notowner@example.com").build();
+      when(currentUserService.getCurrentUser())
+          .thenReturn(
+              CurrentUser.builder()
+                  .user(user)
+                  .roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR")))
+                  .build());
+      when(courseRepository.findById(null)).thenReturn(Optional.empty());
+    }
+
+    @Test
+    @WithMockUser(
+        setupBefore = TestExecutionEvent.TEST_EXECUTION,
+        roles = {"INSTRUCTOR"})
+    public void null_course_id_is_allowed_through_for_controller_validation() {
+      assertTrue(DummyCourseSecurity.nullTest(null));
+    }
+  }
+
+  @Nested
   public class NotFoundConcept {
 
     @BeforeEach

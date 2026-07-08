@@ -325,13 +325,14 @@ public class ConceptsControllerTests extends ControllerTestCase {
         .andExpect(status().isForbidden());
   }
 
-  // ---------- POST /api/concepts/post ----------
+  // ---------- POST /api/concept ----------
+
+  private static final String YAML = "application/yaml";
 
   @Test
   public void anonymous_user_cannot_post_concept() throws Exception {
     mockMvc
-        .perform(
-            post("/api/concepts/post").with(csrf()).param("courseId", "42").param("label", "Loops"))
+        .perform(post("/api/concept").with(csrf()).contentType(YAML).content("courseId: 42"))
         .andExpect(status().isForbidden());
   }
 
@@ -339,8 +340,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @WithMockUser(roles = {"USER"})
   public void user_without_course_permissions_cannot_post_concept() throws Exception {
     mockMvc
-        .perform(
-            post("/api/concepts/post").with(csrf()).param("courseId", "42").param("label", "Loops"))
+        .perform(post("/api/concept").with(csrf()).contentType(YAML).content("courseId: 42"))
         .andExpect(status().isForbidden());
   }
 
@@ -353,17 +353,28 @@ public class ConceptsControllerTests extends ControllerTestCase {
     when(conceptRepository.save(any(Concept.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
+    String body =
+        """
+        courseId: 42
+        name: recursion
+        label: "**Recursion**"
+        description: |-
+          before
+
+          <script>alert('x')</script>
+
+          after
+        example: |-
+          ```python
+          if a < b:
+              print('x')
+          ```
+        x: 800
+        y: 300
+        """;
+
     mockMvc
-        .perform(
-            post("/api/concepts/post")
-                .with(csrf())
-                .param("courseId", "42")
-                .param("name", "recursion")
-                .param("label", "**Recursion**")
-                .param("description", "before\n\n<script>alert('x')</script>\n\nafter")
-                .param("example", "```python\nif a < b:\n    print('x')\n```")
-                .param("x", "800")
-                .param("y", "300"))
+        .perform(post("/api/concept").with(csrf()).contentType(YAML).content(body))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.name").value("recursion"))
         .andExpect(jsonPath("$.label").value("**Recursion**"));
@@ -385,8 +396,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void instructor_can_post_a_top_level_concept_without_color_or_optional_markdown()
-      throws Exception {
+  public void instructor_can_post_a_top_level_concept_with_a_json_body() throws Exception {
     Course course = Course.builder().id(42L).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
@@ -395,13 +405,35 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
     mockMvc
         .perform(
-            post("/api/concepts/post")
+            post("/api/concept")
                 .with(csrf())
-                .param("courseId", "42")
-                .param("name", "loops")
-                .param("label", "Loops")
-                .param("x", "1")
-                .param("y", "2"))
+                .contentType("application/json")
+                .content(
+                    "{\"courseId\": 42, \"name\": \"loops\", \"label\": \"Loops\", \"x\": 1, \"y\": 2}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.name").value("loops"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void instructor_can_post_a_top_level_concept_without_optional_markdown() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
+    when(conceptRepository.save(any(Concept.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    String body =
+        """
+        courseId: 42
+        name: loops
+        label: Loops
+        x: 1
+        y: 2
+        """;
+
+    mockMvc
+        .perform(post("/api/concept").with(csrf()).contentType(YAML).content(body))
         .andExpect(status().isOk());
 
     ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
@@ -414,31 +446,35 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void posting_a_top_level_concept_with_a_color_param_is_ignored_and_still_gets_the_default()
-      throws Exception {
-    // color is not a bound @RequestParam, so a client sending one has no effect: the default
-    // always wins. Guards against accidentally re-wiring color as a client-settable field.
+  public void post_concept_ignores_unknown_fields_such_as_color() throws Exception {
+    // color is not part of CreateConceptDTO (it is never client-settable) and
+    // parentConceptId belongs to the subconcept endpoint; both are silently ignored,
+    // matching Spring Boot's default JSON leniency.
     Course course = Course.builder().id(42L).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
     when(conceptRepository.save(any(Concept.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
+    String body =
+        """
+        courseId: 42
+        name: loops
+        label: Loops
+        color: "#ff0000"
+        parentConceptId: 99
+        x: 1
+        y: 2
+        """;
+
     mockMvc
-        .perform(
-            post("/api/concepts/post")
-                .with(csrf())
-                .param("courseId", "42")
-                .param("name", "loops")
-                .param("label", "Loops")
-                .param("color", "#ff0000")
-                .param("x", "1")
-                .param("y", "2"))
+        .perform(post("/api/concept").with(csrf()).contentType(YAML).content(body))
         .andExpect(status().isOk());
 
     ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
     verify(conceptRepository).save(captor.capture());
     assertEquals(ConceptsController.DEFAULT_TOP_LEVEL_COLOR, captor.getValue().getColor());
+    assertNull(captor.getValue().getParent());
   }
 
   @Test
@@ -449,10 +485,10 @@ public class ConceptsControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                post("/api/concepts/post")
+                post("/api/concept")
                     .with(csrf())
-                    .param("courseId", "7")
-                    .param("label", "Loops"))
+                    .contentType(YAML)
+                    .content("courseId: 7\nlabel: Loops"))
             .andExpect(status().isNotFound())
             .andReturn();
     Map<String, Object> json = responseToJson(response);
@@ -461,20 +497,50 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void post_concept_rejects_a_label_that_cleans_to_empty() throws Exception {
+  public void post_concept_requires_a_courseId() throws Exception {
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/concept").with(csrf()).contentType(YAML).content("label: Loops"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("courseId is required", json.get("message"));
+    verify(conceptRepository, never()).save(any(Concept.class));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_concept_requires_a_label() throws Exception {
     Course course = Course.builder().id(42L).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
 
     MvcResult response =
         mockMvc
-            .perform(
-                post("/api/concepts/post")
-                    .with(csrf())
-                    .param("courseId", "42")
-                    .param("name", "loops")
-                    .param("label", "<script>alert('x')</script>")
-                    .param("x", "1")
-                    .param("y", "2"))
+            .perform(post("/api/concept").with(csrf()).contentType(YAML).content("courseId: 42"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("label may not be empty", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_concept_rejects_a_label_that_cleans_to_empty() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+
+    String body =
+        """
+        courseId: 42
+        name: loops
+        label: "<script>alert('x')</script>"
+        x: 1
+        y: 2
+        """;
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/concept").with(csrf()).contentType(YAML).content(body))
             .andExpect(status().isBadRequest())
             .andReturn();
     Map<String, Object> json = responseToJson(response);
@@ -492,16 +558,9 @@ public class ConceptsControllerTests extends ControllerTestCase {
     when(conceptRepository.save(any(Concept.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    String label32 = "x".repeat(32);
+    String body = "courseId: 42\nname: loops\nlabel: \"" + "x".repeat(32) + "\"\nx: 1\ny: 2";
     mockMvc
-        .perform(
-            post("/api/concepts/post")
-                .with(csrf())
-                .param("courseId", "42")
-                .param("name", "loops")
-                .param("label", label32)
-                .param("x", "1")
-                .param("y", "2"))
+        .perform(post("/api/concept").with(csrf()).contentType(YAML).content(body))
         .andExpect(status().isOk());
   }
 
@@ -512,21 +571,138 @@ public class ConceptsControllerTests extends ControllerTestCase {
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
 
     // 33 rendered characters, even though the Markdown source is longer still.
-    String label33 = "**" + "x".repeat(33) + "**";
+    String body = "courseId: 42\nname: loops\nlabel: \"**" + "x".repeat(33) + "**\"\nx: 1\ny: 2";
     MvcResult response =
         mockMvc
-            .perform(
-                post("/api/concepts/post")
-                    .with(csrf())
-                    .param("courseId", "42")
-                    .param("name", "loops")
-                    .param("label", label33)
-                    .param("x", "1")
-                    .param("y", "2"))
+            .perform(post("/api/concept").with(csrf()).contentType(YAML).content(body))
             .andExpect(status().isBadRequest())
             .andReturn();
     Map<String, Object> json = responseToJson(response);
     assertEquals("label renders to 33 characters; the maximum is 32", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_concept_requires_a_name() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/concept")
+                    .with(csrf())
+                    .contentType(YAML)
+                    .content("courseId: 42\nlabel: Loops\nx: 1\ny: 2"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(
+        "name is required for a top-level concept and may contain only lowercase letters,"
+            + " digits, and hyphens",
+        json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_concept_rejects_a_badly_formatted_name() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+
+    mockMvc
+        .perform(
+            post("/api/concept")
+                .with(csrf())
+                .contentType(YAML)
+                .content("courseId: 42\nname: Not A Slug\nlabel: Loops\nx: 1\ny: 2"))
+        .andExpect(status().isBadRequest());
+    verify(conceptRepository, never()).save(any(Concept.class));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_concept_rejects_a_duplicate_name() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept existing = Concept.builder().id(1L).course(course).name("loops").build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.of(existing));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/concept")
+                    .with(csrf())
+                    .contentType(YAML)
+                    .content("courseId: 42\nname: loops\nlabel: Loops\nx: 1\ny: 2"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("a concept named loops already exists in course 42", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_concept_requires_x() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/concept")
+                    .with(csrf())
+                    .contentType(YAML)
+                    .content("courseId: 42\nname: loops\nlabel: Loops\ny: 2"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("x and y are required for a top-level concept", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_concept_requires_y() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(
+            post("/api/concept")
+                .with(csrf())
+                .contentType(YAML)
+                .content("courseId: 42\nname: loops\nlabel: Loops\nx: 1"))
+        .andExpect(status().isBadRequest());
+    verify(conceptRepository, never()).save(any(Concept.class));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_concept_rejects_a_malformed_yaml_body() throws Exception {
+    mockMvc
+        .perform(post("/api/concept").with(csrf()).contentType(YAML).content("label: [unclosed"))
+        .andExpect(status().isBadRequest());
+    verify(conceptRepository, never()).save(any(Concept.class));
+  }
+
+  // ---------- POST /api/concept/subconcept ----------
+
+  @Test
+  public void anonymous_user_cannot_post_subconcept() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/concept/subconcept").with(csrf()).contentType(YAML).content("courseId: 42"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void user_without_course_permissions_cannot_post_subconcept() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/concept/subconcept").with(csrf()).contentType(YAML).content("courseId: 42"))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -540,25 +716,49 @@ public class ConceptsControllerTests extends ControllerTestCase {
     when(conceptRepository.save(any(Concept.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
+    String body =
+        """
+        courseId: 42
+        parentConceptId: 1
+        label: Base case
+        description: |-
+          The condition that stops the recursion.
+        """;
+
     mockMvc
-        .perform(
-            post("/api/concepts/post")
-                .with(csrf())
-                .param("courseId", "42")
-                .param("parentConceptId", "1")
-                .param("label", "Base case")
-                .param("description", "d"))
-        .andExpect(status().isOk());
+        .perform(post("/api/concept/subconcept").with(csrf()).contentType(YAML).content(body))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.label").value("Base case"));
 
     ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
     verify(conceptRepository).save(captor.capture());
     Concept saved = captor.getValue();
     assertEquals(parent, saved.getParent());
     assertEquals("Base case", saved.getLabel());
+    assertEquals("The condition that stops the recursion.", saved.getDescription());
     assertNull(saved.getName());
     assertNull(saved.getX());
     assertNull(saved.getY());
     assertNull(saved.getColor());
+    assertNull(saved.getLevel());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_subconcept_returns_404_when_course_does_not_exist() throws Exception {
+    when(courseRepository.findById(7L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/concept/subconcept")
+                    .with(csrf())
+                    .contentType(YAML)
+                    .content("courseId: 7\nparentConceptId: 1\nlabel: Base case"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Course with id 7 not found", json.get("message"));
   }
 
   @Test
@@ -571,15 +771,47 @@ public class ConceptsControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                post("/api/concepts/post")
+                post("/api/concept/subconcept")
                     .with(csrf())
-                    .param("courseId", "42")
-                    .param("parentConceptId", "99")
-                    .param("label", "Base case"))
+                    .contentType(YAML)
+                    .content("courseId: 42\nparentConceptId: 99\nlabel: Base case"))
             .andExpect(status().isNotFound())
             .andReturn();
     Map<String, Object> json = responseToJson(response);
     assertEquals("Concept with id 99 not found", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_subconcept_requires_a_courseId() throws Exception {
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/concept/subconcept")
+                    .with(csrf())
+                    .contentType(YAML)
+                    .content("parentConceptId: 1\nlabel: Base case"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("courseId is required", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_subconcept_requires_a_parentConceptId() throws Exception {
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/concept/subconcept")
+                    .with(csrf())
+                    .contentType(YAML)
+                    .content("courseId: 42\nlabel: Base case"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("parentConceptId is required", json.get("message"));
+    verify(conceptRepository, never()).save(any(Concept.class));
   }
 
   @Test
@@ -594,11 +826,10 @@ public class ConceptsControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                post("/api/concepts/post")
+                post("/api/concept/subconcept")
                     .with(csrf())
-                    .param("courseId", "42")
-                    .param("parentConceptId", "1")
-                    .param("label", "Base case"))
+                    .contentType(YAML)
+                    .content("courseId: 42\nparentConceptId: 1\nlabel: Base case"))
             .andExpect(status().isBadRequest())
             .andReturn();
     Map<String, Object> json = responseToJson(response);
@@ -617,58 +848,16 @@ public class ConceptsControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                post("/api/concepts/post")
+                post("/api/concept/subconcept")
                     .with(csrf())
-                    .param("courseId", "42")
-                    .param("parentConceptId", "2")
-                    .param("label", "Base case"))
+                    .contentType(YAML)
+                    .content("courseId: 42\nparentConceptId: 2\nlabel: Base case"))
             .andExpect(status().isBadRequest())
             .andReturn();
     Map<String, Object> json = responseToJson(response);
     assertEquals(
         "parentConceptId 2 is a subconcept; concepts can only be nested one level deep",
         json.get("message"));
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void post_subconcept_rejects_a_name_parameter() throws Exception {
-    assertSubconceptExtraParamRejected("name", "base-case");
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void post_subconcept_rejects_an_x_parameter() throws Exception {
-    assertSubconceptExtraParamRejected("x", "5");
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void post_subconcept_rejects_a_y_parameter() throws Exception {
-    assertSubconceptExtraParamRejected("y", "5");
-  }
-
-  private void assertSubconceptExtraParamRejected(String paramName, String paramValue)
-      throws Exception {
-    Course course = Course.builder().id(42L).build();
-    Concept parent = Concept.builder().id(1L).course(course).name("recursion").build();
-    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-    when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                post("/api/concepts/post")
-                    .with(csrf())
-                    .param("courseId", "42")
-                    .param("parentConceptId", "1")
-                    .param("label", "Base case")
-                    .param(paramName, paramValue))
-            .andExpect(status().isBadRequest())
-            .andReturn();
-    Map<String, Object> json = responseToJson(response);
-    assertEquals("name, x, and y may not be specified for a subconcept", json.get("message"));
-    verify(conceptRepository, never()).save(any(Concept.class));
   }
 
   @Test
@@ -685,11 +874,10 @@ public class ConceptsControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                post("/api/concepts/post")
+                post("/api/concept/subconcept")
                     .with(csrf())
-                    .param("courseId", "42")
-                    .param("parentConceptId", "1")
-                    .param("label", "Base case"))
+                    .contentType(YAML)
+                    .content("courseId: 42\nparentConceptId: 1\nlabel: Base case"))
             .andExpect(status().isBadRequest())
             .andReturn();
     Map<String, Object> json = responseToJson(response);
@@ -698,110 +886,36 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void post_top_level_concept_requires_a_name() throws Exception {
+  public void post_subconcept_ignores_unknown_fields_such_as_name_and_position() throws Exception {
+    // name, x, and y are not part of CreateSubconceptDTO; a body that includes them is
+    // accepted and they are ignored (subconcepts never get a name or position).
     Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(1L).course(course).name("recursion").build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
+    when(conceptRepository.findByParentIdAndLabel(1L, "Base case")).thenReturn(Optional.empty());
+    when(conceptRepository.save(any(Concept.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
 
-    MvcResult response =
-        mockMvc
-            .perform(
-                post("/api/concepts/post")
-                    .with(csrf())
-                    .param("courseId", "42")
-                    .param("label", "Loops")
-                    .param("x", "1")
-                    .param("y", "2"))
-            .andExpect(status().isBadRequest())
-            .andReturn();
-    Map<String, Object> json = responseToJson(response);
-    assertEquals(
-        "name is required for a top-level concept and may contain only lowercase letters,"
-            + " digits, and hyphens",
-        json.get("message"));
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void post_top_level_concept_rejects_a_badly_formatted_name() throws Exception {
-    Course course = Course.builder().id(42L).build();
-    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    String body =
+        """
+        courseId: 42
+        parentConceptId: 1
+        label: Base case
+        name: base-case
+        x: 5
+        y: 6
+        """;
 
     mockMvc
-        .perform(
-            post("/api/concepts/post")
-                .with(csrf())
-                .param("courseId", "42")
-                .param("name", "Not A Slug")
-                .param("label", "Loops")
-                .param("x", "1")
-                .param("y", "2"))
-        .andExpect(status().isBadRequest());
-    verify(conceptRepository, never()).save(any(Concept.class));
-  }
+        .perform(post("/api/concept/subconcept").with(csrf()).contentType(YAML).content(body))
+        .andExpect(status().isOk());
 
-  @Test
-  @WithInstructorCoursePermissions
-  public void post_top_level_concept_rejects_a_duplicate_name() throws Exception {
-    Course course = Course.builder().id(42L).build();
-    Concept existing = Concept.builder().id(1L).course(course).name("loops").build();
-    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.of(existing));
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                post("/api/concepts/post")
-                    .with(csrf())
-                    .param("courseId", "42")
-                    .param("name", "loops")
-                    .param("label", "Loops")
-                    .param("x", "1")
-                    .param("y", "2"))
-            .andExpect(status().isBadRequest())
-            .andReturn();
-    Map<String, Object> json = responseToJson(response);
-    assertEquals("a concept named loops already exists in course 42", json.get("message"));
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void post_top_level_concept_requires_x() throws Exception {
-    Course course = Course.builder().id(42L).build();
-    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
-
-    MvcResult response =
-        mockMvc
-            .perform(
-                post("/api/concepts/post")
-                    .with(csrf())
-                    .param("courseId", "42")
-                    .param("name", "loops")
-                    .param("label", "Loops")
-                    .param("y", "2"))
-            .andExpect(status().isBadRequest())
-            .andReturn();
-    Map<String, Object> json = responseToJson(response);
-    assertEquals("x and y are required for a top-level concept", json.get("message"));
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
-  public void post_top_level_concept_requires_y() throws Exception {
-    Course course = Course.builder().id(42L).build();
-    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
-    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
-
-    mockMvc
-        .perform(
-            post("/api/concepts/post")
-                .with(csrf())
-                .param("courseId", "42")
-                .param("name", "loops")
-                .param("label", "Loops")
-                .param("x", "1"))
-        .andExpect(status().isBadRequest());
-    verify(conceptRepository, never()).save(any(Concept.class));
+    ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
+    verify(conceptRepository).save(captor.capture());
+    assertNull(captor.getValue().getName());
+    assertNull(captor.getValue().getX());
+    assertNull(captor.getValue().getY());
   }
 
   // ---------- POST /api/concepts/practiceproblems/post ----------
