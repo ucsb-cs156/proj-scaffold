@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">97.4% </span>
+                <span class="strong">96.15% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>150/154</span>
+                <span class='fraction'>150/156</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">78.57% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>88/110</span>
+                <span class='fraction'>88/112</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">97.77% </span>
+                <span class="strong">96.35% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>132/135</span>
+                <span class='fraction'>132/137</span>
             </div>
         
             
@@ -927,7 +927,14 @@
 <a name='L862'></a><a href='#L862'>862</a>
 <a name='L863'></a><a href='#L863'>863</a>
 <a name='L864'></a><a href='#L864'>864</a>
-<a name='L865'></a><a href='#L865'>865</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L865'></a><a href='#L865'>865</a>
+<a name='L866'></a><a href='#L866'>866</a>
+<a name='L867'></a><a href='#L867'>867</a>
+<a name='L868'></a><a href='#L868'>868</a>
+<a name='L869'></a><a href='#L869'>869</a>
+<a name='L870'></a><a href='#L870'>870</a>
+<a name='L871'></a><a href='#L871'>871</a>
+<a name='L872'></a><a href='#L872'>872</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -970,6 +977,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1439,6 +1450,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">37x</span>
 <span class="cline-any cline-yes">16x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1737,6 +1749,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1771,7 +1785,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1875,6 +1889,10 @@ interface ConceptGraphV2Props {
     posX: number,
     posY: number,
   ) =&gt; void;
+  // Called when the user finishes dragging a top-level concept node. The position is a
+  // private, per-user override (see ConceptGraphPage) until an instructor's course-wide
+  // reset recomputes the shared, canonical position.
+  onMajorMoved?: (name: string, posX: number, posY: number) =&gt; void;
   masteredSubconcepts: Set&lt;string&gt;;
   onSubconceptMastered: (sub: string) =&gt; void;
   onPaneClick?: () =&gt; void;
@@ -2295,6 +2313,7 @@ export default function ConceptGraphV2({
   onDetailDeleted,
   restoredDetailCards,
   onDetailMoved,
+  onMajorMoved,
   masteredSubconcepts,
   onSubconceptMastered,
   onPaneClick,
@@ -2601,11 +2620,13 @@ export default function ConceptGraphV2({
               change.position.x,
               change.position.y,
             );
+<span class="cstat-no" title="statement not covered" >          } else if (node?.type === "major") {</span>
+<span class="cstat-no" title="statement not covered" >            onMajorMoved?.(node.id, change.position.x, change.position.y);</span>
           }
         }
       });
     },
-    [onNodesChange, onDetailMoved],
+    [onNodesChange, onDetailMoved, onMajorMoved],
   );
 &nbsp;
   return (
@@ -2662,7 +2683,7 @@ export default function ConceptGraphV2({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-08T20:14:44.161Z
+                at 2026-07-08T22:58:32.694Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
