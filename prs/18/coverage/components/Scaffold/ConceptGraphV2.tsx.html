@@ -918,7 +918,17 @@
 <a name='L853'></a><a href='#L853'>853</a>
 <a name='L854'></a><a href='#L854'>854</a>
 <a name='L855'></a><a href='#L855'>855</a>
-<a name='L856'></a><a href='#L856'>856</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L856'></a><a href='#L856'>856</a>
+<a name='L857'></a><a href='#L857'>857</a>
+<a name='L858'></a><a href='#L858'>858</a>
+<a name='L859'></a><a href='#L859'>859</a>
+<a name='L860'></a><a href='#L860'>860</a>
+<a name='L861'></a><a href='#L861'>861</a>
+<a name='L862'></a><a href='#L862'>862</a>
+<a name='L863'></a><a href='#L863'>863</a>
+<a name='L864'></a><a href='#L864'>864</a>
+<a name='L865'></a><a href='#L865'>865</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1133,6 +1143,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1199,6 +1210,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1292,6 +1304,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1803,6 +1821,7 @@ import "App.css";
 import {
   buildGraphElementsV2,
   type MajorConceptLike,
+  type SubconceptLike,
   type EdgeLike,
 } from "main/utils/layout";
 import type { ConceptContentDTO } from "main/api/client";
@@ -1815,8 +1834,8 @@ import type { ConceptContentDTO } from "main/api/client";
 // untouched; once this version is proven out, one of the two can be retired.
 &nbsp;
 const cardKeyMap: Record&lt;string, keyof ConceptContentDTO&gt; = {
-  Description: "description",
-  Example: "example",
+  Description: "descriptionHtml",
+  Example: "exampleHtml",
   "PrairieLearn Practice": "practiceUrl",
 };
 &nbsp;
@@ -1923,8 +1942,8 @@ function ResetButton({ onReset }: { onReset: () =&gt; void }) {
 &nbsp;
 function MajorNode({ data, id }: NodeProps) {
   const color = data.color as string;
-  const label = data.label as string;
-  const subconcepts = data.subconcepts as string[];
+  const labelHtml = data.labelHtml as string;
+  const subconcepts = data.subconcepts as SubconceptLike[];
   const highlighted = data.highlighted as boolean;
   const hasSelection = data.hasSelection as boolean;
   const highlightedSubconcepts = data.highlightedSubconcepts as Set&lt;string&gt;;
@@ -1939,6 +1958,7 @@ function MajorNode({ data, id }: NodeProps) {
 &nbsp;
   return (
     &lt;div
+      data-testid={`major-node-${id}`}
       style={{
         width: 280,
         borderRadius: 10,
@@ -1984,7 +2004,7 @@ function MajorNode({ data, id }: NodeProps) {
           position: "relative",
         }}
       &gt;
-        {label}
+        &lt;span dangerouslySetInnerHTML={{ __html: labelHtml }} /&gt;
         &lt;div
           data-testid={`star-button-${id}`}
           onClick={(e) =&gt; {
@@ -2032,13 +2052,14 @@ function MajorNode({ data, id }: NodeProps) {
         }}
       &gt;
         {subconcepts.map((sub, i) =&gt; {
-          const isMastered = masteredSubconcepts?.has(sub) ?? false;
+          const isMastered = masteredSubconcepts?.has(sub.labelHtml) ?? false;
           return (
             &lt;div
-              key={i}
+              key={sub.id}
+              data-testid={`subconcept-row-${id}-${i}`}
               style={{
                 position: "relative",
-                background: highlightedSubconcepts?.has(sub)
+                background: highlightedSubconcepts?.has(sub.labelHtml)
                   ? toPastel(color)
                   : "#fff",
                 padding: "5px 6px",
@@ -2055,7 +2076,7 @@ function MajorNode({ data, id }: NodeProps) {
                 data-testid={`subconcept-checkbox-${id}-${i}`}
                 onClick={(e) =&gt; {
                   e.stopPropagation();
-                  onSubconceptMastered?.(sub);
+                  onSubconceptMastered?.(sub.labelHtml);
                 }}
                 style={{
                   position: "absolute",
@@ -2092,7 +2113,7 @@ function MajorNode({ data, id }: NodeProps) {
                   &lt;/svg&gt;
                 )}
               &lt;/div&gt;
-              {sub}
+              &lt;span dangerouslySetInnerHTML={{ __html: sub.labelHtml }} /&gt;
             &lt;/div&gt;
           );
         })}
@@ -2210,7 +2231,8 @@ function DetailNode({ data, id }: NodeProps) {
         }}
       &gt;
         {cardType === "Example" ? (
-          &lt;pre
+          &lt;div
+            className="concept-detail-content"
             style={{
               fontFamily: "monospace",
               fontSize: 12,
@@ -2223,22 +2245,27 @@ function DetailNode({ data, id }: NodeProps) {
               color: textColor,
               lineHeight: 1.5,
             }}
-          &gt;
-            {(data.cardContent as string) ||
-<span class="branch-1 cbranch-no" title="branch not covered" >              `Example for "${itemLabel}" will appear here.`}</span>
-          &lt;/pre&gt;
+            dangerouslySetInnerHTML={{
+              __html:
+                (data.cardContent as string) ||
+<span class="branch-1 cbranch-no" title="branch not covered" >                `Example for "${itemLabel}" will appear here.`,</span>
+            }}
+          /&gt;
         ) : (
           &lt;div
+            className="concept-detail-content"
             style={{
               fontFamily: "Helvetica, Arial, sans-serif",
               fontSize: 12,
               color: "#1E293B",
               lineHeight: 1.5,
             }}
-          &gt;
-            {(data.cardContent as string) ||
-              `${cardType} for "${itemLabel}" will appear here.`}
-          &lt;/div&gt;
+            dangerouslySetInnerHTML={{
+              __html:
+                (data.cardContent as string) ||
+                `${cardType} for "${itemLabel}" will appear here.`,
+            }}
+          /&gt;
         )}
       &lt;/div&gt;
 &nbsp;
@@ -2301,7 +2328,7 @@ export default function ConceptGraphV2({
 &nbsp;
     const newNodes = restoredDetailCards.map((card, i) =&gt; {
       const concept = majorConcepts.find((c) =&gt; c.name === card.conceptId);
-      const conceptLabel = concept?.label.replace(/\n/g, " ") ?? <span class="branch-1 cbranch-no" title="branch not covered" >"";</span>
+      const conceptLabel = concept?.labelHtml.replace(/\n/g, " ") ?? <span class="branch-1 cbranch-no" title="branch not covered" >"";</span>
       const isConceptItself = card.itemLabel === conceptLabel;
       const contentKey = isConceptItself
         ? card.conceptId
@@ -2327,7 +2354,7 @@ export default function ConceptGraphV2({
       source: card.conceptId,
       target: newNodes[i].id,
       targetHandle: "bottom",
-      type: "smooth",
+      type: "smoothstep",
       style: {
         stroke: card.conceptColor,
         strokeWidth: 4,
@@ -2410,7 +2437,7 @@ export default function ConceptGraphV2({
           source: conceptId,
           target: nodeId,
           targetHandle: "bottom",
-          type: "smooth",
+          type: "smoothstep",
           style: { stroke: edgeColor, strokeWidth: 4, strokeDasharray: "4 2" },
           markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor },
           data: { conceptColor },
@@ -2635,7 +2662,7 @@ export default function ConceptGraphV2({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-08T18:32:42.375Z
+                at 2026-07-08T20:14:44.161Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
