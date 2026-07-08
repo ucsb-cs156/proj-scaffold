@@ -199,16 +199,7 @@
 <a name='L134'></a><a href='#L134'>134</a>
 <a name='L135'></a><a href='#L135'>135</a>
 <a name='L136'></a><a href='#L136'>136</a>
-<a name='L137'></a><a href='#L137'>137</a>
-<a name='L138'></a><a href='#L138'>138</a>
-<a name='L139'></a><a href='#L139'>139</a>
-<a name='L140'></a><a href='#L140'>140</a>
-<a name='L141'></a><a href='#L141'>141</a>
-<a name='L142'></a><a href='#L142'>142</a>
-<a name='L143'></a><a href='#L143'>143</a>
-<a name='L144'></a><a href='#L144'>144</a>
-<a name='L145'></a><a href='#L145'>145</a>
-<a name='L146'></a><a href='#L146'>146</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L137'></a><a href='#L137'>137</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -231,16 +222,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -249,15 +241,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -269,7 +261,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -281,16 +273,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -368,13 +350,14 @@ import SettingsTabComponent from "main/components/Courses/TabComponent/SettingsT
 import JobTabComponent from "main/components/Courses/TabComponent/JobTabComponent";
 import { hasRole } from "main/utils/currentUser";
 import DownloadsTabComponent from "main/components/Courses/TabComponent/DownloadsTabComponent";
+import LinkToScaffold from "main/components/Courses/LinkToScaffold";
 &nbsp;
 export default function InstructorCourseShowPage({
   testId = "InstructorCourseShowPage",
   showSettingsTab = true,
   staffTabIsInstructor = true,
-  canEditStudents,
-  canManageTeams,
+  canEditStudents = undefined,
+  canManageTeams = undefined,
 }) {
   const currentUser = useCurrentUser();
   const courseId = useParams().id;
@@ -433,68 +416,58 @@ export default function InstructorCourseShowPage({
       {!course ? (
         &lt;div data-testid={`${testId}-loading`}&gt;Course: Loading...&lt;/div&gt;
       ) : (
-        &lt;div className="border rounded-3 p-4 mb-4"&gt;
-          &lt;div className="d-flex align-items-center gap-3"&gt;
-            {course.orgName &amp;&amp; (
-<span class="branch-1 cbranch-no" title="branch not covered" >              &lt;img</span>
-                src={`https://github.com/${course.orgName}.png?size=64`}
-                alt={course.orgName}
-                data-testid={`${testId}-github-org-image`}
-                className="rounded-circle border"
-                style={{ width: 48, height: 48 }}
-              /&gt;
-            )}
-            &lt;div&gt;
-              &lt;div className="d-flex align-items-center gap-2"&gt;
-                &lt;h1
-                  data-testid={`${testId}-title`}
-                  className="h3 mb-0 fw-semibold"
-                &gt;
-                  {course.courseName}
-                &lt;/h1&gt;
-                &lt;span className="badge bg-primary-subtle text-primary-emphasis rounded-pill"&gt;
-                  {course.term}
-                &lt;/span&gt;
+        &lt;div className="border rounded-3 p-4 mb-4 tabsGroup"&gt;
+          &lt;div className="border rounded-3 p-4 mb-4"&gt;
+            &lt;div className="d-flex align-items-center gap-3"&gt;
+              {course.orgName &amp;&amp; (
+<span class="branch-1 cbranch-no" title="branch not covered" >                &lt;img</span>
+                  src={`https://github.com/${course.orgName}.png?size=64`}
+                  alt={course.orgName}
+                  data-testid={`${testId}-github-org-image`}
+                  className="rounded-circle border"
+                  style={{ width: 48, height: 48 }}
+                /&gt;
+              )}
+              &lt;div&gt;
+                &lt;div className="d-flex align-items-center gap-2"&gt;
+                  &lt;h1
+                    data-testid={`${testId}-title`}
+                    className="h3 mb-0 fw-semibold"
+                  &gt;
+                    &lt;LinkToScaffold
+                      courseName={course.courseName}
+                      courseId={course.id}
+                      testId={`${testId}-title-linkToScaffold`}
+                    /&gt;
+                  &lt;/h1&gt;
+                  &lt;span className="badge bg-primary-subtle text-primary-emphasis rounded-pill"&gt;
+                    {course.term}
+                  &lt;/span&gt;
+                &lt;/div&gt;
               &lt;/div&gt;
             &lt;/div&gt;
           &lt;/div&gt;
-        &lt;/div&gt;
-      )}
-      &lt;div className="border rounded-3 p-4 mb-4" className="tabsGroup"&gt;
-        &lt;Tabs defaultActiveKey={"students"}&gt;
-          &lt;Tab eventKey={"students"} title={"Students"} className="pt-2"&gt;
-            &lt;EnrollmentTabComponent
-              courseId={courseId}
-              testIdPrefix={testId}
-              currentUser={currentUser}
-              canEditStudents={canEditStudents}
-            /&gt;
-          &lt;/Tab&gt;
-          &lt;Tab eventKey={"staff"} title={"Staff"} className="pt-2"&gt;
-            &lt;StaffTabComponent
-              courseId={courseId}
-              testIdPrefix={testId}
-              currentUser={currentUser}
-              isInstructor={staffTabIsInstructor}
-            /&gt;
-          &lt;/Tab&gt;
-          &lt;Tab eventKey={"jobs"} title={"Jobs"} className="pt-2"&gt;
-            &lt;JobTabComponent courseId={courseId} testIdPrefix={testId} /&gt;
-          &lt;/Tab&gt;
-          &lt;Tab eventKey={"downloads"} title={"Downloads"} className="pt-2"&gt;
-            &lt;DownloadsTabComponent courseId={courseId} testIdPrefix={testId} /&gt;
-          &lt;/Tab&gt;
-          {showSettingsTab &amp;&amp; (
-            &lt;Tab eventKey={"settings"} title={"Settings"} className="pt-2"&gt;
-              &lt;SettingsTabComponent
+&nbsp;
+          &lt;Tabs defaultActiveKey={"students"}&gt;
+            &lt;Tab eventKey={"students"} title={"Students"} className="pt-2"&gt;
+              &lt;EnrollmentTabComponent
                 courseId={courseId}
                 testIdPrefix={testId}
-                canEditCourseOptions={canEditCourseOptions}
+                currentUser={currentUser}
+                canEditStudents={canEditStudents}
               /&gt;
             &lt;/Tab&gt;
-          )}
-        &lt;/Tabs&gt;
-      &lt;/div&gt;
+            &lt;Tab eventKey={"staff"} title={"Staff"} className="pt-2"&gt;
+              &lt;StaffTabComponent
+                courseId={courseId}
+                testIdPrefix={testId}
+                currentUser={currentUser}
+                isInstructor={staffTabIsInstructor}
+              /&gt;
+            &lt;/Tab&gt;
+          &lt;/Tabs&gt;
+        &lt;/div&gt;
+      )}
     &lt;/BasicLayout&gt;
   );
 }
@@ -505,7 +478,7 @@ export default function InstructorCourseShowPage({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-08T01:29:54.578Z
+                at 2026-07-08T05:28:03.959Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
