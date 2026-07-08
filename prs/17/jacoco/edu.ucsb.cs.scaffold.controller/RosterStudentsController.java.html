@@ -237,10 +237,9 @@ import org.springframework.web.server.ResponseStatusException;
 <span class="fc" id="L237">            .orElseThrow(() -&gt; new EntityNotFoundException(RosterStudent.class, id));</span>
 
 <span class="fc" id="L239">    rosterStudent.getCourse().getRosterStudents().remove(rosterStudent);</span>
-<span class="fc" id="L240">    rosterStudent.setCourse(null);</span>
-<span class="fc" id="L241">    rosterStudentRepository.delete(rosterStudent);</span>
+<span class="fc" id="L240">    rosterStudentRepository.delete(rosterStudent);</span>
 
-<span class="fc" id="L243">    return ResponseEntity.ok(</span>
+<span class="fc" id="L242">    return ResponseEntity.ok(</span>
         &quot;Successfully deleted roster student and removed him/her from the course list&quot;);
   }
 }
