@@ -1,13 +1,28 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import AppNavbar from "../../components/Nav/AppNavbar";
 import Footer from "../../components/Nav/Footer";
 import { useLogout } from "../../utils/currentUser";
+
 interface BasicLayoutProps {
   children: ReactNode;
+  // When true (the Scaffold Canvas pages), the viewport is pinned so the
+  // React Flow canvas handles all pan/zoom itself: a class is added to
+  // <body> that index.css uses to disable page scrolling. Every other page
+  // scrolls normally.
+  lockScroll?: boolean;
 }
 
-export default function BasicLayout({ children }: BasicLayoutProps) {
+export default function BasicLayout({
+  children,
+  lockScroll = false,
+}: BasicLayoutProps) {
   const doLogout = useLogout().mutate;
+
+  useEffect(() => {
+    if (!lockScroll) return;
+    document.body.classList.add("scaffold-canvas-active");
+    return () => document.body.classList.remove("scaffold-canvas-active");
+  }, [lockScroll]);
 
   return (
     <div

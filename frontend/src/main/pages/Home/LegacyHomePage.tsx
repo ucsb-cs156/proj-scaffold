@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import ConceptGraph from "main/components/Scaffold/ConceptGraph";
-import "App.css";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 
@@ -304,7 +303,7 @@ export default function LegacyHomePage() {
   }
 
   return (
-    <BasicLayout>
+    <BasicLayout lockScroll>
       <div
         style={{
           display: "flex",
