@@ -1,4 +1,8 @@
+import { useDebugMode } from "main/utils/debugMode";
+
 export default function Footer() {
+  const { debugMode, setDebugMode, canUseDebugMode } = useDebugMode();
+
   return (
     <footer
       style={{
@@ -14,9 +18,34 @@ export default function Footer() {
           padding: "16px 20px",
           color: "#475569",
           fontSize: "0.95rem",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "8px",
         }}
       >
-        Scaffold is a UCSB Computer Science project.
+        <span>Scaffold is a UCSB Computer Science project.</span>
+        {canUseDebugMode && (
+          <label
+            data-testid="debug-mode-toggle-label"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <input
+              type="checkbox"
+              data-testid="debug-mode-toggle"
+              checked={debugMode}
+              onChange={(e) => setDebugMode(e.target.checked)}
+            />
+            Debug Mode
+          </label>
+        )}
       </div>
     </footer>
   );

@@ -11,6 +11,7 @@ import SignInPage from "main/pages/Auth/SignInPage";
 import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
 
 import { useCurrentUser } from "main/utils/currentUser";
+import { DebugModeProvider } from "main/utils/debugMode";
 import AdminDeveloperPage from "main/pages/Admin/AdminDeveloperPage";
 import InstructorCoursesIndexPage from "main/pages/Courses/InstructorCoursesIndexPage";
 import AdminCoursesIndexPage from "main/pages/Admin/AdminCoursesIndexPage";
@@ -30,8 +31,9 @@ export default function App() {
   );
 
   return (
-    <BrowserRouter>
-      <Routes>
+    <DebugModeProvider>
+      <BrowserRouter>
+        <Routes>
         <Route path="/" element={homePage} />
         <Route path="/LegacyHomePage" element={<LegacyHomePage />} />
         <Route
@@ -138,7 +140,8 @@ export default function App() {
         />
 
         <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </DebugModeProvider>
   );
 }

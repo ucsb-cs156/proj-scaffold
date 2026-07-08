@@ -31,6 +31,7 @@ import {
   type EdgeLike,
 } from "main/utils/layout";
 import type { ConceptContentDTO } from "main/api/client";
+import { useDebugMode } from "main/utils/debugMode";
 
 // This is a parallel, database-driven version of ConceptGraph.tsx: instead of
 // importing majorConcepts/prereqEdgeData/positions/conceptContent from the
@@ -97,6 +98,9 @@ function toPastel(hex: string, strength: number = 0.35): string {
 }
 
 const DeleteDetailContext = createContext<(id: string) => void>(() => {});
+const ConceptContentContext = createContext<Record<string, ConceptContentDTO>>(
+  {},
+);
 
 const LEVELS = [
   { label: "Level 5", color: "#2bcd9c" },
@@ -160,10 +164,27 @@ function MajorNode({ data, id }: NodeProps) {
   const onSubconceptMastered = data.onSubconceptMastered as
     ((sub: string) => void) | undefined;
 
+  const { debugMode } = useDebugMode();
+  const allConceptContent = useContext(ConceptContentContext);
+  const debugTitle = debugMode
+    ? JSON.stringify(
+        {
+          id,
+          label,
+          color,
+          subconcepts,
+          conceptContent: allConceptContent[id],
+        },
+        null,
+        2,
+      )
+    : undefined;
+
   const showColor = !hasSelection || highlighted;
 
   return (
     <div
+      title={debugTitle}
       style={{
         width: 280,
         borderRadius: 10,
@@ -807,49 +828,51 @@ export default function ConceptGraphV2({
   );
 
   return (
-    <DeleteDetailContext.Provider value={handleDeleteDetail}>
-      <div style={{ width: "100%", height: "100%", position: "relative" }}>
-        <div
-          style={{
-            position: "absolute",
-            alignItems: "flex-end",
-            top: 12,
-            right: 12,
-            zIndex: 10,
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-          }}
-        >
-          <ResetButton onReset={handleReset} />
-          <LevelLegend />
+    <ConceptContentContext.Provider value={conceptContent}>
+      <DeleteDetailContext.Provider value={handleDeleteDetail}>
+        <div style={{ width: "100%", height: "100%", position: "relative" }}>
+          <div
+            style={{
+              position: "absolute",
+              alignItems: "flex-end",
+              top: 12,
+              right: 12,
+              zIndex: 10,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <ResetButton onReset={handleReset} />
+            <LevelLegend />
+          </div>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={handleNodesChange}
+            onEdgesChange={onEdgesChange}
+            nodeTypes={nodeTypes}
+            nodesConnectable={false}
+            onNodeClick={onNodeClick}
+            onInit={(instance: ReactFlowInstance<Node, Edge>) => {
+              rfInstance.current = instance;
+            }}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+            fitView
+            fitViewOptions={{ padding: 0.08 }}
+            minZoom={0.1}
+            onPaneClick={onPaneClick}
+          >
+            <Controls />
+            <Background
+              variant={BackgroundVariant.Dots}
+              color="#1E293B"
+              gap={20}
+            />
+          </ReactFlow>
         </div>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={handleNodesChange}
-          onEdgesChange={onEdgesChange}
-          nodeTypes={nodeTypes}
-          nodesConnectable={false}
-          onNodeClick={onNodeClick}
-          onInit={(instance: ReactFlowInstance<Node, Edge>) => {
-            rfInstance.current = instance;
-          }}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-          fitView
-          fitViewOptions={{ padding: 0.08 }}
-          minZoom={0.1}
-          onPaneClick={onPaneClick}
-        >
-          <Controls />
-          <Background
-            variant={BackgroundVariant.Dots}
-            color="#1E293B"
-            gap={20}
-          />
-        </ReactFlow>
-      </div>
-    </DeleteDetailContext.Provider>
+      </DeleteDetailContext.Provider>
+    </ConceptContentContext.Provider>
   );
 }
