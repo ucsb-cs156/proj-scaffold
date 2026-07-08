@@ -112,6 +112,88 @@ public class MarkdownServiceTests {
         service.clean("[a ![img](javascript:alert(1)) text](https://ok.com/page)"));
   }
 
+  // toHtml
+
+  @Test
+  public void toHtml_returns_null_for_null_input() {
+    assertNull(service.toHtml(null));
+  }
+
+  @Test
+  public void toHtml_wraps_plain_text_in_a_paragraph() {
+    assertEquals("<p>hello</p>", service.toHtml("hello"));
+  }
+
+  @Test
+  public void toHtml_renders_a_fenced_code_block_as_pre_code() {
+    assertEquals(
+        "<pre><code class=\"language-python\">if a &lt; b:\n</code></pre>",
+        service.toHtml("```python\nif a < b:\n```"));
+  }
+
+  @Test
+  public void toHtml_sanitizes_the_rendered_output_even_when_the_source_was_never_cleaned() {
+    // Simulates content that bypassed clean() (e.g. legacy/seeded data): the unsafe
+    // <script> tag must still be stripped from the rendered HTML before it is returned.
+    assertEquals("<p>before  after</p>", service.toHtml("before <script>x</script> after"));
+  }
+
+  @Test
+  public void toHtml_keeps_an_image_produced_by_markdown_image_syntax() {
+    assertEquals(
+        "<p><img src=\"https://ok.com/i.png\" alt=\"alt\" /></p>",
+        service.toHtml("![alt](https://ok.com/i.png)"));
+  }
+
+  // toInlineHtml
+
+  @Test
+  public void toInlineHtml_returns_null_for_null_input() {
+    assertNull(service.toInlineHtml(null));
+  }
+
+  @Test
+  public void toInlineHtml_strips_the_paragraph_wrapper_from_plain_text() {
+    assertEquals("Recursion", service.toInlineHtml("Recursion"));
+  }
+
+  @Test
+  public void toInlineHtml_strips_the_paragraph_wrapper_but_keeps_inline_formatting() {
+    assertEquals(
+        "<strong>Numeric (integers, floats)</strong>",
+        service.toInlineHtml("**Numeric (integers, floats)**"));
+  }
+
+  @Test
+  public void toInlineHtml_preserves_a_literal_newline_in_a_multiline_label() {
+    // "\n" survives so CSS white-space: pre-line can still break the label onto two
+    // lines, matching how these labels rendered before Markdown support was added.
+    assertEquals("Basic\nData Types", service.toInlineHtml("Basic \n Data Types"));
+  }
+
+  @Test
+  public void toInlineHtml_returns_the_full_html_unchanged_for_multi_paragraph_input() {
+    // Falls back rather than mangling the markup: stripping only the outer <p>...</p>
+    // would leave a dangling </p><p> pair in the middle of the string.
+    assertEquals("<p>para one</p>\n<p>para two</p>", service.toInlineHtml("para one\n\npara two"));
+  }
+
+  @Test
+  public void toInlineHtml_returns_the_full_html_unchanged_when_it_does_not_end_with_a_p_tag() {
+    // Starts with <p> (a paragraph) but ends with <hr /> (a following block element),
+    // so there is no single trailing </p> to strip.
+    assertEquals("<p>para</p>\n<hr />", service.toInlineHtml("para\n\n---"));
+  }
+
+  @Test
+  public void toInlineHtml_returns_the_full_html_unchanged_when_it_is_not_p_wrapped() {
+    // A fenced code block renders as <pre><code>...</code></pre>, not a <p>, so there
+    // is no wrapper to strip.
+    assertEquals(
+        "<pre><code class=\"language-python\">if a &lt; b:\n</code></pre>",
+        service.toInlineHtml("```python\nif a < b:\n```"));
+  }
+
   // renderedLength
 
   @Test

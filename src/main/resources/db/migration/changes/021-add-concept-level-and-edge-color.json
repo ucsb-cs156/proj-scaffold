@@ -1,0 +1,28 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "021-add-concept-level-and-edge-color",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "columnExists": { "tableName": "concepts", "columnName": "level" } } }
+        ],
+        "changes": [
+          {
+            "addColumn": {
+              "tableName": "concepts",
+              "columns": [{ "column": { "name": "level", "type": "INT" } }]
+            }
+          },
+          {
+            "addColumn": {
+              "tableName": "concept_edges",
+              "columns": [{ "column": { "name": "color", "type": "VARCHAR(255)" } }]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

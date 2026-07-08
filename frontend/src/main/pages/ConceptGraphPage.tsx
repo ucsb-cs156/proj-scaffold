@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams } from "react-router";
 import { Spinner } from "react-bootstrap";
 import ConceptGraphV2 from "main/components/Scaffold/ConceptGraphV2";
@@ -90,6 +90,12 @@ export default function ConceptGraphPage() {
   const [positions, setPositions] = useState<
     Record<string, { x: number; y: number }>
   >({});
+  // Private, per-user overrides of top-level concept positions (dragged by this user);
+  // takes precedence over the shared `positions` above, which only an instructor's
+  // POST /api/course/scaffold/reset can change. Cleared course-wide by that same reset.
+  const [topLevelPositions, setTopLevelPositions] = useState<
+    Record<string, { x: number; y: number }>
+  >({});
   const [conceptContent, setConceptContent] = useState<
     Record<string, ConceptContentDTO>
   >({});
@@ -111,6 +117,12 @@ export default function ConceptGraphPage() {
   useEffect(() => {
     savedDetailCardsRef.current = savedDetailCards;
   }, [savedDetailCards]);
+
+  const topLevelPositionsRef =
+    useRef<Record<string, { x: number; y: number }>>(topLevelPositions);
+  useEffect(() => {
+    topLevelPositionsRef.current = topLevelPositions;
+  }, [topLevelPositions]);
 
   // Fetch the concept graph data for this course once on mount.
   useEffect(() => {
@@ -168,6 +180,7 @@ export default function ConceptGraphPage() {
         setMasteredSubconcepts(
           new Set((data.mastered_subconcepts ?? []) as string[]),
         );
+        setTopLevelPositions(data.top_level_positions ?? {});
       }
     });
   }, [userId, courseId, courseIdIsValid]);
@@ -177,6 +190,10 @@ export default function ConceptGraphPage() {
       stars: Set<string>,
       cards: SavedDetailCard[],
       mastered: Set<string> = masteredSubconceptsRef.current,
+      topLevelPos: Record<
+        string,
+        { x: number; y: number }
+      > = topLevelPositionsRef.current,
     ) => {
       if (!userId || !courseIdIsValid) return;
       await saveUserStateV2({
@@ -185,10 +202,30 @@ export default function ConceptGraphPage() {
         starred_ids: Array.from(stars),
         detail_cards: cards,
         mastered_subconcepts: Array.from(mastered),
+        top_level_positions: topLevelPos,
       });
     },
     [userId, courseId, courseIdIsValid],
   );
+
+  // Private overrides take precedence over the shared, instructor-controlled positions.
+  const effectivePositions = useMemo(
+    () => ({ ...positions, ...topLevelPositions }),
+    [positions, topLevelPositions],
+  );
+
+  const handleMajorMoved = (name: string, posX: number, posY: number) => {
+    setTopLevelPositions((prev) => {
+      const next = { ...prev, [name]: { x: posX, y: posY } };
+      persistState(
+        starredIdsRef.current,
+        savedDetailCardsRef.current,
+        masteredSubconceptsRef.current,
+        next,
+      );
+      return next;
+    });
+  };
 
   const handleSubconceptMastered = (sub: string) => {
     setMasteredSubconcepts((prev) => {
@@ -312,7 +349,8 @@ export default function ConceptGraphPage() {
     setSavedDetailCards([]);
     setAddedDetailKeys(new Set());
     setMasteredSubconcepts(new Set());
-    persistState(new Set(), [], new Set());
+    setTopLevelPositions({});
+    persistState(new Set(), [], new Set(), {});
   };
 
   const handleDetailAdded = (card: SavedDetailCard) => {
@@ -522,7 +560,7 @@ export default function ConceptGraphPage() {
         <div style={{ flex: 1, minHeight: 0, background: "#ffffff" }}>
           <ConceptGraphV2
             majorConcepts={majorConcepts}
-            positions={positions}
+            positions={effectivePositions}
             conceptContent={conceptContent}
             prereqEdgeData={prereqEdgeData}
             highlightedIds={highlightedIds}
@@ -535,6 +573,7 @@ export default function ConceptGraphPage() {
             onDetailAdded={handleDetailAdded}
             onDetailDeleted={handleDetailDeleted}
             onDetailMoved={handleDetailMoved}
+            onMajorMoved={handleMajorMoved}
             masteredSubconcepts={masteredSubconcepts}
             onSubconceptMastered={handleSubconceptMastered}
             onPaneClick={handlePaneClick}
@@ -623,9 +662,7 @@ export default function ConceptGraphPage() {
                       key={sub.id}
                       onClick={() =>
                         setSelectedItem(
-                          selectedItem === sub.labelHtml
-                            ? null
-                            : sub.labelHtml,
+                          selectedItem === sub.labelHtml ? null : sub.labelHtml,
                         )
                       }
                       style={{
@@ -715,7 +752,10 @@ export default function ConceptGraphPage() {
                     [
                       { label: "Description", key: "descriptionHtml" },
                       { label: "Example", key: "exampleHtml" },
-                    ] as { label: string; key: "descriptionHtml" | "exampleHtml" }[]
+                    ] as {
+                      label: string;
+                      key: "descriptionHtml" | "exampleHtml";
+                    }[]
                   ).map((card) => {
                     const isAdded = addedDetailKeys.has(
                       `${card.label}:${selectedItemLabel}`,

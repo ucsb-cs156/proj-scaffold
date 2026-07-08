@@ -59,6 +59,7 @@ vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
       posX: number,
       posY: number,
     ) => void;
+    onMajorMoved?: (name: string, posX: number, posY: number) => void;
     onSubconceptMastered: (sub: string) => void;
     onPaneClick?: () => void;
   }) => (
@@ -99,6 +100,9 @@ vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
         onClick={() => props.onDetailMoved?.("Description", "Loops", 5, 6)}
       >
         trigger-detail-moved
+      </button>
+      <button onClick={() => props.onMajorMoved?.("recursion", 30, 40)}>
+        trigger-major-moved
       </button>
       <button onClick={() => props.onSubconceptMastered("Base case")}>
         trigger-subconcept-mastered
@@ -181,6 +185,7 @@ const userState: UserStateV2Response = {
     },
   ] as unknown as UserStateV2Response["detail_cards"],
   mastered_subconcepts: ["For loops"],
+  top_level_positions: {},
 };
 
 const loggedInWithId = {
@@ -469,6 +474,7 @@ describe("ConceptGraphPage", () => {
         starred_ids: [],
         detail_cards: [],
         mastered_subconcepts: [],
+        top_level_positions: {},
       }),
     );
   });
@@ -525,6 +531,21 @@ describe("ConceptGraphPage", () => {
       expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
         expect.objectContaining({
           detail_cards: [expect.objectContaining({ posX: 5, posY: 6 })],
+        }),
+      ),
+    );
+  });
+
+  test("triggering onMajorMoved persists a private top-level position override", async () => {
+    renderConceptGraphPage(loggedInWithId);
+    await screen.findByTestId("concept-graph-stub");
+
+    fireEvent.click(screen.getByText("trigger-major-moved"));
+
+    await waitFor(() =>
+      expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
+        expect.objectContaining({
+          top_level_positions: { recursion: { x: 30, y: 40 } },
         }),
       ),
     );

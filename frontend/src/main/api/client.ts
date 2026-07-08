@@ -168,6 +168,7 @@ export interface UserStateV2Response {
   starred_ids: string[];
   detail_cards: unknown[];
   mastered_subconcepts: string[];
+  top_level_positions: Record<string, { x: number; y: number }>;
 }
 
 export async function fetchUserStateV2(
@@ -191,6 +192,7 @@ export async function saveUserStateV2(body: {
   starred_ids: string[];
   detail_cards: unknown[];
   mastered_subconcepts: string[];
+  top_level_positions: Record<string, { x: number; y: number }>;
 }): Promise<void> {
   const res = await fetch(`${API_BASE}/user-state-v2`, {
     method: "POST",

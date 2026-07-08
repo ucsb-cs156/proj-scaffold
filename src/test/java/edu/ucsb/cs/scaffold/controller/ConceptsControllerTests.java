@@ -1,7 +1,9 @@
 package edu.ucsb.cs.scaffold.controller;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -21,10 +23,13 @@ import edu.ucsb.cs.scaffold.entity.Concept;
 import edu.ucsb.cs.scaffold.entity.ConceptEdge;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.PracticeProblem;
+import edu.ucsb.cs.scaffold.model.UserStateV2;
 import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
 import edu.ucsb.cs.scaffold.repository.ConceptRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PracticeProblemRepository;
+import edu.ucsb.cs.scaffold.repository.UserStateV2Repository;
+import edu.ucsb.cs.scaffold.services.ConceptGraphService;
 import edu.ucsb.cs.scaffold.services.MarkdownService;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +43,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 @WebMvcTest(controllers = ConceptsController.class)
-@Import(MarkdownService.class)
+@Import({MarkdownService.class, ConceptGraphService.class})
 public class ConceptsControllerTests extends ControllerTestCase {
 
   @MockitoBean private ConceptRepository conceptRepository;
@@ -48,6 +53,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
   @MockitoBean private ConceptEdgeRepository conceptEdgeRepository;
 
   @MockitoBean private CourseRepository courseRepository;
+
+  @MockitoBean private UserStateV2Repository userStateV2Repository;
 
   private List<Concept> buildSampleConcepts() {
     Course course = Course.builder().id(42L).courseName("CMPSC 8").build();
@@ -231,14 +238,35 @@ public class ConceptsControllerTests extends ControllerTestCase {
     String expectedJson =
         """
         [
-          { "source": "loops", "target": "recursion" }
+          { "id": 20, "source": "loops", "target": "recursion", "color": null }
         ]
         """;
 
     mockMvc
         .perform(get("/api/concepts/edges").param("courseId", "42"))
         .andExpect(status().isOk())
-        .andExpect(content().json(expectedJson));
+        .andExpect(content().json(expectedJson, true));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void logged_in_user_sees_an_edges_cycle_color_when_set() throws Exception {
+    List<Concept> concepts = buildSampleConcepts();
+    List<ConceptEdge> edges = buildSampleEdges(concepts);
+    edges.get(0).setColor("#FF0000");
+    when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(edges);
+
+    String expectedJson =
+        """
+        [
+          { "id": 20, "source": "loops", "target": "recursion", "color": "#FF0000" }
+        ]
+        """;
+
+    mockMvc
+        .perform(get("/api/concepts/edges").param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(content().json(expectedJson, true));
   }
 
   @Test
@@ -334,7 +362,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
                 .param("label", "**Recursion**")
                 .param("description", "before\n\n<script>alert('x')</script>\n\nafter")
                 .param("example", "```python\nif a < b:\n    print('x')\n```")
-                .param("color", "#fe9a71")
                 .param("x", "800")
                 .param("y", "300"))
         .andExpect(status().isOk())
@@ -349,7 +376,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
     assertEquals("**Recursion**", saved.getLabel());
     assertEquals("before\n\nafter", saved.getDescription());
     assertEquals("```python\nif a < b:\n    print('x')\n```", saved.getExample());
-    assertEquals("#fe9a71", saved.getColor());
+    assertEquals(ConceptsController.DEFAULT_TOP_LEVEL_COLOR, saved.getColor());
+    assertEquals(1, saved.getLevel());
     assertEquals(800, saved.getX());
     assertEquals(300, saved.getY());
     assertNull(saved.getParent());
@@ -379,9 +407,38 @@ public class ConceptsControllerTests extends ControllerTestCase {
     ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
     verify(conceptRepository).save(captor.capture());
     Concept saved = captor.getValue();
-    assertNull(saved.getColor());
+    assertEquals(ConceptsController.DEFAULT_TOP_LEVEL_COLOR, saved.getColor());
     assertNull(saved.getDescription());
     assertNull(saved.getExample());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void posting_a_top_level_concept_with_a_color_param_is_ignored_and_still_gets_the_default()
+      throws Exception {
+    // color is not a bound @RequestParam, so a client sending one has no effect: the default
+    // always wins. Guards against accidentally re-wiring color as a client-settable field.
+    Course course = Course.builder().id(42L).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseIdAndName(42L, "loops")).thenReturn(Optional.empty());
+    when(conceptRepository.save(any(Concept.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    mockMvc
+        .perform(
+            post("/api/concepts/post")
+                .with(csrf())
+                .param("courseId", "42")
+                .param("name", "loops")
+                .param("label", "Loops")
+                .param("color", "#ff0000")
+                .param("x", "1")
+                .param("y", "2"))
+        .andExpect(status().isOk());
+
+    ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
+    verify(conceptRepository).save(captor.capture());
+    assertEquals(ConceptsController.DEFAULT_TOP_LEVEL_COLOR, captor.getValue().getColor());
   }
 
   @Test
@@ -581,12 +638,6 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void post_subconcept_rejects_a_color_parameter() throws Exception {
-    assertSubconceptExtraParamRejected("color", "#fff");
-  }
-
-  @Test
-  @WithInstructorCoursePermissions
   public void post_subconcept_rejects_an_x_parameter() throws Exception {
     assertSubconceptExtraParamRejected("x", "5");
   }
@@ -616,8 +667,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
             .andExpect(status().isBadRequest())
             .andReturn();
     Map<String, Object> json = responseToJson(response);
-    assertEquals(
-        "name, color, x, and y may not be specified for a subconcept", json.get("message"));
+    assertEquals("name, x, and y may not be specified for a subconcept", json.get("message"));
     verify(conceptRepository, never()).save(any(Concept.class));
   }
 
@@ -1377,6 +1427,34 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void post_edge_rejects_an_edge_that_would_create_a_cycle() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept loops = Concept.builder().id(1L).course(course).name("loops").build();
+    Concept recursion = Concept.builder().id(2L).course(course).name("recursion").build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(loops));
+    when(conceptRepository.findById(2L)).thenReturn(Optional.of(recursion));
+    when(conceptEdgeRepository.findBySourceIdAndTargetId(1L, 2L)).thenReturn(Optional.empty());
+    // recursion -> loops already exists, so loops -> recursion would close a cycle.
+    ConceptEdge existing =
+        ConceptEdge.builder().id(20L).course(course).source(recursion).target(loops).build();
+    when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of(existing));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/concepts/edges/post")
+                    .with(csrf())
+                    .param("sourceConceptId", "1")
+                    .param("targetConceptId", "2"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("edge from concept 1 to concept 2 would create a cycle", json.get("message"));
+    verify(conceptEdgeRepository, never()).save(any(ConceptEdge.class));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void post_edge_returns_404_when_source_does_not_exist() throws Exception {
     when(conceptRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -1579,5 +1657,253 @@ public class ConceptsControllerTests extends ControllerTestCase {
             .andReturn();
     Map<String, Object> json = responseToJson(response);
     assertEquals("ConceptEdge with id 20 not found", json.get("message"));
+  }
+
+  // ---------- POST /api/course/scaffold/reset ----------
+
+  @Test
+  public void anonymous_user_cannot_reset_course_scaffold() throws Exception {
+    mockMvc
+        .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void user_without_course_permissions_cannot_reset_course_scaffold() throws Exception {
+    mockMvc
+        .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reset_course_scaffold_returns_404_when_course_does_not_exist() throws Exception {
+    when(courseRepository.findById(42L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Course with id 42 not found", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reset_ranks_and_lays_out_a_simple_chain() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(999).y(999).build();
+    Concept b = Concept.builder().id(2L).course(course).name("b").label("B").x(999).y(999).build();
+    ConceptEdge edge = ConceptEdge.builder().id(10L).course(course).source(a).target(b).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a, b));
+    when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of(edge));
+
+    mockMvc
+        .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.report.cycleEdges").isEmpty())
+        .andExpect(jsonPath("$.report.removedEdges").isEmpty())
+        .andExpect(jsonPath("$.report.levels[0].name").value("a"))
+        .andExpect(jsonPath("$.report.levels[0].level").value(1))
+        .andExpect(jsonPath("$.report.levels[0].color").value("#c99ffe"))
+        .andExpect(jsonPath("$.report.levels[0].x").value(0))
+        .andExpect(jsonPath("$.report.levels[0].y").value(0))
+        .andExpect(jsonPath("$.report.levels[1].name").value("b"))
+        .andExpect(jsonPath("$.report.levels[1].level").value(2))
+        .andExpect(jsonPath("$.report.levels[1].color").value("#feaef2"))
+        .andExpect(jsonPath("$.report.levels[1].x").value(0))
+        .andExpect(jsonPath("$.report.levels[1].y").value(-300))
+        .andExpect(jsonPath("$.graph[0].color").value("#c99ffe"))
+        .andExpect(jsonPath("$.graph[1].color").value("#feaef2"))
+        .andExpect(jsonPath("$.edges[0].color").doesNotExist());
+
+    assertEquals(1, a.getLevel());
+    assertEquals(2, b.getLevel());
+    assertNull(edge.getColor());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reset_sorts_by_the_callers_private_position_override_instead_of_the_saved_x()
+      throws Exception {
+    Course course = Course.builder().id(42L).build();
+    // Saved x would order b before a; the caller's private drag reverses that.
+    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(500).y(0).build();
+    Concept b = Concept.builder().id(2L).course(course).name("b").label("B").x(0).y(0).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a, b));
+    when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
+
+    UserStateV2 callerState = new UserStateV2();
+    callerState.setTopLevelPositions("{\"a\": {\"x\": -500, \"y\": 0}}");
+    when(userStateV2Repository.findByUseridAndCourseId(1L, 42L))
+        .thenReturn(Optional.of(callerState));
+
+    mockMvc
+        .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
+        .andExpect(status().isOk());
+
+    // With a's private x (-500) sorted before b's saved x (0), a lands on the left.
+    assertEquals(-175, a.getX());
+    assertEquals(175, b.getX());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reset_falls_back_to_saved_x_when_the_override_has_no_x_value() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(500).y(0).build();
+    Concept b = Concept.builder().id(2L).course(course).name("b").label("B").x(0).y(0).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a, b));
+    when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
+
+    // The override entry for "a" exists but has no x (only y is set), so its saved x (500)
+    // is still used for sorting, keeping it to the right of b.
+    UserStateV2 callerState = new UserStateV2();
+    callerState.setTopLevelPositions("{\"a\": {\"y\": 50}}");
+    when(userStateV2Repository.findByUseridAndCourseId(1L, 42L))
+        .thenReturn(Optional.of(callerState));
+
+    mockMvc
+        .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
+        .andExpect(status().isOk());
+
+    assertEquals(175, a.getX());
+    assertEquals(-175, b.getX());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reset_throws_when_the_callers_stored_positions_are_malformed() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(0).y(0).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a));
+    when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
+
+    UserStateV2 callerState = new UserStateV2();
+    callerState.setTopLevelPositions("not valid json");
+    when(userStateV2Repository.findByUseridAndCourseId(1L, 42L))
+        .thenReturn(Optional.of(callerState));
+
+    jakarta.servlet.ServletException thrown =
+        assertThrows(
+            jakarta.servlet.ServletException.class,
+            () ->
+                mockMvc.perform(
+                    post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42")));
+    assertEquals(IllegalStateException.class, thrown.getCause().getClass());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reset_excludes_subconcepts_from_the_top_level_analysis() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(0).y(0).build();
+    Concept sub = Concept.builder().id(2L).course(course).parent(a).label("Sub").build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a, sub));
+    when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
+
+    mockMvc
+        .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.report.levels", hasSize(1)))
+        .andExpect(jsonPath("$.report.levels[0].name").value("a"));
+
+    assertNull(sub.getLevel());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reset_clears_every_users_private_top_level_position_overrides() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(0).y(0).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a));
+    when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
+
+    UserStateV2 instructorState = new UserStateV2();
+    instructorState.setTopLevelPositions("{\"a\": {\"x\": 999, \"y\": 0}}");
+    UserStateV2 studentState = new UserStateV2();
+    studentState.setTopLevelPositions("{\"a\": {\"x\": -999, \"y\": 0}}");
+    when(userStateV2Repository.findByUseridAndCourseId(1L, 42L))
+        .thenReturn(Optional.of(instructorState));
+    when(userStateV2Repository.findByCourseId(42L))
+        .thenReturn(List.of(instructorState, studentState));
+
+    mockMvc
+        .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
+        .andExpect(status().isOk());
+
+    ArgumentCaptor<List<UserStateV2>> captor = ArgumentCaptor.forClass(List.class);
+    verify(userStateV2Repository).saveAll(captor.capture());
+    assertEquals(List.of(instructorState, studentState), captor.getValue());
+    assertEquals("{}", instructorState.getTopLevelPositions());
+    assertEquals("{}", studentState.getTopLevelPositions());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reset_colors_a_two_node_cycle_red_and_falls_both_concepts_back_to_level_one()
+      throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(0).y(0).build();
+    Concept b = Concept.builder().id(2L).course(course).name("b").label("B").x(0).y(0).build();
+    ConceptEdge ab = ConceptEdge.builder().id(10L).course(course).source(a).target(b).build();
+    ConceptEdge ba = ConceptEdge.builder().id(11L).course(course).source(b).target(a).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a, b));
+    when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of(ab, ba));
+
+    mockMvc
+        .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.report.cycleEdges", hasSize(2)))
+        .andExpect(jsonPath("$.report.cycleEdges[0].edgeId").value(10))
+        .andExpect(jsonPath("$.report.cycleEdges[0].source").value("a"))
+        .andExpect(jsonPath("$.report.cycleEdges[0].target").value("b"))
+        .andExpect(jsonPath("$.report.cycleEdges[1].edgeId").value(11))
+        .andExpect(jsonPath("$.report.cycleEdges[1].source").value("b"))
+        .andExpect(jsonPath("$.report.cycleEdges[1].target").value("a"))
+        .andExpect(jsonPath("$.report.removedEdges").isEmpty());
+
+    assertEquals(1, a.getLevel());
+    assertEquals(1, b.getLevel());
+    assertEquals(ConceptGraphService.CYCLE_EDGE_COLOR, ab.getColor());
+    assertEquals(ConceptGraphService.CYCLE_EDGE_COLOR, ba.getColor());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reset_deletes_an_edge_made_redundant_by_a_longer_path() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept a = Concept.builder().id(1L).course(course).name("a").label("A").x(0).y(0).build();
+    Concept b = Concept.builder().id(2L).course(course).name("b").label("B").x(0).y(0).build();
+    Concept c = Concept.builder().id(3L).course(course).name("c").label("C").x(0).y(0).build();
+    ConceptEdge shortcut = ConceptEdge.builder().id(10L).course(course).source(a).target(c).build();
+    ConceptEdge ab = ConceptEdge.builder().id(11L).course(course).source(a).target(b).build();
+    ConceptEdge bc = ConceptEdge.builder().id(12L).course(course).source(b).target(c).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a, b, c));
+    when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of(shortcut, ab, bc));
+
+    mockMvc
+        .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.report.removedEdges", hasSize(1)))
+        .andExpect(jsonPath("$.report.removedEdges[0].edgeId").value(10))
+        .andExpect(jsonPath("$.report.removedEdges[0].source").value("a"))
+        .andExpect(jsonPath("$.report.removedEdges[0].target").value("c"))
+        .andExpect(jsonPath("$.report.levels[2].name").value("c"))
+        .andExpect(jsonPath("$.report.levels[2].level").value(3));
+
+    ArgumentCaptor<List<ConceptEdge>> captor = ArgumentCaptor.forClass(List.class);
+    verify(conceptEdgeRepository).deleteAll(captor.capture());
+    assertEquals(List.of(shortcut), captor.getValue());
   }
 }

@@ -82,6 +82,10 @@ interface ConceptGraphV2Props {
     posX: number,
     posY: number,
   ) => void;
+  // Called when the user finishes dragging a top-level concept node. The position is a
+  // private, per-user override (see ConceptGraphPage) until an instructor's course-wide
+  // reset recomputes the shared, canonical position.
+  onMajorMoved?: (name: string, posX: number, posY: number) => void;
   masteredSubconcepts: Set<string>;
   onSubconceptMastered: (sub: string) => void;
   onPaneClick?: () => void;
@@ -502,6 +506,7 @@ export default function ConceptGraphV2({
   onDetailDeleted,
   restoredDetailCards,
   onDetailMoved,
+  onMajorMoved,
   masteredSubconcepts,
   onSubconceptMastered,
   onPaneClick,
@@ -808,11 +813,13 @@ export default function ConceptGraphV2({
               change.position.x,
               change.position.y,
             );
+          } else if (node?.type === "major") {
+            onMajorMoved?.(node.id, change.position.x, change.position.y);
           }
         }
       });
     },
-    [onNodesChange, onDetailMoved],
+    [onNodesChange, onDetailMoved, onMajorMoved],
   );
 
   return (

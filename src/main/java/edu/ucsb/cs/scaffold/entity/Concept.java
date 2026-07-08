@@ -45,6 +45,10 @@ public class Concept {
   private Integer x;
   private Integer y;
 
+  // Longest-path rank from a root (no-prerequisite) concept, 1-based. Top-level only,
+  // recomputed by ConceptGraphService.reset(); see /api/course/scaffold/reset.
+  private Integer level;
+
   @ManyToOne
   @JoinColumn(name = "parent_id")
   @ToString.Exclude
