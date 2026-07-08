@@ -117,24 +117,19 @@ import org.springframework.web.bind.annotation.RestController;
   @Transactional
   public ResponseEntity&lt;String&gt; deleteStaffMember(
       @Parameter(name = &quot;id&quot;) @RequestParam Long id,
-      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
-      @Parameter(
-              name = &quot;removeFromOrg&quot;,
-              description = &quot;Whether to remove course staff from GitHub organization&quot;)
-          @RequestParam(defaultValue = &quot;false&quot;)
-          boolean removeFromOrg)
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId)
       throws EntityNotFoundException {
-<span class="fc" id="L127">    CourseStaff staffMember =</span>
+<span class="fc" id="L122">    CourseStaff staffMember =</span>
         courseStaffRepository
-<span class="fc" id="L129">            .findById(id)</span>
-<span class="fc" id="L130">            .orElseThrow(() -&gt; new EntityNotFoundException(CourseStaff.class, id));</span>
-<span class="fc" id="L131">    Course course = staffMember.getCourse();</span>
+<span class="fc" id="L124">            .findById(id)</span>
+<span class="fc" id="L125">            .orElseThrow(() -&gt; new EntityNotFoundException(CourseStaff.class, id));</span>
+<span class="fc" id="L126">    Course course = staffMember.getCourse();</span>
 
-<span class="fc" id="L133">    course.getCourseStaff().remove(staffMember);</span>
-<span class="fc" id="L134">    staffMember.setCourse(null);</span>
-<span class="fc" id="L135">    courseStaffRepository.delete(staffMember);</span>
+<span class="fc" id="L128">    course.getCourseStaff().remove(staffMember);</span>
+<span class="fc" id="L129">    staffMember.setCourse(null);</span>
+<span class="fc" id="L130">    courseStaffRepository.delete(staffMember);</span>
 
-<span class="fc" id="L137">    return ResponseEntity.ok(&quot;Successfully deleted staff member.&quot;);</span>
+<span class="fc" id="L132">    return ResponseEntity.ok(&quot;Successfully deleted staff member.&quot;);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
