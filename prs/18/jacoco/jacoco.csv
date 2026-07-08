@@ -15,7 +15,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,UserStateV2Controller,0,170,0,12,0,43,0
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.StoredPosition,0,9,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController,0,502,0,34,0,132,0,39,0,22
 scaffold,edu.ucsb.cs.scaffold.controller,ApiController,0,41,0,0,0,11,0,7,0,7
-scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController,0,1286,0,90,0,285,0,87,0,42
+scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController,0,1283,0,82,0,281,0,82,0,41
 scaffold,edu.ucsb.cs.scaffold.controller,CourseStaffController,0,129,0,0,0,33,0,10,0,10
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.ScaffoldResetReportDTO,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController,0,9,0,0,0,2,0,2,0,2
@@ -27,12 +27,12 @@ scaffold,edu.ucsb.cs.scaffold.controller,UserStateController.new TypeReference()
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateController,0,134,0,8,0,29,0,11,0,7
 scaffold,edu.ucsb.cs.scaffold.controller,CourseStaffCSVController,0,169,0,12,0,38,0,11,0,5
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.InstructorCourseView,0,53,0,4,0,10,0,4,0,2
-scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.MajorConceptDTO,0,18,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.MajorConceptDTO,0,15,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.CycleEdgeDTO,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,UserInfoController,0,6,0,0,0,2,0,2,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,RosterStudentsCSVController,0,520,0,42,0,122,0,37,0,16
 scaffold,edu.ucsb.cs.scaffold.controller,UserActivityV2Controller,0,65,0,10,0,16,0,7,0,2
-scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.LevelAssignmentDTO,0,18,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.LevelAssignmentDTO,0,21,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,QuestionController,0,5,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.EmailTypes,0,21,0,0,0,4,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,UserActivityV2Controller.UserActivityV2Request,0,15,0,0,0,1,0,1,0,1

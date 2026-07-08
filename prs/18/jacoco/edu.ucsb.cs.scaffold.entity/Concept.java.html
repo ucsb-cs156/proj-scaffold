@@ -8,13 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(
-    name = &quot;concepts&quot;,
-    uniqueConstraints = {
-      @UniqueConstraint(
-          name = &quot;UK_CONCEPTS_COURSE_CONCEPT&quot;,
-          columnNames = {&quot;course_id&quot;, &quot;name&quot;})
-    })
+@Table(name = &quot;concepts&quot;)
 public class Concept {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,10 +18,6 @@ public class Concept {
   @JoinColumn(name = &quot;course_id&quot;, nullable = false)
   @ToString.Exclude
   private Course course;
-
-  // Human-readable slug (lowercase letters, digits, hyphens). Non-null exactly for
-  // top-level concepts; subconcepts are identified by (parent, label) instead.
-  private String name;
 
   @Column(nullable = false)
   private String label;
@@ -55,7 +45,7 @@ public class Concept {
   private Concept parent;
 
   public boolean isSubconcept() {
-<span class="fc bfc" id="L58" title="All 2 branches covered.">    return parent != null;</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">    return parent != null;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
