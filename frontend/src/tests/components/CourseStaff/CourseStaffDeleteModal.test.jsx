@@ -27,13 +27,11 @@ describe("CourseStaffDeleteModal tests", () => {
       "modal-dialog-centered",
     );
 
-    const submitButton = await screen.findByText("Delete Staff");
+    const submitButton = await screen.findByText("Delete Staff Member");
     fireEvent.click(submitButton);
     await waitFor(() => expect(mockSubmit).toHaveBeenCalledTimes(1));
     expect(mockSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        removeFromOrg: "false",
-      }),
+      expect.anything(),
       expect.anything(),
     );
   });
@@ -52,18 +50,11 @@ describe("CourseStaffDeleteModal tests", () => {
       </div>,
     );
 
-    const submitButton = await screen.findByText("Delete Staff");
-    fireEvent.click(
-      screen.getByLabelText(
-        "Yes, I'd like to remove them from the GitHub Organization",
-      ),
-    );
+    const submitButton = await screen.findByText("Delete Staff Member");
     fireEvent.click(submitButton);
     await waitFor(() => expect(mockSubmit).toHaveBeenCalledTimes(1));
     expect(mockSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        removeFromOrg: "true",
-      }),
+      expect.anything(),
       expect.anything(),
     );
   });

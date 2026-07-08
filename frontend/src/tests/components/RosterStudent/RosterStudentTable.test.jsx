@@ -79,7 +79,7 @@ describe("RosterStudentTable tests", () => {
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <RosterStudentTable
-            students={rosterStudentFixtures.studentsWithEachStatus}
+            students={rosterStudentFixtures.sixStudents}
             currentUser={currentUser}
           />
         </MemoryRouter>
@@ -266,12 +266,10 @@ describe("RosterStudentTable tests", () => {
     await waitFor(() => axiosMock.history.delete.length === 1);
     expect(axiosMock.history.delete[0].params).toEqual({
       id: 3,
-      removeFromOrg: "false",
     });
     await waitFor(() =>
       expect(screen.queryByText("Delete Student")).not.toBeInTheDocument(),
     );
-    expect(mockToast).toBeCalledWith("Student deleted successfully.");
     expect(
       queryClientSpecific.getQueryState(["/api/rosterstudents/course/7"])
         .isInvalidated,

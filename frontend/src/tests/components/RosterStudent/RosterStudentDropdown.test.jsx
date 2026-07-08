@@ -3,7 +3,7 @@ import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import RosterStudentDropdown from "main/components/RosterStudent/RosterStudentDropdown";
 
-const firstStudent = rosterStudentFixtures.studentsWithEachStatus[0];
+const firstStudent = rosterStudentFixtures.sixStudents[0];
 const expectedFullName = `${firstStudent.firstName} ${firstStudent.lastName}`;
 
 // Mock Typeahead
@@ -56,7 +56,7 @@ describe("RosterStudentForm tests", () => {
 
     render(
       <RosterStudentDropdown
-        rosterStudents={rosterStudentFixtures.studentsWithEachStatus}
+        rosterStudents={rosterStudentFixtures.sixStudents}
         value={1}
         onChange={mockOnChange}
         isInvalid={true}
@@ -80,7 +80,7 @@ describe("RosterStudentForm tests", () => {
 
     render(
       <RosterStudentDropdown
-        rosterStudents={rosterStudentFixtures.studentsWithEachStatus}
+        rosterStudents={rosterStudentFixtures.sixStudents}
         value={1}
         onChange={mockOnChange}
         isInvalid={false}

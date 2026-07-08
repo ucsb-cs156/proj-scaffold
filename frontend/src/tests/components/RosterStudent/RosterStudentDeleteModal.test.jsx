@@ -31,9 +31,7 @@ describe("RosterStudentDeleteModal tests", () => {
     fireEvent.click(submitButton);
     await waitFor(() => expect(mockSubmit).toHaveBeenCalledTimes(1));
     expect(mockSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        removeFromOrg: "false",
-      }),
+      expect.anything(),
       expect.anything(),
     );
   });
@@ -53,17 +51,10 @@ describe("RosterStudentDeleteModal tests", () => {
     );
 
     const submitButton = await screen.findByText("Delete Student");
-    fireEvent.click(
-      screen.getByLabelText(
-        "Yes, I'd like to remove them from the GitHub Organization",
-      ),
-    );
     fireEvent.click(submitButton);
     await waitFor(() => expect(mockSubmit).toHaveBeenCalledTimes(1));
     expect(mockSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        removeFromOrg: "true",
-      }),
+      expect.anything(),
       expect.anything(),
     );
   });

@@ -1,6 +1,7 @@
 import OurTable from "main/components/Common/OurTable";
 import { Tooltip, OverlayTrigger, Button, Spinner } from "react-bootstrap";
 import { Link } from "react-router";
+import LinkToScaffold from "./LinkToScaffold";
 
 const baseColumns = [
   {
@@ -35,12 +36,12 @@ export default function CoursesTable({
               ...column,
               id: "courseName",
               cell: ({ cell }) => (
-                <Link
-                  to={`${courseNameLinkPrefix}/${cell.row.original.id}`}
-                  data-testid={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
-                >
-                  {cell.row.original.courseName}
-                </Link>
+                <LinkToScaffold
+                  courseName={cell.row.original.courseName}
+                  courseId={cell.row.original.id}
+                  rowIndex={cell.row.index}
+                  testId={`${testId}-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+                />
               ),
             }
           : column,

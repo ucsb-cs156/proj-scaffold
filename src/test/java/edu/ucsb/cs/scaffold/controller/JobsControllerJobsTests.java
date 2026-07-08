@@ -43,9 +43,7 @@ public class JobsControllerJobsTests extends ControllerTestCase {
 
   @MockitoBean UserRepository userRepository;
 
-  @MockitoBean
-  UpdateUserService
-      updateUserService; // This will be used in the UpdateAllJob to call the GithubSignInService
+  @MockitoBean UpdateUserService updateUserService;
 
   @MockitoBean JobService jobService;
 

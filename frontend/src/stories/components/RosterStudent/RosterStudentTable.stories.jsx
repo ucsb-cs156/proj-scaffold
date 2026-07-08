@@ -58,7 +58,7 @@ ThreeItemsAdminUser.parameters = {
 
 export const ItemWithEachStatusAdminUser = Template.bind({});
 ItemWithEachStatusAdminUser.args = {
-  students: rosterStudentFixtures.studentsWithEachStatus,
+  students: rosterStudentFixtures.sixStudents,
   currentUser: currentUserFixtures.adminUser,
 };
 

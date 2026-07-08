@@ -33,6 +33,13 @@ describe("AdminCoursesIndexPage tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
+    axiosMock.onGet("/api/courses/allForAdmins").reply(200, []);
+    axiosMock
+      .onGet("/api/currentUser")
+      .reply(200, apiCurrentUserFixtures.userOnly);
+    axiosMock
+      .onGet("/api/systemInfo")
+      .reply(200, systemInfoFixtures.showingNeither);
   });
 
   afterEach(() => {

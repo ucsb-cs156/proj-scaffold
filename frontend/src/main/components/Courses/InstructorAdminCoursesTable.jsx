@@ -10,6 +10,7 @@ import CourseModal from "main/components/Courses/CourseModal";
 import Modal from "react-bootstrap/Modal";
 import { useLocation } from "react-router";
 import { GraphIcon, UserListIcon } from "main/components/Common/Icons";
+import LinkToScaffold from "main/components/Courses/LinkToScaffold";
 
 export default function InstructorAdminCoursesTable({
   courses,
@@ -73,22 +74,12 @@ export default function InstructorAdminCoursesTable({
       id: "courseName",
       cell: ({ cell }) => {
         return (
-          <OverlayTrigger
-            placement="right"
-            overlay={
-              <Tooltip id={`tooltip-coursename-${cell.row.index}`}>
-                View scaffold for {cell.row.original.courseName}
-              </Tooltip>
-            }
-          >
-            <Link
-              to={`${courseNameLinkPrefix}/${cell.row.original.id}`}
-              data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
-            >
-              <GraphIcon className="me-2" />
-              {cell.row.original.courseName}
-            </Link>
-          </OverlayTrigger>
+          <LinkToScaffold
+            courseName={cell.row.original.courseName}
+            rowIndex={cell.row.index}
+            courseId={cell.row.original.id}
+            testId={`InstructorAdminCoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+          />
         );
       },
     },
@@ -107,7 +98,7 @@ export default function InstructorAdminCoursesTable({
           >
             <Link
               to={`${courseNameLinkPrefix}/${cell.row.original.id}/settings`}
-              data-testid={`CoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+              data-testid={`InstructorAdminCoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
             >
               <UserListIcon />
             </Link>

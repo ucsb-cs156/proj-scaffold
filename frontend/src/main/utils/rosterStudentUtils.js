@@ -4,7 +4,6 @@ export function cellToAxiosParamsDelete(formData) {
     method: "DELETE",
     params: {
       id: formData.id,
-      removeFromOrg: formData.removeFromOrg,
     },
   };
 }

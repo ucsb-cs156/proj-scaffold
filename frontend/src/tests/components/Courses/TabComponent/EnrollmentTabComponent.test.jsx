@@ -218,12 +218,18 @@ describe("EnrollmentTabComponent Tests", () => {
     // Get the search input and set a search term
     const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
     fireEvent.change(searchInput, { target: { value: "test search" } });
-    expect(searchInput.value).toBe("test search");
+
+    await waitFor(() => {
+      expect(searchInput.value).toBe("test search");
+    });
 
     fireEvent.click(openModal);
-    expect(screen.getByTestId(`${testId}-csv-modal`)).toHaveClass(
-      "modal-dialog modal-dialog-centered",
-    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId(`${testId}-csv-modal`)).toHaveClass(
+        "modal-dialog modal-dialog-centered",
+      );
+    });
 
     const upload = await screen.findByTestId(
       "RosterStudentCSVUploadForm-upload",
@@ -423,7 +429,10 @@ describe("EnrollmentTabComponent Tests", () => {
     // Get the search input and set a search term
     const searchInput = screen.getByTestId("InstructorCourseShowPage-search");
     fireEvent.change(searchInput, { target: { value: "test search" } });
-    expect(searchInput.value).toBe("test search");
+
+    await waitFor(() => {
+      expect(searchInput.value).toBe("test search");
+    });
 
     expect(screen.queryByText("Cancel")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Student Id"), {
@@ -461,9 +470,12 @@ describe("EnrollmentTabComponent Tests", () => {
     await waitFor(() => {
       expect(searchInput.value).toBe("");
     });
-    expect(
-      screen.queryByTestId(`${testId}-post-modal`),
-    ).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId(`${testId}-post-modal`),
+      ).not.toBeInTheDocument();
+    });
   });
 
   test("RosterStudentForm works on error", async () => {
@@ -528,7 +540,6 @@ describe("EnrollmentTabComponent Tests", () => {
       target: { value: "bobsmith@ucsb.edu" },
     });
     fireEvent.click(screen.getByTestId("RosterStudentForm-submit"));
-    screen.debug(null, 1000000);
     await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
     await waitFor(() =>
       expect(toast.error).toBeCalledWith(
@@ -634,7 +645,7 @@ describe("EnrollmentTabComponent Tests", () => {
     const testId = "InstructorCourseShowPage";
     const rsTestId = "InstructorCourseShowPage-RosterStudentTable";
     const studentList = [
-      ...rosterStudentFixtures.studentsWithEachStatus,
+      ...rosterStudentFixtures.sixStudents,
       {
         id: 7,
         studentId: "A626737",
@@ -700,7 +711,7 @@ describe("EnrollmentTabComponent Tests", () => {
       // Verify search input is rendered
       const searchInput = screen.getByTestId(`${testId}-search`);
 
-      const fullNameStudent = rosterStudentFixtures.studentsWithEachStatus[2]; // Emma Watson
+      const fullNameStudent = rosterStudentFixtures.sixStudents[2]; // Emma Watson
       fireEvent.change(searchInput, {
         target: {
           value:
@@ -708,9 +719,12 @@ describe("EnrollmentTabComponent Tests", () => {
         },
       });
 
-      expect(
-        screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
-      ).toHaveTextContent(fullNameStudent.firstName);
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+        ).toHaveTextContent(fullNameStudent.firstName);
+      });
+
       expect(
         screen.getByTestId(`${rsTestId}-cell-row-0-col-lastName`),
       ).toHaveTextContent(fullNameStudent.lastName);
@@ -720,9 +734,11 @@ describe("EnrollmentTabComponent Tests", () => {
 
       fireEvent.change(searchInput, { target: { value: "" } });
 
-      expect(
-        screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+        ).toBeInTheDocument();
+      });
       expect(
         screen.getByTestId(`${rsTestId}-cell-row-1-col-firstName`),
       ).toBeInTheDocument();
@@ -732,16 +748,33 @@ describe("EnrollmentTabComponent Tests", () => {
 
       fireEvent.change(searchInput, {
         target: {
-          value:
-            rosterStudentFixtures.studentsWithEachStatus[1].email.toUpperCase(),
+          value: rosterStudentFixtures.threeStudents[1].email.toUpperCase(),
+        },
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(`${rsTestId}-cell-row-0-col-email`),
+        ).toHaveTextContent(rosterStudentFixtures.threeStudents[1].email);
+      });
+
+      expect(
+        screen.queryByTestId(`${rsTestId}-cell-row-1-col-email`),
+      ).not.toBeInTheDocument();
+
+      expect(
+        screen.getByTestId(`${rsTestId}-cell-row-0-col-firstName`),
+      ).toBeInTheDocument();
+
+      fireEvent.change(searchInput, {
+        target: {
+          value: rosterStudentFixtures.sixStudents[1].email.toUpperCase(),
         },
       });
 
       expect(
         screen.getByTestId(`${rsTestId}-cell-row-0-col-email`),
-      ).toHaveTextContent(
-        rosterStudentFixtures.studentsWithEachStatus[1].email,
-      );
+      ).toHaveTextContent(rosterStudentFixtures.sixStudents[1].email);
       expect(
         screen.queryByTestId(`${rsTestId}-cell-row-1-col-email`),
       ).not.toBeInTheDocument();
