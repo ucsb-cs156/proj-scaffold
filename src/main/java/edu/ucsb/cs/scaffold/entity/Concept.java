@@ -13,7 +13,7 @@ import lombok.*;
     uniqueConstraints = {
       @UniqueConstraint(
           name = "UK_CONCEPTS_COURSE_CONCEPT",
-          columnNames = {"course_id", "concept_id"})
+          columnNames = {"course_id", "name"})
     })
 public class Concept {
   @Id
@@ -25,8 +25,9 @@ public class Concept {
   @ToString.Exclude
   private Course course;
 
-  @Column(name = "concept_id", nullable = false)
-  private String conceptId;
+  // Human-readable slug (lowercase letters, digits, hyphens). Non-null exactly for
+  // top-level concepts; subconcepts are identified by (parent, label) instead.
+  private String name;
 
   @Column(nullable = false)
   private String label;
@@ -48,4 +49,8 @@ public class Concept {
   @JoinColumn(name = "parent_id")
   @ToString.Exclude
   private Concept parent;
+
+  public boolean isSubconcept() {
+    return parent != null;
+  }
 }

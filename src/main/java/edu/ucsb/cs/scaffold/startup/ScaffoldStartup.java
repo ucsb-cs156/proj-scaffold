@@ -75,10 +75,23 @@ public class ScaffoldStartup {
   }
 
   private void seedConceptsSqlFile() throws IOException {
+    // Subconcepts have a NULL name, so re-running the seed script would not trip the
+    // (course_id, name) unique constraint and would insert duplicates; skip the whole
+    // script once any concepts exist for the seed course.
+    if (seedConceptsAlreadyPresent()) {
+      return;
+    }
     String sql =
         StreamUtils.copyToString(
             new ClassPathResource(SEED_DATA_RESOURCE).getInputStream(), StandardCharsets.UTF_8);
     executeSeedStatements(sql);
+  }
+
+  boolean seedConceptsAlreadyPresent() {
+    Integer count =
+        jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM concepts WHERE course_id = ?", Integer.class, SEED_COURSE_ID);
+    return count != null && count > 0;
   }
 
   void executeSeedStatements(String sql) {

@@ -23,7 +23,7 @@ export function buildGraphElements(
     target: e.target,
     sourceHandle: "top",
     targetHandle: "bottom",
-    type: "smooth",
+    type: "smoothstep",
     style: {
       stroke: majorConcepts.find((c) => c.name === e.source)?.color,
       strokeWidth: 4,
@@ -37,11 +37,17 @@ export function buildGraphElements(
   return { nodes, edges };
 }
 
+export interface SubconceptLike {
+  id: number;
+  parentId: number;
+  labelHtml: string;
+}
+
 export interface MajorConceptLike {
   name: string;
-  label: string;
+  labelHtml: string;
   color: string;
-  subconcepts: string[];
+  subconcepts: SubconceptLike[];
 }
 
 export interface EdgeLike {
@@ -64,7 +70,7 @@ export function buildGraphElementsV2(
     type: "major",
     position: positions[concept.name] ?? { x: 0, y: 0 },
     data: {
-      label: concept.label,
+      labelHtml: concept.labelHtml,
       color: concept.color,
       subconcepts: concept.subconcepts,
     },
@@ -78,7 +84,7 @@ export function buildGraphElementsV2(
     target: e.target,
     sourceHandle: "top",
     targetHandle: "bottom",
-    type: "smooth",
+    type: "smoothstep",
     style: {
       stroke: majorConceptsData.find((c) => c.name === e.source)?.color,
       strokeWidth: 4,

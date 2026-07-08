@@ -132,16 +132,21 @@ const questionConcepts: QuestionConcept[] = [
 
 const majorConcepts: MajorConceptDTO[] = [
   {
+    id: 1,
     name: "recursion",
-    label: "Recursion",
+    labelHtml: "Recursion",
     color: "#fe9a71",
-    subconcepts: ["Base case", "State change"],
+    subconcepts: [
+      { id: 2, parentId: 1, labelHtml: "Base case" },
+      { id: 3, parentId: 1, labelHtml: "State change" },
+    ],
   },
   {
+    id: 4,
     name: "loops",
-    label: "Loops",
+    labelHtml: "Loops",
     color: "#93ebff",
-    subconcepts: ["For loops"],
+    subconcepts: [{ id: 5, parentId: 4, labelHtml: "For loops" }],
   },
 ];
 
@@ -152,8 +157,10 @@ const positions: Record<string, { x: number; y: number }> = {
 
 const conceptContent: Record<string, ConceptContentDTO> = {
   recursion: {
-    description: "Recursion description",
-    example: "def f(): ...",
+    id: 1,
+    parentId: null,
+    descriptionHtml: "<p>Recursion description</p>",
+    exampleHtml: "<p>def f(): ...</p>",
     practiceUrl:
       "https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000011/",
   },

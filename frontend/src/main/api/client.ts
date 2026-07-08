@@ -86,16 +86,33 @@ export async function logUserActivity(body: {
 
 // ── Database-driven concept graph (per-course) ──────────────────────────────
 
+/**
+ * An HTML string that has already been rendered from Markdown and sanitized
+ * server-side (OWASP HTML sanitizer) — see MarkdownService on the backend.
+ * Safe to render via `dangerouslySetInnerHTML`; do not re-escape or otherwise
+ * transform it before doing so.
+ */
+export type SafeHtml = string;
+
+export interface SubconceptDTO {
+  id: number;
+  parentId: number;
+  labelHtml: SafeHtml;
+}
+
 export interface MajorConceptDTO {
+  id: number;
   name: string;
-  label: string;
+  labelHtml: SafeHtml;
   color: string;
-  subconcepts: string[];
+  subconcepts: SubconceptDTO[];
 }
 
 export interface ConceptContentDTO {
-  description: string | null;
-  example: string | null;
+  id: number;
+  parentId: number | null;
+  descriptionHtml: SafeHtml | null;
+  exampleHtml: SafeHtml | null;
   practiceUrl: string | null;
 }
 

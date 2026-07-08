@@ -527,7 +527,7 @@ export default function ConceptGraph({
       source: card.conceptId,
       target: newNodes[i].id,
       targetHandle: "bottom",
-      type: "smooth",
+      type: "smoothstep",
       style: {
         stroke: card.conceptColor,
         strokeWidth: 4,
@@ -610,7 +610,7 @@ export default function ConceptGraph({
           source: conceptId,
           target: nodeId,
           targetHandle: "bottom",
-          type: "smooth",
+          type: "smoothstep",
           style: { stroke: edgeColor, strokeWidth: 4, strokeDasharray: "4 2" },
           markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor },
           data: { conceptColor },

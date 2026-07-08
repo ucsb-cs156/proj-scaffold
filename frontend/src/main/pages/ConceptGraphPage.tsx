@@ -591,7 +591,11 @@ export default function ConceptGraphPage() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {selectedConcept.label.replace(/\n/g, " ")}
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: selectedConcept.labelHtml.replace(/\n/g, " "),
+                    }}
+                  />
                 </button>
 
                 {/* Divider */}
@@ -616,13 +620,17 @@ export default function ConceptGraphPage() {
                 >
                   {selectedConcept.subconcepts.map((sub) => (
                     <button
-                      key={sub}
+                      key={sub.id}
                       onClick={() =>
-                        setSelectedItem(selectedItem === sub ? null : sub)
+                        setSelectedItem(
+                          selectedItem === sub.labelHtml
+                            ? null
+                            : sub.labelHtml,
+                        )
                       }
                       style={{
                         background:
-                          selectedItem === sub
+                          selectedItem === sub.labelHtml
                             ? selectedConcept.color
                             : "#ffffff",
                         color: "#000000",
@@ -635,7 +643,11 @@ export default function ConceptGraphPage() {
                         cursor: "pointer",
                       }}
                     >
-                      {sub.replace(/\n/g, " ")}
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html: sub.labelHtml.replace(/\n/g, " "),
+                        }}
+                      />
                     </button>
                   ))}
                 </div>
@@ -679,9 +691,14 @@ export default function ConceptGraphPage() {
           {selectedConcept &&
             selectedItem !== null &&
             (() => {
+              // selectedItem holds a subconcept's labelHtml (or the major
+              // concept's name); contentKey below must line up with the
+              // backend's parentName:label keys in conceptContent, which
+              // holds as long as the label contains no Markdown formatting
+              // (the common case — see MarkdownService.toInlineHtml).
               const selectedItemLabel =
                 selectedItem === selectedConcept.name
-                  ? selectedConcept.label.replace(/\n/g, " ")
+                  ? selectedConcept.labelHtml.replace(/\n/g, " ")
                   : (selectedItem ?? "");
               const contentKey =
                 selectedItem === selectedConcept.name
@@ -694,10 +711,12 @@ export default function ConceptGraphPage() {
                 <div
                   style={{ padding: "0 20px 20px", display: "flex", gap: 12 }}
                 >
-                  {[
-                    { label: "Description", key: "description" },
-                    { label: "Example", key: "example" },
-                  ].map((card) => {
+                  {(
+                    [
+                      { label: "Description", key: "descriptionHtml" },
+                      { label: "Example", key: "exampleHtml" },
+                    ] as { label: string; key: "descriptionHtml" | "exampleHtml" }[]
+                  ).map((card) => {
                     const isAdded = addedDetailKeys.has(
                       `${card.label}:${selectedItemLabel}`,
                     );
@@ -716,10 +735,7 @@ export default function ConceptGraphPage() {
                                     itemLabel: selectedItemLabel,
                                     conceptId: selectedConcept.name,
                                     conceptColor: selectedConcept.color,
-                                    cardContent:
-                                      content?.[
-                                        card.key as keyof ConceptContentDTO
-                                      ] ?? "",
+                                    cardContent: content?.[card.key] ?? "",
                                   }),
                                 );
                                 e.dataTransfer.effectAllowed = "move";
@@ -763,8 +779,9 @@ export default function ConceptGraphPage() {
                             whiteSpace: "pre-wrap",
                           }}
                         >
-                          {card.key === "example" ? (
-                            <pre
+                          {card.key === "exampleHtml" ? (
+                            <div
+                              className="concept-detail-content"
                               style={{
                                 fontFamily: "monospace",
                                 border: "1px solid #000000",
@@ -776,13 +793,21 @@ export default function ConceptGraphPage() {
                                 whiteSpace: "pre-wrap",
                                 color: "#1E293B",
                               }}
-                            >
-                              {content?.[card.key as keyof ConceptContentDTO] ??
-                                `Example for "${selectedItemLabel}" will appear here.`}
-                            </pre>
+                              dangerouslySetInnerHTML={{
+                                __html:
+                                  content?.[card.key] ??
+                                  `Example for "${selectedItemLabel}" will appear here.`,
+                              }}
+                            />
                           ) : (
-                            (content?.[card.key as keyof ConceptContentDTO] ??
-                            `${card.label} for "${selectedItemLabel}" will appear here.`)
+                            <div
+                              className="concept-detail-content"
+                              dangerouslySetInnerHTML={{
+                                __html:
+                                  content?.[card.key] ??
+                                  `${card.label} for "${selectedItemLabel}" will appear here.`,
+                              }}
+                            />
                           )}
                         </div>
                       </div>

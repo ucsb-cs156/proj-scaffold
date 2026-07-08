@@ -30,15 +30,18 @@ beforeEach(() => {
 const sampleMajorConcepts = [
   {
     name: "recursion",
-    label: "Recursion",
+    labelHtml: "Recursion",
     color: "#fe9a71",
-    subconcepts: ["Base case", "State change"],
+    subconcepts: [
+      { id: 2, parentId: 1, labelHtml: "Base case" },
+      { id: 3, parentId: 1, labelHtml: "State change" },
+    ],
   },
   {
     name: "loops",
-    label: "Loops",
+    labelHtml: "Loops",
     color: "#93ebff",
-    subconcepts: ["For loops"],
+    subconcepts: [{ id: 5, parentId: 4, labelHtml: "For loops" }],
   },
 ];
 const samplePositions = {
@@ -229,13 +232,15 @@ describe("ConceptGraphV2", () => {
       />,
     );
 
-    const recursionCard = screen.getByText("Recursion").parentElement!;
-    const loopsCard = screen.getByText("Loops").parentElement!;
+    const recursionCard = screen.getByTestId("major-node-recursion");
+    const loopsCard = screen.getByTestId("major-node-loops");
 
     expect(recursionCard.style.opacity).toBe("1");
     expect(loopsCard.style.opacity).toBe("0.25");
 
-    const highlightedSubconcept = screen.getByText("Base case");
+    const highlightedSubconcept = screen.getByTestId(
+      "subconcept-row-recursion-0",
+    );
     expect(highlightedSubconcept.style.background).not.toBe("");
   });
 

@@ -61,7 +61,7 @@ describe("utils/layout", () => {
       expect(edge?.id).toBe(`prereq-${source}-${target}`);
       expect(edge?.sourceHandle).toBe("top");
       expect(edge?.targetHandle).toBe("bottom");
-      expect(edge?.type).toBe("smooth");
+      expect(edge?.type).toBe("smoothstep");
       expect(edge?.style).toEqual({ stroke: sourceColor, strokeWidth: 4 });
       expect(edge?.markerEnd).toEqual({
         type: MarkerType.ArrowClosed,
@@ -72,8 +72,13 @@ describe("utils/layout", () => {
 
   describe("buildGraphElementsV2", () => {
     const sampleConcepts = [
-      { name: "a", label: "A", color: "#111111", subconcepts: ["sub-a1"] },
-      { name: "b", label: "B", color: "#222222", subconcepts: [] },
+      {
+        name: "a",
+        labelHtml: "A",
+        color: "#111111",
+        subconcepts: [{ id: 101, parentId: 1, labelHtml: "sub-a1" }],
+      },
+      { name: "b", labelHtml: "B", color: "#222222", subconcepts: [] },
     ];
     const sampleEdges = [{ source: "a", target: "b" }];
     const samplePositions = { a: { x: 10, y: 20 }, b: { x: 30, y: 40 } };
@@ -87,9 +92,9 @@ describe("utils/layout", () => {
       expect(nodes).toHaveLength(2);
       expect(nodes.map((n) => n.id).sort()).toEqual(["a", "b"]);
       expect(nodes[0].data).toEqual({
-        label: "A",
+        labelHtml: "A",
         color: "#111111",
-        subconcepts: ["sub-a1"],
+        subconcepts: [{ id: 101, parentId: 1, labelHtml: "sub-a1" }],
       });
     });
 
@@ -126,7 +131,7 @@ describe("utils/layout", () => {
         target: "b",
         sourceHandle: "top",
         targetHandle: "bottom",
-        type: "smooth",
+        type: "smoothstep",
         style: { stroke: "#111111", strokeWidth: 4 },
         markerEnd: { type: MarkerType.ArrowClosed, color: "#111111" },
       });
