@@ -8,6 +8,7 @@ import org.commonmark.node.Image;
 import org.commonmark.node.Link;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 import org.commonmark.renderer.markdown.MarkdownRenderer;
 import org.commonmark.renderer.text.TextContentRenderer;
 import org.owasp.html.HtmlPolicyBuilder;
@@ -22,13 +23,13 @@ import org.springframework.stereotype.Service;
  * &lt;code&gt;if a &amp;lt; b:&lt;/code&gt; in text or code blocks are left untouched.
  */
 @Service
-<span class="fc" id="L25">public class MarkdownService {</span>
+<span class="fc" id="L26">public class MarkdownService {</span>
 
-<span class="fc" id="L27">  private static final Set&lt;String&gt; ALLOWED_LINK_SCHEMES = Set.of(&quot;http&quot;, &quot;https&quot;, &quot;mailto&quot;);</span>
+<span class="fc" id="L28">  private static final Set&lt;String&gt; ALLOWED_LINK_SCHEMES = Set.of(&quot;http&quot;, &quot;https&quot;, &quot;mailto&quot;);</span>
 
-<span class="fc" id="L29">  private static final PolicyFactory HTML_POLICY =</span>
+<span class="fc" id="L30">  private static final PolicyFactory HTML_POLICY =</span>
       new HtmlPolicyBuilder()
-<span class="fc" id="L31">          .allowElements(</span>
+<span class="fc" id="L32">          .allowElements(</span>
               &quot;p&quot;,
               &quot;b&quot;,
               &quot;i&quot;,
@@ -56,18 +57,22 @@ import org.springframework.stereotype.Service;
               &quot;th&quot;,
               &quot;td&quot;,
               &quot;span&quot;,
-              &quot;div&quot;)
-<span class="fc" id="L60">          .allowAttributes(&quot;href&quot;)</span>
-<span class="fc" id="L61">          .onElements(&quot;a&quot;)</span>
-<span class="fc" id="L62">          .allowAttributes(&quot;class&quot;)</span>
-<span class="fc" id="L63">          .onElements(&quot;code&quot;, &quot;span&quot;, &quot;div&quot;)</span>
-<span class="fc" id="L64">          .allowUrlProtocols(&quot;http&quot;, &quot;https&quot;, &quot;mailto&quot;)</span>
-<span class="fc" id="L65">          .requireRelNofollowOnLinks()</span>
-<span class="fc" id="L66">          .toFactory();</span>
+              &quot;div&quot;,
+              &quot;img&quot;)
+<span class="fc" id="L62">          .allowAttributes(&quot;href&quot;)</span>
+<span class="fc" id="L63">          .onElements(&quot;a&quot;)</span>
+<span class="fc" id="L64">          .allowAttributes(&quot;class&quot;)</span>
+<span class="fc" id="L65">          .onElements(&quot;code&quot;, &quot;span&quot;, &quot;div&quot;)</span>
+<span class="fc" id="L66">          .allowAttributes(&quot;src&quot;, &quot;alt&quot;)</span>
+<span class="fc" id="L67">          .onElements(&quot;img&quot;)</span>
+<span class="fc" id="L68">          .allowUrlProtocols(&quot;http&quot;, &quot;https&quot;, &quot;mailto&quot;)</span>
+<span class="fc" id="L69">          .requireRelNofollowOnLinks()</span>
+<span class="fc" id="L70">          .toFactory();</span>
 
-<span class="fc" id="L68">  private final Parser parser = Parser.builder().build();</span>
-<span class="fc" id="L69">  private final MarkdownRenderer markdownRenderer = MarkdownRenderer.builder().build();</span>
-<span class="fc" id="L70">  private final TextContentRenderer textContentRenderer = TextContentRenderer.builder().build();</span>
+<span class="fc" id="L72">  private final Parser parser = Parser.builder().build();</span>
+<span class="fc" id="L73">  private final MarkdownRenderer markdownRenderer = MarkdownRenderer.builder().build();</span>
+<span class="fc" id="L74">  private final TextContentRenderer textContentRenderer = TextContentRenderer.builder().build();</span>
+<span class="fc" id="L75">  private final HtmlRenderer htmlRenderer = HtmlRenderer.builder().build();</span>
 
   /**
    * Sanitizes raw HTML embedded in the Markdown (dropping anything the OWASP policy rejects,
@@ -78,45 +83,82 @@ import org.springframework.stereotype.Service;
    * @return the cleaned Markdown, or null if the input was null
    */
   public String clean(String markdown) {
-<span class="fc bfc" id="L81" title="All 2 branches covered.">    if (markdown == null) {</span>
-<span class="fc" id="L82">      return null;</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">    if (markdown == null) {</span>
+<span class="fc" id="L87">      return null;</span>
     }
-<span class="fc" id="L84">    Node document = parser.parse(markdown);</span>
-<span class="fc" id="L85">    document.accept(</span>
-<span class="fc" id="L86">        new AbstractVisitor() {</span>
+<span class="fc" id="L89">    Node document = parser.parse(markdown);</span>
+<span class="fc" id="L90">    document.accept(</span>
+<span class="fc" id="L91">        new AbstractVisitor() {</span>
           @Override
           public void visit(HtmlBlock htmlBlock) {
-<span class="fc" id="L89">            String safe = HTML_POLICY.sanitize(htmlBlock.getLiteral());</span>
-<span class="fc bfc" id="L90" title="All 2 branches covered.">            if (safe.isBlank()) {</span>
-<span class="fc" id="L91">              htmlBlock.unlink();</span>
+<span class="fc" id="L94">            String safe = HTML_POLICY.sanitize(htmlBlock.getLiteral());</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">            if (safe.isBlank()) {</span>
+<span class="fc" id="L96">              htmlBlock.unlink();</span>
             } else {
-<span class="fc" id="L93">              htmlBlock.setLiteral(safe);</span>
+<span class="fc" id="L98">              htmlBlock.setLiteral(safe);</span>
             }
-<span class="fc" id="L95">          }</span>
+<span class="fc" id="L100">          }</span>
 
           @Override
           public void visit(HtmlInline htmlInline) {
-<span class="fc" id="L99">            String safe = HTML_POLICY.sanitize(htmlInline.getLiteral());</span>
-<span class="fc bfc" id="L100" title="All 2 branches covered.">            if (safe.isBlank()) {</span>
-<span class="fc" id="L101">              htmlInline.unlink();</span>
+<span class="fc" id="L104">            String safe = HTML_POLICY.sanitize(htmlInline.getLiteral());</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (safe.isBlank()) {</span>
+<span class="fc" id="L106">              htmlInline.unlink();</span>
             } else {
-<span class="fc" id="L103">              htmlInline.setLiteral(safe);</span>
+<span class="fc" id="L108">              htmlInline.setLiteral(safe);</span>
             }
-<span class="fc" id="L105">          }</span>
+<span class="fc" id="L110">          }</span>
 
           @Override
           public void visit(Link link) {
-<span class="fc" id="L109">            link.setDestination(safeDestination(link.getDestination()));</span>
-<span class="fc" id="L110">            visitChildren(link);</span>
-<span class="fc" id="L111">          }</span>
+<span class="fc" id="L114">            link.setDestination(safeDestination(link.getDestination()));</span>
+<span class="fc" id="L115">            visitChildren(link);</span>
+<span class="fc" id="L116">          }</span>
 
           @Override
           public void visit(Image image) {
-<span class="fc" id="L115">            image.setDestination(safeDestination(image.getDestination()));</span>
-<span class="fc" id="L116">            visitChildren(image);</span>
-<span class="fc" id="L117">          }</span>
+<span class="fc" id="L120">            image.setDestination(safeDestination(image.getDestination()));</span>
+<span class="fc" id="L121">            visitChildren(image);</span>
+<span class="fc" id="L122">          }</span>
         });
-<span class="fc" id="L119">    return markdownRenderer.render(document).strip();</span>
+<span class="fc" id="L124">    return markdownRenderer.render(document).strip();</span>
+  }
+
+  /**
+   * Renders Markdown to HTML for direct display (e.g. via {@code dangerouslySetInnerHTML} on the
+   * frontend). The rendered HTML is itself run through the OWASP sanitizer before being returned,
+   * so the result is safe to inject even if the stored Markdown was never cleaned (e.g. seed data
+   * inserted directly via SQL).
+   *
+   * @param markdown the raw Markdown, may be null
+   * @return sanitized HTML, or null if the input was null
+   */
+  public String toHtml(String markdown) {
+<span class="fc bfc" id="L137" title="All 2 branches covered.">    if (markdown == null) {</span>
+<span class="fc" id="L138">      return null;</span>
+    }
+<span class="fc" id="L140">    String html = htmlRenderer.render(parser.parse(markdown));</span>
+<span class="fc" id="L141">    return HTML_POLICY.sanitize(html).strip();</span>
+  }
+
+  /**
+   * Like {@link #toHtml}, but for short, single-line Markdown meant to be displayed inline (e.g. a
+   * concept label shown inside a {@code &lt;span&gt;}): the block-level {@code &lt;p&gt;} wrapper CommonMark
+   * would normally add around a single paragraph is stripped, since nesting a block element inside
+   * an inline container is invalid HTML.
+   *
+   * @param markdown the raw Markdown, may be null
+   * @return sanitized inline HTML, or null if the input was null
+   */
+  public String toInlineHtml(String markdown) {
+<span class="fc" id="L154">    String html = toHtml(markdown);</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">    if (html != null</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        &amp;&amp; html.startsWith(&quot;&lt;p&gt;&quot;)</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">        &amp;&amp; html.endsWith(&quot;&lt;/p&gt;&quot;)</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        &amp;&amp; html.indexOf(&quot;&lt;p&gt;&quot;, &quot;&lt;p&gt;&quot;.length()) &lt; 0) {</span>
+<span class="fc" id="L159">      return html.substring(&quot;&lt;p&gt;&quot;.length(), html.length() - &quot;&lt;/p&gt;&quot;.length());</span>
+    }
+<span class="nc" id="L161">    return html;</span>
   }
 
   /**
@@ -125,21 +167,21 @@ import org.springframework.stereotype.Service;
    * independent of how verbose the Markdown markup is.
    */
   public int renderedLength(String markdown) {
-<span class="fc bfc" id="L128" title="All 2 branches covered.">    if (markdown == null) {</span>
-<span class="fc" id="L129">      return 0;</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">    if (markdown == null) {</span>
+<span class="fc" id="L171">      return 0;</span>
     }
-<span class="fc" id="L131">    String text = textContentRenderer.render(parser.parse(markdown));</span>
-<span class="fc" id="L132">    return text.strip().replaceAll(&quot;\\s+&quot;, &quot; &quot;).length();</span>
+<span class="fc" id="L173">    String text = textContentRenderer.render(parser.parse(markdown));</span>
+<span class="fc" id="L174">    return text.strip().replaceAll(&quot;\\s+&quot;, &quot; &quot;).length();</span>
   }
 
   /** Allows relative destinations and http/https/mailto; anything else is dropped. */
   static String safeDestination(String destination) {
-<span class="fc" id="L137">    int colon = destination.indexOf(':');</span>
-<span class="fc bfc" id="L138" title="All 2 branches covered.">    if (colon &lt; 0) {</span>
-<span class="fc" id="L139">      return destination;</span>
+<span class="fc" id="L179">    int colon = destination.indexOf(':');</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">    if (colon &lt; 0) {</span>
+<span class="fc" id="L181">      return destination;</span>
     }
-<span class="fc" id="L141">    String scheme = destination.substring(0, colon).toLowerCase();</span>
-<span class="fc bfc" id="L142" title="All 2 branches covered.">    return ALLOWED_LINK_SCHEMES.contains(scheme) ? destination : &quot;&quot;;</span>
+<span class="fc" id="L183">    String scheme = destination.substring(0, colon).toLowerCase();</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">    return ALLOWED_LINK_SCHEMES.contains(scheme) ? destination : &quot;&quot;;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
