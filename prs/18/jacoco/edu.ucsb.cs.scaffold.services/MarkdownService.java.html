@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MarkdownService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.services</a> &gt; <span class="el_source">MarkdownService.java</span></div><h1>MarkdownService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.services;
+
+import java.util.Set;
+import org.commonmark.node.AbstractVisitor;
+import org.commonmark.node.HtmlBlock;
+import org.commonmark.node.HtmlInline;
+import org.commonmark.node.Image;
+import org.commonmark.node.Link;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.markdown.MarkdownRenderer;
+import org.commonmark.renderer.text.TextContentRenderer;
+import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.PolicyFactory;
+import org.springframework.stereotype.Service;
+
+/**
+ * Cleans user-supplied Markdown before it is stored. Markdown itself has no invalid syntax (every
+ * string is a valid CommonMark document), so &quot;linting&quot; takes the form of reformatting to canonical
+ * CommonMark. The security-relevant part is sanitizing raw HTML embedded in the Markdown: only the
+ * HTML nodes of the parsed document are run through the OWASP sanitizer, so code samples such as
+ * &lt;code&gt;if a &amp;lt; b:&lt;/code&gt; in text or code blocks are left untouched.
+ */
+@Service
+<span class="fc" id="L25">public class MarkdownService {</span>
+
+<span class="fc" id="L27">  private static final Set&lt;String&gt; ALLOWED_LINK_SCHEMES = Set.of(&quot;http&quot;, &quot;https&quot;, &quot;mailto&quot;);</span>
+
+<span class="fc" id="L29">  private static final PolicyFactory HTML_POLICY =</span>
+      new HtmlPolicyBuilder()
+<span class="fc" id="L31">          .allowElements(</span>
+              &quot;p&quot;,
+              &quot;b&quot;,
+              &quot;i&quot;,
+              &quot;em&quot;,
+              &quot;strong&quot;,
+              &quot;a&quot;,
+              &quot;h1&quot;,
+              &quot;h2&quot;,
+              &quot;h3&quot;,
+              &quot;h4&quot;,
+              &quot;h5&quot;,
+              &quot;h6&quot;,
+              &quot;ul&quot;,
+              &quot;ol&quot;,
+              &quot;li&quot;,
+              &quot;code&quot;,
+              &quot;pre&quot;,
+              &quot;blockquote&quot;,
+              &quot;hr&quot;,
+              &quot;br&quot;,
+              &quot;table&quot;,
+              &quot;thead&quot;,
+              &quot;tbody&quot;,
+              &quot;tr&quot;,
+              &quot;th&quot;,
+              &quot;td&quot;,
+              &quot;span&quot;,
+              &quot;div&quot;)
+<span class="fc" id="L60">          .allowAttributes(&quot;href&quot;)</span>
+<span class="fc" id="L61">          .onElements(&quot;a&quot;)</span>
+<span class="fc" id="L62">          .allowAttributes(&quot;class&quot;)</span>
+<span class="fc" id="L63">          .onElements(&quot;code&quot;, &quot;span&quot;, &quot;div&quot;)</span>
+<span class="fc" id="L64">          .allowUrlProtocols(&quot;http&quot;, &quot;https&quot;, &quot;mailto&quot;)</span>
+<span class="fc" id="L65">          .requireRelNofollowOnLinks()</span>
+<span class="fc" id="L66">          .toFactory();</span>
+
+<span class="fc" id="L68">  private final Parser parser = Parser.builder().build();</span>
+<span class="fc" id="L69">  private final MarkdownRenderer markdownRenderer = MarkdownRenderer.builder().build();</span>
+<span class="fc" id="L70">  private final TextContentRenderer textContentRenderer = TextContentRenderer.builder().build();</span>
+
+  /**
+   * Sanitizes raw HTML embedded in the Markdown (dropping anything the OWASP policy rejects,
+   * including scripts and javascript: URLs), removes unsafe link/image destinations, and reformats
+   * the result to canonical CommonMark.
+   *
+   * @param markdown the raw Markdown, may be null
+   * @return the cleaned Markdown, or null if the input was null
+   */
+  public String clean(String markdown) {
+<span class="fc bfc" id="L81" title="All 2 branches covered.">    if (markdown == null) {</span>
+<span class="fc" id="L82">      return null;</span>
+    }
+<span class="fc" id="L84">    Node document = parser.parse(markdown);</span>
+<span class="fc" id="L85">    document.accept(</span>
+<span class="fc" id="L86">        new AbstractVisitor() {</span>
+          @Override
+          public void visit(HtmlBlock htmlBlock) {
+<span class="fc" id="L89">            String safe = HTML_POLICY.sanitize(htmlBlock.getLiteral());</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">            if (safe.isBlank()) {</span>
+<span class="fc" id="L91">              htmlBlock.unlink();</span>
+            } else {
+<span class="fc" id="L93">              htmlBlock.setLiteral(safe);</span>
+            }
+<span class="fc" id="L95">          }</span>
+
+          @Override
+          public void visit(HtmlInline htmlInline) {
+<span class="fc" id="L99">            String safe = HTML_POLICY.sanitize(htmlInline.getLiteral());</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            if (safe.isBlank()) {</span>
+<span class="fc" id="L101">              htmlInline.unlink();</span>
+            } else {
+<span class="fc" id="L103">              htmlInline.setLiteral(safe);</span>
+            }
+<span class="fc" id="L105">          }</span>
+
+          @Override
+          public void visit(Link link) {
+<span class="fc" id="L109">            link.setDestination(safeDestination(link.getDestination()));</span>
+<span class="fc" id="L110">            visitChildren(link);</span>
+<span class="fc" id="L111">          }</span>
+
+          @Override
+          public void visit(Image image) {
+<span class="fc" id="L115">            image.setDestination(safeDestination(image.getDestination()));</span>
+<span class="fc" id="L116">            visitChildren(image);</span>
+<span class="fc" id="L117">          }</span>
+        });
+<span class="fc" id="L119">    return markdownRenderer.render(document).strip();</span>
+  }
+
+  /**
+   * Returns the length of the plain text this Markdown renders to, with runs of whitespace
+   * collapsed to a single space. Used to enforce limits on the &lt;i&gt;rendered&lt;/i&gt; length of a field
+   * independent of how verbose the Markdown markup is.
+   */
+  public int renderedLength(String markdown) {
+<span class="fc bfc" id="L128" title="All 2 branches covered.">    if (markdown == null) {</span>
+<span class="fc" id="L129">      return 0;</span>
+    }
+<span class="fc" id="L131">    String text = textContentRenderer.render(parser.parse(markdown));</span>
+<span class="fc" id="L132">    return text.strip().replaceAll(&quot;\\s+&quot;, &quot; &quot;).length();</span>
+  }
+
+  /** Allows relative destinations and http/https/mailto; anything else is dropped. */
+  static String safeDestination(String destination) {
+<span class="fc" id="L137">    int colon = destination.indexOf(':');</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">    if (colon &lt; 0) {</span>
+<span class="fc" id="L139">      return destination;</span>
+    }
+<span class="fc" id="L141">    String scheme = destination.substring(0, colon).toLowerCase();</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">    return ALLOWED_LINK_SCHEMES.contains(scheme) ? destination : &quot;&quot;;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
