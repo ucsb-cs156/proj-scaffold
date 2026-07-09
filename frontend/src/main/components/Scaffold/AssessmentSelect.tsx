@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import type { Assessment } from "../../api/client";
-import "App.css";
 
 interface AssessmentSelectProps {
   assessments: Assessment[];

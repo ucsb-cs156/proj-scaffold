@@ -23,7 +23,6 @@ import {
   type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import "App.css";
 import { buildGraphElements } from "main/utils/layout";
 import { majorConcepts, prereqEdgeData } from "main/data/conceptGraph";
 import { positions } from "main/data/conceptGraphPositions";
@@ -527,7 +526,7 @@ export default function ConceptGraph({
       source: card.conceptId,
       target: newNodes[i].id,
       targetHandle: "bottom",
-      type: "smoothstep",
+      type: "default",
       style: {
         stroke: card.conceptColor,
         strokeWidth: 4,
@@ -610,7 +609,7 @@ export default function ConceptGraph({
           source: conceptId,
           target: nodeId,
           targetHandle: "bottom",
-          type: "smoothstep",
+          type: "default",
           style: { stroke: edgeColor, strokeWidth: 4, strokeDasharray: "4 2" },
           markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor },
           data: { conceptColor },
@@ -703,7 +702,7 @@ export default function ConceptGraph({
           target: e.target,
           sourceHandle: "top",
           targetHandle: "bottom",
-          type: "dashed",
+          type: "default",
           animated: isHighlighted,
           style: {
             stroke: isHighlighted ? color : "#CBD5E1",

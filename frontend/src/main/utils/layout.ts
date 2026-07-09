@@ -23,7 +23,7 @@ export function buildGraphElements(
     target: e.target,
     sourceHandle: "top",
     targetHandle: "bottom",
-    type: "smoothstep",
+    type: "default",
     style: {
       stroke: majorConcepts.find((c) => c.name === e.source)?.color,
       strokeWidth: 4,
@@ -92,15 +92,9 @@ export function buildGraphElementsV2(
       target: String(e.targetId),
       sourceHandle: "top",
       targetHandle: "bottom",
-      type: "smoothstep",
-      style: {
-        stroke: color,
-        strokeWidth: 4,
-      },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color,
-      },
+      type: "default",
+      style: { stroke: color, strokeWidth: 4 },
+      markerEnd: { type: MarkerType.ArrowClosed, color },
     };
   });
 

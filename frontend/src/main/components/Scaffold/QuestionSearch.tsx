@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import type { Question } from "../../api/client";
-import "App.css";
 
 interface QuestionSearchProps {
   questions: Question[];

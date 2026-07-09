@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams } from "react-router";
 import { Spinner } from "react-bootstrap";
 import ConceptGraphV2 from "main/components/Scaffold/ConceptGraphV2";
-import "App.css";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 
@@ -455,7 +454,7 @@ export default function ConceptGraphPage() {
   }
 
   return (
-    <BasicLayout>
+    <BasicLayout lockScroll>
       <div
         style={{
           display: "flex",
