@@ -2307,4 +2307,221 @@ public class ConceptsControllerTests extends ControllerTestCase {
         json.get("message"));
     verify(conceptRepository, never()).saveAll(any());
   }
+
+  // ---------- GET /api/concepts/top-level ----------
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void logged_in_user_can_get_top_level_concepts() throws Exception {
+    List<Concept> concepts = buildSampleConcepts();
+    when(conceptRepository.findByCourseId(42L)).thenReturn(concepts);
+
+    String expectedJson =
+        """
+        [
+          { "id": 1, "label": "Recursion", "level": null, "x": 800, "y": 300 },
+          { "id": 4, "label": "Loops", "level": null, "x": 490, "y": 300 }
+        ]
+        """;
+
+    mockMvc
+        .perform(get("/api/concepts/top-level").param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(content().json(expectedJson));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void top_level_concepts_sorted_by_id() throws Exception {
+    Course course = Course.builder().id(42L).courseName("CMPSC 8").build();
+    Concept b = Concept.builder().id(10L).course(course).label("B").level(2).x(200).y(100).build();
+    Concept a = Concept.builder().id(5L).course(course).label("A").level(1).x(100).y(100).build();
+    when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(b, a));
+
+    mockMvc
+        .perform(get("/api/concepts/top-level").param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].id").value(5))
+        .andExpect(jsonPath("$[1].id").value(10));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void top_level_concepts_excludes_subconcepts() throws Exception {
+    List<Concept> concepts = buildSampleConcepts();
+    when(conceptRepository.findByCourseId(42L)).thenReturn(concepts);
+
+    mockMvc
+        .perform(get("/api/concepts/top-level").param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$", hasSize(2)));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void top_level_concepts_empty_for_course_with_no_concepts() throws Exception {
+    when(conceptRepository.findByCourseId(99L)).thenReturn(List.of());
+
+    mockMvc
+        .perform(get("/api/concepts/top-level").param("courseId", "99"))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+  }
+
+  @Test
+  public void anonymous_user_cannot_get_top_level_concepts() throws Exception {
+    mockMvc
+        .perform(get("/api/concepts/top-level").param("courseId", "42"))
+        .andExpect(status().isForbidden());
+  }
+
+  // ---------- GET /api/concepts/subconcepts ----------
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void logged_in_user_can_get_subconcepts() throws Exception {
+    List<Concept> concepts = buildSampleConcepts();
+    when(conceptRepository.findByCourseId(42L)).thenReturn(concepts);
+
+    // concepts[0] = Recursion (top-level, x=800), concepts[1] = BaseCase (sub of Recursion),
+    // concepts[2] = StateChange (sub of Recursion), concepts[3] = Loops (top-level)
+    String expectedJson =
+        """
+        [
+          {
+            "id": 2,
+            "label": "Base case",
+            "parentId": 1,
+            "parentLabel": "Recursion",
+            "parentLevel": null,
+            "parentX": 800,
+            "sortOrder": null
+          },
+          {
+            "id": 3,
+            "label": "State change",
+            "parentId": 1,
+            "parentLabel": "Recursion",
+            "parentLevel": null,
+            "parentX": 800,
+            "sortOrder": null
+          }
+        ]
+        """;
+
+    mockMvc
+        .perform(get("/api/concepts/subconcepts").param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(content().json(expectedJson));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void subconcepts_sorted_by_parent_level_then_x_then_sort_order() throws Exception {
+    Course course = Course.builder().id(42L).courseName("CMPSC 8").build();
+
+    Concept parentA =
+        Concept.builder().id(1L).course(course).label("A").level(1).x(200).y(100).build();
+    Concept parentB =
+        Concept.builder().id(2L).course(course).label("B").level(1).x(100).y(100).build();
+    Concept parentC =
+        Concept.builder().id(3L).course(course).label("C").level(2).x(300).y(200).build();
+
+    Concept sub1 =
+        Concept.builder().id(10L).course(course).label("Sub1").parent(parentA).sortOrder(2).build();
+    Concept sub2 =
+        Concept.builder().id(11L).course(course).label("Sub2").parent(parentA).sortOrder(1).build();
+    Concept sub3 =
+        Concept.builder().id(12L).course(course).label("Sub3").parent(parentB).sortOrder(1).build();
+    Concept sub4 =
+        Concept.builder().id(13L).course(course).label("Sub4").parent(parentC).sortOrder(1).build();
+
+    when(conceptRepository.findByCourseId(42L))
+        .thenReturn(List.of(parentA, parentB, parentC, sub1, sub2, sub3, sub4));
+
+    mockMvc
+        .perform(get("/api/concepts/subconcepts").param("courseId", "42"))
+        .andExpect(status().isOk())
+        // level 1, x=100 (parentB) before level 1, x=200 (parentA)
+        .andExpect(jsonPath("$[0].id").value(12))
+        // sortOrder 1 before sortOrder 2 within same parent
+        .andExpect(jsonPath("$[1].id").value(11))
+        .andExpect(jsonPath("$[2].id").value(10))
+        // level 2 (parentC) comes last
+        .andExpect(jsonPath("$[3].id").value(13));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void subconcepts_level_takes_priority_over_x_in_sort() throws Exception {
+    // Designed to kill the mutation "replace getParent().getLevel() return with 0".
+    // parentLowX is at level=2 with x=50 (low x).
+    // parentHighX is at level=1 with x=300 (high x).
+    // Correct sort: level-1 child first (regardless of x).
+    // If level is mutated to always return 0, then x decides: level-2 child (x=50) comes first.
+    Course course = Course.builder().id(50L).courseName("CS Test").build();
+    Concept parentLevel2LowX =
+        Concept.builder().id(2L).course(course).label("Level2LowX").level(2).x(50).y(100).build();
+    Concept parentLevel1HighX =
+        Concept.builder().id(1L).course(course).label("Level1HighX").level(1).x(300).y(100).build();
+    Concept subOfLevel2 =
+        Concept.builder()
+            .id(5L)
+            .course(course)
+            .label("SubLevel2")
+            .parent(parentLevel2LowX)
+            .sortOrder(1)
+            .build();
+    Concept subOfLevel1 =
+        Concept.builder()
+            .id(10L)
+            .course(course)
+            .label("SubLevel1")
+            .parent(parentLevel1HighX)
+            .sortOrder(1)
+            .build();
+
+    when(conceptRepository.findByCourseId(50L))
+        .thenReturn(List.of(parentLevel2LowX, parentLevel1HighX, subOfLevel2, subOfLevel1));
+
+    mockMvc
+        .perform(get("/api/concepts/subconcepts").param("courseId", "50"))
+        .andExpect(status().isOk())
+        // subOfLevel1 (parent level=1) must come before subOfLevel2 (parent level=2)
+        // even though parent level=2 has lower x (50 < 300)
+        .andExpect(jsonPath("$[0].id").value(10))
+        .andExpect(jsonPath("$[1].id").value(5));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void subconcepts_empty_for_course_with_no_concepts() throws Exception {
+    when(conceptRepository.findByCourseId(99L)).thenReturn(List.of());
+
+    mockMvc
+        .perform(get("/api/concepts/subconcepts").param("courseId", "99"))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void subconcepts_empty_for_course_with_only_top_level_concepts() throws Exception {
+    Course course = Course.builder().id(42L).courseName("CMPSC 8").build();
+    Concept topLevel =
+        Concept.builder().id(1L).course(course).label("Recursion").x(800).y(300).build();
+    when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(topLevel));
+
+    mockMvc
+        .perform(get("/api/concepts/subconcepts").param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+  }
+
+  @Test
+  public void anonymous_user_cannot_get_subconcepts() throws Exception {
+    mockMvc
+        .perform(get("/api/concepts/subconcepts").param("courseId", "42"))
+        .andExpect(status().isForbidden());
+  }
 }
