@@ -576,6 +576,8 @@ public class ConceptYamlServiceTests {
   @Test
   public void replaceFromYAML_reports_concept_id_and_label_problems() throws Exception {
     String longLabel = "a".repeat(40);
+    // Exactly at the 32-rendered-character limit: allowed, so it must NOT be reported.
+    String limitLabel = "b".repeat(32);
     Map<String, Object> report =
         replaceExpectingFailure(
             """
@@ -592,8 +594,10 @@ public class ConceptYamlServiceTests {
                 label: %s
               - id: 6
                 label: ""
+              - id: 7
+                label: %s
             """
-                .formatted(longLabel));
+                .formatted(longLabel, limitLabel));
     assertEquals(
         failureReport(
             List.of(
@@ -608,6 +612,10 @@ public class ConceptYamlServiceTests {
 
   @Test
   public void replaceFromYAML_reports_subconcept_problems() throws Exception {
+    // Two label-less subconcepts and two same-over-long-label subconcepts each get their
+    // own error, but never a bogus "duplicate" error: invalid labels are excluded from
+    // duplicate detection.
+    String longLabel = "c".repeat(40);
     Map<String, Object> report =
         replaceExpectingFailure(
             """
@@ -620,19 +628,28 @@ public class ConceptYamlServiceTests {
                   - label: Twin
                   - label: Twin
                   - description: no label here
-            """);
+                  - description: no label here either
+                  - label: %s
+                  - label: %s
+            """
+                .formatted(longLabel, longLabel));
     assertEquals(
         failureReport(
             List.of(
                 "concepts[0].subconcepts[0] is empty",
                 "concepts[0].subconcepts[2]: duplicate subconcept label Twin",
-                "concepts[0].subconcepts[3]: label may not be empty")),
+                "concepts[0].subconcepts[3]: label may not be empty",
+                "concepts[0].subconcepts[4]: label may not be empty",
+                "concepts[0].subconcepts[5]: label renders to 40 characters; the maximum is 32",
+                "concepts[0].subconcepts[6]: label renders to 40 characters; the maximum is 32")),
         report);
   }
 
   @Test
   public void replaceFromYAML_reports_practice_problem_url_problems() throws Exception {
     String longUrl = "https://x.example/" + "a".repeat(500);
+    // Exactly at the 512-character limit: allowed, so it must NOT be reported.
+    String limitUrl = "https://x.example/" + "b".repeat(494);
     Map<String, Object> report =
         replaceExpectingFailure(
             """
@@ -646,12 +663,13 @@ public class ConceptYamlServiceTests {
                   - https://example.org/p1
                   - https://example.org/p1
                   - %s
+                  - %s
                 subconcepts:
                   - label: Child
                     practiceProblems:
                       - ""
             """
-                .formatted(longUrl));
+                .formatted(longUrl, limitUrl));
     assertEquals(
         failureReport(
             List.of(
