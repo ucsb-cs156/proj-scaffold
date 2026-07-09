@@ -1,13 +1,30 @@
 import React from "react";
+<<<<<<< HEAD
 import { http, HttpResponse } from "msw";
+=======
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+>>>>>>> origin/main
 import ConceptTabComponent from "main/components/Courses/TabComponents/ConceptTabComponent";
+import conceptsFixtures from "fixtures/conceptsFixtures";
+import { http, HttpResponse } from "msw";
 
 export default {
   title: "components/Courses/TabComponents/ConceptTabComponent",
   component: ConceptTabComponent,
 };
 
-const Template = (args) => <ConceptTabComponent {...args} />;
+const QueryWrapper = ({ children }) => {
+  const queryClient = new QueryClient();
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
+
+const Template = (args) => (
+  <QueryWrapper>
+    <ConceptTabComponent {...args} />
+  </QueryWrapper>
+);
 
 const sampleYaml = `# Concept graph for course 1 (Storybook 101)
 # See docs/yaml-format.md for the format.
@@ -26,6 +43,7 @@ Default.args = {
 
 Default.parameters = {
   msw: [
+<<<<<<< HEAD
     http.get("/api/concepts/yaml/download", () => {
       return new HttpResponse(sampleYaml, {
         status: 200,
@@ -49,6 +67,17 @@ Default.parameters = {
         },
         { status: 200 },
       );
+=======
+    http.get("/api/concepts/course", () =>
+      HttpResponse.json(conceptsFixtures.severalConcepts),
+    ),
+    http.post("/api/concept", async ({ request }) => {
+      const body = await request.json();
+      window.alert(
+        "Invoked post on /api/concept with body: " + JSON.stringify(body),
+      );
+      return HttpResponse.json({ id: 3, ...body }, { status: 200 });
+>>>>>>> origin/main
     }),
   ],
 };
