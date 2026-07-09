@@ -467,7 +467,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
   @Test
   @WithMockUser(roles = {"USER"})
-  public void testGetCourseAccessInfo_withAccess() throws Exception {
+  public void testGetCourseAccessInfo_withInstructorAccess() throws Exception {
     // arrange
     String email = "user@example.org";
 
@@ -496,6 +496,127 @@ public class CoursesControllerTests extends ControllerTestCase {
             false,
             true,
             false);
+
+    // act
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/list/1")).andExpect(status().isOk()).andReturn();
+
+    // assert
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(expectedDto);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void testGetCourseAccessInfo_withStudentAccess() throws Exception {
+    // arrange
+    String email = "user@example.org";
+
+    Course course =
+        Course.builder().id(1L).courseName("CS156").term("S25").school(School.UCSB).build();
+
+    RosterStudent rs = new RosterStudent();
+    rs.setId(10L);
+    rs.setCourse(course);
+    rs.setEmail(email);
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(adminRepository.existsByEmail(email)).thenReturn(false);
+    when(rosterStudentRepository.findAllByEmail(email)).thenReturn(List.of(rs));
+    when(courseStaffRepository.findAllByEmail(email)).thenReturn(List.of());
+
+    CoursesController.CourseListDTO expectedDto =
+        new CoursesController.CourseListDTO(
+            course.getId(),
+            course.getCourseName(),
+            course.getTerm(),
+            course.getSchool(),
+            course.getInstructorEmail(),
+            true,
+            false,
+            false,
+            false);
+
+    // act
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/list/1")).andExpect(status().isOk()).andReturn();
+
+    // assert
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(expectedDto);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void testGetCourseAccessInfo_withStaffAccess() throws Exception {
+    // arrange
+    String email = "user@example.org";
+
+    Course course =
+        Course.builder().id(1L).courseName("CS156").term("S25").school(School.UCSB).build();
+
+    CourseStaff cs = CourseStaff.builder().id(20L).email(email).course(course).build();
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(adminRepository.existsByEmail(email)).thenReturn(false);
+    when(rosterStudentRepository.findAllByEmail(email)).thenReturn(List.of());
+    when(courseStaffRepository.findAllByEmail(email)).thenReturn(List.of(cs));
+
+    CoursesController.CourseListDTO expectedDto =
+        new CoursesController.CourseListDTO(
+            course.getId(),
+            course.getCourseName(),
+            course.getTerm(),
+            course.getSchool(),
+            course.getInstructorEmail(),
+            false,
+            true,
+            false,
+            false);
+
+    // act
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/list/1")).andExpect(status().isOk()).andReturn();
+
+    // assert
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(expectedDto);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testGetCourseAccessInfo_withAdminAccessOnly() throws Exception {
+    // arrange
+    String email = "user@example.org";
+
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail("someone_else@example.org")
+            .build();
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(adminRepository.existsByEmail(email)).thenReturn(true);
+    when(rosterStudentRepository.findAllByEmail(email)).thenReturn(List.of());
+    when(courseStaffRepository.findAllByEmail(email)).thenReturn(List.of());
+
+    CoursesController.CourseListDTO expectedDto =
+        new CoursesController.CourseListDTO(
+            course.getId(),
+            course.getCourseName(),
+            course.getTerm(),
+            course.getSchool(),
+            course.getInstructorEmail(),
+            false,
+            false,
+            false,
+            true);
 
     // act
     MvcResult response =
