@@ -374,15 +374,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 <span class="fc" id="L375">    boolean studentAccess =</span>
 <span class="fc" id="L376">        rosterStudentRepository.findAllByEmail(email).stream()</span>
-<span class="pc" id="L377">            .anyMatch(rs -&gt; rs.getCourse().getId().equals(courseId));</span>
+<span class="fc" id="L377">            .anyMatch(rs -&gt; rs.getCourse().getId().equals(courseId));</span>
 
 <span class="fc" id="L379">    boolean staffAccess =</span>
 <span class="fc" id="L380">        courseStaffRepository.findAllByEmail(email).stream()</span>
-<span class="pc" id="L381">            .anyMatch(cs -&gt; cs.getCourse().getId().equals(courseId));</span>
+<span class="fc" id="L381">            .anyMatch(cs -&gt; cs.getCourse().getId().equals(courseId));</span>
 
 <span class="fc" id="L383">    boolean instructorAccess = email.equals(course.getInstructorEmail());</span>
 
-<span class="pc bpc" id="L385" title="3 of 8 branches missed.">    if (!isAdmin &amp;&amp; !studentAccess &amp;&amp; !staffAccess &amp;&amp; !instructorAccess) {</span>
+<span class="fc bfc" id="L385" title="All 8 branches covered.">    if (!isAdmin &amp;&amp; !studentAccess &amp;&amp; !staffAccess &amp;&amp; !instructorAccess) {</span>
 <span class="fc" id="L386">      throw new EntityNotFoundException(Course.class, courseId);</span>
     }
 
