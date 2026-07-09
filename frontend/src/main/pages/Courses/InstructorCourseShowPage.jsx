@@ -14,6 +14,10 @@ import JobTabComponent from "main/components/Courses/TabComponent/JobTabComponen
 import { hasRole } from "main/utils/currentUser";
 import DownloadsTabComponent from "main/components/Courses/TabComponent/DownloadsTabComponent";
 import LinkToScaffold from "main/components/Courses/LinkToScaffold";
+import ScaffoldTabComponent from "main/components/Courses/TabComponents/ScaffoldTabComponent";
+import ConceptTabComponent from "main/components/Courses/TabComponents/ConceptTabComponent";
+import SubConceptTabComponent from "main/components/Courses/TabComponents/SubConceptTabComponent";
+import EdgeConceptTabComponent from "main/components/Courses/TabComponents/EdgeConceptTabComponent";
 
 export default function InstructorCourseShowPage({
   testId = "InstructorCourseShowPage",
@@ -127,6 +131,22 @@ export default function InstructorCourseShowPage({
                 currentUser={currentUser}
                 isInstructor={staffTabIsInstructor}
               />
+            </Tab>
+            <Tab eventKey={"scaffold"} title={"Scaffold"} className="pt-2">
+              <ScaffoldTabComponent testIdPrefix={testId} />
+            </Tab>
+            <Tab eventKey={"concepts"} title={"Concepts"} className="pt-2">
+              <ConceptTabComponent testIdPrefix={testId} />
+            </Tab>
+            <Tab
+              eventKey={"subconcepts"}
+              title={"SubConcepts"}
+              className="pt-2"
+            >
+              <SubConceptTabComponent testIdPrefix={testId} />
+            </Tab>
+            <Tab eventKey={"edges"} title={"Edges"} className="pt-2">
+              <EdgeConceptTabComponent testIdPrefix={testId} />
             </Tab>
           </Tabs>
         </div>
