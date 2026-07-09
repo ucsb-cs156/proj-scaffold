@@ -20,4 +20,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/create-tabs-for-concepts-and-subconcepts","number":26,"title":"Add placeholder tab components for Scaffold, Concepts, SubConcepts, and Edges","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/26"},{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/create-table-and-form-components","number":24,"title":"Add Storybook Concept and SubConcept table/modal components","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/24"}]
+pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/create-table-and-form-components","number":24,"title":"Add Storybook Concept and SubConcept table/modal components","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/24"}]
