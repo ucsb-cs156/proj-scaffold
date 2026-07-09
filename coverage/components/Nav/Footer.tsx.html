@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
@@ -39,14 +39,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
@@ -115,16 +115,40 @@
 <a name='L50'></a><a href='#L50'>50</a>
 <a name='L51'></a><a href='#L51'>51</a>
 <a name='L52'></a><a href='#L52'>52</a>
-<a name='L53'></a><a href='#L53'>53</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">362x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">362x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">372x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">372x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -167,10 +191,33 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useDebugMode } from "main/utils/useDebugMode";
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useStaffTools } from "main/utils/useStaffTools";
+&nbsp;
+const toggleLabelStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  cursor: "pointer",
+  userSelect: "none",
+} as const;
 &nbsp;
 export default function Footer() {
-  const { debugMode, setDebugMode, canUseDebugMode } = useDebugMode();
+  const { debugMode, unlockSubconcepts, canUseStaffTools, setStaffTool } =
+    useStaffTools();
 &nbsp;
   return (
     &lt;footer
@@ -195,25 +242,35 @@ export default function Footer() {
         }}
       &gt;
         &lt;span&gt;Scaffold is a UCSB Computer Science project.&lt;/span&gt;
-        {canUseDebugMode &amp;&amp; (
-          &lt;label
-            data-testid="debug-mode-toggle-label"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              cursor: "pointer",
-              userSelect: "none",
-            }}
-          &gt;
-            &lt;input
-              type="checkbox"
-              data-testid="debug-mode-toggle"
-              checked={debugMode}
-              onChange={(e) =&gt; setDebugMode(e.target.checked)}
-            /&gt;
-            Debug Mode
-          &lt;/label&gt;
+        {canUseStaffTools &amp;&amp; (
+          &lt;span style={{ display: "flex", gap: "16px" }}&gt;
+            &lt;label
+              data-testid="unlock-subconcepts-toggle-label"
+              style={toggleLabelStyle}
+            &gt;
+              &lt;input
+                type="checkbox"
+                data-testid="unlock-subconcepts-toggle"
+                checked={unlockSubconcepts}
+                onChange={(e) =&gt;
+                  setStaffTool("unlockSubconcepts", e.target.checked)
+                }
+              /&gt;
+              Unlock Subconcepts
+            &lt;/label&gt;
+            &lt;label
+              data-testid="debug-mode-toggle-label"
+              style={toggleLabelStyle}
+            &gt;
+              &lt;input
+                type="checkbox"
+                data-testid="debug-mode-toggle"
+                checked={debugMode}
+                onChange={(e) =&gt; setStaffTool("debugMode", e.target.checked)}
+              /&gt;
+              Debug Mode
+            &lt;/label&gt;
+          &lt;/span&gt;
         )}
       &lt;/div&gt;
     &lt;/footer&gt;
@@ -226,7 +283,7 @@ export default function Footer() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-09T02:30:17.673Z
+                at 2026-07-09T03:44:16.687Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
