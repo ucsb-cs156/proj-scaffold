@@ -91,9 +91,14 @@ describe("ConceptTabComponent tests", () => {
     const revokeObjectURL = vi.fn();
     window.URL.createObjectURL = createObjectURL;
     window.URL.revokeObjectURL = revokeObjectURL;
+    let hrefDuringClick = null;
+    let connectedDuringClick = null;
     const click = vi
       .spyOn(HTMLAnchorElement.prototype, "click")
-      .mockImplementation(() => {});
+      .mockImplementation(function () {
+        hrefDuringClick = this.getAttribute("href");
+        connectedDuringClick = this.isConnected;
+      });
 
     renderConceptTabComponent();
     fireEvent.click(screen.getByTestId("test-download-yaml-button"));
@@ -107,6 +112,11 @@ describe("ConceptTabComponent tests", () => {
     const blob = createObjectURL.mock.calls[0][0];
     expect(blob.type).toBe("application/x-yaml");
     expect(await blob.text()).toBe(SAMPLE_YAML);
+    // The temporary anchor points at the blob, is attached to the document when
+    // clicked, and is cleaned up (removed, object URL revoked) afterward.
+    expect(hrefDuringClick).toBe("blob:fake-url");
+    expect(connectedDuringClick).toBe(true);
+    expect(document.querySelector("a[download]")).toBeNull();
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:fake-url");
     expect(mockToastError).not.toHaveBeenCalled();
 
