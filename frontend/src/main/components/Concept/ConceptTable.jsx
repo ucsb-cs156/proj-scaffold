@@ -4,6 +4,7 @@ export default function ConceptTable({
   concepts = [],
   editCallback = () => {},
   deleteCallback = () => {},
+  showButtons = true,
   testId = "ConceptTable",
 }) {
   const columns = [
@@ -32,9 +33,14 @@ export default function ConceptTable({
       accessorKey: "y",
       id: "y",
     },
-    ButtonColumn("Edit", "primary", editCallback, testId),
-    ButtonColumn("Delete", "danger", deleteCallback, testId),
   ];
+
+  if (showButtons) {
+    columns.push(
+      ButtonColumn("Edit", "primary", editCallback, testId),
+      ButtonColumn("Delete", "danger", deleteCallback, testId),
+    );
+  }
 
   return <OurTable data={concepts} columns={columns} testid={testId} />;
 }
