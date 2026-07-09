@@ -31,7 +31,7 @@ import {
   type EdgeLike,
 } from "main/utils/layout";
 import type { ConceptContentDTO } from "main/api/client";
-import { useDebugMode } from "main/utils/debugMode";
+import { useDebugMode } from "main/utils/useDebugMode";
 
 // This is a parallel, database-driven version of ConceptGraph.tsx: instead of
 // importing majorConcepts/prereqEdgeData/positions/conceptContent from the

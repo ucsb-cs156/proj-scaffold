@@ -3,7 +3,8 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { renderHook } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode } from "react";
-import { DebugModeProvider, useDebugMode } from "main/utils/debugMode";
+import { DebugModeProvider } from "main/utils/debugMode";
+import { useDebugMode } from "main/utils/useDebugMode";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import Footer from "main/components/Nav/Footer";
 

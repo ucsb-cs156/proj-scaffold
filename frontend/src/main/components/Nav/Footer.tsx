@@ -1,4 +1,4 @@
-import { useDebugMode } from "main/utils/debugMode";
+import { useDebugMode } from "main/utils/useDebugMode";
 
 export default function Footer() {
   const { debugMode, setDebugMode, canUseDebugMode } = useDebugMode();

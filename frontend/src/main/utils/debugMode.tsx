@@ -1,22 +1,6 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  type ReactNode,
-} from "react";
+import { useState, type ReactNode } from "react";
 import { useCurrentUser, hasRole } from "main/utils/currentUser";
-
-interface DebugModeContextType {
-  debugMode: boolean;
-  setDebugMode: (value: boolean) => void;
-  canUseDebugMode: boolean;
-}
-
-const DebugModeContext = createContext<DebugModeContextType>({
-  debugMode: false,
-  setDebugMode: () => {},
-  canUseDebugMode: false,
-});
+import { DebugModeContext } from "main/utils/debugModeContext";
 
 export function DebugModeProvider({ children }: { children: ReactNode }) {
   const currentUser = useCurrentUser();
@@ -52,8 +36,4 @@ export function DebugModeProvider({ children }: { children: ReactNode }) {
       {children}
     </DebugModeContext.Provider>
   );
-}
-
-export function useDebugMode(): DebugModeContextType {
-  return useContext(DebugModeContext);
 }

@@ -29,7 +29,7 @@ import { buildGraphElements } from "main/utils/layout";
 import { majorConcepts, prereqEdgeData } from "main/data/conceptGraph";
 import { positions } from "main/data/conceptGraphPositions";
 import { conceptContent, type ConceptContent } from "main/data/conceptContent";
-import { useDebugMode } from "main/utils/debugMode";
+import { useDebugMode } from "main/utils/useDebugMode";
 
 const cardKeyMap: Record<string, keyof ConceptContent> = {
   Description: "description",
