@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.15% </span>
+                <span class="strong">96.22% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>150/156</span>
+                <span class='fraction'>153/159</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">78.57% </span>
+                <span class="strong">78.76% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>88/112</span>
+                <span class='fraction'>89/113</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.35% </span>
+                <span class="strong">96.47% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>132/137</span>
+                <span class='fraction'>137/142</span>
             </div>
         
             
@@ -934,7 +934,19 @@
 <a name='L869'></a><a href='#L869'>869</a>
 <a name='L870'></a><a href='#L870'>870</a>
 <a name='L871'></a><a href='#L871'>871</a>
-<a name='L872'></a><a href='#L872'>872</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L872'></a><a href='#L872'>872</a>
+<a name='L873'></a><a href='#L873'>873</a>
+<a name='L874'></a><a href='#L874'>874</a>
+<a name='L875'></a><a href='#L875'>875</a>
+<a name='L876'></a><a href='#L876'>876</a>
+<a name='L877'></a><a href='#L877'>877</a>
+<a name='L878'></a><a href='#L878'>878</a>
+<a name='L879'></a><a href='#L879'>879</a>
+<a name='L880'></a><a href='#L880'>880</a>
+<a name='L881'></a><a href='#L881'>881</a>
+<a name='L882'></a><a href='#L882'>882</a>
+<a name='L883'></a><a href='#L883'>883</a>
+<a name='L884'></a><a href='#L884'>884</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1475,9 +1487,17 @@
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1668,10 +1688,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2346,12 +2370,20 @@ export default function ConceptGraphV2({
     restoredRef.current = true;
 &nbsp;
     const newNodes = restoredDetailCards.map((card, i) =&gt; {
-      const concept = majorConcepts.find((c) =&gt; c.name === card.conceptId);
+      // card.conceptId is the parent concept's numeric id as a string (the React
+      // Flow node id). Content is keyed by each concept's own numeric id, so a
+      // subconcept card resolves its subconcept id via its label.
+      const concept = majorConcepts.find(
+        (c) =&gt; String(c.id) === card.conceptId,
+      );
       const conceptLabel = concept?.labelHtml.replace(/\n/g, " ") ?? <span class="branch-1 cbranch-no" title="branch not covered" >"";</span>
       const isConceptItself = card.itemLabel === conceptLabel;
+      const subconceptId = concept?.subconcepts.find(
+        (s) =&gt; s.labelHtml === card.itemLabel,
+      )?.id;
       const contentKey = isConceptItself
         ? card.conceptId
-        : `${card.conceptId}:${card.itemLabel}`;
+        : String(subconceptId);
       const cardContent =
         conceptContent[contentKey]?.[cardKeyMap[card.cardType]] ?? "";
 &nbsp;
@@ -2539,14 +2571,18 @@ export default function ConceptGraphV2({
     }
     setEdges((eds) =&gt; [
       ...prereqEdgeData.map((e) =&gt; {
+        const source = String(e.sourceId);
+        const target = String(e.targetId);
         const isHighlighted =
-          highlightedIds.has(e.source) &amp;&amp; highlightedIds.has(e.target);
+          highlightedIds.has(source) &amp;&amp; highlightedIds.has(target);
         const color =
-          majorConcepts.find((c) =&gt; c.name === e.source)?.color ?? <span class="branch-1 cbranch-no" title="branch not covered" >"#64748B";</span>
+          e.color ??
+          majorConcepts.find((c) =&gt; c.id === e.sourceId)?.color ??
+<span class="branch-2 cbranch-no" title="branch not covered" >          "#64748B";</span>
         return {
-          id: `prereq-${e.source}-${e.target}`,
-          source: e.source,
-          target: e.target,
+          id: `prereq-${e.id}`,
+          source,
+          target,
           sourceHandle: "top",
           targetHandle: "bottom",
           type: "dashed",
@@ -2683,7 +2719,7 @@ export default function ConceptGraphV2({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-08T22:58:32.694Z
+                at 2026-07-09T00:14:07.633Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

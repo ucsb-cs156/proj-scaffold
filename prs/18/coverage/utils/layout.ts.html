@@ -32,21 +32,21 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>10/10</span>
+                <span class='fraction'>9/9</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>10/10</span>
+                <span class='fraction'>11/11</span>
             </div>
         
             
@@ -162,7 +162,17 @@
 <a name='L97'></a><a href='#L97'>97</a>
 <a name='L98'></a><a href='#L98'>98</a>
 <a name='L99'></a><a href='#L99'>99</a>
-<a name='L100'></a><a href='#L100'>100</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -229,7 +239,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">42x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">44x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -242,24 +257,29 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">37x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { type Node, type Edge, MarkerType, Position } from "@xyflow/react";
 import { majorConcepts, prereqEdgeData } from "../data/conceptGraph";
@@ -307,31 +327,36 @@ export interface SubconceptLike {
 }
 &nbsp;
 export interface MajorConceptLike {
-  name: string;
+  id: number;
   labelHtml: string;
   color: string;
   subconcepts: SubconceptLike[];
 }
 &nbsp;
 export interface EdgeLike {
-  source: string;
-  target: string;
+  id: number;
+  sourceId: number;
+  targetId: number;
+  // Set (bright red) when the edge is part of a prerequisite cycle; null otherwise,
+  // in which case the edge takes its source concept's color.
+  color?: string | null;
 }
 &nbsp;
 // Same shape as buildGraphElements, but fully parameterized so it can build a
 // graph from database-fetched data instead of the hardcoded conceptGraph.ts
-// imports. Kept separate (rather than changing buildGraphElements itself) so
-// the original, hardcoded-data code path used by LegacyHomePage.tsx / ConceptGraph.tsx
-// is completely untouched.
+// imports, using numeric concept ids (as strings) for React Flow node ids. Kept
+// separate (rather than changing buildGraphElements itself) so the original,
+// hardcoded-data code path used by LegacyHomePage.tsx / ConceptGraph.tsx is
+// completely untouched.
 export function buildGraphElementsV2(
   positions: Record&lt;string, { x: number; y: number }&gt;,
   majorConceptsData: MajorConceptLike[],
   prereqEdgeDataArg: EdgeLike[],
 ): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = majorConceptsData.map((concept) =&gt; ({
-    id: concept.name,
+    id: String(concept.id),
     type: "major",
-    position: positions[concept.name] ?? { x: 0, y: 0 },
+    position: positions[String(concept.id)] ?? { x: 0, y: 0 },
     data: {
       labelHtml: concept.labelHtml,
       color: concept.color,
@@ -341,22 +366,27 @@ export function buildGraphElementsV2(
     targetPosition: Position.Bottom,
   }));
 &nbsp;
-  const edges: Edge[] = prereqEdgeDataArg.map((e) =&gt; ({
-    id: `prereq-${e.source}-${e.target}`,
-    source: e.source,
-    target: e.target,
-    sourceHandle: "top",
-    targetHandle: "bottom",
-    type: "smoothstep",
-    style: {
-      stroke: majorConceptsData.find((c) =&gt; c.name === e.source)?.color,
-      strokeWidth: 4,
-    },
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: majorConceptsData.find((c) =&gt; c.name === e.source)?.color,
-    },
-  }));
+  const edges: Edge[] = prereqEdgeDataArg.map((e) =&gt; {
+    const color =
+      e.color ??
+      majorConceptsData.find((c) =&gt; c.id === e.sourceId)?.color;
+    return {
+      id: `prereq-${e.id}`,
+      source: String(e.sourceId),
+      target: String(e.targetId),
+      sourceHandle: "top",
+      targetHandle: "bottom",
+      type: "smoothstep",
+      style: {
+        stroke: color,
+        strokeWidth: 4,
+      },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color,
+      },
+    };
+  });
 &nbsp;
   return { nodes, edges };
 }
@@ -367,7 +397,7 @@ export function buildGraphElementsV2(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-08T22:58:32.694Z
+                at 2026-07-09T00:14:07.633Z
             </div>
         <script src="../prettify.js"></script>
         <script>

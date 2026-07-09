@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">99.05% </span>
+                <span class="strong">99.06% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>210/212</span>
+                <span class='fraction'>212/214</span>
             </div>
         
             
@@ -39,14 +39,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>51/51</span>
+                <span class='fraction'>52/52</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>201/201</span>
+                <span class='fraction'>204/204</span>
             </div>
         
             
@@ -959,7 +959,12 @@
 <a name='L894'></a><a href='#L894'>894</a>
 <a name='L895'></a><a href='#L895'>895</a>
 <a name='L896'></a><a href='#L896'>896</a>
-<a name='L897'></a><a href='#L897'>897</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L897'></a><a href='#L897'>897</a>
+<a name='L898'></a><a href='#L898'>898</a>
+<a name='L899'></a><a href='#L899'>899</a>
+<a name='L900'></a><a href='#L900'>900</a>
+<a name='L901'></a><a href='#L901'>901</a>
+<a name='L902'></a><a href='#L902'>902</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1249,6 +1254,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -1693,16 +1703,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
@@ -1886,7 +1896,7 @@ import { useCurrentUser } from "main/utils/currentUser";
 import {
   normalize,
   toPastel,
-  computeSubgraph,
+  computeSubgraphV2,
 } from "main/utils/conceptGraphUtils";
 &nbsp;
 // Database-driven counterpart to LegacyHomePage.tsx, rendered at /course/{courseId}.
@@ -2144,7 +2154,12 @@ export default function ConceptGraphPage() {
       return;
     }
     fetchQuestionConcepts(selectedQuestionId).then((concepts) =&gt; {
-      setHighlightedIds(computeSubgraph(concepts.map((c) =&gt; c.concept_id)));
+      setHighlightedIds(
+        computeSubgraphV2(
+          concepts.map((c) =&gt; c.concept_id),
+          prereqEdgeData,
+        ),
+      );
       const subMap = new Map&lt;string, Set&lt;string&gt;&gt;();
       concepts.forEach((c) =&gt; {
         <span class="missing-if-branch" title="else path not taken" >E</span>if (c.subconcept_label) {
@@ -2172,13 +2187,13 @@ export default function ConceptGraphPage() {
   }, [logActivity, selectedConceptId, selectedItem]);
 &nbsp;
   const selectedConcept = selectedConceptId
-    ? majorConcepts.find((c) =&gt; c.name === selectedConceptId)
+    ? majorConcepts.find((c) =&gt; String(c.id) === selectedConceptId)
     : null;
 &nbsp;
   const handleConceptClick = (id: string) =&gt; {
     setSelectedConceptId(id);
     <span class="missing-if-branch" title="else path not taken" >E</span>if (!selectedQuestionId) {
-      setHighlightedIds(computeSubgraph([id]));
+      setHighlightedIds(computeSubgraphV2([id], prereqEdgeData));
     }
     logActivity("concept_clicked", { conceptId: id });
   };
@@ -2462,14 +2477,14 @@ export default function ConceptGraphPage() {
                 &lt;button
                   onClick={() =&gt;
                     setSelectedItem(
-                      selectedItem === selectedConcept.name
+                      selectedItem === String(selectedConcept.id)
                         ? <span class="branch-0 cbranch-no" title="branch not covered" >null</span>
-                        : selectedConcept.name,
+                        : String(selectedConcept.id),
                     )
                   }
                   style={{
                     background:
-                      selectedItem === selectedConcept.name
+                      selectedItem === String(selectedConcept.id)
                         ? selectedConcept.color
                         : "#ffffff",
                     color: "#000000",
@@ -2585,21 +2600,21 @@ export default function ConceptGraphPage() {
           {selectedConcept &amp;&amp;
             selectedItem !== null &amp;&amp;
             (() =&gt; {
-              // selectedItem holds a subconcept's labelHtml (or the major
-              // concept's name); contentKey below must line up with the
-              // backend's parentName:label keys in conceptContent, which
-              // holds as long as the label contains no Markdown formatting
-              // (the common case — see MarkdownService.toInlineHtml).
-              const selectedItemLabel =
-                selectedItem === selectedConcept.name
-                  ? selectedConcept.labelHtml.replace(/\n/g, " ")
-                  : (selectedItem ?? <span class="branch-1 cbranch-no" title="branch not covered" >"");</span>
-              const contentKey =
-                selectedItem === selectedConcept.name
-                  ? selectedConcept.name
-                  : `${selectedConcept.name}:${selectedItem}`;
+              // selectedItem holds a subconcept's labelHtml, or the major
+              // concept's node id (its numeric id as a string). Content is
+              // keyed by each concept's own numeric id.
+              const isMajorConcept =
+                selectedItem === String(selectedConcept.id);
+              const selectedItemLabel = isMajorConcept
+                ? selectedConcept.labelHtml.replace(/\n/g, " ")
+                : (selectedItem ?? <span class="branch-1 cbranch-no" title="branch not covered" >"");</span>
+              const subconceptId = selectedConcept.subconcepts.find(
+                (s) =&gt; s.labelHtml === selectedItem,
+              )?.id;
+              const contentKey = isMajorConcept
+                ? String(selectedConcept.id)
+                : String(subconceptId);
               const content = conceptContent[contentKey];
-              const isMajorConcept = selectedItem === selectedConcept.name;
 &nbsp;
               return (
                 &lt;div
@@ -2630,7 +2645,7 @@ export default function ConceptGraphPage() {
                                   JSON.stringify({
                                     cardType: card.label,
                                     itemLabel: selectedItemLabel,
-                                    conceptId: selectedConcept.name,
+                                    conceptId: String(selectedConcept.id),
                                     conceptColor: selectedConcept.color,
                                     cardContent: content?.[card.key] ?? <span class="branch-1 cbranch-no" title="branch not covered" >"",</span>
                                   }),
@@ -2758,7 +2773,7 @@ export default function ConceptGraphPage() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-08T22:58:32.694Z
+                at 2026-07-09T00:14:07.633Z
             </div>
         <script src="../prettify.js"></script>
         <script>
