@@ -20,4 +20,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: []
+pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/concept-crud-frontend-progress","number":32,"title":"[WIP] Add concept modal and concept table to ConceptTabComponent","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/32"},{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/add-button-on-scaffoldtabcomponent","number":31,"title":"[WIP] Add button on ScaffoldTabComponent to invoke reset endpoint","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/31"}]
