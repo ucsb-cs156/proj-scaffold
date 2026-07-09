@@ -20,4 +20,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/subconcept-crud-progress","number":33,"title":"[WIP] Add SubConceptTable for current course","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/33"},{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/concept-crud-frontend-progress","number":32,"title":"Add course-scoped Concept tab CRUD scaffolding and table data endpoint","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/32"}]
+pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/subconcept-crud-progress","number":33,"title":"[WIP] Add SubConceptTable for current course","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/33"}]
