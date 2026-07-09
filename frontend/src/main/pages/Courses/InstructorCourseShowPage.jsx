@@ -136,7 +136,7 @@ export default function InstructorCourseShowPage({
               <ScaffoldTabComponent courseId={courseId} testIdPrefix={testId} />
             </Tab>
             <Tab eventKey={"concepts"} title={"Concepts"} className="pt-2">
-              <ConceptTabComponent testIdPrefix={testId} />
+              <ConceptTabComponent courseId={courseId} testIdPrefix={testId} />
             </Tab>
             <Tab
               eventKey={"subconcepts"}
