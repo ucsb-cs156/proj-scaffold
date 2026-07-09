@@ -28,6 +28,16 @@ export default function SubConceptTable({
       id: "parentLabel",
     },
     {
+      header: "parentLevel",
+      accessorKey: "parentLevel",
+      id: "parentLevel",
+    },
+    {
+      header: "parentX",
+      accessorKey: "parentX",
+      id: "parentX",
+    },
+    {
       header: "sortOrder",
       accessorKey: "sortOrder",
       id: "sortOrder",
