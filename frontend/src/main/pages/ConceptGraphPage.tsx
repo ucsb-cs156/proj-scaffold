@@ -26,6 +26,7 @@ import type { Assessment, Question } from "main/api/client";
 import LoginScreen from "main/components/Auth/LoginScreen";
 import QuestionSearch from "main/components/Scaffold/QuestionSearch";
 import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
+import ScaffoldBrand from "main/components/Scaffold/ScaffoldBrand";
 import { useCurrentUser } from "main/utils/currentUser";
 import { StaffToolsProvider } from "main/utils/staffTools";
 import {
@@ -520,23 +521,7 @@ function ConceptGraphPageContent() {
             padding: "0 20px",
           }}
         >
-          <div
-            style={{
-              fontFamily: "Helvetica, Arial, sans-serif",
-              fontWeight: 800,
-              fontSize: 20,
-              color: "#1E293B",
-              background: "#d9f9ff",
-              padding: "4px 12px",
-              borderRadius: 8,
-              borderTop: "1.5px solid #1E293B",
-              borderLeft: "1.5px solid #1E293B",
-              borderRight: "4px solid #1E293B",
-              borderBottom: "4px solid #1E293B",
-            }}
-          >
-            Scaffold
-          </div>
+          <ScaffoldBrand />
           <AssessmentSelect
             assessments={assessments}
             selectedAssessmentId={selectedAssessmentId}
