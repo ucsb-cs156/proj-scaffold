@@ -643,10 +643,21 @@ public class CoursesControllerTests extends ControllerTestCase {
             .instructorEmail("someone_else@example.org")
             .build();
 
+    Course otherCourse =
+        Course.builder().id(2L).courseName("CS24").term("S25").school(School.UCSB).build();
+
+    RosterStudent rsOtherCourse = new RosterStudent();
+    rsOtherCourse.setId(99L);
+    rsOtherCourse.setCourse(otherCourse);
+    rsOtherCourse.setEmail(email);
+
+    CourseStaff csOtherCourse =
+        CourseStaff.builder().id(98L).email(email).course(otherCourse).build();
+
     when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
     when(adminRepository.existsByEmail(email)).thenReturn(false);
-    when(rosterStudentRepository.findAllByEmail(email)).thenReturn(List.of());
-    when(courseStaffRepository.findAllByEmail(email)).thenReturn(List.of());
+    when(rosterStudentRepository.findAllByEmail(email)).thenReturn(List.of(rsOtherCourse));
+    when(courseStaffRepository.findAllByEmail(email)).thenReturn(List.of(csOtherCourse));
 
     // act
     MvcResult response =
