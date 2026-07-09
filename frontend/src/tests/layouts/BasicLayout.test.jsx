@@ -71,7 +71,7 @@ describe("BasicLayout tests", () => {
       </QueryClientProvider>,
     );
     expect(
-      screen.getByText(/UCSB Computer Science project/),
+      screen.getByRole("link", { name: "About Scaffold" }),
     ).toBeInTheDocument();
   });
 

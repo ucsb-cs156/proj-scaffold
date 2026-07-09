@@ -2,6 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { renderHook } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MemoryRouter } from "react-router";
 import { type ReactNode } from "react";
 import { StaffToolsProvider } from "main/utils/staffTools";
 import { useStaffTools } from "main/utils/useStaffTools";
@@ -219,7 +220,9 @@ describe("Footer staff tool toggles", () => {
     render(
       <QueryClientProvider client={qc}>
         <StaffToolsProvider>
-          <Footer />
+          <MemoryRouter>
+            <Footer />
+          </MemoryRouter>
         </StaffToolsProvider>
       </QueryClientProvider>,
     );
@@ -242,7 +245,11 @@ describe("Footer staff tool toggles", () => {
   });
 
   test("does not show either toggle outside a StaffToolsProvider (non-graph pages)", () => {
-    render(<Footer />);
+    render(
+      <MemoryRouter>
+        <Footer />
+      </MemoryRouter>,
+    );
     expect(screen.queryByTestId("debug-mode-toggle")).not.toBeInTheDocument();
     expect(
       screen.queryByTestId("unlock-subconcepts-toggle"),

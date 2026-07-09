@@ -7,6 +7,7 @@ import ProtectedPage from "main/pages/Auth/ProtectedPage";
 import LegacyHomePage from "main/pages/Home/LegacyHomePage";
 import ConceptGraphPage from "main/pages/ConceptGraphPage";
 import NotFoundPage from "main/pages/Auth/NotFoundPage";
+import AboutScaffold from "main/pages/Help/AboutScaffold";
 import SignInPage from "main/pages/Auth/SignInPage";
 import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
 
@@ -34,6 +35,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={homePage} />
         <Route path="/LegacyHomePage" element={<LegacyHomePage />} />
+        <Route path="/about" element={<AboutScaffold />} />
         <Route
           path="/course/:courseId"
           element={

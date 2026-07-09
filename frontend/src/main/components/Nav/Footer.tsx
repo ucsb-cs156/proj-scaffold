@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import { useStaffTools } from "main/utils/useStaffTools";
 
 const toggleLabelStyle = {
@@ -34,7 +35,9 @@ export default function Footer() {
           gap: "8px",
         }}
       >
-        <span>Scaffold is a UCSB Computer Science project.</span>
+        <span>
+          <Link to="/about">About Scaffold</Link>
+        </span>
         {canUseStaffTools && (
           <span style={{ display: "flex", gap: "16px" }}>
             <label
