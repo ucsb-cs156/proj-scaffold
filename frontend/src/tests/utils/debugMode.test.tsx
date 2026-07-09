@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from "vitest";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { renderHook } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -139,6 +139,38 @@ describe("debugMode utility tests", () => {
       });
       expect(result.current.debugMode).toBe(false);
       expect(sessionStorage.getItem("debugMode")).toBe("false");
+    });
+  });
+
+  describe("sessionStorage unavailable", () => {
+    // e.g. Safari private browsing or storage blocked by browser settings:
+    // the toggle should still work for the current page load, just without
+    // persistence.
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    test("defaults to off when sessionStorage.getItem throws", () => {
+      vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+        throw new Error("storage blocked");
+      });
+      const { result } = renderHook(() => useDebugMode(), {
+        wrapper: makeWrapper(currentUserFixtures.adminUser),
+      });
+      expect(result.current.debugMode).toBe(false);
+    });
+
+    test("still toggles in-memory when sessionStorage.setItem throws", () => {
+      vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw new Error("storage blocked");
+      });
+      const { result } = renderHook(() => useDebugMode(), {
+        wrapper: makeWrapper(currentUserFixtures.adminUser),
+      });
+      act(() => {
+        result.current.setDebugMode(true);
+      });
+      expect(result.current.debugMode).toBe(true);
     });
   });
 

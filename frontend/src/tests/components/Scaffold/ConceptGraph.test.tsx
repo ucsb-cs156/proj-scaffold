@@ -1,6 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import ConceptGraph from "main/components/Scaffold/ConceptGraph";
+import { DebugModeContext } from "main/utils/debugModeContext";
 
 // @xyflow/react measures its container via ResizeObserver and
 // getBoundingClientRect, neither of which jsdom implements with real
@@ -344,5 +345,38 @@ describe("ConceptGraph", () => {
     fireEvent.click(screen.getByText("Unique Detail Label"));
 
     expect(props.onConceptClick).not.toHaveBeenCalled();
+  });
+});
+
+describe("ConceptGraph debug mode tooltips", () => {
+  test("nodes have no title tooltip when debug mode is off", () => {
+    render(<ConceptGraph {...baseProps()} />);
+    expect(screen.getByText("Recursion").closest("[title]")).toBeNull();
+  });
+
+  test("nodes show the full concept JSON as a tooltip when debug mode is on", () => {
+    render(
+      <DebugModeContext.Provider
+        value={{
+          debugMode: true,
+          setDebugMode: vi.fn(),
+          canUseDebugMode: true,
+        }}
+      >
+        <ConceptGraph {...baseProps()} />
+      </DebugModeContext.Provider>,
+    );
+
+    const node = screen.getByText("Recursion").closest("[title]");
+    expect(node).not.toBeNull();
+    const title = node!.getAttribute("title")!;
+    const parsed = JSON.parse(title);
+    expect(parsed.label).toBe("Recursion");
+    expect(parsed).toHaveProperty("id");
+    expect(parsed).toHaveProperty("color");
+    expect(parsed).toHaveProperty("subconcepts");
+    expect(parsed).toHaveProperty("conceptContent");
+    // Pretty-printed (multi-line), not a single-line blob.
+    expect(title).toContain("\n");
   });
 });
