@@ -590,6 +590,8 @@ public class ConceptYamlServiceTests {
               - id: 4
               - id: 5
                 label: %s
+              - id: 6
+                label: ""
             """
                 .formatted(longLabel));
     assertEquals(
@@ -599,7 +601,8 @@ public class ConceptYamlServiceTests {
                 "concepts[1]: id is required",
                 "concepts[3]: duplicate id 3",
                 "concepts[4]: label may not be empty",
-                "concepts[5]: label renders to 40 characters; the maximum is 32")),
+                "concepts[5]: label renders to 40 characters; the maximum is 32",
+                "concepts[6]: label may not be empty")),
         report);
   }
 

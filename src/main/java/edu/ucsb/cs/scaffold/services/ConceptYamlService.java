@@ -72,7 +72,7 @@ public class ConceptYamlService {
    * Top-level concepts are numbered with consecutive external ids 1..n in database-id order; edges
    * refer to those external ids.
    */
-  public String createYAML(long courseId) throws EntityNotFoundException {
+  public String createYAML(long courseId) throws EntityNotFoundException, JsonProcessingException {
     Course course =
         courseRepository
             .findById(courseId)
@@ -148,11 +148,7 @@ public class ConceptYamlService {
     String header =
         "# Concept graph for course %d (%s)%n# See docs/yaml-format.md for the format.%n"
             .formatted(course.getId(), course.getCourseName());
-    try {
-      return header + YAML_MAPPER.writeValueAsString(dto);
-    } catch (JsonProcessingException e) {
-      throw new IllegalStateException("Unable to serialize concept graph as YAML", e);
-    }
+    return header + YAML_MAPPER.writeValueAsString(dto);
   }
 
   /**

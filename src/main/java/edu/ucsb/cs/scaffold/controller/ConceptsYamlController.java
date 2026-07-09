@@ -41,7 +41,8 @@ public class ConceptsYamlController extends ApiController {
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("/api/concepts/yaml/download")
   public ResponseEntity<String> downloadConceptsYaml(
-      @Parameter(name = "courseId") @RequestParam Long courseId) throws EntityNotFoundException {
+      @Parameter(name = "courseId") @RequestParam Long courseId)
+      throws EntityNotFoundException, IOException {
     String yaml = conceptYamlService.createYAML(courseId);
     return ResponseEntity.ok()
         .contentType(MediaType.parseMediaType("application/x-yaml"))
