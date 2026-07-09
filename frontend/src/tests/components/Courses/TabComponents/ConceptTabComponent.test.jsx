@@ -18,7 +18,12 @@ import {
   vi,
 } from "vitest";
 
-// axiosMock with passthrough so unmatched requests reach the MSW server
+// This file uses two request-mocking layers:
+//  - MSW (setupServer below) handles CRUD endpoints (/api/concept, /api/concepts/course)
+//    used by the ConceptModal/ConceptTable parts of the component.
+//  - axios-mock-adapter (axiosMock) handles YAML endpoints (/api/concepts/yaml/*),
+//    which are called with raw axios and need per-test reply control.
+// onNoMatch:"passthrough" lets unmatched axios requests fall through to MSW.
 const axiosMock = new AxiosMockAdapter(axios, { onNoMatch: "passthrough" });
 
 const mockToast = vi.fn();
