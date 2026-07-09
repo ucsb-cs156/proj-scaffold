@@ -1,13 +1,26 @@
-<<<<<<< HEAD
+import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ConceptTabComponent from "main/components/Courses/TabComponents/ConceptTabComponent";
+import conceptsFixtures from "fixtures/conceptsFixtures";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
-import { vi } from "vitest";
+import { HttpResponse, http } from "msw";
+import { setupServer } from "msw/node";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  test,
+  vi,
+} from "vitest";
 
-const axiosMock = new AxiosMockAdapter(axios);
+// axiosMock with passthrough so unmatched requests reach the MSW server
+const axiosMock = new AxiosMockAdapter(axios, { onNoMatch: "passthrough" });
+
 const mockToast = vi.fn();
 const mockToastError = vi.fn();
 
@@ -34,64 +47,9 @@ const successReport = {
   userStatesCleared: 17,
 };
 
-const renderConceptTabComponent = (props = {}) => {
-  const queryClient = new QueryClient();
-
-  render(
-    <QueryClientProvider client={queryClient}>
-      <ConceptTabComponent courseId={42} testIdPrefix="test" {...props} />
-    </QueryClientProvider>,
-  );
-};
-
-describe("ConceptTabComponent tests", () => {
-  beforeEach(() => {
-    axiosMock.reset();
-    mockToast.mockClear();
-    mockToastError.mockClear();
-  });
-
-  test("renders the Concepts heading", () => {
-    renderConceptTabComponent();
-    expect(screen.getByText("Concepts")).toBeInTheDocument();
-  });
-
-  test("renders with correct data-testid", () => {
-    renderConceptTabComponent();
-    expect(screen.getByTestId("test-conceptTab")).toBeInTheDocument();
-    expect(screen.getByTestId("test-download-yaml-button")).toBeInTheDocument();
-    expect(screen.getByTestId("test-upload-yaml-input")).toBeInTheDocument();
-    expect(screen.getByTestId("test-upload-yaml-button")).toBeInTheDocument();
-  });
-
-  test("renders with custom testIdPrefix", () => {
-    renderConceptTabComponent({ testIdPrefix: "InstructorCourseShowPage" });
-=======
-import React from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import ConceptTabComponent from "main/components/Courses/TabComponents/ConceptTabComponent";
-import conceptsFixtures from "fixtures/conceptsFixtures";
-import { HttpResponse, http } from "msw";
-import { setupServer } from "msw/node";
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  test,
-  vi,
-} from "vitest";
-
-const mockToast = vi.fn();
 const postSpy = vi.fn();
 
-vi.mock("react-toastify", async (importOriginal) => ({
-  ...(await importOriginal()),
-  toast: (message) => mockToast(message),
-}));
-
+// MSW server handles CRUD-related requests
 const server = setupServer(
   http.get("/api/concepts/course", () =>
     HttpResponse.json(conceptsFixtures.severalConcepts),
@@ -106,7 +64,9 @@ const server = setupServer(
 beforeAll(() => server.listen());
 afterEach(() => {
   server.resetHandlers();
+  axiosMock.reset();
   mockToast.mockClear();
+  mockToastError.mockClear();
   postSpy.mockClear();
 });
 afterAll(() => server.close());
@@ -124,12 +84,22 @@ describe("ConceptTabComponent tests", () => {
     });
   });
 
+  // renderComponent uses courseId 7 (for CRUD-focused tests)
   const renderComponent = (props = {}) =>
     render(
       <QueryClientProvider client={queryClient}>
         <ConceptTabComponent courseId={7} testIdPrefix="test" {...props} />
       </QueryClientProvider>,
     );
+
+  // renderConceptTabComponent uses courseId 42 (for YAML-focused tests)
+  const renderConceptTabComponent = (props = {}) => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ConceptTabComponent courseId={42} testIdPrefix="test" {...props} />
+      </QueryClientProvider>,
+    );
+  };
 
   test("renders fetched concepts and correct data-testid", async () => {
     renderComponent();
@@ -188,7 +158,6 @@ describe("ConceptTabComponent tests", () => {
   test("renders with custom testIdPrefix", async () => {
     renderComponent({ testIdPrefix: "InstructorCourseShowPage" });
 
->>>>>>> origin/main
     expect(
       screen.getByTestId("InstructorCourseShowPage-conceptTab"),
     ).toBeInTheDocument();
@@ -235,9 +204,12 @@ describe("ConceptTabComponent tests", () => {
     renderConceptTabComponent();
     fireEvent.click(screen.getByTestId("test-download-yaml-button"));
 
-    await waitFor(() => expect(axiosMock.history.get.length).toBe(1));
-    expect(axiosMock.history.get[0].url).toBe("/api/concepts/yaml/download");
-    expect(axiosMock.history.get[0].params).toEqual({ courseId: 42 });
+    const yamlGets = () =>
+      axiosMock.history.get.filter(
+        (r) => r.url === "/api/concepts/yaml/download",
+      );
+    await waitFor(() => expect(yamlGets().length).toBe(1));
+    expect(yamlGets()[0].params).toEqual({ courseId: 42 });
 
     await waitFor(() => expect(click).toHaveBeenCalledTimes(1));
     expect(createObjectURL).toHaveBeenCalledTimes(1);
