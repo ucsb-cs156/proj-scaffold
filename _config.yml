@@ -1,4 +1,3 @@
-
 title: Documentation
 description: >- # this means to ignore newlines until "baseurl:"
   When reviewing a PR for this repo, you can see what the documentation,
@@ -18,9 +17,7 @@ collections:
     permalink: /branches/:path/
 
 repo_name: "TBD"
-
-
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-fix-scrolling-css","number":22,"title":"pc - fix #19: scroll lock only on Scaffold Canvas pages; consolidate custom CSS","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/22"},{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/debug-mode-for-admin-instructors","number":21,"title":"Add client-side debug mode toggle for Admin/Instructor users","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/21"},{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-add-backend-CRUD-Concept","number":18,"title":"Pc add backend crud concept","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/18"}]
+pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-fix-scrolling-css","number":22,"title":"pc - fix #19: scroll lock only on Scaffold Canvas pages; consolidate custom CSS","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/22"},{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/debug-mode-for-admin-instructors","number":21,"title":"Add client-side debug mode toggle for Admin/Instructor users","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/21"}]
