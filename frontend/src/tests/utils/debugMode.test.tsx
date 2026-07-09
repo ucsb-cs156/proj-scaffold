@@ -191,12 +191,14 @@ describe("Footer debug toggle UI", () => {
   test("shows debug toggle for admin user", () => {
     renderFooterWithUser(currentUserFixtures.adminUser);
     expect(screen.getByTestId("debug-mode-toggle")).toBeInTheDocument();
+    expect(screen.getByTestId("debug-mode-toggle-label")).toBeInTheDocument();
     expect(screen.getByText("Debug Mode")).toBeInTheDocument();
   });
 
   test("shows debug toggle for instructor user", () => {
     renderFooterWithUser(currentUserFixtures.instructorUser);
     expect(screen.getByTestId("debug-mode-toggle")).toBeInTheDocument();
+    expect(screen.getByTestId("debug-mode-toggle-label")).toBeInTheDocument();
     expect(screen.getByText("Debug Mode")).toBeInTheDocument();
   });
 
