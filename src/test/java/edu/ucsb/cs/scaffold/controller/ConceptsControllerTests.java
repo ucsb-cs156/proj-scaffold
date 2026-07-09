@@ -2411,6 +2411,48 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @Test
   @WithMockUser(roles = {"USER"})
+  public void subconcepts_level_takes_priority_over_x_in_sort() throws Exception {
+    // Designed to kill the mutation "replace getParent().getLevel() return with 0".
+    // parentLowX is at level=2 with x=50 (low x).
+    // parentHighX is at level=1 with x=300 (high x).
+    // Correct sort: level-1 child first (regardless of x).
+    // If level is mutated to always return 0, then x decides: level-2 child (x=50) comes first.
+    Course course = Course.builder().id(50L).courseName("CS Test").build();
+    Concept parentLevel2LowX =
+        Concept.builder().id(2L).course(course).label("Level2LowX").level(2).x(50).y(100).build();
+    Concept parentLevel1HighX =
+        Concept.builder().id(1L).course(course).label("Level1HighX").level(1).x(300).y(100).build();
+    Concept subOfLevel2 =
+        Concept.builder()
+            .id(5L)
+            .course(course)
+            .label("SubLevel2")
+            .parent(parentLevel2LowX)
+            .sortOrder(1)
+            .build();
+    Concept subOfLevel1 =
+        Concept.builder()
+            .id(10L)
+            .course(course)
+            .label("SubLevel1")
+            .parent(parentLevel1HighX)
+            .sortOrder(1)
+            .build();
+
+    when(conceptRepository.findByCourseId(50L))
+        .thenReturn(List.of(parentLevel2LowX, parentLevel1HighX, subOfLevel2, subOfLevel1));
+
+    mockMvc
+        .perform(get("/api/concepts/subconcepts").param("courseId", "50"))
+        .andExpect(status().isOk())
+        // subOfLevel1 (parent level=1) must come before subOfLevel2 (parent level=2)
+        // even though parent level=2 has lower x (50 < 300)
+        .andExpect(jsonPath("$[0].id").value(10))
+        .andExpect(jsonPath("$[1].id").value(5));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
   public void subconcepts_empty_for_course_with_no_concepts() throws Exception {
     when(conceptRepository.findByCourseId(99L)).thenReturn(List.of());
 
