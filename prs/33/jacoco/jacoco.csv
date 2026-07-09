@@ -17,7 +17,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.StoredPosition,0,9,0
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController,0,502,0,34,0,132,0,39,0,22
 scaffold,edu.ucsb.cs.scaffold.controller,ApiController,0,41,0,0,0,11,0,7,0,7
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.SubConceptTableRowDTO,0,24,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController,0,1549,0,96,0,352,0,101,0,53
+scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController,0,1594,0,98,0,367,0,105,0,56
 scaffold,edu.ucsb.cs.scaffold.controller,CourseStaffController,0,129,0,0,0,33,0,10,0,10
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.ScaffoldResetReportDTO,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController,0,9,0,0,0,2,0,2,0,2
@@ -38,6 +38,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.LevelAssignmentDTO,0
 scaffold,edu.ucsb.cs.scaffold.controller,QuestionController,0,5,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.EmailTypes,0,21,0,0,0,4,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,UserActivityV2Controller.UserActivityV2Request,0,15,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.CourseConceptDTO,0,18,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateV2Controller.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,UserActivityController,0,58,0,8,0,12,0,6,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.EmailFormats,0,15,0,0,0,3,0,1,0,1
