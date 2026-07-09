@@ -7,6 +7,8 @@ import ConceptModal from "main/components/Concept/ConceptModal";
 import ConceptTable from "main/components/Concept/ConceptTable";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
 
+// Suppress error toasts when the concept list fetch fails (e.g. network error);
+// background fetches should not interrupt the user with toast messages.
 const suppressFetchToasts = true;
 const DEFAULT_NEW_CONCEPT_POSITION = { x: 0, y: 0 };
 
