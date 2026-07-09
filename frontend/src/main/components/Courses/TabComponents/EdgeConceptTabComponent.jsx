@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Form } from "react-bootstrap";
+import { Alert, Button, Form } from "react-bootstrap";
 import { toast } from "react-toastify";
 import EdgeTable from "main/components/Concept/EdgeTable";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
@@ -9,6 +9,7 @@ const suppressFetchToasts = true;
 export default function EdgeConceptTabComponent({ courseId, testIdPrefix }) {
   const [sourceConceptId, setSourceConceptId] = useState("");
   const [targetConceptId, setTargetConceptId] = useState("");
+  const [createEdgeError, setCreateEdgeError] = useState(null);
 
   const conceptsPath = `/api/concepts/course?courseId=${courseId}`;
   const { data: concepts } = useBackend(
@@ -53,6 +54,13 @@ export default function EdgeConceptTabComponent({ courseId, testIdPrefix }) {
         setSourceConceptId("");
         setTargetConceptId("");
       },
+      onError: (error) => {
+        const message =
+          error.response?.data?.message ??
+          "Error creating edge; please try again";
+        setCreateEdgeError(message);
+        toast(message);
+      },
     },
     [edgesPath],
   );
@@ -75,6 +83,7 @@ export default function EdgeConceptTabComponent({ courseId, testIdPrefix }) {
 
   const handleCreateEdge = (event) => {
     event.preventDefault();
+    setCreateEdgeError(null);
     createEdgeMutation.mutate({ sourceConceptId, targetConceptId });
   };
 
@@ -128,6 +137,14 @@ export default function EdgeConceptTabComponent({ courseId, testIdPrefix }) {
             ))}
           </Form.Select>
         </Form.Group>
+        {createEdgeError && (
+          <Alert
+            variant="danger"
+            data-testid={`${testIdPrefix}-create-edge-error`}
+          >
+            {createEdgeError}
+          </Alert>
+        )}
         <Button
           type="submit"
           disabled={createDisabled}
@@ -138,7 +155,10 @@ export default function EdgeConceptTabComponent({ courseId, testIdPrefix }) {
       </Form>
       <EdgeTable
         edges={edgesWithLabels}
-        deleteCallback={(cell) => deleteEdgeMutation.mutate(cell)}
+        deleteCallback={(cell) => {
+          setCreateEdgeError(null);
+          deleteEdgeMutation.mutate(cell);
+        }}
         testId={`${testIdPrefix}-EdgeTable`}
       />
     </div>

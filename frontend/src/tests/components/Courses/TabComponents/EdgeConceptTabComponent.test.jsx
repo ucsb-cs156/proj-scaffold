@@ -207,4 +207,127 @@ describe("EdgeConceptTabComponent tests", () => {
     });
     await waitFor(() => expect(mockToast).toHaveBeenCalledWith("Edge deleted"));
   });
+
+  const selectAndSubmitEdge = async () => {
+    const sourceSelect = await screen.findByTestId("test-source-select");
+    const targetSelect = screen.getByTestId("test-target-select");
+
+    await waitFor(() => {
+      expect(sourceSelect).toContainHTML("Variables");
+    });
+
+    fireEvent.change(sourceSelect, { target: { value: "1" } });
+    fireEvent.change(targetSelect, { target: { value: "2" } });
+    fireEvent.click(screen.getByTestId("test-create-edge-button"));
+  };
+
+  test("shows backend error message under the selectors when create fails", async () => {
+    server.use(
+      http.post("/api/concepts/edges/post", () =>
+        HttpResponse.json(
+          {
+            type: "IllegalArgumentException",
+            message: "edge from concept 1 to concept 2 would create a cycle",
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderComponent();
+
+    expect(
+      screen.queryByTestId("test-create-edge-error"),
+    ).not.toBeInTheDocument();
+
+    await selectAndSubmitEdge();
+
+    const errorAlert = await screen.findByTestId("test-create-edge-error");
+    expect(errorAlert).toHaveTextContent(
+      "edge from concept 1 to concept 2 would create a cycle",
+    );
+    expect(mockToast).toHaveBeenCalledWith(
+      "edge from concept 1 to concept 2 would create a cycle",
+    );
+
+    // selections are preserved so the user can adjust them
+    expect(screen.getByTestId("test-source-select")).toHaveValue("1");
+    expect(screen.getByTestId("test-target-select")).toHaveValue("2");
+  });
+
+  test("shows a fallback error message when the backend provides none", async () => {
+    server.use(
+      http.post(
+        "/api/concepts/edges/post",
+        () => new HttpResponse(null, { status: 500 }),
+      ),
+    );
+    renderComponent();
+
+    await selectAndSubmitEdge();
+
+    const errorAlert = await screen.findByTestId("test-create-edge-error");
+    expect(errorAlert).toHaveTextContent(
+      "Error creating edge; please try again",
+    );
+    expect(mockToast).toHaveBeenCalledWith(
+      "Error creating edge; please try again",
+    );
+  });
+
+  test("clears the error message when create is attempted again", async () => {
+    server.use(
+      http.post("/api/concepts/edges/post", () =>
+        HttpResponse.json(
+          {
+            type: "IllegalArgumentException",
+            message: "edge from concept 1 to concept 2 already exists",
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderComponent();
+
+    await selectAndSubmitEdge();
+    await screen.findByTestId("test-create-edge-error");
+
+    server.resetHandlers();
+    fireEvent.click(screen.getByTestId("test-create-edge-button"));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId("test-create-edge-error"),
+      ).not.toBeInTheDocument();
+    });
+    await waitFor(() => expect(mockToast).toHaveBeenCalledWith("Edge created"));
+  });
+
+  test("clears the error message when an edge is deleted", async () => {
+    server.use(
+      http.post("/api/concepts/edges/post", () =>
+        HttpResponse.json(
+          {
+            type: "IllegalArgumentException",
+            message: "edge from concept 1 to concept 2 already exists",
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderComponent();
+
+    await selectAndSubmitEdge();
+    await screen.findByTestId("test-create-edge-error");
+
+    fireEvent.click(
+      screen.getByTestId("test-EdgeTable-cell-row-0-col-Delete-button"),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId("test-create-edge-error"),
+      ).not.toBeInTheDocument();
+    });
+    await waitFor(() => expect(mockToast).toHaveBeenCalledWith("Edge deleted"));
+  });
 });
