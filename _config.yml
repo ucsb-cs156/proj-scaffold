@@ -20,4 +20,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/subconcept-crud-progress","number":33,"title":"[WIP] Add SubConceptTable for current course","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/33"}]
+pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/design-edge-creation-method","number":35,"title":"[WIP] Design a way to create and delete edges in EdgeTabComponent","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/35"},{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/subconcept-crud-progress","number":33,"title":"[WIP] Add SubConceptTable for current course","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/33"}]
