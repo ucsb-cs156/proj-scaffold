@@ -1,6 +1,7 @@
 import {
   useEffect,
   useCallback,
+  useMemo,
   useRef,
   createContext,
   useContext,
@@ -27,6 +28,7 @@ import { buildGraphElements } from "main/utils/layout";
 import { majorConcepts, prereqEdgeData } from "main/data/conceptGraph";
 import { positions } from "main/data/conceptGraphPositions";
 import { conceptContent, type ConceptContent } from "main/data/conceptContent";
+import { useDebugMode } from "main/utils/useDebugMode";
 
 const cardKeyMap: Record<string, keyof ConceptContent> = {
   Description: "description",
@@ -145,10 +147,31 @@ function MajorNode({ data, id }: NodeProps) {
   const onSubconceptMastered = data.onSubconceptMastered as
     ((sub: string) => void) | undefined;
 
+  const { debugMode } = useDebugMode();
+  const conceptContentForNode = conceptContent[id];
+  const debugTitle = useMemo(
+    () =>
+      debugMode
+        ? JSON.stringify(
+            {
+              id,
+              label,
+              color,
+              subconcepts,
+              conceptContent: conceptContentForNode,
+            },
+            null,
+            2,
+          )
+        : undefined,
+    [debugMode, id, label, color, subconcepts, conceptContentForNode],
+  );
+
   const showColor = !hasSelection || highlighted;
 
   return (
     <div
+      title={debugTitle}
       style={{
         width: 280,
         borderRadius: 10,

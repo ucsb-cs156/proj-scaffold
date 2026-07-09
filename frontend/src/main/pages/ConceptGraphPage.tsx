@@ -270,6 +270,7 @@ export default function ConceptGraphPage() {
       setQuestions([]);
       return;
     }
+    setQuestions([]);
     fetchQuestions(selectedAssessmentId).then(setQuestions);
     setSelectedQuestionId("");
     setHighlightedIds(new Set());

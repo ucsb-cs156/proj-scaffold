@@ -1,6 +1,8 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import ConceptGraphV2 from "main/components/Scaffold/ConceptGraphV2";
+import { DebugModeContext } from "main/utils/debugModeContext";
+import type { ReactElement } from "react";
 
 // @xyflow/react measures its container via ResizeObserver and
 // getBoundingClientRect, neither of which jsdom implements with real
@@ -371,5 +373,57 @@ describe("ConceptGraphV2", () => {
     fireEvent.click(screen.getByText("Unique Detail Label"));
 
     expect(props.onConceptClick).not.toHaveBeenCalled();
+  });
+});
+
+describe("ConceptGraphV2 debug mode tooltips", () => {
+  function renderWithDebugMode(ui: ReactElement, debugMode: boolean) {
+    return render(
+      <DebugModeContext.Provider
+        value={{ debugMode, setDebugMode: vi.fn(), canUseDebugMode: true }}
+      >
+        {ui}
+      </DebugModeContext.Provider>,
+    );
+  }
+
+  test("nodes have no title tooltip when debug mode is off", () => {
+    renderWithDebugMode(<ConceptGraphV2 {...baseProps()} />, false);
+    expect(screen.getByTestId("major-node-1")).not.toHaveAttribute("title");
+  });
+
+  test("nodes show the full concept JSON as a tooltip when debug mode is on", () => {
+    const props = baseProps();
+    props.conceptContent = {
+      "1": {
+        id: 1,
+        parentId: null,
+        descriptionHtml: "<p>desc</p>",
+        exampleHtml: null,
+        practiceUrl: null,
+      },
+    };
+    renderWithDebugMode(<ConceptGraphV2 {...props} />, true);
+
+    const title = screen.getByTestId("major-node-1").getAttribute("title");
+    expect(title).not.toBeNull();
+    expect(JSON.parse(title!)).toEqual({
+      id: "1",
+      label: "Recursion",
+      color: "#fe9a71",
+      subconcepts: [
+        { id: 2, parentId: 1, labelHtml: "Base case" },
+        { id: 3, parentId: 1, labelHtml: "State change" },
+      ],
+      conceptContent: {
+        id: 1,
+        parentId: null,
+        descriptionHtml: "<p>desc</p>",
+        exampleHtml: null,
+        practiceUrl: null,
+      },
+    });
+    // Pretty-printed (multi-line), not a single-line blob.
+    expect(title).toContain("\n");
   });
 });
