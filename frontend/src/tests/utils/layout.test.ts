@@ -61,7 +61,7 @@ describe("utils/layout", () => {
       expect(edge?.id).toBe(`prereq-${source}-${target}`);
       expect(edge?.sourceHandle).toBe("top");
       expect(edge?.targetHandle).toBe("bottom");
-      expect(edge?.type).toBe("smooth");
+      expect(edge?.type).toBe("default");
       expect(edge?.style).toEqual({ stroke: sourceColor, strokeWidth: 4 });
       expect(edge?.markerEnd).toEqual({
         type: MarkerType.ArrowClosed,
@@ -126,7 +126,7 @@ describe("utils/layout", () => {
         target: "b",
         sourceHandle: "top",
         targetHandle: "bottom",
-        type: "smooth",
+        type: "default",
         style: { stroke: "#111111", strokeWidth: 4 },
         markerEnd: { type: MarkerType.ArrowClosed, color: "#111111" },
       });

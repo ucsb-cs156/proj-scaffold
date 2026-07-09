@@ -551,7 +551,7 @@ export default function ConceptGraphV2({
       source: card.conceptId,
       target: newNodes[i].id,
       targetHandle: "bottom",
-      type: "smooth",
+      type: "default",
       style: {
         stroke: card.conceptColor,
         strokeWidth: 4,
@@ -634,7 +634,7 @@ export default function ConceptGraphV2({
           source: conceptId,
           target: nodeId,
           targetHandle: "bottom",
-          type: "smooth",
+          type: "default",
           style: { stroke: edgeColor, strokeWidth: 4, strokeDasharray: "4 2" },
           markerEnd: { type: MarkerType.ArrowClosed, color: edgeColor },
           data: { conceptColor },
@@ -727,7 +727,7 @@ export default function ConceptGraphV2({
           target: e.target,
           sourceHandle: "top",
           targetHandle: "bottom",
-          type: "dashed",
+          type: "default",
           animated: isHighlighted,
           style: {
             stroke: isHighlighted ? color : "#CBD5E1",

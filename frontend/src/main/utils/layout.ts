@@ -23,7 +23,7 @@ export function buildGraphElements(
     target: e.target,
     sourceHandle: "top",
     targetHandle: "bottom",
-    type: "smooth",
+    type: "default",
     style: {
       stroke: majorConcepts.find((c) => c.name === e.source)?.color,
       strokeWidth: 4,
@@ -78,7 +78,7 @@ export function buildGraphElementsV2(
     target: e.target,
     sourceHandle: "top",
     targetHandle: "bottom",
-    type: "smooth",
+    type: "default",
     style: {
       stroke: majorConceptsData.find((c) => c.name === e.source)?.color,
       strokeWidth: 4,
