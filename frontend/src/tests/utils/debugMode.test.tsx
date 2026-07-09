@@ -177,16 +177,12 @@ describe("Footer debug toggle UI", () => {
 
   test("does not show debug toggle for regular user", () => {
     renderFooterWithUser(currentUserFixtures.userOnly);
-    expect(
-      screen.queryByTestId("debug-mode-toggle"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("debug-mode-toggle")).not.toBeInTheDocument();
   });
 
   test("does not show debug toggle for not-logged-in user", () => {
     renderFooterWithUser(currentUserFixtures.notLoggedIn);
-    expect(
-      screen.queryByTestId("debug-mode-toggle"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("debug-mode-toggle")).not.toBeInTheDocument();
   });
 
   test("shows debug toggle for admin user", () => {
