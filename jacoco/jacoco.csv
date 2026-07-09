@@ -15,7 +15,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,UserStateV2Controller,0,170,0,12,0,43,0
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.StoredPosition,0,9,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController,0,502,0,34,0,132,0,39,0,22
 scaffold,edu.ucsb.cs.scaffold.controller,ApiController,0,41,0,0,0,11,0,7,0,7
-scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController,0,1283,0,82,0,281,0,82,0,41
+scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController,0,1458,0,94,0,320,0,93,0,46
 scaffold,edu.ucsb.cs.scaffold.controller,CourseStaffController,0,129,0,0,0,33,0,10,0,10
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.ScaffoldResetReportDTO,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController,0,9,0,0,0,2,0,2,0,2

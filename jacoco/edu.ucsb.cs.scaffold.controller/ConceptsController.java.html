@@ -24,9 +24,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -52,6 +54,13 @@ public class ConceptsController extends ApiController {
   // invisible). Matches the &quot;Level 1&quot; swatch in the frontend's concept-graph legend.
   public static final String DEFAULT_TOP_LEVEL_COLOR = &quot;#c99ffe&quot;;
 
+  // The display order of subconcepts within a parent. sortOrder is author-controlled
+  // (see reorderSubconcepts); the id tiebreaker makes the order deterministic even for
+  // rows with equal or missing sortOrder (pre-backfill data, concurrent-create ties).
+<span class="fc" id="L60">  private static final Comparator&lt;Concept&gt; SUBCONCEPT_DISPLAY_ORDER =</span>
+<span class="fc" id="L61">      Comparator.comparing(Concept::getSortOrder, Comparator.nullsLast(Comparator.naturalOrder()))</span>
+<span class="fc" id="L62">          .thenComparing(Concept::getId);</span>
+
   private final ConceptRepository conceptRepository;
   private final PracticeProblemRepository practiceProblemRepository;
   private final ConceptEdgeRepository conceptEdgeRepository;
@@ -66,21 +75,21 @@ public class ConceptsController extends ApiController {
   @GetMapping(&quot;/api/concepts/content&quot;)
   public Map&lt;Long, ConceptContentDTO&gt; getContent(
       @Parameter(description = &quot;id of the course&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L69">    Map&lt;Long, String&gt; urlByConceptId = firstUrlByConceptId(courseId);</span>
+<span class="fc" id="L78">    Map&lt;Long, String&gt; urlByConceptId = firstUrlByConceptId(courseId);</span>
 
-<span class="fc" id="L71">    Map&lt;Long, ConceptContentDTO&gt; result = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L72" title="All 2 branches covered.">    for (Concept concept : conceptRepository.findByCourseId(courseId)) {</span>
-<span class="fc bfc" id="L73" title="All 2 branches covered.">      Long parentId = concept.isSubconcept() ? concept.getParent().getId() : null;</span>
-<span class="fc" id="L74">      result.put(</span>
-<span class="fc" id="L75">          concept.getId(),</span>
+<span class="fc" id="L80">    Map&lt;Long, ConceptContentDTO&gt; result = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">    for (Concept concept : conceptRepository.findByCourseId(courseId)) {</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">      Long parentId = concept.isSubconcept() ? concept.getParent().getId() : null;</span>
+<span class="fc" id="L83">      result.put(</span>
+<span class="fc" id="L84">          concept.getId(),</span>
           new ConceptContentDTO(
-<span class="fc" id="L77">              concept.getId(),</span>
+<span class="fc" id="L86">              concept.getId(),</span>
               parentId,
-<span class="fc" id="L79">              markdownService.toHtml(concept.getDescription()),</span>
-<span class="fc" id="L80">              markdownService.toHtml(concept.getExample()),</span>
-<span class="fc" id="L81">              urlByConceptId.get(concept.getId())));</span>
-<span class="fc" id="L82">    }</span>
-<span class="fc" id="L83">    return result;</span>
+<span class="fc" id="L88">              markdownService.toHtml(concept.getDescription()),</span>
+<span class="fc" id="L89">              markdownService.toHtml(concept.getExample()),</span>
+<span class="fc" id="L90">              urlByConceptId.get(concept.getId())));</span>
+<span class="fc" id="L91">    }</span>
+<span class="fc" id="L92">    return result;</span>
   }
 
   @Operation(summary = &quot;Get the major concepts and their subconcepts for a course&quot;)
@@ -88,41 +97,41 @@ public class ConceptsController extends ApiController {
   @GetMapping(&quot;/api/concepts/graph&quot;)
   public List&lt;MajorConceptDTO&gt; getGraph(
       @Parameter(description = &quot;id of the course&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L91">    List&lt;Concept&gt; concepts = conceptRepository.findByCourseId(courseId);</span>
+<span class="fc" id="L100">    List&lt;Concept&gt; concepts = conceptRepository.findByCourseId(courseId);</span>
 
-<span class="fc" id="L93">    Map&lt;Long, List&lt;Concept&gt;&gt; subconceptsByParentId =</span>
-<span class="fc" id="L94">        concepts.stream()</span>
-<span class="fc" id="L95">            .filter(Concept::isSubconcept)</span>
-<span class="fc" id="L96">            .sorted(Comparator.comparing(Concept::getId))</span>
-<span class="fc" id="L97">            .collect(</span>
-<span class="fc" id="L98">                Collectors.groupingBy(</span>
-<span class="fc" id="L99">                    concept -&gt; concept.getParent().getId(),</span>
+<span class="fc" id="L102">    Map&lt;Long, List&lt;Concept&gt;&gt; subconceptsByParentId =</span>
+<span class="fc" id="L103">        concepts.stream()</span>
+<span class="fc" id="L104">            .filter(Concept::isSubconcept)</span>
+<span class="fc" id="L105">            .sorted(SUBCONCEPT_DISPLAY_ORDER)</span>
+<span class="fc" id="L106">            .collect(</span>
+<span class="fc" id="L107">                Collectors.groupingBy(</span>
+<span class="fc" id="L108">                    concept -&gt; concept.getParent().getId(),</span>
                     LinkedHashMap::new,
-<span class="fc" id="L101">                    Collectors.toList()));</span>
+<span class="fc" id="L110">                    Collectors.toList()));</span>
 
-<span class="fc" id="L103">    List&lt;MajorConceptDTO&gt; result = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L104">    concepts.stream()</span>
-<span class="fc bfc" id="L105" title="All 2 branches covered.">        .filter(concept -&gt; !concept.isSubconcept())</span>
-<span class="fc" id="L106">        .sorted(Comparator.comparing(Concept::getId))</span>
-<span class="fc" id="L107">        .forEach(</span>
+<span class="fc" id="L112">    List&lt;MajorConceptDTO&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L113">    concepts.stream()</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        .filter(concept -&gt; !concept.isSubconcept())</span>
+<span class="fc" id="L115">        .sorted(Comparator.comparing(Concept::getId))</span>
+<span class="fc" id="L116">        .forEach(</span>
             major -&gt; {
-<span class="fc" id="L109">              List&lt;SubconceptDTO&gt; subconceptDtos =</span>
-<span class="fc" id="L110">                  subconceptsByParentId.getOrDefault(major.getId(), List.of()).stream()</span>
-<span class="fc" id="L111">                      .map(</span>
+<span class="fc" id="L118">              List&lt;SubconceptDTO&gt; subconceptDtos =</span>
+<span class="fc" id="L119">                  subconceptsByParentId.getOrDefault(major.getId(), List.of()).stream()</span>
+<span class="fc" id="L120">                      .map(</span>
                           sub -&gt;
-<span class="fc" id="L113">                              new SubconceptDTO(</span>
-<span class="fc" id="L114">                                  sub.getId(),</span>
-<span class="fc" id="L115">                                  sub.getParent().getId(),</span>
-<span class="fc" id="L116">                                  markdownService.toInlineHtml(sub.getLabel())))</span>
-<span class="fc" id="L117">                      .toList();</span>
-<span class="fc" id="L118">              result.add(</span>
+<span class="fc" id="L122">                              new SubconceptDTO(</span>
+<span class="fc" id="L123">                                  sub.getId(),</span>
+<span class="fc" id="L124">                                  sub.getParent().getId(),</span>
+<span class="fc" id="L125">                                  markdownService.toInlineHtml(sub.getLabel())))</span>
+<span class="fc" id="L126">                      .toList();</span>
+<span class="fc" id="L127">              result.add(</span>
                   new MajorConceptDTO(
-<span class="fc" id="L120">                      major.getId(),</span>
-<span class="fc" id="L121">                      markdownService.toInlineHtml(major.getLabel()),</span>
-<span class="fc" id="L122">                      major.getColor(),</span>
+<span class="fc" id="L129">                      major.getId(),</span>
+<span class="fc" id="L130">                      markdownService.toInlineHtml(major.getLabel()),</span>
+<span class="fc" id="L131">                      major.getColor(),</span>
                       subconceptDtos));
-<span class="fc" id="L124">            });</span>
-<span class="fc" id="L125">    return result;</span>
+<span class="fc" id="L133">            });</span>
+<span class="fc" id="L134">    return result;</span>
   }
 
   @Operation(summary = &quot;Get the graph positions of the top-level concepts in a course&quot;)
@@ -130,13 +139,13 @@ public class ConceptsController extends ApiController {
   @GetMapping(&quot;/api/concepts/positions&quot;)
   public Map&lt;Long, PositionDTO&gt; getPositions(
       @Parameter(description = &quot;id of the course&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L133">    Map&lt;Long, PositionDTO&gt; result = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L134" title="All 2 branches covered.">    for (Concept concept : conceptRepository.findByCourseId(courseId)) {</span>
-<span class="fc bfc" id="L135" title="All 2 branches covered.">      if (!concept.isSubconcept()) {</span>
-<span class="fc" id="L136">        result.put(concept.getId(), new PositionDTO(concept.getX(), concept.getY()));</span>
+<span class="fc" id="L142">    Map&lt;Long, PositionDTO&gt; result = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">    for (Concept concept : conceptRepository.findByCourseId(courseId)) {</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">      if (!concept.isSubconcept()) {</span>
+<span class="fc" id="L145">        result.put(concept.getId(), new PositionDTO(concept.getX(), concept.getY()));</span>
       }
-<span class="fc" id="L138">    }</span>
-<span class="fc" id="L139">    return result;</span>
+<span class="fc" id="L147">    }</span>
+<span class="fc" id="L148">    return result;</span>
   }
 
   @Operation(summary = &quot;Get the prerequisite edges between concepts in a course&quot;)
@@ -144,13 +153,13 @@ public class ConceptsController extends ApiController {
   @GetMapping(&quot;/api/concepts/edges&quot;)
   public List&lt;EdgeDTO&gt; getEdges(
       @Parameter(description = &quot;id of the course&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L147">    List&lt;EdgeDTO&gt; result = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L148" title="All 2 branches covered.">    for (ConceptEdge edge : conceptEdgeRepository.findByCourseId(courseId)) {</span>
-<span class="fc" id="L149">      result.add(</span>
+<span class="fc" id="L156">    List&lt;EdgeDTO&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">    for (ConceptEdge edge : conceptEdgeRepository.findByCourseId(courseId)) {</span>
+<span class="fc" id="L158">      result.add(</span>
           new EdgeDTO(
-<span class="fc" id="L151">              edge.getId(), edge.getSource().getId(), edge.getTarget().getId(), edge.getColor()));</span>
-<span class="fc" id="L152">    }</span>
-<span class="fc" id="L153">    return result;</span>
+<span class="fc" id="L160">              edge.getId(), edge.getSource().getId(), edge.getTarget().getId(), edge.getColor()));</span>
+<span class="fc" id="L161">    }</span>
+<span class="fc" id="L162">    return result;</span>
   }
 
   @Operation(
@@ -191,31 +200,31 @@ public class ConceptsController extends ApiController {
       value = &quot;/api/concept&quot;,
       consumes = {&quot;application/yaml&quot;, &quot;application/x-yaml&quot;, &quot;application/json&quot;})
   public Concept postConcept(@RequestBody CreateConceptDTO dto) throws EntityNotFoundException {
-<span class="fc bfc" id="L194" title="All 2 branches covered.">    if (dto.getCourseId() == null) {</span>
-<span class="fc" id="L195">      throw new IllegalArgumentException(&quot;courseId is required&quot;);</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">    if (dto.getCourseId() == null) {</span>
+<span class="fc" id="L204">      throw new IllegalArgumentException(&quot;courseId is required&quot;);</span>
     }
-<span class="fc" id="L197">    Course course =</span>
+<span class="fc" id="L206">    Course course =</span>
         courseRepository
-<span class="fc" id="L199">            .findById(dto.getCourseId())</span>
-<span class="fc" id="L200">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, dto.getCourseId()));</span>
+<span class="fc" id="L208">            .findById(dto.getCourseId())</span>
+<span class="fc" id="L209">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, dto.getCourseId()));</span>
 
-<span class="fc" id="L202">    String cleanLabel = cleanAndValidateLabel(dto.getLabel());</span>
-<span class="fc bfc" id="L203" title="All 4 branches covered.">    if (dto.getX() == null || dto.getY() == null) {</span>
-<span class="fc" id="L204">      throw new IllegalArgumentException(&quot;x and y are required for a top-level concept&quot;);</span>
+<span class="fc" id="L211">    String cleanLabel = cleanAndValidateLabel(dto.getLabel());</span>
+<span class="fc bfc" id="L212" title="All 4 branches covered.">    if (dto.getX() == null || dto.getY() == null) {</span>
+<span class="fc" id="L213">      throw new IllegalArgumentException(&quot;x and y are required for a top-level concept&quot;);</span>
     }
 
     Concept concept =
-<span class="fc" id="L208">        Concept.builder()</span>
-<span class="fc" id="L209">            .course(course)</span>
-<span class="fc" id="L210">            .label(cleanLabel)</span>
-<span class="fc" id="L211">            .description(markdownService.clean(dto.getDescription()))</span>
-<span class="fc" id="L212">            .example(markdownService.clean(dto.getExample()))</span>
-<span class="fc" id="L213">            .color(DEFAULT_TOP_LEVEL_COLOR)</span>
-<span class="fc" id="L214">            .level(1)</span>
-<span class="fc" id="L215">            .x(dto.getX())</span>
-<span class="fc" id="L216">            .y(dto.getY())</span>
-<span class="fc" id="L217">            .build();</span>
-<span class="fc" id="L218">    return conceptRepository.save(concept);</span>
+<span class="fc" id="L217">        Concept.builder()</span>
+<span class="fc" id="L218">            .course(course)</span>
+<span class="fc" id="L219">            .label(cleanLabel)</span>
+<span class="fc" id="L220">            .description(markdownService.clean(dto.getDescription()))</span>
+<span class="fc" id="L221">            .example(markdownService.clean(dto.getExample()))</span>
+<span class="fc" id="L222">            .color(DEFAULT_TOP_LEVEL_COLOR)</span>
+<span class="fc" id="L223">            .level(1)</span>
+<span class="fc" id="L224">            .x(dto.getX())</span>
+<span class="fc" id="L225">            .y(dto.getY())</span>
+<span class="fc" id="L226">            .build();</span>
+<span class="fc" id="L227">    return conceptRepository.save(concept);</span>
   }
 
   @Operation(
@@ -255,44 +264,45 @@ public class ConceptsController extends ApiController {
       consumes = {&quot;application/yaml&quot;, &quot;application/x-yaml&quot;, &quot;application/json&quot;})
   public Concept postSubconcept(@RequestBody CreateSubconceptDTO dto)
       throws EntityNotFoundException {
-<span class="fc bfc" id="L258" title="All 2 branches covered.">    if (dto.getCourseId() == null) {</span>
-<span class="fc" id="L259">      throw new IllegalArgumentException(&quot;courseId is required&quot;);</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">    if (dto.getCourseId() == null) {</span>
+<span class="fc" id="L268">      throw new IllegalArgumentException(&quot;courseId is required&quot;);</span>
     }
-<span class="fc bfc" id="L261" title="All 2 branches covered.">    if (dto.getParentConceptId() == null) {</span>
-<span class="fc" id="L262">      throw new IllegalArgumentException(&quot;parentConceptId is required&quot;);</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">    if (dto.getParentConceptId() == null) {</span>
+<span class="fc" id="L271">      throw new IllegalArgumentException(&quot;parentConceptId is required&quot;);</span>
     }
-<span class="fc" id="L264">    Course course =</span>
+<span class="fc" id="L273">    Course course =</span>
         courseRepository
-<span class="fc" id="L266">            .findById(dto.getCourseId())</span>
-<span class="fc" id="L267">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, dto.getCourseId()));</span>
+<span class="fc" id="L275">            .findById(dto.getCourseId())</span>
+<span class="fc" id="L276">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, dto.getCourseId()));</span>
 
-<span class="fc" id="L269">    String cleanLabel = cleanAndValidateLabel(dto.getLabel());</span>
+<span class="fc" id="L278">    String cleanLabel = cleanAndValidateLabel(dto.getLabel());</span>
 
-<span class="fc" id="L271">    Concept parent =</span>
+<span class="fc" id="L280">    Concept parent =</span>
         conceptRepository
-<span class="fc" id="L273">            .findById(dto.getParentConceptId())</span>
-<span class="fc" id="L274">            .orElseThrow(</span>
-<span class="fc" id="L275">                () -&gt; new EntityNotFoundException(Concept.class, dto.getParentConceptId()));</span>
-<span class="fc bfc" id="L276" title="All 2 branches covered.">    if (!parent.getCourse().getId().equals(dto.getCourseId())) {</span>
-<span class="fc" id="L277">      throw new IllegalArgumentException(</span>
-<span class="fc" id="L278">          &quot;parentConceptId %d belongs to a different course&quot;.formatted(dto.getParentConceptId()));</span>
+<span class="fc" id="L282">            .findById(dto.getParentConceptId())</span>
+<span class="fc" id="L283">            .orElseThrow(</span>
+<span class="fc" id="L284">                () -&gt; new EntityNotFoundException(Concept.class, dto.getParentConceptId()));</span>
+<span class="fc bfc" id="L285" title="All 2 branches covered.">    if (!parent.getCourse().getId().equals(dto.getCourseId())) {</span>
+<span class="fc" id="L286">      throw new IllegalArgumentException(</span>
+<span class="fc" id="L287">          &quot;parentConceptId %d belongs to a different course&quot;.formatted(dto.getParentConceptId()));</span>
     }
-<span class="fc bfc" id="L280" title="All 2 branches covered.">    if (parent.isSubconcept()) {</span>
-<span class="fc" id="L281">      throw new IllegalArgumentException(</span>
+<span class="fc bfc" id="L289" title="All 2 branches covered.">    if (parent.isSubconcept()) {</span>
+<span class="fc" id="L290">      throw new IllegalArgumentException(</span>
           &quot;parentConceptId %d is a subconcept; concepts can only be nested one level deep&quot;
-<span class="fc" id="L283">              .formatted(dto.getParentConceptId()));</span>
+<span class="fc" id="L292">              .formatted(dto.getParentConceptId()));</span>
     }
-<span class="fc" id="L285">    rejectDuplicateLabelUnderParent(parent, cleanLabel);</span>
+<span class="fc" id="L294">    rejectDuplicateLabelUnderParent(parent, cleanLabel);</span>
 
     Concept concept =
-<span class="fc" id="L288">        Concept.builder()</span>
-<span class="fc" id="L289">            .course(course)</span>
-<span class="fc" id="L290">            .label(cleanLabel)</span>
-<span class="fc" id="L291">            .description(markdownService.clean(dto.getDescription()))</span>
-<span class="fc" id="L292">            .example(markdownService.clean(dto.getExample()))</span>
-<span class="fc" id="L293">            .parent(parent)</span>
-<span class="fc" id="L294">            .build();</span>
-<span class="fc" id="L295">    return conceptRepository.save(concept);</span>
+<span class="fc" id="L297">        Concept.builder()</span>
+<span class="fc" id="L298">            .course(course)</span>
+<span class="fc" id="L299">            .label(cleanLabel)</span>
+<span class="fc" id="L300">            .description(markdownService.clean(dto.getDescription()))</span>
+<span class="fc" id="L301">            .example(markdownService.clean(dto.getExample()))</span>
+<span class="fc" id="L302">            .parent(parent)</span>
+<span class="fc" id="L303">            .sortOrder(nextSortOrder(parent.getId()))</span>
+<span class="fc" id="L304">            .build();</span>
+<span class="fc" id="L305">    return conceptRepository.save(concept);</span>
   }
 
   @Operation(summary = &quot;Add a practice problem URL to a concept&quot;)
@@ -303,30 +313,30 @@ public class ConceptsController extends ApiController {
       @Parameter(name = &quot;url&quot;) @RequestParam String url)
       throws EntityNotFoundException {
 
-<span class="fc" id="L306">    Concept concept =</span>
+<span class="fc" id="L316">    Concept concept =</span>
         conceptRepository
-<span class="fc" id="L308">            .findById(conceptId)</span>
-<span class="fc" id="L309">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, conceptId));</span>
+<span class="fc" id="L318">            .findById(conceptId)</span>
+<span class="fc" id="L319">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, conceptId));</span>
 
-<span class="fc" id="L311">    String cleanUrl = url.strip();</span>
-<span class="fc bfc" id="L312" title="All 2 branches covered.">    if (cleanUrl.isEmpty()) {</span>
-<span class="fc" id="L313">      throw new IllegalArgumentException(&quot;url may not be empty&quot;);</span>
+<span class="fc" id="L321">    String cleanUrl = url.strip();</span>
+<span class="fc bfc" id="L322" title="All 2 branches covered.">    if (cleanUrl.isEmpty()) {</span>
+<span class="fc" id="L323">      throw new IllegalArgumentException(&quot;url may not be empty&quot;);</span>
     }
-<span class="fc" id="L315">    Long courseId = concept.getCourse().getId();</span>
-<span class="fc" id="L316">    if (practiceProblemRepository</span>
-<span class="fc" id="L317">        .findByCourseIdAndConceptIdAndUrl(courseId, conceptId, cleanUrl)</span>
-<span class="fc bfc" id="L318" title="All 2 branches covered.">        .isPresent()) {</span>
-<span class="fc" id="L319">      throw new IllegalArgumentException(</span>
-<span class="fc" id="L320">          &quot;concept %d already has practice problem url %s&quot;.formatted(conceptId, cleanUrl));</span>
+<span class="fc" id="L325">    Long courseId = concept.getCourse().getId();</span>
+<span class="fc" id="L326">    if (practiceProblemRepository</span>
+<span class="fc" id="L327">        .findByCourseIdAndConceptIdAndUrl(courseId, conceptId, cleanUrl)</span>
+<span class="fc bfc" id="L328" title="All 2 branches covered.">        .isPresent()) {</span>
+<span class="fc" id="L329">      throw new IllegalArgumentException(</span>
+<span class="fc" id="L330">          &quot;concept %d already has practice problem url %s&quot;.formatted(conceptId, cleanUrl));</span>
     }
 
     PracticeProblem practiceProblem =
-<span class="fc" id="L324">        PracticeProblem.builder()</span>
-<span class="fc" id="L325">            .course(concept.getCourse())</span>
-<span class="fc" id="L326">            .concept(concept)</span>
-<span class="fc" id="L327">            .url(cleanUrl)</span>
-<span class="fc" id="L328">            .build();</span>
-<span class="fc" id="L329">    return practiceProblemRepository.save(practiceProblem);</span>
+<span class="fc" id="L334">        PracticeProblem.builder()</span>
+<span class="fc" id="L335">            .course(concept.getCourse())</span>
+<span class="fc" id="L336">            .concept(concept)</span>
+<span class="fc" id="L337">            .url(cleanUrl)</span>
+<span class="fc" id="L338">            .build();</span>
+<span class="fc" id="L339">    return practiceProblemRepository.save(practiceProblem);</span>
   }
 
   @Operation(
@@ -345,42 +355,43 @@ public class ConceptsController extends ApiController {
       @Parameter(name = &quot;parentConceptId&quot;) @RequestParam Long parentConceptId)
       throws EntityNotFoundException {
 
-<span class="fc" id="L348">    Concept concept =</span>
+<span class="fc" id="L358">    Concept concept =</span>
         conceptRepository
-<span class="fc" id="L350">            .findById(conceptId)</span>
-<span class="fc" id="L351">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, conceptId));</span>
-<span class="fc" id="L352">    Concept parent =</span>
+<span class="fc" id="L360">            .findById(conceptId)</span>
+<span class="fc" id="L361">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, conceptId));</span>
+<span class="fc" id="L362">    Concept parent =</span>
         conceptRepository
-<span class="fc" id="L354">            .findById(parentConceptId)</span>
-<span class="fc" id="L355">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, parentConceptId));</span>
+<span class="fc" id="L364">            .findById(parentConceptId)</span>
+<span class="fc" id="L365">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, parentConceptId));</span>
 
-<span class="fc bfc" id="L357" title="All 2 branches covered.">    if (concept.getId().equals(parent.getId())) {</span>
-<span class="fc" id="L358">      throw new IllegalArgumentException(&quot;a concept cannot be its own parent&quot;);</span>
+<span class="fc bfc" id="L367" title="All 2 branches covered.">    if (concept.getId().equals(parent.getId())) {</span>
+<span class="fc" id="L368">      throw new IllegalArgumentException(&quot;a concept cannot be its own parent&quot;);</span>
     }
-<span class="fc bfc" id="L360" title="All 2 branches covered.">    if (!parent.getCourse().getId().equals(concept.getCourse().getId())) {</span>
-<span class="fc" id="L361">      throw new IllegalArgumentException(</span>
-<span class="fc" id="L362">          &quot;parentConceptId %d belongs to a different course&quot;.formatted(parentConceptId));</span>
+<span class="fc bfc" id="L370" title="All 2 branches covered.">    if (!parent.getCourse().getId().equals(concept.getCourse().getId())) {</span>
+<span class="fc" id="L371">      throw new IllegalArgumentException(</span>
+<span class="fc" id="L372">          &quot;parentConceptId %d belongs to a different course&quot;.formatted(parentConceptId));</span>
     }
-<span class="fc bfc" id="L364" title="All 2 branches covered.">    if (parent.isSubconcept()) {</span>
-<span class="fc" id="L365">      throw new IllegalArgumentException(</span>
-          &quot;parentConceptId %d is a subconcept; concepts can only be nested one level deep&quot;
-<span class="fc" id="L367">              .formatted(parentConceptId));</span>
-    }
-<span class="fc bfc" id="L369" title="All 2 branches covered.">    if (!conceptRepository.findByParentId(conceptId).isEmpty()) {</span>
-<span class="fc" id="L370">      throw new IllegalArgumentException(</span>
-          &quot;concept %d has subconcepts of its own, so it cannot become a subconcept&quot;
-<span class="fc" id="L372">              .formatted(conceptId));</span>
-    }
-<span class="fc bfc" id="L374" title="All 2 branches covered.">    if (!conceptEdgeRepository.findBySourceIdOrTargetId(conceptId, conceptId).isEmpty()) {</span>
+<span class="fc bfc" id="L374" title="All 2 branches covered.">    if (parent.isSubconcept()) {</span>
 <span class="fc" id="L375">      throw new IllegalArgumentException(</span>
-          &quot;concept %d has prerequisite edges; delete them before designating it as a subconcept&quot;
-<span class="fc" id="L377">              .formatted(conceptId));</span>
+          &quot;parentConceptId %d is a subconcept; concepts can only be nested one level deep&quot;
+<span class="fc" id="L377">              .formatted(parentConceptId));</span>
     }
-<span class="fc" id="L379">    rejectDuplicateLabelUnderParent(parent, concept.getLabel());</span>
+<span class="fc bfc" id="L379" title="All 2 branches covered.">    if (!conceptRepository.findByParentId(conceptId).isEmpty()) {</span>
+<span class="fc" id="L380">      throw new IllegalArgumentException(</span>
+          &quot;concept %d has subconcepts of its own, so it cannot become a subconcept&quot;
+<span class="fc" id="L382">              .formatted(conceptId));</span>
+    }
+<span class="fc bfc" id="L384" title="All 2 branches covered.">    if (!conceptEdgeRepository.findBySourceIdOrTargetId(conceptId, conceptId).isEmpty()) {</span>
+<span class="fc" id="L385">      throw new IllegalArgumentException(</span>
+          &quot;concept %d has prerequisite edges; delete them before designating it as a subconcept&quot;
+<span class="fc" id="L387">              .formatted(conceptId));</span>
+    }
+<span class="fc" id="L389">    rejectDuplicateLabelUnderParent(parent, concept.getLabel());</span>
 
-<span class="fc" id="L381">    concept.setParent(parent);</span>
-<span class="fc" id="L382">    concept.setColor(parent.getColor());</span>
-<span class="fc" id="L383">    return conceptRepository.save(concept);</span>
+<span class="fc" id="L391">    concept.setParent(parent);</span>
+<span class="fc" id="L392">    concept.setColor(parent.getColor());</span>
+<span class="fc" id="L393">    concept.setSortOrder(nextSortOrder(parent.getId()));</span>
+<span class="fc" id="L394">    return conceptRepository.save(concept);</span>
   }
 
   @Operation(
@@ -399,23 +410,82 @@ public class ConceptsController extends ApiController {
       @Parameter(name = &quot;y&quot;) @RequestParam Integer y)
       throws EntityNotFoundException {
 
-<span class="fc" id="L402">    Concept concept =</span>
+<span class="fc" id="L413">    Concept concept =</span>
         conceptRepository
-<span class="fc" id="L404">            .findById(conceptId)</span>
-<span class="fc" id="L405">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, conceptId));</span>
+<span class="fc" id="L415">            .findById(conceptId)</span>
+<span class="fc" id="L416">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, conceptId));</span>
 
-<span class="fc bfc" id="L407" title="All 2 branches covered.">    if (!concept.isSubconcept()) {</span>
-<span class="fc" id="L408">      throw new IllegalArgumentException(</span>
-<span class="fc" id="L409">          &quot;concept %d is already a top-level concept&quot;.formatted(conceptId));</span>
+<span class="fc bfc" id="L418" title="All 2 branches covered.">    if (!concept.isSubconcept()) {</span>
+<span class="fc" id="L419">      throw new IllegalArgumentException(</span>
+<span class="fc" id="L420">          &quot;concept %d is already a top-level concept&quot;.formatted(conceptId));</span>
     }
 
-<span class="fc bfc" id="L412" title="All 2 branches covered.">    if (concept.getColor() == null) {</span>
-<span class="fc" id="L413">      concept.setColor(concept.getParent().getColor());</span>
+<span class="fc bfc" id="L423" title="All 2 branches covered.">    if (concept.getColor() == null) {</span>
+<span class="fc" id="L424">      concept.setColor(concept.getParent().getColor());</span>
     }
-<span class="fc" id="L415">    concept.setParent(null);</span>
-<span class="fc" id="L416">    concept.setX(x);</span>
-<span class="fc" id="L417">    concept.setY(y);</span>
-<span class="fc" id="L418">    return conceptRepository.save(concept);</span>
+<span class="fc" id="L426">    concept.setParent(null);</span>
+<span class="fc" id="L427">    concept.setSortOrder(null);</span>
+<span class="fc" id="L428">    concept.setX(x);</span>
+<span class="fc" id="L429">    concept.setY(y);</span>
+<span class="fc" id="L430">    return conceptRepository.save(concept);</span>
+  }
+
+  @Operation(
+      summary = &quot;Reorder the subconcepts of a top-level concept&quot;,
+      description =
+          &quot;&quot;&quot;
+          Takes the complete ordered list of the parent's subconcept ids and rewrites every
+          subconcept's sort position to its index in the list. Sending the whole permutation
+          (rather than individual move operations) makes the update atomic and idempotent:
+          concurrent reorders resolve to one complete, coherent ordering (last writer wins),
+          and any sort-position ties left by concurrent subconcept creation are cleaned up as
+          a side effect. The list must contain each current subconcept of the parent exactly
+          once. Returns the subconcepts in their new order.
+          &quot;&quot;&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasConceptManagementPermissions(#root, #parentConceptId)&quot;)
+  @PutMapping(&quot;/api/concepts/subconcepts/reorder&quot;)
+  public List&lt;SubconceptDTO&gt; reorderSubconcepts(
+      @Parameter(name = &quot;parentConceptId&quot;) @RequestParam Long parentConceptId,
+      @RequestBody List&lt;Long&gt; orderedSubconceptIds)
+      throws EntityNotFoundException {
+
+<span class="fc" id="L452">    Concept parent =</span>
+        conceptRepository
+<span class="fc" id="L454">            .findById(parentConceptId)</span>
+<span class="fc" id="L455">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, parentConceptId));</span>
+<span class="fc bfc" id="L456" title="All 2 branches covered.">    if (parent.isSubconcept()) {</span>
+<span class="fc" id="L457">      throw new IllegalArgumentException(</span>
+          &quot;concept %d is a subconcept; only top-level concepts have subconcepts to reorder&quot;
+<span class="fc" id="L459">              .formatted(parentConceptId));</span>
+    }
+
+<span class="fc" id="L462">    List&lt;Concept&gt; subconcepts = conceptRepository.findByParentId(parentConceptId);</span>
+<span class="fc" id="L463">    Map&lt;Long, Concept&gt; subconceptById = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L464" title="All 2 branches covered.">    for (Concept subconcept : subconcepts) {</span>
+<span class="fc" id="L465">      subconceptById.put(subconcept.getId(), subconcept);</span>
+<span class="fc" id="L466">    }</span>
+<span class="fc bfc" id="L467" title="All 2 branches covered.">    if (new HashSet&lt;&gt;(orderedSubconceptIds).size() != orderedSubconceptIds.size()</span>
+<span class="fc bfc" id="L468" title="All 2 branches covered.">        || orderedSubconceptIds.size() != subconcepts.size()</span>
+<span class="fc bfc" id="L469" title="All 2 branches covered.">        || !subconceptById.keySet().containsAll(orderedSubconceptIds)) {</span>
+<span class="fc" id="L470">      throw new IllegalArgumentException(</span>
+          &quot;orderedSubconceptIds must contain the id of each subconcept of concept %d exactly once&quot;
+<span class="fc" id="L472">              .formatted(parentConceptId));</span>
+    }
+
+<span class="fc bfc" id="L475" title="All 2 branches covered.">    for (int i = 0; i &lt; orderedSubconceptIds.size(); i++) {</span>
+<span class="fc" id="L476">      subconceptById.get(orderedSubconceptIds.get(i)).setSortOrder(i);</span>
+    }
+<span class="fc" id="L478">    conceptRepository.saveAll(subconcepts);</span>
+
+<span class="fc" id="L480">    return orderedSubconceptIds.stream()</span>
+<span class="fc" id="L481">        .map(subconceptById::get)</span>
+<span class="fc" id="L482">        .map(</span>
+            sub -&gt;
+<span class="fc" id="L484">                new SubconceptDTO(</span>
+<span class="fc" id="L485">                    sub.getId(),</span>
+<span class="fc" id="L486">                    sub.getParent().getId(),</span>
+<span class="fc" id="L487">                    markdownService.toInlineHtml(sub.getLabel())))</span>
+<span class="fc" id="L488">        .toList();</span>
   }
 
   @Operation(summary = &quot;Create a prerequisite edge between two top-level concepts&quot;)
@@ -426,43 +496,43 @@ public class ConceptsController extends ApiController {
       @Parameter(name = &quot;targetConceptId&quot;) @RequestParam Long targetConceptId)
       throws EntityNotFoundException {
 
-<span class="fc" id="L429">    Concept source =</span>
+<span class="fc" id="L499">    Concept source =</span>
         conceptRepository
-<span class="fc" id="L431">            .findById(sourceConceptId)</span>
-<span class="fc" id="L432">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, sourceConceptId));</span>
-<span class="fc" id="L433">    Concept target =</span>
+<span class="fc" id="L501">            .findById(sourceConceptId)</span>
+<span class="fc" id="L502">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, sourceConceptId));</span>
+<span class="fc" id="L503">    Concept target =</span>
         conceptRepository
-<span class="fc" id="L435">            .findById(targetConceptId)</span>
-<span class="fc" id="L436">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, targetConceptId));</span>
+<span class="fc" id="L505">            .findById(targetConceptId)</span>
+<span class="fc" id="L506">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, targetConceptId));</span>
 
-<span class="fc bfc" id="L438" title="All 2 branches covered.">    if (source.getId().equals(target.getId())) {</span>
-<span class="fc" id="L439">      throw new IllegalArgumentException(&quot;an edge cannot connect a concept to itself&quot;);</span>
+<span class="fc bfc" id="L508" title="All 2 branches covered.">    if (source.getId().equals(target.getId())) {</span>
+<span class="fc" id="L509">      throw new IllegalArgumentException(&quot;an edge cannot connect a concept to itself&quot;);</span>
     }
-<span class="fc bfc" id="L441" title="All 2 branches covered.">    if (!source.getCourse().getId().equals(target.getCourse().getId())) {</span>
-<span class="fc" id="L442">      throw new IllegalArgumentException(&quot;both concepts must belong to the same course&quot;);</span>
+<span class="fc bfc" id="L511" title="All 2 branches covered.">    if (!source.getCourse().getId().equals(target.getCourse().getId())) {</span>
+<span class="fc" id="L512">      throw new IllegalArgumentException(&quot;both concepts must belong to the same course&quot;);</span>
     }
-<span class="fc bfc" id="L444" title="All 4 branches covered.">    if (source.isSubconcept() || target.isSubconcept()) {</span>
-<span class="fc" id="L445">      throw new IllegalArgumentException(&quot;edges may only connect top-level concepts&quot;);</span>
+<span class="fc bfc" id="L514" title="All 4 branches covered.">    if (source.isSubconcept() || target.isSubconcept()) {</span>
+<span class="fc" id="L515">      throw new IllegalArgumentException(&quot;edges may only connect top-level concepts&quot;);</span>
     }
-<span class="fc" id="L447">    if (conceptEdgeRepository</span>
-<span class="fc" id="L448">        .findBySourceIdAndTargetId(sourceConceptId, targetConceptId)</span>
-<span class="fc bfc" id="L449" title="All 2 branches covered.">        .isPresent()) {</span>
-<span class="fc" id="L450">      throw new IllegalArgumentException(</span>
+<span class="fc" id="L517">    if (conceptEdgeRepository</span>
+<span class="fc" id="L518">        .findBySourceIdAndTargetId(sourceConceptId, targetConceptId)</span>
+<span class="fc bfc" id="L519" title="All 2 branches covered.">        .isPresent()) {</span>
+<span class="fc" id="L520">      throw new IllegalArgumentException(</span>
           &quot;edge from concept %d to concept %d already exists&quot;
-<span class="fc" id="L452">              .formatted(sourceConceptId, targetConceptId));</span>
+<span class="fc" id="L522">              .formatted(sourceConceptId, targetConceptId));</span>
     }
-<span class="fc bfc" id="L454" title="All 2 branches covered.">    if (conceptGraphService.wouldCreateCycle(</span>
-<span class="fc" id="L455">        conceptEdgeRepository.findByCourseId(source.getCourse().getId()),</span>
+<span class="fc bfc" id="L524" title="All 2 branches covered.">    if (conceptGraphService.wouldCreateCycle(</span>
+<span class="fc" id="L525">        conceptEdgeRepository.findByCourseId(source.getCourse().getId()),</span>
         sourceConceptId,
         targetConceptId)) {
-<span class="fc" id="L458">      throw new IllegalArgumentException(</span>
+<span class="fc" id="L528">      throw new IllegalArgumentException(</span>
           &quot;edge from concept %d to concept %d would create a cycle&quot;
-<span class="fc" id="L460">              .formatted(sourceConceptId, targetConceptId));</span>
+<span class="fc" id="L530">              .formatted(sourceConceptId, targetConceptId));</span>
     }
 
     ConceptEdge edge =
-<span class="fc" id="L464">        ConceptEdge.builder().course(source.getCourse()).source(source).target(target).build();</span>
-<span class="fc" id="L465">    return conceptEdgeRepository.save(edge);</span>
+<span class="fc" id="L534">        ConceptEdge.builder().course(source.getCourse()).source(source).target(target).build();</span>
+<span class="fc" id="L535">    return conceptEdgeRepository.save(edge);</span>
   }
 
   @Operation(summary = &quot;Delete a prerequisite edge&quot;)
@@ -470,12 +540,12 @@ public class ConceptsController extends ApiController {
   @DeleteMapping(&quot;/api/concepts/edges/delete&quot;)
   public Object deleteConceptEdge(@Parameter(name = &quot;id&quot;) @RequestParam Long id)
       throws EntityNotFoundException {
-<span class="fc" id="L473">    ConceptEdge edge =</span>
+<span class="fc" id="L543">    ConceptEdge edge =</span>
         conceptEdgeRepository
-<span class="fc" id="L475">            .findById(id)</span>
-<span class="fc" id="L476">            .orElseThrow(() -&gt; new EntityNotFoundException(ConceptEdge.class, id));</span>
-<span class="fc" id="L477">    conceptEdgeRepository.delete(edge);</span>
-<span class="fc" id="L478">    return genericMessage(&quot;ConceptEdge with id %s deleted&quot;.formatted(id));</span>
+<span class="fc" id="L545">            .findById(id)</span>
+<span class="fc" id="L546">            .orElseThrow(() -&gt; new EntityNotFoundException(ConceptEdge.class, id));</span>
+<span class="fc" id="L547">    conceptEdgeRepository.delete(edge);</span>
+<span class="fc" id="L548">    return genericMessage(&quot;ConceptEdge with id %s deleted&quot;.formatted(id));</span>
   }
 
   @Operation(
@@ -495,98 +565,114 @@ public class ConceptsController extends ApiController {
   @PostMapping(&quot;/api/course/scaffold/reset&quot;)
   public ScaffoldResetResponseDTO resetCourseScaffold(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) throws EntityNotFoundException {
-<span class="fc" id="L498">    courseRepository</span>
-<span class="fc" id="L499">        .findById(courseId)</span>
-<span class="fc" id="L500">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L568">    courseRepository</span>
+<span class="fc" id="L569">        .findById(courseId)</span>
+<span class="fc" id="L570">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L502">    List&lt;Concept&gt; topLevelConcepts =</span>
-<span class="fc" id="L503">        conceptRepository.findByCourseId(courseId).stream()</span>
-<span class="fc bfc" id="L504" title="All 2 branches covered.">            .filter(concept -&gt; !concept.isSubconcept())</span>
-<span class="fc" id="L505">            .toList();</span>
-<span class="fc" id="L506">    List&lt;ConceptEdge&gt; edges = conceptEdgeRepository.findByCourseId(courseId);</span>
+<span class="fc" id="L572">    List&lt;Concept&gt; topLevelConcepts =</span>
+<span class="fc" id="L573">        conceptRepository.findByCourseId(courseId).stream()</span>
+<span class="fc bfc" id="L574" title="All 2 branches covered.">            .filter(concept -&gt; !concept.isSubconcept())</span>
+<span class="fc" id="L575">            .toList();</span>
+<span class="fc" id="L576">    List&lt;ConceptEdge&gt; edges = conceptEdgeRepository.findByCourseId(courseId);</span>
 
-<span class="fc" id="L508">    Map&lt;Long, Integer&gt; priorXByConceptId =</span>
-<span class="fc" id="L509">        priorXByConceptId(topLevelConcepts, callerPrivatePositions(courseId));</span>
-<span class="fc" id="L510">    ConceptGraphService.ResetResult result =</span>
-<span class="fc" id="L511">        conceptGraphService.reset(topLevelConcepts, edges, priorXByConceptId);</span>
+<span class="fc" id="L578">    Map&lt;Long, Integer&gt; priorXByConceptId =</span>
+<span class="fc" id="L579">        priorXByConceptId(topLevelConcepts, callerPrivatePositions(courseId));</span>
+<span class="fc" id="L580">    ConceptGraphService.ResetResult result =</span>
+<span class="fc" id="L581">        conceptGraphService.reset(topLevelConcepts, edges, priorXByConceptId);</span>
 
-<span class="fc bfc" id="L513" title="All 2 branches covered.">    for (ConceptEdge edge : edges) {</span>
-<span class="fc" id="L514">      edge.setColor(</span>
-<span class="fc bfc" id="L515" title="All 2 branches covered.">          result.cycleEdgeIds().contains(edge.getId())</span>
-<span class="fc" id="L516">              ? ConceptGraphService.CYCLE_EDGE_COLOR</span>
-<span class="fc" id="L517">              : null);</span>
-<span class="fc" id="L518">    }</span>
-<span class="fc" id="L519">    conceptEdgeRepository.saveAll(edges);</span>
+<span class="fc bfc" id="L583" title="All 2 branches covered.">    for (ConceptEdge edge : edges) {</span>
+<span class="fc" id="L584">      edge.setColor(</span>
+<span class="fc bfc" id="L585" title="All 2 branches covered.">          result.cycleEdgeIds().contains(edge.getId())</span>
+<span class="fc" id="L586">              ? ConceptGraphService.CYCLE_EDGE_COLOR</span>
+<span class="fc" id="L587">              : null);</span>
+<span class="fc" id="L588">    }</span>
+<span class="fc" id="L589">    conceptEdgeRepository.saveAll(edges);</span>
 
-<span class="fc" id="L521">    List&lt;ConceptEdge&gt; removedEdges =</span>
-<span class="fc" id="L522">        edges.stream().filter(edge -&gt; result.removedEdgeIds().contains(edge.getId())).toList();</span>
-<span class="fc" id="L523">    conceptEdgeRepository.deleteAll(removedEdges);</span>
+<span class="fc" id="L591">    List&lt;ConceptEdge&gt; removedEdges =</span>
+<span class="fc" id="L592">        edges.stream().filter(edge -&gt; result.removedEdgeIds().contains(edge.getId())).toList();</span>
+<span class="fc" id="L593">    conceptEdgeRepository.deleteAll(removedEdges);</span>
 
-<span class="fc bfc" id="L525" title="All 2 branches covered.">    for (Concept concept : topLevelConcepts) {</span>
-<span class="fc" id="L526">      int level = result.levelByConceptId().getOrDefault(concept.getId(), 1);</span>
-<span class="fc" id="L527">      ConceptGraphService.Position position = result.positionByConceptId().get(concept.getId());</span>
-<span class="fc" id="L528">      concept.setLevel(level);</span>
-<span class="fc" id="L529">      concept.setColor(conceptGraphService.colorForLevel(level));</span>
-<span class="fc" id="L530">      concept.setX(position.x());</span>
-<span class="fc" id="L531">      concept.setY(position.y());</span>
-<span class="fc" id="L532">    }</span>
-<span class="fc" id="L533">    conceptRepository.saveAll(topLevelConcepts);</span>
-<span class="fc" id="L534">    clearPrivateTopLevelPositions(courseId);</span>
+<span class="fc bfc" id="L595" title="All 2 branches covered.">    for (Concept concept : topLevelConcepts) {</span>
+<span class="fc" id="L596">      int level = result.levelByConceptId().getOrDefault(concept.getId(), 1);</span>
+<span class="fc" id="L597">      ConceptGraphService.Position position = result.positionByConceptId().get(concept.getId());</span>
+<span class="fc" id="L598">      concept.setLevel(level);</span>
+<span class="fc" id="L599">      concept.setColor(conceptGraphService.colorForLevel(level));</span>
+<span class="fc" id="L600">      concept.setX(position.x());</span>
+<span class="fc" id="L601">      concept.setY(position.y());</span>
+<span class="fc" id="L602">    }</span>
+<span class="fc" id="L603">    conceptRepository.saveAll(topLevelConcepts);</span>
+<span class="fc" id="L604">    clearPrivateTopLevelPositions(courseId);</span>
 
-<span class="fc" id="L536">    List&lt;CycleEdgeDTO&gt; cycleEdgeDtos =</span>
-<span class="fc" id="L537">        edges.stream()</span>
-<span class="fc" id="L538">            .filter(edge -&gt; result.cycleEdgeIds().contains(edge.getId()))</span>
-<span class="fc" id="L539">            .map(</span>
+<span class="fc" id="L606">    List&lt;CycleEdgeDTO&gt; cycleEdgeDtos =</span>
+<span class="fc" id="L607">        edges.stream()</span>
+<span class="fc" id="L608">            .filter(edge -&gt; result.cycleEdgeIds().contains(edge.getId()))</span>
+<span class="fc" id="L609">            .map(</span>
                 edge -&gt;
-<span class="fc" id="L541">                    new CycleEdgeDTO(</span>
-<span class="fc" id="L542">                        edge.getId(), edge.getSource().getId(), edge.getTarget().getId()))</span>
-<span class="fc" id="L543">            .toList();</span>
-<span class="fc" id="L544">    List&lt;RemovedEdgeDTO&gt; removedEdgeDtos =</span>
-<span class="fc" id="L545">        removedEdges.stream()</span>
-<span class="fc" id="L546">            .map(</span>
+<span class="fc" id="L611">                    new CycleEdgeDTO(</span>
+<span class="fc" id="L612">                        edge.getId(), edge.getSource().getId(), edge.getTarget().getId()))</span>
+<span class="fc" id="L613">            .toList();</span>
+<span class="fc" id="L614">    List&lt;RemovedEdgeDTO&gt; removedEdgeDtos =</span>
+<span class="fc" id="L615">        removedEdges.stream()</span>
+<span class="fc" id="L616">            .map(</span>
                 edge -&gt;
-<span class="fc" id="L548">                    new RemovedEdgeDTO(</span>
-<span class="fc" id="L549">                        edge.getId(), edge.getSource().getId(), edge.getTarget().getId()))</span>
-<span class="fc" id="L550">            .toList();</span>
-<span class="fc" id="L551">    List&lt;LevelAssignmentDTO&gt; levelDtos =</span>
-<span class="fc" id="L552">        topLevelConcepts.stream()</span>
-<span class="fc" id="L553">            .sorted(Comparator.comparing(Concept::getId))</span>
-<span class="fc" id="L554">            .map(</span>
+<span class="fc" id="L618">                    new RemovedEdgeDTO(</span>
+<span class="fc" id="L619">                        edge.getId(), edge.getSource().getId(), edge.getTarget().getId()))</span>
+<span class="fc" id="L620">            .toList();</span>
+<span class="fc" id="L621">    List&lt;LevelAssignmentDTO&gt; levelDtos =</span>
+<span class="fc" id="L622">        topLevelConcepts.stream()</span>
+<span class="fc" id="L623">            .sorted(Comparator.comparing(Concept::getId))</span>
+<span class="fc" id="L624">            .map(</span>
                 concept -&gt;
-<span class="fc" id="L556">                    new LevelAssignmentDTO(</span>
-<span class="fc" id="L557">                        concept.getId(),</span>
-<span class="fc" id="L558">                        concept.getLabel(),</span>
-<span class="fc" id="L559">                        concept.getLevel(),</span>
-<span class="fc" id="L560">                        concept.getColor(),</span>
-<span class="fc" id="L561">                        concept.getX(),</span>
-<span class="fc" id="L562">                        concept.getY()))</span>
-<span class="fc" id="L563">            .toList();</span>
+<span class="fc" id="L626">                    new LevelAssignmentDTO(</span>
+<span class="fc" id="L627">                        concept.getId(),</span>
+<span class="fc" id="L628">                        concept.getLabel(),</span>
+<span class="fc" id="L629">                        concept.getLevel(),</span>
+<span class="fc" id="L630">                        concept.getColor(),</span>
+<span class="fc" id="L631">                        concept.getX(),</span>
+<span class="fc" id="L632">                        concept.getY()))</span>
+<span class="fc" id="L633">            .toList();</span>
 
-<span class="fc" id="L565">    ScaffoldResetReportDTO report =</span>
+<span class="fc" id="L635">    ScaffoldResetReportDTO report =</span>
         new ScaffoldResetReportDTO(cycleEdgeDtos, removedEdgeDtos, levelDtos);
-<span class="fc" id="L567">    return new ScaffoldResetResponseDTO(report, getGraph(courseId), getEdges(courseId));</span>
+<span class="fc" id="L637">    return new ScaffoldResetResponseDTO(report, getGraph(courseId), getEdges(courseId));</span>
   }
 
   private String cleanAndValidateLabel(String label) {
-<span class="fc" id="L571">    String cleanLabel = markdownService.clean(label);</span>
-<span class="fc bfc" id="L572" title="All 4 branches covered.">    if (cleanLabel == null || cleanLabel.isEmpty()) {</span>
-<span class="fc" id="L573">      throw new IllegalArgumentException(&quot;label may not be empty&quot;);</span>
+<span class="fc" id="L641">    String cleanLabel = markdownService.clean(label);</span>
+<span class="fc bfc" id="L642" title="All 4 branches covered.">    if (cleanLabel == null || cleanLabel.isEmpty()) {</span>
+<span class="fc" id="L643">      throw new IllegalArgumentException(&quot;label may not be empty&quot;);</span>
     }
-<span class="fc" id="L575">    int renderedLength = markdownService.renderedLength(cleanLabel);</span>
-<span class="fc bfc" id="L576" title="All 2 branches covered.">    if (renderedLength &gt; MAX_RENDERED_CONCEPT_LABEL_LENGTH) {</span>
-<span class="fc" id="L577">      throw new IllegalArgumentException(</span>
+<span class="fc" id="L645">    int renderedLength = markdownService.renderedLength(cleanLabel);</span>
+<span class="fc bfc" id="L646" title="All 2 branches covered.">    if (renderedLength &gt; MAX_RENDERED_CONCEPT_LABEL_LENGTH) {</span>
+<span class="fc" id="L647">      throw new IllegalArgumentException(</span>
           &quot;label renders to %d characters; the maximum is %d&quot;
-<span class="fc" id="L579">              .formatted(renderedLength, MAX_RENDERED_CONCEPT_LABEL_LENGTH));</span>
+<span class="fc" id="L649">              .formatted(renderedLength, MAX_RENDERED_CONCEPT_LABEL_LENGTH));</span>
     }
-<span class="fc" id="L581">    return cleanLabel;</span>
+<span class="fc" id="L651">    return cleanLabel;</span>
+  }
+
+  /**
+   * The sort position for a subconcept newly added to the given parent: one past the highest
+   * existing position, so new subconcepts always append at the end of the author's ordering.
+   * Subconcepts predating the sort_order column may have null positions; they are ignored here
+   * (they display last, after positioned rows, until the author reorders).
+   */
+  private int nextSortOrder(Long parentId) {
+<span class="fc" id="L661">    return conceptRepository.findByParentId(parentId).stream()</span>
+<span class="fc" id="L662">            .map(Concept::getSortOrder)</span>
+<span class="fc" id="L663">            .filter(Objects::nonNull)</span>
+<span class="fc" id="L664">            .mapToInt(Integer::intValue)</span>
+<span class="fc" id="L665">            .max()</span>
+<span class="fc" id="L666">            .orElse(-1)</span>
+        + 1;
   }
 
   private void rejectDuplicateLabelUnderParent(Concept parent, String label) {
-<span class="fc bfc" id="L585" title="All 2 branches covered.">    if (conceptRepository.findByParentIdAndLabel(parent.getId(), label).isPresent()) {</span>
-<span class="fc" id="L586">      throw new IllegalArgumentException(</span>
-<span class="fc" id="L587">          &quot;concept %d already has a subconcept with label %s&quot;.formatted(parent.getId(), label));</span>
+<span class="fc bfc" id="L671" title="All 2 branches covered.">    if (conceptRepository.findByParentIdAndLabel(parent.getId(), label).isPresent()) {</span>
+<span class="fc" id="L672">      throw new IllegalArgumentException(</span>
+<span class="fc" id="L673">          &quot;concept %d already has a subconcept with label %s&quot;.formatted(parent.getId(), label));</span>
     }
-<span class="fc" id="L589">  }</span>
+<span class="fc" id="L675">  }</span>
 
   /**
    * The requesting user's own private, unsaved top-level position overrides for the course (see
@@ -594,18 +680,18 @@ public class ConceptsController extends ApiController {
    * Empty if the user has never dragged a top-level node or has no saved state for the course.
    */
   private Map&lt;String, StoredPosition&gt; callerPrivatePositions(Long courseId) {
-<span class="fc" id="L597">    Long userId = getCurrentUser().getUser().getId();</span>
-<span class="fc" id="L598">    return userStateV2Repository</span>
-<span class="fc" id="L599">        .findByUseridAndCourseId(userId, courseId)</span>
-<span class="fc" id="L600">        .map(state -&gt; parseTopLevelPositions(state.getTopLevelPositions()))</span>
-<span class="fc" id="L601">        .orElseGet(Map::of);</span>
+<span class="fc" id="L683">    Long userId = getCurrentUser().getUser().getId();</span>
+<span class="fc" id="L684">    return userStateV2Repository</span>
+<span class="fc" id="L685">        .findByUseridAndCourseId(userId, courseId)</span>
+<span class="fc" id="L686">        .map(state -&gt; parseTopLevelPositions(state.getTopLevelPositions()))</span>
+<span class="fc" id="L687">        .orElseGet(Map::of);</span>
   }
 
   private Map&lt;String, StoredPosition&gt; parseTopLevelPositions(String json) {
     try {
-<span class="fc" id="L606">      return objectMapper.readValue(json, new TypeReference&lt;Map&lt;String, StoredPosition&gt;&gt;() {});</span>
-<span class="fc" id="L607">    } catch (JsonProcessingException e) {</span>
-<span class="fc" id="L608">      throw new IllegalStateException(&quot;Unable to parse stored top-level position overrides&quot;, e);</span>
+<span class="fc" id="L692">      return objectMapper.readValue(json, new TypeReference&lt;Map&lt;String, StoredPosition&gt;&gt;() {});</span>
+<span class="fc" id="L693">    } catch (JsonProcessingException e) {</span>
+<span class="fc" id="L694">      throw new IllegalStateException(&quot;Unable to parse stored top-level position overrides&quot;, e);</span>
     }
   }
 
@@ -615,13 +701,13 @@ public class ConceptsController extends ApiController {
    */
   private Map&lt;Long, Integer&gt; priorXByConceptId(
       List&lt;Concept&gt; topLevelConcepts, Map&lt;String, StoredPosition&gt; privatePositions) {
-<span class="fc" id="L618">    Map&lt;Long, Integer&gt; result = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L619" title="All 2 branches covered.">    for (Concept concept : topLevelConcepts) {</span>
-<span class="fc" id="L620">      StoredPosition override = privatePositions.get(String.valueOf(concept.getId()));</span>
-<span class="fc bfc" id="L621" title="All 4 branches covered.">      Integer x = override != null &amp;&amp; override.x() != null ? override.x() : concept.getX();</span>
-<span class="fc" id="L622">      result.put(concept.getId(), x);</span>
-<span class="fc" id="L623">    }</span>
-<span class="fc" id="L624">    return result;</span>
+<span class="fc" id="L704">    Map&lt;Long, Integer&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L705" title="All 2 branches covered.">    for (Concept concept : topLevelConcepts) {</span>
+<span class="fc" id="L706">      StoredPosition override = privatePositions.get(String.valueOf(concept.getId()));</span>
+<span class="fc bfc" id="L707" title="All 4 branches covered.">      Integer x = override != null &amp;&amp; override.x() != null ? override.x() : concept.getX();</span>
+<span class="fc" id="L708">      result.put(concept.getId(), x);</span>
+<span class="fc" id="L709">    }</span>
+<span class="fc" id="L710">    return result;</span>
   }
 
   /**
@@ -630,52 +716,52 @@ public class ConceptsController extends ApiController {
    * stale private override render in the wrong row.
    */
   private void clearPrivateTopLevelPositions(Long courseId) {
-<span class="fc" id="L633">    List&lt;UserStateV2&gt; states = userStateV2Repository.findByCourseId(courseId);</span>
-<span class="fc bfc" id="L634" title="All 2 branches covered.">    for (UserStateV2 state : states) {</span>
-<span class="fc" id="L635">      state.setTopLevelPositions(&quot;{}&quot;);</span>
-<span class="fc" id="L636">    }</span>
-<span class="fc" id="L637">    userStateV2Repository.saveAll(states);</span>
-<span class="fc" id="L638">  }</span>
+<span class="fc" id="L719">    List&lt;UserStateV2&gt; states = userStateV2Repository.findByCourseId(courseId);</span>
+<span class="fc bfc" id="L720" title="All 2 branches covered.">    for (UserStateV2 state : states) {</span>
+<span class="fc" id="L721">      state.setTopLevelPositions(&quot;{}&quot;);</span>
+<span class="fc" id="L722">    }</span>
+<span class="fc" id="L723">    userStateV2Repository.saveAll(states);</span>
+<span class="fc" id="L724">  }</span>
 
-<span class="fc" id="L640">  private record StoredPosition(Integer x, Integer y) {}</span>
+<span class="fc" id="L726">  private record StoredPosition(Integer x, Integer y) {}</span>
 
   private Map&lt;Long, String&gt; firstUrlByConceptId(Long courseId) {
-<span class="fc" id="L643">    Map&lt;Long, String&gt; result = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L644">    List&lt;PracticeProblem&gt; problems =</span>
-<span class="fc" id="L645">        practiceProblemRepository.findByCourseId(courseId).stream()</span>
-<span class="fc" id="L646">            .sorted(Comparator.comparing(PracticeProblem::getId))</span>
-<span class="fc" id="L647">            .toList();</span>
-<span class="fc bfc" id="L648" title="All 2 branches covered.">    for (PracticeProblem problem : problems) {</span>
-<span class="fc" id="L649">      result.putIfAbsent(problem.getConcept().getId(), problem.getUrl());</span>
-<span class="fc" id="L650">    }</span>
-<span class="fc" id="L651">    return result;</span>
+<span class="fc" id="L729">    Map&lt;Long, String&gt; result = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L730">    List&lt;PracticeProblem&gt; problems =</span>
+<span class="fc" id="L731">        practiceProblemRepository.findByCourseId(courseId).stream()</span>
+<span class="fc" id="L732">            .sorted(Comparator.comparing(PracticeProblem::getId))</span>
+<span class="fc" id="L733">            .toList();</span>
+<span class="fc bfc" id="L734" title="All 2 branches covered.">    for (PracticeProblem problem : problems) {</span>
+<span class="fc" id="L735">      result.putIfAbsent(problem.getConcept().getId(), problem.getUrl());</span>
+<span class="fc" id="L736">    }</span>
+<span class="fc" id="L737">    return result;</span>
   }
 
-<span class="fc" id="L654">  public record ConceptContentDTO(</span>
+<span class="fc" id="L740">  public record ConceptContentDTO(</span>
       Long id, Long parentId, String descriptionHtml, String exampleHtml, String practiceUrl) {}
 
-<span class="fc" id="L657">  public record MajorConceptDTO(</span>
+<span class="fc" id="L743">  public record MajorConceptDTO(</span>
       Long id, String labelHtml, String color, List&lt;SubconceptDTO&gt; subconcepts) {}
 
-<span class="fc" id="L660">  public record SubconceptDTO(Long id, Long parentId, String labelHtml) {}</span>
+<span class="fc" id="L746">  public record SubconceptDTO(Long id, Long parentId, String labelHtml) {}</span>
 
-<span class="fc" id="L662">  public record PositionDTO(Integer x, Integer y) {}</span>
+<span class="fc" id="L748">  public record PositionDTO(Integer x, Integer y) {}</span>
 
-<span class="fc" id="L664">  public record EdgeDTO(Long id, Long sourceId, Long targetId, String color) {}</span>
+<span class="fc" id="L750">  public record EdgeDTO(Long id, Long sourceId, Long targetId, String color) {}</span>
 
-<span class="fc" id="L666">  public record CycleEdgeDTO(Long edgeId, Long sourceId, Long targetId) {}</span>
+<span class="fc" id="L752">  public record CycleEdgeDTO(Long edgeId, Long sourceId, Long targetId) {}</span>
 
-<span class="fc" id="L668">  public record RemovedEdgeDTO(Long edgeId, Long sourceId, Long targetId) {}</span>
+<span class="fc" id="L754">  public record RemovedEdgeDTO(Long edgeId, Long sourceId, Long targetId) {}</span>
 
-<span class="fc" id="L670">  public record LevelAssignmentDTO(</span>
+<span class="fc" id="L756">  public record LevelAssignmentDTO(</span>
       Long id, String label, Integer level, String color, Integer x, Integer y) {}
 
-<span class="fc" id="L673">  public record ScaffoldResetReportDTO(</span>
+<span class="fc" id="L759">  public record ScaffoldResetReportDTO(</span>
       List&lt;CycleEdgeDTO&gt; cycleEdges,
       List&lt;RemovedEdgeDTO&gt; removedEdges,
       List&lt;LevelAssignmentDTO&gt; levels) {}
 
-<span class="fc" id="L678">  public record ScaffoldResetResponseDTO(</span>
+<span class="fc" id="L764">  public record ScaffoldResetResponseDTO(</span>
       ScaffoldResetReportDTO report, List&lt;MajorConceptDTO&gt; graph, List&lt;EdgeDTO&gt; edges) {}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

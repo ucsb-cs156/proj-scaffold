@@ -39,13 +39,19 @@ public class Concept {
   // recomputed by ConceptGraphService.reset(); see /api/course/scaffold/reset.
   private Integer level;
 
+  // Author-chosen position of a subconcept within its parent's list, 0-based. Subconcepts
+  // only (null for top-level concepts). Not unique: a concurrent create can leave two
+  // subconcepts with the same value, which is harmless because display order always breaks
+  // ties by id, and the next reorder rewrites the whole list to 0..n-1.
+  private Integer sortOrder;
+
   @ManyToOne
   @JoinColumn(name = &quot;parent_id&quot;)
   @ToString.Exclude
   private Concept parent;
 
   public boolean isSubconcept() {
-<span class="fc bfc" id="L48" title="All 2 branches covered.">    return parent != null;</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">    return parent != null;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
