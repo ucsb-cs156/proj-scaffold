@@ -2,6 +2,8 @@ package edu.ucsb.cs.scaffold.config;
 
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.model.CurrentUser;
+import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
+import edu.ucsb.cs.scaffold.repository.ConceptRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.services.CurrentUserService;
@@ -36,16 +38,22 @@ public class CourseSecurity {
   private final RoleHierarchy roleHierarchy;
   private final CourseRepository courseRepository;
   private final RosterStudentRepository rosterStudentRepository;
+  private final ConceptRepository conceptRepository;
+  private final ConceptEdgeRepository conceptEdgeRepository;
 
   public CourseSecurity(
       CurrentUserService currentUserService,
       RoleHierarchy roleHierarchy,
       CourseRepository courseRepository,
-      RosterStudentRepository rosterStudentRepository) {
+      RosterStudentRepository rosterStudentRepository,
+      ConceptRepository conceptRepository,
+      ConceptEdgeRepository conceptEdgeRepository) {
     this.currentUserService = currentUserService;
     this.roleHierarchy = roleHierarchy;
     this.courseRepository = courseRepository;
     this.rosterStudentRepository = rosterStudentRepository;
+    this.conceptRepository = conceptRepository;
+    this.conceptEdgeRepository = conceptEdgeRepository;
   }
 
   /**
@@ -59,6 +67,12 @@ public class CourseSecurity {
   @PreAuthorize("hasRole('ROLE_USER')")
   public Boolean hasManagePermissions(
       MethodSecurityExpressionOperations operations, Long courseId) {
+    if (courseId == null) {
+      // A null id can reach here from endpoints that take the courseId from a request body
+      // (e.g. @PreAuthorize("... #dto.courseId")). Grant access so the controller can reject
+      // the request with a proper validation error, mirroring the course-not-found case below.
+      return true;
+    }
     Optional<Course> course = courseRepository.findById(courseId);
     if (course.isEmpty()) {
       return true;
@@ -107,6 +121,42 @@ public class CourseSecurity {
     return rosterStudentRepository
         .findById(rosterStudentId)
         .map(rosterStudent -> baseHasManagePermissions(operations, rosterStudent.getCourse()))
+        .orElse(true);
+  }
+
+  /**
+   * This method checks if the current user has management permissions for the course associated
+   * with the given concept, so that endpoints can take just a concept id. Works for both staff and
+   * instructor permissions.
+   *
+   * @param operations
+   * @param conceptId numeric id of the concept
+   * @return
+   */
+  @PreAuthorize("hasRole('ROLE_USER')")
+  public Boolean hasConceptManagementPermissions(
+      MethodSecurityExpressionOperations operations, Long conceptId) {
+    return conceptRepository
+        .findById(conceptId)
+        .map(concept -> baseHasManagePermissions(operations, concept.getCourse()))
+        .orElse(true);
+  }
+
+  /**
+   * This method checks if the current user has management permissions for the course associated
+   * with the given concept edge, so that endpoints can take just a concept edge id. Works for both
+   * staff and instructor permissions.
+   *
+   * @param operations
+   * @param conceptEdgeId numeric id of the concept edge
+   * @return
+   */
+  @PreAuthorize("hasRole('ROLE_USER')")
+  public Boolean hasConceptEdgeManagementPermissions(
+      MethodSecurityExpressionOperations operations, Long conceptEdgeId) {
+    return conceptEdgeRepository
+        .findById(conceptEdgeId)
+        .map(edge -> baseHasManagePermissions(operations, edge.getCourse()))
         .orElse(true);
   }
 

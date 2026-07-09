@@ -37,7 +37,8 @@ public class UserStateV2Controller {
                     new UserStateV2Response(
                         parseStringList(state.getStarredIds()),
                         parseJsonNode(state.getDetailCards()),
-                        parseStringList(state.getMasteredSubconcepts()))))
+                        parseStringList(state.getMasteredSubconcepts()),
+                        parseJsonNode(state.getTopLevelPositions()))))
         .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
@@ -74,6 +75,11 @@ public class UserStateV2Controller {
             body.detailCards() == null ? objectMapper.createArrayNode() : body.detailCards()));
     state.setMasteredSubconcepts(
         writeJson(body.masteredSubconcepts() == null ? List.of() : body.masteredSubconcepts()));
+    state.setTopLevelPositions(
+        writeJson(
+            body.topLevelPositions() == null
+                ? objectMapper.createObjectNode()
+                : body.topLevelPositions()));
     userStateV2Repository.save(state);
   }
 
@@ -106,10 +112,12 @@ public class UserStateV2Controller {
       @JsonProperty("courseId") Long courseId,
       @JsonProperty("starred_ids") List<String> starredIds,
       @JsonProperty("detail_cards") JsonNode detailCards,
-      @JsonProperty("mastered_subconcepts") List<String> masteredSubconcepts) {}
+      @JsonProperty("mastered_subconcepts") List<String> masteredSubconcepts,
+      @JsonProperty("top_level_positions") JsonNode topLevelPositions) {}
 
   public record UserStateV2Response(
       @JsonProperty("starred_ids") List<String> starredIds,
       @JsonProperty("detail_cards") JsonNode detailCards,
-      @JsonProperty("mastered_subconcepts") List<String> masteredSubconcepts) {}
+      @JsonProperty("mastered_subconcepts") List<String> masteredSubconcepts,
+      @JsonProperty("top_level_positions") JsonNode topLevelPositions) {}
 }

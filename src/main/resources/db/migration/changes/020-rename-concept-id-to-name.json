@@ -1,0 +1,45 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "020-rename-concept-id-to-name",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          {
+            "columnExists": {
+              "tableName": "concepts",
+              "columnName": "concept_id"
+            }
+          }
+        ],
+        "changes": [
+          {
+            "renameColumn": {
+              "tableName": "concepts",
+              "oldColumnName": "concept_id",
+              "newColumnName": "name",
+              "columnDataType": "VARCHAR(255)"
+            }
+          },
+          {
+            "dropNotNullConstraint": {
+              "tableName": "concepts",
+              "columnName": "name",
+              "columnDataType": "VARCHAR(255)"
+            }
+          },
+          {
+            "update": {
+              "tableName": "concepts",
+              "columns": [
+                { "column": { "name": "name", "valueComputed": "NULL" } }
+              ],
+              "where": "parent_id IS NOT NULL"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

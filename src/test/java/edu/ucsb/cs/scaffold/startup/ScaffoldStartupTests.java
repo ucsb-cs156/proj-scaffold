@@ -119,9 +119,55 @@ class ScaffoldStartupTests {
     assertEquals(
         1,
         executed.stream()
-            .filter(s -> s.contains("data-rep:Converting between bases"))
+            .filter(s -> s.contains("'Converting between bases'"))
             .filter(s -> s.contains("starting at 0.\n\nTo convert"))
             .count());
+  }
+
+  @Test
+  void alwaysRunOnStartup_skips_the_seed_data_file_when_concepts_already_exist() {
+    when(jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM concepts WHERE course_id = ?",
+            Integer.class,
+            ScaffoldStartup.SEED_COURSE_ID))
+        .thenReturn(105);
+
+    scaffoldStartup.alwaysRunOnStartup();
+
+    verify(jdbcTemplate, never()).execute(anyString());
+  }
+
+  @Test
+  void seedConceptsAlreadyPresent_is_false_when_count_is_zero() {
+    when(jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM concepts WHERE course_id = ?",
+            Integer.class,
+            ScaffoldStartup.SEED_COURSE_ID))
+        .thenReturn(0);
+
+    assertEquals(false, scaffoldStartup.seedConceptsAlreadyPresent());
+  }
+
+  @Test
+  void seedConceptsAlreadyPresent_is_false_when_count_is_null() {
+    when(jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM concepts WHERE course_id = ?",
+            Integer.class,
+            ScaffoldStartup.SEED_COURSE_ID))
+        .thenReturn(null);
+
+    assertEquals(false, scaffoldStartup.seedConceptsAlreadyPresent());
+  }
+
+  @Test
+  void seedConceptsAlreadyPresent_is_true_when_concepts_exist() {
+    when(jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM concepts WHERE course_id = ?",
+            Integer.class,
+            ScaffoldStartup.SEED_COURSE_ID))
+        .thenReturn(1);
+
+    assertEquals(true, scaffoldStartup.seedConceptsAlreadyPresent());
   }
 
   @Test

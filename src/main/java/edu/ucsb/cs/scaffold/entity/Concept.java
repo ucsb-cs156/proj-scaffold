@@ -8,13 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(
-    name = "concepts",
-    uniqueConstraints = {
-      @UniqueConstraint(
-          name = "UK_CONCEPTS_COURSE_CONCEPT",
-          columnNames = {"course_id", "concept_id"})
-    })
+@Table(name = "concepts")
 public class Concept {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,9 +18,6 @@ public class Concept {
   @JoinColumn(name = "course_id", nullable = false)
   @ToString.Exclude
   private Course course;
-
-  @Column(name = "concept_id", nullable = false)
-  private String conceptId;
 
   @Column(nullable = false)
   private String label;
@@ -44,8 +35,16 @@ public class Concept {
   private Integer x;
   private Integer y;
 
+  // Longest-path rank from a root (no-prerequisite) concept, 1-based. Top-level only,
+  // recomputed by ConceptGraphService.reset(); see /api/course/scaffold/reset.
+  private Integer level;
+
   @ManyToOne
   @JoinColumn(name = "parent_id")
   @ToString.Exclude
   private Concept parent;
+
+  public boolean isSubconcept() {
+    return parent != null;
+  }
 }

@@ -1,15 +1,15 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import tseslint from 'typescript-eslint'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import js from "@eslint/js";
+import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
+import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage', 'public/mockServiceWorker.js']),
+  globalIgnores(["dist", "coverage", "public/mockServiceWorker.js"]),
   {
-    ignores: ["public/mockServiceWorker.js",".stryker-tmp/**"],
-    files: ['**/*.{ts,tsx}'],
+    ignores: ["public/mockServiceWorker.js", ".stryker-tmp/**"],
+    files: ["**/*.{ts,tsx}"],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
@@ -21,4 +21,4 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
-])
+]);

@@ -61,7 +61,7 @@ describe("utils/layout", () => {
       expect(edge?.id).toBe(`prereq-${source}-${target}`);
       expect(edge?.sourceHandle).toBe("top");
       expect(edge?.targetHandle).toBe("bottom");
-      expect(edge?.type).toBe("smooth");
+      expect(edge?.type).toBe("smoothstep");
       expect(edge?.style).toEqual({ stroke: sourceColor, strokeWidth: 4 });
       expect(edge?.markerEnd).toEqual({
         type: MarkerType.ArrowClosed,
@@ -72,11 +72,19 @@ describe("utils/layout", () => {
 
   describe("buildGraphElementsV2", () => {
     const sampleConcepts = [
-      { name: "a", label: "A", color: "#111111", subconcepts: ["sub-a1"] },
-      { name: "b", label: "B", color: "#222222", subconcepts: [] },
+      {
+        id: 1,
+        labelHtml: "A",
+        color: "#111111",
+        subconcepts: [{ id: 101, parentId: 1, labelHtml: "sub-a1" }],
+      },
+      { id: 2, labelHtml: "B", color: "#222222", subconcepts: [] },
     ];
-    const sampleEdges = [{ source: "a", target: "b" }];
-    const samplePositions = { a: { x: 10, y: 20 }, b: { x: 30, y: 40 } };
+    const sampleEdges = [{ id: 10, sourceId: 1, targetId: 2, color: null }];
+    const samplePositions = {
+      "1": { x: 10, y: 20 },
+      "2": { x: 30, y: 40 },
+    };
 
     test("creates one node per supplied major concept, using the supplied data (not the hardcoded import)", () => {
       const { nodes } = buildGraphElementsV2(
@@ -85,11 +93,11 @@ describe("utils/layout", () => {
         sampleEdges,
       );
       expect(nodes).toHaveLength(2);
-      expect(nodes.map((n) => n.id).sort()).toEqual(["a", "b"]);
+      expect(nodes.map((n) => n.id).sort()).toEqual(["1", "2"]);
       expect(nodes[0].data).toEqual({
-        label: "A",
+        labelHtml: "A",
         color: "#111111",
-        subconcepts: ["sub-a1"],
+        subconcepts: [{ id: 101, parentId: 1, labelHtml: "sub-a1" }],
       });
     });
 
@@ -99,7 +107,7 @@ describe("utils/layout", () => {
         sampleConcepts,
         sampleEdges,
       );
-      expect(nodes.find((n) => n.id === "a")?.position).toEqual({
+      expect(nodes.find((n) => n.id === "1")?.position).toEqual({
         x: 10,
         y: 20,
       });
@@ -107,7 +115,7 @@ describe("utils/layout", () => {
 
     test("defaults a node's position to the origin when missing from the positions map", () => {
       const { nodes } = buildGraphElementsV2({}, sampleConcepts, sampleEdges);
-      expect(nodes.find((n) => n.id === "a")?.position).toEqual({
+      expect(nodes.find((n) => n.id === "1")?.position).toEqual({
         x: 0,
         y: 0,
       });
@@ -121,14 +129,25 @@ describe("utils/layout", () => {
       );
       expect(edges).toHaveLength(1);
       expect(edges[0]).toMatchObject({
-        id: "prereq-a-b",
-        source: "a",
-        target: "b",
+        id: "prereq-10",
+        source: "1",
+        target: "2",
         sourceHandle: "top",
         targetHandle: "bottom",
-        type: "smooth",
+        type: "smoothstep",
         style: { stroke: "#111111", strokeWidth: 4 },
         markerEnd: { type: MarkerType.ArrowClosed, color: "#111111" },
+      });
+    });
+
+    test("uses the edge's own color (e.g. cycle red) when it has one", () => {
+      const { edges } = buildGraphElementsV2(samplePositions, sampleConcepts, [
+        { id: 10, sourceId: 1, targetId: 2, color: "#FF0000" },
+      ]);
+      expect(edges[0].style).toEqual({ stroke: "#FF0000", strokeWidth: 4 });
+      expect(edges[0].markerEnd).toEqual({
+        type: MarkerType.ArrowClosed,
+        color: "#FF0000",
       });
     });
 
