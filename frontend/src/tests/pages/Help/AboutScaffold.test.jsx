@@ -77,21 +77,23 @@ describe("AboutScaffold tests", () => {
 
     expect(hrefs.length).toBeGreaterThan(0);
 
-    await Promise.all(
+    const failures = await Promise.all(
       hrefs.map(async (href) => {
-        let response;
         try {
-          response = await fetch(href, { redirect: "follow" });
+          const response = await fetch(href, { redirect: "follow" });
+          if (response.status >= 400) {
+            return `${href} returned HTTP status ${response.status}`;
+          }
         } catch (error) {
-          throw new Error(
-            `Expected ${href} to be a live link, but the request failed: ${error.cause ?? error}`,
-          );
+          return `${href} request failed: ${error.cause ?? error}`;
         }
-        expect(
-          response.status,
-          `Expected ${href} to be a live link, but got HTTP status ${response.status}`,
-        ).toBeLessThan(400);
+        return null;
       }),
     );
+
+    expect(
+      failures.filter((failure) => failure !== null),
+      "Expected every link on the page to be a live link",
+    ).toEqual([]);
   }, 30000);
 });

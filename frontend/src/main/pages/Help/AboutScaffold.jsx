@@ -72,7 +72,7 @@ export default function AboutScaffold() {
         of her MS project in the{" "}
         <a href="https://cs.ucsb.edu">Department of Computer Science</a> at the
         University of California, Santa Barbara. She was advised by{" "}
-        <a href="https://sites.cs.ucsb.edu/~phtcon/">Phill Conrad</a>,{" "}
+        <a href="https://pconrad.github.io">Phill Conrad</a>,{" "}
         <a href="https://sites.cs.ucsb.edu/~dimirza/">Diba Mirza</a> and{" "}
         <a href="https://sites.cs.ucsb.edu/~sra/">Misha Sra</a> in the
         completion of this project.
