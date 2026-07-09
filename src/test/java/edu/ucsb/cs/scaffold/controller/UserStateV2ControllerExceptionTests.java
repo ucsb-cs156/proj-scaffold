@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -58,7 +59,7 @@ class UserStateV2ControllerExceptionTests {
     when(objectMapper.writeValueAsString(any()))
         .thenThrow(new JsonProcessingException("forced failure") {});
 
-    var request = new UserStateV2Controller.UserStateV2Request(1L, 2L, null, null, null);
+    var request = new UserStateV2Controller.UserStateV2Request(1L, 2L, null, null, null, null);
     assertThrows(IllegalArgumentException.class, () -> controller.upsertUserState(request));
   }
 
@@ -75,10 +76,30 @@ class UserStateV2ControllerExceptionTests {
         .thenThrow(new DataIntegrityViolationException("duplicate key"))
         .thenReturn(insertedByConcurrentRequest);
 
-    var request = new UserStateV2Controller.UserStateV2Request(1L, 2L, null, null, null);
+    var request = new UserStateV2Controller.UserStateV2Request(1L, 2L, null, null, null, null);
     ResponseEntity<Void> response = controller.upsertUserState(request);
 
     assertEquals(204, response.getStatusCode().value());
     verify(repository, times(2)).save(any());
+  }
+
+  @Test
+  void upsertUserStateWritesAProvidedTopLevelPositionsPayload() throws JsonProcessingException {
+    when(repository.findByUseridAndCourseId(1L, 2L)).thenReturn(Optional.empty());
+    when(objectMapper.writeValueAsString(any())).thenReturn("[]");
+    com.fasterxml.jackson.databind.node.ObjectNode positions =
+        new ObjectMapper().createObjectNode();
+    positions.putObject("recursion").put("x", 100).put("y", 200);
+    // Distinguishable from the "[]" default so the saved state can only carry this value if
+    // state.setTopLevelPositions(...) actually ran (not just that writeJson was called).
+    when(objectMapper.writeValueAsString(positions)).thenReturn("{\"recursion\":{\"x\":100}}");
+
+    var request = new UserStateV2Controller.UserStateV2Request(1L, 2L, null, null, null, positions);
+    ResponseEntity<Void> response = controller.upsertUserState(request);
+
+    assertEquals(204, response.getStatusCode().value());
+    ArgumentCaptor<UserStateV2> captor = ArgumentCaptor.forClass(UserStateV2.class);
+    verify(repository).save(captor.capture());
+    assertEquals("{\"recursion\":{\"x\":100}}", captor.getValue().getTopLevelPositions());
   }
 }

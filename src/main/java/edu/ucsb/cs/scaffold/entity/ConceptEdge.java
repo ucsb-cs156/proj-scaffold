@@ -34,4 +34,8 @@ public class ConceptEdge {
   @JoinColumn(name = "target_concept_id", nullable = false)
   @ToString.Exclude
   private Concept target;
+
+  // Set to ConceptGraphService.CYCLE_EDGE_COLOR by /api/course/scaffold/reset when this edge
+  // is part of a cycle; null otherwise (the frontend falls back to the source concept's color).
+  private String color;
 }

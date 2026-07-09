@@ -293,6 +293,23 @@
   transition: stroke 0.15s;
 }
 
+/* Wraps server-rendered, sanitized HTML (from Markdown) shown on detail
+   cards — resets block-element margins so injected <p>/<pre> tags don't add
+   unexpected spacing inside the card. */
+.concept-detail-content {
+  p {
+    margin: 0;
+  }
+
+  p + p {
+    margin-top: 0.5em;
+  }
+
+  img {
+    max-width: 100%;
+  }
+}
+
 /* Shared dropdown option row (AssessmentSelect.tsx, QuestionSearch.tsx) */
 
 .dropdown-option {
@@ -344,14 +361,12 @@
 }
 
 .tabComponent {
- background-color: #fefeff;;
-
+  background-color: #fefeff;
 }
 
 .tabsGroup {
- background-color: #fefeff;
- padding: 12px 12px 12px 12px;
-
+  background-color: #fefeff;
+  padding: 12px 12px 12px 12px;
 }
 
 .table {
