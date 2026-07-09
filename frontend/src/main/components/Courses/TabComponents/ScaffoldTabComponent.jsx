@@ -8,7 +8,7 @@ export default function ScaffoldTabComponent({ courseId, testIdPrefix }) {
     toast("Scaffold reset successfully completed.");
   };
 
-  const objectToAxiosParams = () => ({
+  const scaffoldResetAxiosParams = () => ({
     url: "/api/course/scaffold/reset",
     method: "POST",
     params: {
@@ -16,19 +16,15 @@ export default function ScaffoldTabComponent({ courseId, testIdPrefix }) {
     },
   });
 
-  const resetScaffoldMutation = useBackendMutation(objectToAxiosParams, {
+  const resetScaffoldMutation = useBackendMutation(scaffoldResetAxiosParams, {
     onSuccess: onSuccessScaffoldReset,
   });
-
-  const handleResetScaffold = () => {
-    resetScaffoldMutation.mutate();
-  };
 
   return (
     <div className="tabComponent" data-testid={`${testIdPrefix}-scaffoldTab`}>
       <h2>Scaffold</h2>
       <Button
-        onClick={handleResetScaffold}
+        onClick={resetScaffoldMutation.mutate}
         data-testid={`${testIdPrefix}-reset-button`}
       >
         Reset Scaffold
