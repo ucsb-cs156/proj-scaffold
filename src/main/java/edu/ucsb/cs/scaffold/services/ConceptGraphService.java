@@ -104,8 +104,8 @@ public class ConceptGraphService {
       Map<Long, Integer> priorXByConceptId) {
     Set<Long> nodeIds = topLevelConcepts.stream().map(Concept::getId).collect(Collectors.toSet());
 
-    Map<Long, Integer> sccId = computeStronglyConnectedComponents(buildAdjacency(edges), nodeIds);
-    Map<Integer, Long> sccSize =
+    Map<Long, Long> sccId = computeStronglyConnectedComponents(buildAdjacency(edges), nodeIds);
+    Map<Long, Long> sccSize =
         sccId.values().stream().collect(Collectors.groupingBy(id -> id, Collectors.counting()));
 
     Set<Long> cycleEdgeIds = new HashSet<>();
@@ -123,10 +123,12 @@ public class ConceptGraphService {
     }
 
     Set<Long> removedEdgeIds = computeTransitiveReductionRemovals(nodeIds, acyclicEdges);
-    List<ConceptEdge> keptEdges =
-        acyclicEdges.stream().filter(e -> !removedEdgeIds.contains(e.getId())).toList();
 
-    Map<Long, Integer> levelByConceptId = computeLongestPathLevels(nodeIds, keptEdges);
+    // The transitively redundant edges are only reported for deletion, not filtered out
+    // before leveling: a removed edge u->v is by definition a shortcut for a longer path
+    // u -> ... -> v, whose constraint on v's level always dominates, so including or
+    // excluding these edges cannot change any longest-path level.
+    Map<Long, Integer> levelByConceptId = computeLongestPathLevels(nodeIds, acyclicEdges);
     Map<Long, Position> positionByConceptId =
         computeLayout(topLevelConcepts, levelByConceptId, priorXByConceptId);
 
@@ -166,10 +168,12 @@ public class ConceptGraphService {
   }
 
   /**
-   * Tarjan's algorithm: maps each node id to an integer id shared by its strongly connected
-   * component (a nontrivial cycle iff more than one node shares it).
+   * Tarjan's algorithm: maps each node id to an id shared by its strongly connected component (a
+   * nontrivial cycle iff more than one node shares it). The component id is the id of the
+   * component's root node — any value unique per component would do, and using the root avoids
+   * maintaining a separate counter.
    */
-  private Map<Long, Integer> computeStronglyConnectedComponents(
+  private Map<Long, Long> computeStronglyConnectedComponents(
       Map<Long, List<Long>> adjacency, Set<Long> nodeIds) {
     TarjanState state = new TarjanState(adjacency);
     for (Long node : nodeIds) {
@@ -186,9 +190,8 @@ public class ConceptGraphService {
     private final Map<Long, Integer> lowlink = new HashMap<>();
     private final Set<Long> onStack = new HashSet<>();
     private final Deque<Long> stack = new ArrayDeque<>();
-    private final Map<Long, Integer> sccId = new HashMap<>();
+    private final Map<Long, Long> sccId = new HashMap<>();
     private int counter = 0;
-    private int sccCounter = 0;
 
     TarjanState(Map<Long, List<Long>> adjacency) {
       this.adjacency = adjacency;
@@ -215,9 +218,9 @@ public class ConceptGraphService {
         do {
           w = stack.pop();
           onStack.remove(w);
-          sccId.put(w, sccCounter);
+          // v is this component's root: every member gets tagged with its id.
+          sccId.put(w, v);
         } while (!w.equals(v));
-        sccCounter++;
       }
     }
   }
