@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Concept.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.entity</a> &gt; <span class="el_source">Concept.java</span></div><h1>Concept.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Entity
+@Table(name = &quot;concepts&quot;)
+public class Concept {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
+  @ManyToOne
+  @JoinColumn(name = &quot;course_id&quot;, nullable = false)
+  @ToString.Exclude
+  private Course course;
+
+  @Column(nullable = false)
+  private String label;
+
+  // length is set well above the default 255 so that Hibernate's schema
+  // validation matches the VARCHAR(1048576) column defined in the migration.
+  @Column(length = 1048576)
+  private String description;
+
+  @Column(length = 1048576)
+  private String example;
+
+  private String color;
+
+  private Integer x;
+  private Integer y;
+
+  // Longest-path rank from a root (no-prerequisite) concept, 1-based. Top-level only,
+  // recomputed by ConceptGraphService.reset(); see /api/course/scaffold/reset.
+  private Integer level;
+
+  @ManyToOne
+  @JoinColumn(name = &quot;parent_id&quot;)
+  @ToString.Exclude
+  private Concept parent;
+
+  public boolean isSubconcept() {
+<span class="fc bfc" id="L48" title="All 2 branches covered.">    return parent != null;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

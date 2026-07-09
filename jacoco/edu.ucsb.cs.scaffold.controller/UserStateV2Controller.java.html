@@ -37,80 +37,88 @@ public class UserStateV2Controller {
                     new UserStateV2Response(
 <span class="fc" id="L38">                        parseStringList(state.getStarredIds()),</span>
 <span class="fc" id="L39">                        parseJsonNode(state.getDetailCards()),</span>
-<span class="fc" id="L40">                        parseStringList(state.getMasteredSubconcepts()))))</span>
-<span class="fc" id="L41">        .orElseGet(() -&gt; ResponseEntity.notFound().build());</span>
+<span class="fc" id="L40">                        parseStringList(state.getMasteredSubconcepts()),</span>
+<span class="fc" id="L41">                        parseJsonNode(state.getTopLevelPositions()))))</span>
+<span class="fc" id="L42">        .orElseGet(() -&gt; ResponseEntity.notFound().build());</span>
   }
 
   @Operation(summary = &quot;Upsert saved user state by user ID and course ID&quot;)
   @PostMapping(&quot;/api/user-state-v2&quot;)
   public ResponseEntity&lt;Void&gt; upsertUserState(@RequestBody UserStateV2Request body) {
-<span class="fc bfc" id="L47" title="All 4 branches covered.">    if (body.userid() == null || body.courseId() == null) {</span>
-<span class="fc" id="L48">      return ResponseEntity.badRequest().build();</span>
+<span class="fc bfc" id="L48" title="All 4 branches covered.">    if (body.userid() == null || body.courseId() == null) {</span>
+<span class="fc" id="L49">      return ResponseEntity.badRequest().build();</span>
     }
 
     try {
-<span class="fc" id="L52">      upsert(body);</span>
-<span class="fc" id="L53">    } catch (DataIntegrityViolationException e) {</span>
+<span class="fc" id="L53">      upsert(body);</span>
+<span class="fc" id="L54">    } catch (DataIntegrityViolationException e) {</span>
       // Two near-simultaneous saves for a brand new (userid, courseId) pair (e.g. React
       // StrictMode double-invoking a state updater in dev) can both find no existing row and
       // both attempt an insert; the second violates the unique constraint. Retry once as an
       // update against the row the other request just inserted.
-<span class="fc" id="L58">      upsert(body);</span>
-<span class="fc" id="L59">    }</span>
+<span class="fc" id="L59">      upsert(body);</span>
+<span class="fc" id="L60">    }</span>
 
-<span class="fc" id="L61">    return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L62">    return ResponseEntity.noContent().build();</span>
   }
 
   private void upsert(UserStateV2Request body) {
-<span class="fc" id="L65">    UserStateV2 state =</span>
+<span class="fc" id="L66">    UserStateV2 state =</span>
         userStateV2Repository
-<span class="fc" id="L67">            .findByUseridAndCourseId(body.userid(), body.courseId())</span>
-<span class="fc" id="L68">            .orElseGet(UserStateV2::new);</span>
-<span class="fc" id="L69">    state.setUserid(body.userid());</span>
-<span class="fc" id="L70">    state.setCourseId(body.courseId());</span>
-<span class="fc bfc" id="L71" title="All 2 branches covered.">    state.setStarredIds(writeJson(body.starredIds() == null ? List.of() : body.starredIds()));</span>
-<span class="fc" id="L72">    state.setDetailCards(</span>
-<span class="fc" id="L73">        writeJson(</span>
-<span class="fc bfc" id="L74" title="All 2 branches covered.">            body.detailCards() == null ? objectMapper.createArrayNode() : body.detailCards()));</span>
-<span class="fc" id="L75">    state.setMasteredSubconcepts(</span>
-<span class="fc bfc" id="L76" title="All 2 branches covered.">        writeJson(body.masteredSubconcepts() == null ? List.of() : body.masteredSubconcepts()));</span>
-<span class="fc" id="L77">    userStateV2Repository.save(state);</span>
-<span class="fc" id="L78">  }</span>
+<span class="fc" id="L68">            .findByUseridAndCourseId(body.userid(), body.courseId())</span>
+<span class="fc" id="L69">            .orElseGet(UserStateV2::new);</span>
+<span class="fc" id="L70">    state.setUserid(body.userid());</span>
+<span class="fc" id="L71">    state.setCourseId(body.courseId());</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">    state.setStarredIds(writeJson(body.starredIds() == null ? List.of() : body.starredIds()));</span>
+<span class="fc" id="L73">    state.setDetailCards(</span>
+<span class="fc" id="L74">        writeJson(</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            body.detailCards() == null ? objectMapper.createArrayNode() : body.detailCards()));</span>
+<span class="fc" id="L76">    state.setMasteredSubconcepts(</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        writeJson(body.masteredSubconcepts() == null ? List.of() : body.masteredSubconcepts()));</span>
+<span class="fc" id="L78">    state.setTopLevelPositions(</span>
+<span class="fc" id="L79">        writeJson(</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">            body.topLevelPositions() == null</span>
+<span class="fc" id="L81">                ? objectMapper.createObjectNode()</span>
+<span class="fc" id="L82">                : body.topLevelPositions()));</span>
+<span class="fc" id="L83">    userStateV2Repository.save(state);</span>
+<span class="fc" id="L84">  }</span>
 
   private List&lt;String&gt; parseStringList(String json) {
     try {
-<span class="fc" id="L82">      return objectMapper.readValue(json, new TypeReference&lt;&gt;() {});</span>
-<span class="fc" id="L83">    } catch (JsonProcessingException e) {</span>
-<span class="fc" id="L84">      throw new IllegalStateException(&quot;Unable to parse stored string list JSON&quot;, e);</span>
+<span class="fc" id="L88">      return objectMapper.readValue(json, new TypeReference&lt;&gt;() {});</span>
+<span class="fc" id="L89">    } catch (JsonProcessingException e) {</span>
+<span class="fc" id="L90">      throw new IllegalStateException(&quot;Unable to parse stored string list JSON&quot;, e);</span>
     }
   }
 
   private JsonNode parseJsonNode(String json) {
     try {
-<span class="fc" id="L90">      return objectMapper.readTree(json);</span>
-<span class="fc" id="L91">    } catch (JsonProcessingException e) {</span>
-<span class="fc" id="L92">      throw new IllegalStateException(&quot;Unable to parse stored JSON payload&quot;, e);</span>
+<span class="fc" id="L96">      return objectMapper.readTree(json);</span>
+<span class="fc" id="L97">    } catch (JsonProcessingException e) {</span>
+<span class="fc" id="L98">      throw new IllegalStateException(&quot;Unable to parse stored JSON payload&quot;, e);</span>
     }
   }
 
   private String writeJson(Object value) {
     try {
-<span class="fc" id="L98">      return objectMapper.writeValueAsString(value);</span>
-<span class="fc" id="L99">    } catch (JsonProcessingException e) {</span>
-<span class="fc" id="L100">      throw new IllegalArgumentException(&quot;Unable to serialize JSON payload&quot;, e);</span>
+<span class="fc" id="L104">      return objectMapper.writeValueAsString(value);</span>
+<span class="fc" id="L105">    } catch (JsonProcessingException e) {</span>
+<span class="fc" id="L106">      throw new IllegalArgumentException(&quot;Unable to serialize JSON payload&quot;, e);</span>
     }
   }
 
-<span class="fc" id="L104">  public record UserStateV2Request(</span>
+<span class="fc" id="L110">  public record UserStateV2Request(</span>
       Long userid,
       @JsonProperty(&quot;courseId&quot;) Long courseId,
       @JsonProperty(&quot;starred_ids&quot;) List&lt;String&gt; starredIds,
       @JsonProperty(&quot;detail_cards&quot;) JsonNode detailCards,
-      @JsonProperty(&quot;mastered_subconcepts&quot;) List&lt;String&gt; masteredSubconcepts) {}
+      @JsonProperty(&quot;mastered_subconcepts&quot;) List&lt;String&gt; masteredSubconcepts,
+      @JsonProperty(&quot;top_level_positions&quot;) JsonNode topLevelPositions) {}
 
-<span class="fc" id="L111">  public record UserStateV2Response(</span>
+<span class="fc" id="L118">  public record UserStateV2Response(</span>
       @JsonProperty(&quot;starred_ids&quot;) List&lt;String&gt; starredIds,
       @JsonProperty(&quot;detail_cards&quot;) JsonNode detailCards,
-      @JsonProperty(&quot;mastered_subconcepts&quot;) List&lt;String&gt; masteredSubconcepts) {}
+      @JsonProperty(&quot;mastered_subconcepts&quot;) List&lt;String&gt; masteredSubconcepts,
+      @JsonProperty(&quot;top_level_positions&quot;) JsonNode topLevelPositions) {}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
