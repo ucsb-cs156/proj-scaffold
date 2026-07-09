@@ -7,10 +7,8 @@ const subConceptsFixtures = {
       example: 'String name = "Ada";',
       parentId: 1,
       parentLabel: "Variables",
-      parent: {
-        id: 1,
-        label: "Variables",
-      },
+      parentLevel: 1,
+      parentX: 125,
       sortOrder: 1,
     },
     {
@@ -20,10 +18,8 @@ const subConceptsFixtures = {
       example: "count = count + 1;",
       parentId: 1,
       parentLabel: "Variables",
-      parent: {
-        id: 1,
-        label: "Variables",
-      },
+      parentLevel: 1,
+      parentX: 125,
       sortOrder: 2,
     },
   ],

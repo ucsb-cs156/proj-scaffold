@@ -97,4 +97,60 @@ describe("SubConceptTable tests", () => {
     expect(editCallback).toHaveBeenCalledTimes(1);
     expect(deleteCallback).toHaveBeenCalledTimes(1);
   });
+
+  test("renders subconcepts in default parent and sort order", () => {
+    const unsortedSubConcepts = [
+      {
+        id: 22,
+        label: "Middle sort order",
+        parentId: 1,
+        parentLabel: "Variables",
+        parentLevel: 1,
+        parentX: 125,
+        sortOrder: 2,
+      },
+      {
+        id: 33,
+        label: "Higher parent level",
+        parentId: 2,
+        parentLabel: "Loops",
+        parentLevel: 2,
+        parentX: 300,
+        sortOrder: 1,
+      },
+      {
+        id: 11,
+        label: "Lower sort order",
+        parentId: 1,
+        parentLabel: "Variables",
+        parentLevel: 1,
+        parentX: 125,
+        sortOrder: 1,
+      },
+      {
+        id: 44,
+        label: "Further left parent",
+        parentId: 3,
+        parentLabel: "Arrays",
+        parentLevel: 1,
+        parentX: 50,
+        sortOrder: 1,
+      },
+    ];
+
+    render(<SubConceptTable subConcepts={unsortedSubConcepts} />);
+
+    expect(screen.getByTestId(`${testId}-cell-row-0-col-id`)).toHaveTextContent(
+      "44",
+    );
+    expect(screen.getByTestId(`${testId}-cell-row-1-col-id`)).toHaveTextContent(
+      "11",
+    );
+    expect(screen.getByTestId(`${testId}-cell-row-2-col-id`)).toHaveTextContent(
+      "22",
+    );
+    expect(screen.getByTestId(`${testId}-cell-row-3-col-id`)).toHaveTextContent(
+      "33",
+    );
+  });
 });

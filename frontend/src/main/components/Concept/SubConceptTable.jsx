@@ -19,12 +19,12 @@ export default function SubConceptTable({
     },
     {
       header: "parentId",
-      accessorKey: "parent.id",
+      accessorKey: "parentId",
       id: "parentId",
     },
     {
       header: "parentLabel",
-      accessorKey: "parent.label",
+      accessorKey: "parentLabel",
       id: "parentLabel",
     },
     {
@@ -36,5 +36,27 @@ export default function SubConceptTable({
     ButtonColumn("Delete", "danger", deleteCallback, testId),
   ];
 
-  return <OurTable data={subConcepts} columns={columns} testid={testId} />;
+  const sortedSubConcepts = [...subConcepts].sort((a, b) => {
+    if ((a.parentLevel ?? 0) !== (b.parentLevel ?? 0)) {
+      return (a.parentLevel ?? 0) - (b.parentLevel ?? 0);
+    }
+
+    if ((a.parentX ?? 0) !== (b.parentX ?? 0)) {
+      return (a.parentX ?? 0) - (b.parentX ?? 0);
+    }
+
+    if ((a.parentLabel ?? "") !== (b.parentLabel ?? "")) {
+      return (a.parentLabel ?? "").localeCompare(b.parentLabel ?? "");
+    }
+
+    if ((a.sortOrder ?? 0) !== (b.sortOrder ?? 0)) {
+      return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+    }
+
+    return (a.id ?? 0) - (b.id ?? 0);
+  });
+
+  return (
+    <OurTable data={sortedSubConcepts} columns={columns} testid={testId} />
+  );
 }
