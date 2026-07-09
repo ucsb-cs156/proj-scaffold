@@ -152,13 +152,15 @@ import org.springframework.stereotype.Service;
    */
   public String toInlineHtml(String markdown) {
 <span class="fc" id="L154">    String html = toHtml(markdown);</span>
-<span class="fc bfc" id="L155" title="All 2 branches covered.">    if (html != null</span>
-<span class="fc bfc" id="L156" title="All 2 branches covered.">        &amp;&amp; html.startsWith(&quot;&lt;p&gt;&quot;)</span>
-<span class="fc bfc" id="L157" title="All 2 branches covered.">        &amp;&amp; html.endsWith(&quot;&lt;/p&gt;&quot;)</span>
-<span class="fc bfc" id="L158" title="All 2 branches covered.">        &amp;&amp; html.indexOf(&quot;&lt;p&gt;&quot;, &quot;&lt;p&gt;&quot;.length()) &lt; 0) {</span>
-<span class="fc" id="L159">      return html.substring(&quot;&lt;p&gt;&quot;.length(), html.length() - &quot;&lt;/p&gt;&quot;.length());</span>
+    // == -1 rather than &lt; 0: indexOf with a fromIndex of 3 can only return -1 or &gt;= 3, so the
+    // two are equivalent, but &lt; 0 leaves an unkillable &quot;boundary&quot; mutant (&lt;= 0) for pitest.
+<span class="fc bfc" id="L157" title="All 2 branches covered.">    if (html != null</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        &amp;&amp; html.startsWith(&quot;&lt;p&gt;&quot;)</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        &amp;&amp; html.endsWith(&quot;&lt;/p&gt;&quot;)</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        &amp;&amp; html.indexOf(&quot;&lt;p&gt;&quot;, &quot;&lt;p&gt;&quot;.length()) == -1) {</span>
+<span class="fc" id="L161">      return html.substring(&quot;&lt;p&gt;&quot;.length(), html.length() - &quot;&lt;/p&gt;&quot;.length());</span>
     }
-<span class="fc" id="L161">    return html;</span>
+<span class="fc" id="L163">    return html;</span>
   }
 
   /**
@@ -167,21 +169,21 @@ import org.springframework.stereotype.Service;
    * independent of how verbose the Markdown markup is.
    */
   public int renderedLength(String markdown) {
-<span class="fc bfc" id="L170" title="All 2 branches covered.">    if (markdown == null) {</span>
-<span class="fc" id="L171">      return 0;</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">    if (markdown == null) {</span>
+<span class="fc" id="L173">      return 0;</span>
     }
-<span class="fc" id="L173">    String text = textContentRenderer.render(parser.parse(markdown));</span>
-<span class="fc" id="L174">    return text.strip().replaceAll(&quot;\\s+&quot;, &quot; &quot;).length();</span>
+<span class="fc" id="L175">    String text = textContentRenderer.render(parser.parse(markdown));</span>
+<span class="fc" id="L176">    return text.strip().replaceAll(&quot;\\s+&quot;, &quot; &quot;).length();</span>
   }
 
   /** Allows relative destinations and http/https/mailto; anything else is dropped. */
   static String safeDestination(String destination) {
-<span class="fc" id="L179">    int colon = destination.indexOf(':');</span>
-<span class="fc bfc" id="L180" title="All 2 branches covered.">    if (colon &lt; 0) {</span>
-<span class="fc" id="L181">      return destination;</span>
+<span class="fc" id="L181">    int colon = destination.indexOf(':');</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">    if (colon &lt; 0) {</span>
+<span class="fc" id="L183">      return destination;</span>
     }
-<span class="fc" id="L183">    String scheme = destination.substring(0, colon).toLowerCase();</span>
-<span class="fc bfc" id="L184" title="All 2 branches covered.">    return ALLOWED_LINK_SCHEMES.contains(scheme) ? destination : &quot;&quot;;</span>
+<span class="fc" id="L185">    String scheme = destination.substring(0, colon).toLowerCase();</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">    return ALLOWED_LINK_SCHEMES.contains(scheme) ? destination : &quot;&quot;;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
