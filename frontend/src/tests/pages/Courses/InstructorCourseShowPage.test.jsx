@@ -80,6 +80,8 @@ describe("InstructorCourseShowPage tests", () => {
     axiosMock
       .onGet("/api/currentUser")
       .reply(200, apiCurrentUserFixtures.userOnly);
+    axiosMock.onGet("/api/concepts/subconcepts").reply(200, []);
+    axiosMock.onGet("/api/concepts/top-level").reply(200, []);
   });
 
   const setupInstructorUser = () => {

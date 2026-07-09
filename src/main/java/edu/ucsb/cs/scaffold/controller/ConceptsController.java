@@ -148,6 +148,54 @@ public class ConceptsController extends ApiController {
     return result;
   }
 
+  @Operation(summary = "Get all top-level concepts for a course")
+  @PreAuthorize("hasRole('ROLE_USER')")
+  @GetMapping("/api/concepts/top-level")
+  public List<TopLevelConceptDTO> getTopLevelConcepts(
+      @Parameter(description = "id of the course") @RequestParam Long courseId) {
+    return conceptRepository.findByCourseId(courseId).stream()
+        .filter(concept -> !concept.isSubconcept())
+        .sorted(Comparator.comparing(Concept::getId))
+        .map(
+            concept ->
+                new TopLevelConceptDTO(
+                    concept.getId(),
+                    concept.getLabel(),
+                    concept.getLevel(),
+                    concept.getX(),
+                    concept.getY()))
+        .toList();
+  }
+
+  @Operation(summary = "Get all subconcepts for a course in table-row format")
+  @PreAuthorize("hasRole('ROLE_USER')")
+  @GetMapping("/api/concepts/subconcepts")
+  public List<SubConceptTableRowDTO> getSubconcepts(
+      @Parameter(description = "id of the course") @RequestParam Long courseId) {
+    return conceptRepository.findByCourseId(courseId).stream()
+        .filter(Concept::isSubconcept)
+        .sorted(
+            Comparator.comparing(
+                    (Concept c) -> c.getParent().getLevel(),
+                    Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(
+                    c -> c.getParent().getX(), Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(
+                    Concept::getSortOrder, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(Concept::getId))
+        .map(
+            concept ->
+                new SubConceptTableRowDTO(
+                    concept.getId(),
+                    concept.getLabel(),
+                    concept.getParent().getId(),
+                    concept.getParent().getLabel(),
+                    concept.getParent().getLevel(),
+                    concept.getParent().getX(),
+                    concept.getSortOrder()))
+        .toList();
+  }
+
   @Operation(summary = "Get the prerequisite edges between concepts in a course")
   @PreAuthorize("hasRole('ROLE_USER')")
   @GetMapping("/api/concepts/edges")
@@ -744,6 +792,17 @@ public class ConceptsController extends ApiController {
       Long id, String labelHtml, String color, List<SubconceptDTO> subconcepts) {}
 
   public record SubconceptDTO(Long id, Long parentId, String labelHtml) {}
+
+  public record TopLevelConceptDTO(Long id, String label, Integer level, Integer x, Integer y) {}
+
+  public record SubConceptTableRowDTO(
+      Long id,
+      String label,
+      Long parentId,
+      String parentLabel,
+      Integer parentLevel,
+      Integer parentX,
+      Integer sortOrder) {}
 
   public record PositionDTO(Integer x, Integer y) {}
 
