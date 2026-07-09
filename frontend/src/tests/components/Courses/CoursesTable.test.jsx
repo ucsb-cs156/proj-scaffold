@@ -75,7 +75,7 @@ describe("CoursesTable tests", () => {
   test("Delete column does not appear when deleteCourseButton is false", async () => {
     axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
     axiosMock
-      .onGet("/api/courses/allForAdmins")
+      .onGet("/api/courses/list/admins")
       .reply(200, coursesFixtures.severalCourses);
 
     const queryClient = new QueryClient();

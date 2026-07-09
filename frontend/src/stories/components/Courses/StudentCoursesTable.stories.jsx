@@ -46,7 +46,7 @@ Default.parameters = {
       http.get("/api/systemInfo", () => {
         return HttpResponse.json(systemInfoFixtures.showingNeither);
       }),
-      http.get("/api/courses/list", () => {
+      http.get("/api/courses/list/students", () => {
         return HttpResponse.json(coursesFixtures.severalCourses);
       }),
     ],
@@ -66,7 +66,7 @@ WithNoCourses.parameters = {
       http.get("/api/systemInfo", () => {
         return HttpResponse.json(systemInfoFixtures.showingNeither);
       }),
-      http.get("/api/courses/list", () => {
+      http.get("/api/courses/list/students", () => {
         return HttpResponse.json([]);
       }),
     ],

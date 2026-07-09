@@ -971,10 +971,10 @@ describe("InstructorAdminCoursesTable tests", () => {
       expect(invalidateQueriesSpy).toHaveBeenCalledTimes(2);
 
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-        queryKey: ["/api/courses/allForAdmins"],
+        queryKey: ["/api/courses/list/admins"],
       });
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-        queryKey: ["/api/courses/allForInstructors"],
+        queryKey: ["/api/courses/list/instructors"],
       });
     });
 
@@ -1018,10 +1018,10 @@ describe("InstructorAdminCoursesTable tests", () => {
 
       expect(invalidateQueriesSpy).toHaveBeenCalledTimes(2);
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-        queryKey: ["/api/courses/allForAdmins"],
+        queryKey: ["/api/courses/list/admins"],
       });
       expect(invalidateQueriesSpy).toHaveBeenCalledWith({
-        queryKey: ["/api/courses/allForInstructors"],
+        queryKey: ["/api/courses/list/instructors"],
       });
     });
   });
@@ -1293,10 +1293,10 @@ describe("InstructorAdminCoursesTable tests", () => {
 
       // EXPECT BOTH CACHE INVALIDATIONS TO FIRE
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: ["/api/courses/allForAdmins"],
+        queryKey: ["/api/courses/list/admins"],
       });
       expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: ["/api/courses/allForInstructors"],
+        queryKey: ["/api/courses/list/instructors"],
       });
 
       invalidateSpy.mockRestore();

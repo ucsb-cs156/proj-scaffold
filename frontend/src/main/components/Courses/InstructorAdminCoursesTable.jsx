@@ -22,8 +22,8 @@ export default function InstructorAdminCoursesTable({
   courseNameLinkPrefix = "/course",
   canEditCourse,
   mutationQueryKeys = [
-    "/api/courses/allForAdmins",
-    "/api/courses/allForInstructors",
+    "/api/courses/list/admins",
+    "/api/courses/list/instructors",
   ],
 }) {
   const location = useLocation();

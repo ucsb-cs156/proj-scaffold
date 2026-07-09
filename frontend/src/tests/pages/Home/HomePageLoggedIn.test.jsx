@@ -40,9 +40,9 @@ describe("HomePageLoggedIn tests", () => {
     axiosMock.resetHistory();
     queryClient.clear();
     mockToast.mockReset();
-    axiosMock.onGet("/api/courses/staffCourses").reply(200, []);
-    axiosMock.onGet("/api/courses/list").reply(200, []);
-    axiosMock.onGet("/api/courses/allForInstructors").reply(200, []);
+    axiosMock.onGet("/api/courses/list/staff").reply(200, []);
+    axiosMock.onGet("/api/courses/list/students").reply(200, []);
+    axiosMock.onGet("/api/courses/list/instructors").reply(200, []);
     axiosMock
       .onGet("/api/currentUser")
       .reply(200, apiCurrentUserFixtures.userOnly);
@@ -76,10 +76,10 @@ describe("HomePageLoggedIn tests", () => {
   test("tables render correctly", async () => {
     setupUserOnly();
     axiosMock
-      .onGet("/api/courses/staffCourses")
+      .onGet("/api/courses/list/staff")
       .reply(200, coursesFixtures.severalCourses);
     axiosMock
-      .onGet("/api/courses/list")
+      .onGet("/api/courses/list/students")
       .reply(200, coursesFixtures.severalCourses);
 
     render(
@@ -125,8 +125,8 @@ describe("HomePageLoggedIn tests", () => {
 
   test("staff courses section renders empty message when there are no staffCourses", async () => {
     setupUserOnly();
-    axiosMock.onGet("/api/courses/staffCourses").reply(200, []);
-    axiosMock.onGet("/api/courses/list").reply(200, []);
+    axiosMock.onGet("/api/courses/list/staff").reply(200, []);
+    axiosMock.onGet("/api/courses/list/students").reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -147,7 +147,7 @@ describe("HomePageLoggedIn tests", () => {
   test("tables render correctly for instructor when courses exist", async () => {
     setupInstructorUser();
     axiosMock
-      .onGet("/api/courses/allForInstructors")
+      .onGet("/api/courses/list/instructors")
       .reply(200, coursesFixtures.severalCourses);
 
     render(
@@ -184,7 +184,7 @@ describe("HomePageLoggedIn tests", () => {
 
   test("table doesn't render for instructors when courses don't exist", async () => {
     setupInstructorUser();
-    axiosMock.onGet("/api/courses/allForInstructors").reply(200, []);
+    axiosMock.onGet("/api/courses/list/instructors").reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -226,7 +226,7 @@ describe("HomePageLoggedIn tests", () => {
       .onPost("/api/courses/post")
       .reply(200, coursesFixtures.severalCourses[0]);
     axiosMock
-      .onGet("/api/courses/allForInstructors")
+      .onGet("/api/courses/list/instructors")
       .reply(200, coursesFixtures.severalCourses);
     axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
 
@@ -268,7 +268,7 @@ describe("HomePageLoggedIn tests", () => {
       school: "UCSB",
     });
     expect(
-      queryClient.getQueryState(["/api/courses/allForInstructors"]),
+      queryClient.getQueryState(["/api/courses/list/instructors"]),
     ).toBeTruthy();
     await waitFor(() =>
       expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument(),
@@ -277,7 +277,7 @@ describe("HomePageLoggedIn tests", () => {
 
   test("Loading message renders, staff", async () => {
     setupUserOnly();
-    axiosMock.onGet("/api/courses/staffCourses").reply(200, [
+    axiosMock.onGet("/api/courses/list/staff").reply(200, [
       ...coursesFixtures.severalCourses,
       {
         id: 7,
@@ -287,7 +287,7 @@ describe("HomePageLoggedIn tests", () => {
         school: "UCSB",
       },
     ]);
-    axiosMock.onGet("/api/courses/list").reply(200, [
+    axiosMock.onGet("/api/courses/list/students").reply(200, [
       ...coursesFixtures.severalCourses,
       {
         id: 7,
@@ -310,12 +310,12 @@ describe("HomePageLoggedIn tests", () => {
   test("toast called on instructor error", async () => {
     const restoreConsole = mockConsole();
     setupInstructorUser();
-    axiosMock.onGet("/api/courses/allForInstructors").reply(500);
+    axiosMock.onGet("/api/courses/list/instructors").reply(500);
     axiosMock
-      .onGet("/api/courses/staffCourses")
+      .onGet("/api/courses/list/staff")
       .reply(200, coursesFixtures.severalCourses);
     axiosMock
-      .onGet("/api/courses/list")
+      .onGet("/api/courses/list/students")
       .reply(200, coursesFixtures.severalCourses);
 
     render(
@@ -340,15 +340,15 @@ describe("HomePageLoggedIn tests", () => {
 
     expect(useBackendSpy).toHaveBeenNthCalledWith(
       1,
-      ["/api/courses/staffCourses"],
-      { method: "GET", url: "/api/courses/staffCourses" },
+      ["/api/courses/list/staff"],
+      { method: "GET", url: "/api/courses/list/staff" },
       [],
     );
 
     expect(useBackendSpy).toHaveBeenNthCalledWith(
       2,
-      ["/api/courses/allForInstructors"],
-      { method: "GET", url: "/api/courses/allForInstructors" },
+      ["/api/courses/list/instructors"],
+      { method: "GET", url: "/api/courses/list/instructors" },
       [],
       false,
       {
@@ -360,7 +360,7 @@ describe("HomePageLoggedIn tests", () => {
       1,
       expect.any(Function),
       { onSuccess: expect.any(Function) },
-      ["/api/courses/allForInstructors"],
+      ["/api/courses/list/instructors"],
     );
   });
 });

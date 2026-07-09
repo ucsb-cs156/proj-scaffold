@@ -179,7 +179,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     // act
 
     MvcResult response =
-        mockMvc.perform(get("/api/courses/allForAdmins")).andExpect(status().isOk()).andReturn();
+        mockMvc.perform(get("/api/courses/list/admins")).andExpect(status().isOk()).andReturn();
 
     // assert
 
@@ -213,7 +213,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
     MvcResult response =
         mockMvc
-            .perform(get("/api/courses/allForInstructors"))
+            .perform(get("/api/courses/list/instructors"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -253,7 +253,7 @@ public class CoursesControllerTests extends ControllerTestCase {
 
     MvcResult result =
         mockMvc
-            .perform(get("/api/courses/list").with(authentication(auth)))
+            .perform(get("/api/courses/list/students").with(authentication(auth)))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -323,7 +323,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     // act
     MvcResult response =
         mockMvc
-            .perform(get("/api/courses/staffCourses").param("studentId", "123"))
+            .perform(get("/api/courses/list/staff").param("studentId", "123"))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -331,6 +331,236 @@ public class CoursesControllerTests extends ControllerTestCase {
     String responseString = response.getResponse().getContentAsString();
     String expectedJson = mapper.writeValueAsString(List.of(staffCourse1, staffCourse2));
     assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void testListCoursesForCurrentUserUnified_nonAdmin() throws Exception {
+    // arrange
+    String email = "user@example.org";
+
+    Course studentCourse =
+        Course.builder().id(1L).courseName("CS156").term("S25").school(School.UCSB).build();
+    Course staffCourse =
+        Course.builder().id(2L).courseName("CS24").term("S25").school(School.UCSB).build();
+    Course instructorCourse =
+        Course.builder()
+            .id(3L)
+            .courseName("CS148")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail(email)
+            .build();
+
+    RosterStudent rs = new RosterStudent();
+    rs.setId(10L);
+    rs.setCourse(studentCourse);
+    rs.setEmail(email);
+
+    CourseStaff cs = CourseStaff.builder().id(20L).email(email).course(staffCourse).build();
+
+    when(adminRepository.existsByEmail(email)).thenReturn(false);
+    when(rosterStudentRepository.findAllByEmail(email)).thenReturn(List.of(rs));
+    when(courseStaffRepository.findAllByEmail(email)).thenReturn(List.of(cs));
+    when(courseRepository.findByInstructorEmail(email)).thenReturn(List.of(instructorCourse));
+    when(courseRepository.findAllById(any()))
+        .thenReturn(List.of(studentCourse, staffCourse, instructorCourse));
+
+    CoursesController.CourseListDTO studentDto =
+        new CoursesController.CourseListDTO(
+            studentCourse.getId(),
+            studentCourse.getCourseName(),
+            studentCourse.getTerm(),
+            studentCourse.getSchool(),
+            studentCourse.getInstructorEmail(),
+            true,
+            false,
+            false,
+            false);
+
+    CoursesController.CourseListDTO staffDto =
+        new CoursesController.CourseListDTO(
+            staffCourse.getId(),
+            staffCourse.getCourseName(),
+            staffCourse.getTerm(),
+            staffCourse.getSchool(),
+            staffCourse.getInstructorEmail(),
+            false,
+            true,
+            false,
+            false);
+
+    CoursesController.CourseListDTO instructorDto =
+        new CoursesController.CourseListDTO(
+            instructorCourse.getId(),
+            instructorCourse.getCourseName(),
+            instructorCourse.getTerm(),
+            instructorCourse.getSchool(),
+            instructorCourse.getInstructorEmail(),
+            false,
+            false,
+            true,
+            false);
+
+    // act
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/list")).andExpect(status().isOk()).andReturn();
+
+    // assert
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(List.of(studentDto, staffDto, instructorDto));
+    assertEquals(expectedJson, responseString);
+    verify(courseRepository, never()).findAll();
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void testListCoursesForCurrentUserUnified_admin() throws Exception {
+    // arrange
+    String email = "user@example.org";
+
+    Course course1 =
+        Course.builder().id(1L).courseName("CS156").term("S25").school(School.UCSB).build();
+    Course course2 =
+        Course.builder().id(2L).courseName("CS24").term("S25").school(School.UCSB).build();
+
+    when(adminRepository.existsByEmail(email)).thenReturn(true);
+    when(rosterStudentRepository.findAllByEmail(email)).thenReturn(List.of());
+    when(courseStaffRepository.findAllByEmail(email)).thenReturn(List.of());
+    when(courseRepository.findByInstructorEmail(email)).thenReturn(List.of());
+    when(courseRepository.findAll()).thenReturn(List.of(course1, course2));
+
+    CoursesController.CourseListDTO dto1 =
+        new CoursesController.CourseListDTO(
+            course1.getId(),
+            course1.getCourseName(),
+            course1.getTerm(),
+            course1.getSchool(),
+            course1.getInstructorEmail(),
+            false,
+            false,
+            false,
+            true);
+
+    CoursesController.CourseListDTO dto2 =
+        new CoursesController.CourseListDTO(
+            course2.getId(),
+            course2.getCourseName(),
+            course2.getTerm(),
+            course2.getSchool(),
+            course2.getInstructorEmail(),
+            false,
+            false,
+            false,
+            true);
+
+    // act
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/list")).andExpect(status().isOk()).andReturn();
+
+    // assert
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(List.of(dto1, dto2));
+    assertEquals(expectedJson, responseString);
+    verify(courseRepository, never()).findAllById(any());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void testGetCourseAccessInfo_withAccess() throws Exception {
+    // arrange
+    String email = "user@example.org";
+
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail(email)
+            .build();
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(adminRepository.existsByEmail(email)).thenReturn(false);
+    when(rosterStudentRepository.findAllByEmail(email)).thenReturn(List.of());
+    when(courseStaffRepository.findAllByEmail(email)).thenReturn(List.of());
+
+    CoursesController.CourseListDTO expectedDto =
+        new CoursesController.CourseListDTO(
+            course.getId(),
+            course.getCourseName(),
+            course.getTerm(),
+            course.getSchool(),
+            course.getInstructorEmail(),
+            false,
+            false,
+            true,
+            false);
+
+    // act
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/list/1")).andExpect(status().isOk()).andReturn();
+
+    // assert
+    String responseString = response.getResponse().getContentAsString();
+    String expectedJson = mapper.writeValueAsString(expectedDto);
+    assertEquals(expectedJson, responseString);
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void testGetCourseAccessInfo_noAccess() throws Exception {
+    // arrange
+    String email = "user@example.org";
+
+    Course course =
+        Course.builder()
+            .id(1L)
+            .courseName("CS156")
+            .term("S25")
+            .school(School.UCSB)
+            .instructorEmail("someone_else@example.org")
+            .build();
+
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(adminRepository.existsByEmail(email)).thenReturn(false);
+    when(rosterStudentRepository.findAllByEmail(email)).thenReturn(List.of());
+    when(courseStaffRepository.findAllByEmail(email)).thenReturn(List.of());
+
+    // act
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/list/1")).andExpect(status().isNotFound()).andReturn();
+
+    // assert
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "Course with id 1 not found");
+    Map<String, String> actualMap =
+        mapper.readValue(responseString, new TypeReference<Map<String, String>>() {});
+    assertEquals(expectedMap, actualMap);
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void testGetCourseAccessInfo_courseDoesNotExist() throws Exception {
+    // arrange
+    when(courseRepository.findById(1L)).thenReturn(Optional.empty());
+
+    // act
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/list/1")).andExpect(status().isNotFound()).andReturn();
+
+    // assert
+    String responseString = response.getResponse().getContentAsString();
+    Map<String, String> expectedMap =
+        Map.of(
+            "type", "EntityNotFoundException",
+            "message", "Course with id 1 not found");
+    Map<String, String> actualMap =
+        mapper.readValue(responseString, new TypeReference<Map<String, String>>() {});
+    assertEquals(expectedMap, actualMap);
   }
 
   @Test
