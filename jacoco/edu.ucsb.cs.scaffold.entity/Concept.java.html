@@ -10,6 +10,11 @@ import lombok.*;
 @Entity
 @Table(name = &quot;concepts&quot;)
 public class Concept {
+
+  // Longest a label may be once its Markdown is rendered to plain text; enforced everywhere
+  // labels enter the system (single-concept endpoints and YAML upload).
+  public static final int MAX_RENDERED_LABEL_LENGTH = 32;
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -51,7 +56,7 @@ public class Concept {
   private Concept parent;
 
   public boolean isSubconcept() {
-<span class="fc bfc" id="L54" title="All 2 branches covered.">    return parent != null;</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">    return parent != null;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
