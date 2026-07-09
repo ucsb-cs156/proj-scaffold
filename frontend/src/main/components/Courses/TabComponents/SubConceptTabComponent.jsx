@@ -41,7 +41,6 @@ export default function SubConceptTabComponent({ courseId, testIdPrefix }) {
   return (
     <div className="tabComponent" data-testid={`${testIdPrefix}-subConceptTab`}>
       <h2>SubConcepts</h2>
-      <SubConceptTable subConcepts={subConcepts} />
       <ConceptSelector
         courseId={courseId}
         onSelect={setSelectedConcept}
@@ -55,6 +54,7 @@ export default function SubConceptTabComponent({ courseId, testIdPrefix }) {
       >
         Create SubConcept
       </Button>
+      <SubConceptTable subConcepts={subConcepts} />
       <SubConceptModal
         showModal={showModal}
         toggleShowModal={setShowModal}
