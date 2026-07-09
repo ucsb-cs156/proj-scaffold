@@ -166,6 +166,7 @@ function MajorNode({ data, id }: NodeProps) {
 
   const { debugMode } = useDebugMode();
   const allConceptContent = useContext(ConceptContentContext);
+  const conceptContentForNode = allConceptContent[id];
   const debugTitle = useMemo(
     () =>
       debugMode
@@ -175,13 +176,13 @@ function MajorNode({ data, id }: NodeProps) {
               label,
               color,
               subconcepts,
-              conceptContent: allConceptContent[id],
+              conceptContent: conceptContentForNode,
             },
             null,
             2,
           )
         : undefined,
-    [debugMode, id, label, color, subconcepts, allConceptContent],
+    [debugMode, id, label, color, subconcepts, conceptContentForNode],
   );
 
   const showColor = !hasSelection || highlighted;
