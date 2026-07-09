@@ -27,6 +27,11 @@ export default function SubConceptTable({
       accessorKey: "parent.label",
       id: "parentLabel",
     },
+    {
+      header: "sortOrder",
+      accessorKey: "sortOrder",
+      id: "sortOrder",
+    },
     ButtonColumn("Edit", "primary", editCallback, testId),
     ButtonColumn("Delete", "danger", deleteCallback, testId),
   ];

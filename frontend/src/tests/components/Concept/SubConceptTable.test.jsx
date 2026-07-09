@@ -10,10 +10,17 @@ describe("SubConceptTable tests", () => {
     "label",
     "parentId",
     "parentLabel",
+    "sortOrder",
     "Edit",
     "Delete",
   ];
-  const expectedFields = ["id", "label", "parentId", "parentLabel"];
+  const expectedFields = [
+    "id",
+    "label",
+    "parentId",
+    "parentLabel",
+    "sortOrder",
+  ];
   const editCallback = vi.fn();
   const deleteCallback = vi.fn();
 
@@ -70,6 +77,9 @@ describe("SubConceptTable tests", () => {
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-parentLabel`),
     ).toHaveTextContent("Variables");
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-sortOrder`),
+    ).toHaveTextContent("1");
 
     const editButton = screen.getByTestId(
       `${testId}-cell-row-0-col-Edit-button`,

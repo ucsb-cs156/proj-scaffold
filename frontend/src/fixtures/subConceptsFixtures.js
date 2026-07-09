@@ -11,6 +11,7 @@ const subConceptsFixtures = {
         id: 1,
         label: "Variables",
       },
+      sortOrder: 1,
     },
     {
       id: 12,
@@ -23,6 +24,7 @@ const subConceptsFixtures = {
         id: 1,
         label: "Variables",
       },
+      sortOrder: 2,
     },
   ],
 };
