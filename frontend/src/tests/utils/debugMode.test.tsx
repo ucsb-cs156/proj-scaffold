@@ -116,18 +116,15 @@ describe("debugMode utility tests", () => {
       render(
         <QueryClientProvider client={qc}>
           <DebugModeProvider>
-            <div data-testid="children" />
+            <Footer />
           </DebugModeProvider>
         </QueryClientProvider>,
       );
 
-      const { result } = renderHook(() => useDebugMode(), {
-        wrapper: makeWrapper(currentUserFixtures.userOnly),
-      });
-      expect(result.current.canUseDebugMode).toBe(false);
+      expect(screen.queryByTestId("debug-mode-toggle")).not.toBeInTheDocument();
     });
 
-    test("setDebugMode updates debugMode state to false when called with false", () => {
+    test("can be toggled off", () => {
       const { result } = renderHook(() => useDebugMode(), {
         wrapper: makeWrapper(currentUserFixtures.adminUser),
       });
