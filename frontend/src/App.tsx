@@ -11,7 +11,6 @@ import SignInPage from "main/pages/Auth/SignInPage";
 import SignInSuccessPage from "main/pages/Auth/SignInSuccessPage";
 
 import { useCurrentUser } from "main/utils/currentUser";
-import { DebugModeProvider } from "main/utils/debugMode";
 import AdminDeveloperPage from "main/pages/Admin/AdminDeveloperPage";
 import InstructorCoursesIndexPage from "main/pages/Courses/InstructorCoursesIndexPage";
 import AdminCoursesIndexPage from "main/pages/Admin/AdminCoursesIndexPage";
@@ -31,117 +30,115 @@ export default function App() {
   );
 
   return (
-    <DebugModeProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={homePage} />
-          <Route path="/LegacyHomePage" element={<LegacyHomePage />} />
-          <Route
-            path="/course/:courseId"
-            element={
-              <ProtectedPage
-                component={<ConceptGraphPage />}
-                enforceRole={"ROLE_USER"}
-                currentUser={currentUser}
-              />
-            }
-          />
-          <Route path="/login" element={<SignInPage />} />
-          <Route path="/login/success" element={<SignInSuccessPage />} />
-          <Route
-            path="/admin/admins"
-            element={
-              <ProtectedPage
-                component={<AdminsIndexPage />}
-                enforceRole={"ROLE_ADMIN"}
-                currentUser={currentUser}
-              />
-            }
-          />
-          <Route
-            path="/admin/instructors"
-            element={
-              <ProtectedPage
-                component={<InstructorsIndexPage />}
-                enforceRole={"ROLE_ADMIN"}
-                currentUser={currentUser}
-              />
-            }
-          />
-          <Route
-            path="/admin/admins/create"
-            element={
-              <ProtectedPage
-                component={<AdminsCreatePage />}
-                enforceRole={"ROLE_ADMIN"}
-                currentUser={currentUser}
-              />
-            }
-          />
-          <Route
-            path="/admin/instructors/create"
-            element={
-              <ProtectedPage
-                component={<InstructorsCreatePage />}
-                enforceRole={"ROLE_ADMIN"}
-                currentUser={currentUser}
-              />
-            }
-          />
-          <Route
-            path="/admin/developer"
-            element={
-              <ProtectedPage
-                component={<AdminDeveloperPage />}
-                enforceRole={"ROLE_ADMIN"}
-                currentUser={currentUser}
-              />
-            }
-          />
-          <Route
-            path="/admin/courses"
-            element={
-              <ProtectedPage
-                component={<AdminCoursesIndexPage />}
-                enforceRole={"ROLE_ADMIN"}
-                currentUser={currentUser}
-              />
-            }
-          />
-          <Route
-            path="/courses"
-            element={
-              <ProtectedPage
-                component={<InstructorCoursesIndexPage />}
-                enforceRole={"ROLE_INSTRUCTOR"}
-                currentUser={currentUser}
-              />
-            }
-          />
-          <Route
-            path="/course/:id/settings"
-            element={
-              <ProtectedPage
-                component={<InstructorCourseShowPage />}
-                enforceRole={"ROLE_INSTRUCTOR"}
-                currentUser={currentUser}
-              />
-            }
-          />
-          <Route
-            path="/admin/jobs"
-            element={
-              <ProtectedPage
-                component={<AdminJobsPage />}
-                enforceRole={"ROLE_ADMIN"}
-                currentUser={currentUser}
-              />
-            }
-          />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={homePage} />
+        <Route path="/LegacyHomePage" element={<LegacyHomePage />} />
+        <Route
+          path="/course/:courseId"
+          element={
+            <ProtectedPage
+              component={<ConceptGraphPage />}
+              enforceRole={"ROLE_USER"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route path="/login" element={<SignInPage />} />
+        <Route path="/login/success" element={<SignInSuccessPage />} />
+        <Route
+          path="/admin/admins"
+          element={
+            <ProtectedPage
+              component={<AdminsIndexPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/instructors"
+          element={
+            <ProtectedPage
+              component={<InstructorsIndexPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/admins/create"
+          element={
+            <ProtectedPage
+              component={<AdminsCreatePage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/instructors/create"
+          element={
+            <ProtectedPage
+              component={<InstructorsCreatePage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/developer"
+          element={
+            <ProtectedPage
+              component={<AdminDeveloperPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/courses"
+          element={
+            <ProtectedPage
+              component={<AdminCoursesIndexPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/courses"
+          element={
+            <ProtectedPage
+              component={<InstructorCoursesIndexPage />}
+              enforceRole={"ROLE_INSTRUCTOR"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/course/:id/settings"
+          element={
+            <ProtectedPage
+              component={<InstructorCourseShowPage />}
+              enforceRole={"ROLE_INSTRUCTOR"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/jobs"
+          element={
+            <ProtectedPage
+              component={<AdminJobsPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
 
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </BrowserRouter>
-    </DebugModeProvider>
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

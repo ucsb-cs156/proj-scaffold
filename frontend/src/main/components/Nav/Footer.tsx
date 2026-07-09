@@ -1,7 +1,16 @@
-import { useDebugMode } from "main/utils/useDebugMode";
+import { useStaffTools } from "main/utils/useStaffTools";
+
+const toggleLabelStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  cursor: "pointer",
+  userSelect: "none",
+} as const;
 
 export default function Footer() {
-  const { debugMode, setDebugMode, canUseDebugMode } = useDebugMode();
+  const { debugMode, unlockSubconcepts, canUseStaffTools, setStaffTool } =
+    useStaffTools();
 
   return (
     <footer
@@ -26,25 +35,35 @@ export default function Footer() {
         }}
       >
         <span>Scaffold is a UCSB Computer Science project.</span>
-        {canUseDebugMode && (
-          <label
-            data-testid="debug-mode-toggle-label"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              cursor: "pointer",
-              userSelect: "none",
-            }}
-          >
-            <input
-              type="checkbox"
-              data-testid="debug-mode-toggle"
-              checked={debugMode}
-              onChange={(e) => setDebugMode(e.target.checked)}
-            />
-            Debug Mode
-          </label>
+        {canUseStaffTools && (
+          <span style={{ display: "flex", gap: "16px" }}>
+            <label
+              data-testid="unlock-subconcepts-toggle-label"
+              style={toggleLabelStyle}
+            >
+              <input
+                type="checkbox"
+                data-testid="unlock-subconcepts-toggle"
+                checked={unlockSubconcepts}
+                onChange={(e) =>
+                  setStaffTool("unlockSubconcepts", e.target.checked)
+                }
+              />
+              Unlock Subconcepts
+            </label>
+            <label
+              data-testid="debug-mode-toggle-label"
+              style={toggleLabelStyle}
+            >
+              <input
+                type="checkbox"
+                data-testid="debug-mode-toggle"
+                checked={debugMode}
+                onChange={(e) => setStaffTool("debugMode", e.target.checked)}
+              />
+              Debug Mode
+            </label>
+          </span>
         )}
       </div>
     </footer>

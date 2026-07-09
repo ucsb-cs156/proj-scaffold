@@ -1,7 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import ConceptGraph from "main/components/Scaffold/ConceptGraph";
-import { DebugModeContext } from "main/utils/debugModeContext";
+import { StaffToolsContext } from "main/utils/staffToolsContext";
 
 // @xyflow/react measures its container via ResizeObserver and
 // getBoundingClientRect, neither of which jsdom implements with real
@@ -356,15 +356,16 @@ describe("ConceptGraph debug mode tooltips", () => {
 
   test("nodes show the full concept JSON as a tooltip when debug mode is on", () => {
     render(
-      <DebugModeContext.Provider
+      <StaffToolsContext.Provider
         value={{
           debugMode: true,
-          setDebugMode: vi.fn(),
-          canUseDebugMode: true,
+          unlockSubconcepts: false,
+          setStaffTool: vi.fn(),
+          canUseStaffTools: true,
         }}
       >
         <ConceptGraph {...baseProps()} />
-      </DebugModeContext.Provider>,
+      </StaffToolsContext.Provider>,
     );
 
     const node = screen.getByText("Recursion").closest("[title]");

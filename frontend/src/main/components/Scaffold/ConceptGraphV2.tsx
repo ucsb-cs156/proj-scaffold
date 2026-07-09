@@ -3,6 +3,7 @@ import {
   useCallback,
   useMemo,
   useRef,
+  useState,
   createContext,
   useContext,
 } from "react";
@@ -31,7 +32,7 @@ import {
   type EdgeLike,
 } from "main/utils/layout";
 import type { ConceptContentDTO } from "main/api/client";
-import { useDebugMode } from "main/utils/useDebugMode";
+import { useStaffTools } from "main/utils/useStaffTools";
 
 // This is a parallel, database-driven version of ConceptGraph.tsx: instead of
 // importing majorConcepts/prereqEdgeData/positions/conceptContent from the
@@ -86,6 +87,13 @@ interface ConceptGraphV2Props {
   // private, per-user override (see ConceptGraphPage) until an instructor's course-wide
   // reset recomputes the shared, canonical position.
   onMajorMoved?: (name: string, posX: number, posY: number) => void;
+  // Called when an author (with subconcepts unlocked) drag-and-drops a card's
+  // subconcepts into a new order. orderedSubconceptIds is the complete new
+  // ordering of the parent's subconcept ids; the page persists it.
+  onSubconceptsReordered?: (
+    parentConceptId: number,
+    orderedSubconceptIds: number[],
+  ) => void;
   masteredSubconcepts: Set<string>;
   onSubconceptMastered: (sub: string) => void;
   onPaneClick?: () => void;
@@ -105,6 +113,13 @@ const DeleteDetailContext = createContext<(id: string) => void>(() => {});
 const ConceptContentContext = createContext<Record<string, ConceptContentDTO>>(
   {},
 );
+// Lets a MajorNode report that the author drag-and-dropped its subconcepts into
+// a new order (nodeId is the parent's React Flow node id, i.e. its numeric
+// concept id as a string). Provided by ConceptGraphV2, which updates the node's
+// data and notifies the page so it can persist the order.
+const SubconceptReorderContext = createContext<
+  (nodeId: string, reordered: SubconceptLike[]) => void
+>(() => {});
 
 const LEVELS = [
   { label: "Level 5", color: "#2bcd9c" },
@@ -168,7 +183,12 @@ function MajorNode({ data, id }: NodeProps) {
   const onSubconceptMastered = data.onSubconceptMastered as
     ((sub: string) => void) | undefined;
 
-  const { debugMode } = useDebugMode();
+  const { debugMode, unlockSubconcepts } = useStaffTools();
+  const onSubconceptsReordered = useContext(SubconceptReorderContext);
+  // Index of the subconcept row being dragged / hovered over during an
+  // unlocked drag-and-drop reorder; null when no drag is in progress.
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
   const allConceptContent = useContext(ConceptContentContext);
   const conceptContentForNode = allConceptContent[id];
   const debugTitle = useMemo(
@@ -289,15 +309,51 @@ function MajorNode({ data, id }: NodeProps) {
       >
         {subconcepts.map((sub, i) => {
           const isMastered = masteredSubconcepts?.has(sub.labelHtml) ?? false;
+          const isDropTarget =
+            dropIndex === i && dragIndex !== null && dragIndex !== i;
           return (
             <div
               key={sub.id}
               data-testid={`subconcept-row-${id}-${i}`}
+              // "nodrag" tells React Flow not to treat a drag that starts on
+              // this row as a node drag, so the HTML5 row drag can happen.
+              className={unlockSubconcepts ? "nodrag" : undefined}
+              draggable={unlockSubconcepts}
+              onDragStart={(e) => {
+                e.stopPropagation();
+                e.dataTransfer.effectAllowed = "move";
+                setDragIndex(i);
+              }}
+              onDragOver={(e) => {
+                if (dragIndex === null) return;
+                e.preventDefault();
+                e.stopPropagation();
+                setDropIndex(i);
+              }}
+              onDrop={(e) => {
+                if (dragIndex === null) return;
+                e.preventDefault();
+                e.stopPropagation();
+                if (dragIndex !== i) {
+                  const reordered = [...subconcepts];
+                  const [moved] = reordered.splice(dragIndex, 1);
+                  reordered.splice(i, 0, moved);
+                  onSubconceptsReordered(id, reordered);
+                }
+                setDragIndex(null);
+                setDropIndex(null);
+              }}
+              onDragEnd={() => {
+                setDragIndex(null);
+                setDropIndex(null);
+              }}
               style={{
                 position: "relative",
-                background: highlightedSubconcepts?.has(sub.labelHtml)
-                  ? toPastel(color)
-                  : "#fff",
+                background: isDropTarget
+                  ? "#e2e8f0"
+                  : highlightedSubconcepts?.has(sub.labelHtml)
+                    ? toPastel(color)
+                    : "#fff",
                 padding: "5px 6px",
                 textAlign: "center",
                 fontFamily: "Helvetica, Arial, sans-serif",
@@ -306,6 +362,8 @@ function MajorNode({ data, id }: NodeProps) {
                 lineHeight: 1.3,
                 color: "#1E293B",
                 whiteSpace: "pre-line",
+                cursor: unlockSubconcepts ? "grab" : undefined,
+                opacity: dragIndex === i ? 0.5 : 1,
               }}
             >
               <div
@@ -350,6 +408,22 @@ function MajorNode({ data, id }: NodeProps) {
                 )}
               </div>
               <span dangerouslySetInnerHTML={{ __html: sub.labelHtml }} />
+              {unlockSubconcepts && (
+                <span
+                  data-testid={`subconcept-drag-handle-${id}-${i}`}
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    right: 6,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "#94A3B8",
+                    fontSize: 13,
+                  }}
+                >
+                  ⠿
+                </span>
+              )}
             </div>
           );
         })}
@@ -535,6 +609,7 @@ export default function ConceptGraphV2({
   masteredSubconcepts,
   onSubconceptMastered,
   onPaneClick,
+  onSubconceptsReordered,
 }: ConceptGraphV2Props) {
   // majorConcepts/positions/prereqEdgeData are only expected to be stable for
   // the lifetime of a mounted instance (the page that renders this component
@@ -637,6 +712,26 @@ export default function ConceptGraphV2({
       setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
     },
     [setNodes, setEdges, onDetailDeleted],
+  );
+
+  // A MajorNode reports a drag-and-drop reorder of its subconcepts: update the
+  // node's own data (nodes are snapshotted by useNodesState, so the prop-driven
+  // rebuild won't do it) and tell the page so it can persist the new order.
+  const handleSubconceptsReordered = useCallback(
+    (nodeId: string, reordered: SubconceptLike[]) => {
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === nodeId
+            ? { ...node, data: { ...node.data, subconcepts: reordered } }
+            : node,
+        ),
+      );
+      onSubconceptsReordered?.(
+        Number(nodeId),
+        reordered.map((sub) => sub.id),
+      );
+    },
+    [setNodes, onSubconceptsReordered],
   );
 
   const onDragOver = useCallback((e: React.DragEvent) => {
@@ -861,50 +956,52 @@ export default function ConceptGraphV2({
 
   return (
     <ConceptContentContext.Provider value={conceptContent}>
-      <DeleteDetailContext.Provider value={handleDeleteDetail}>
-        <div style={{ width: "100%", height: "100%", position: "relative" }}>
-          <div
-            style={{
-              position: "absolute",
-              alignItems: "flex-end",
-              top: 12,
-              right: 12,
-              zIndex: 10,
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-            }}
-          >
-            <ResetButton onReset={handleReset} />
-            <LevelLegend />
+      <SubconceptReorderContext.Provider value={handleSubconceptsReordered}>
+        <DeleteDetailContext.Provider value={handleDeleteDetail}>
+          <div style={{ width: "100%", height: "100%", position: "relative" }}>
+            <div
+              style={{
+                position: "absolute",
+                alignItems: "flex-end",
+                top: 12,
+                right: 12,
+                zIndex: 10,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              <ResetButton onReset={handleReset} />
+              <LevelLegend />
+            </div>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={handleNodesChange}
+              onEdgesChange={onEdgesChange}
+              nodeTypes={nodeTypes}
+              nodesConnectable={false}
+              onNodeClick={onNodeClick}
+              onInit={(instance: ReactFlowInstance<Node, Edge>) => {
+                rfInstance.current = instance;
+              }}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              fitView
+              fitViewOptions={{ padding: 0.08 }}
+              minZoom={0.1}
+              onPaneClick={onPaneClick}
+            >
+              <Controls />
+              <Background
+                variant={BackgroundVariant.Dots}
+                color="#1E293B"
+                gap={20}
+              />
+            </ReactFlow>
           </div>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={handleNodesChange}
-            onEdgesChange={onEdgesChange}
-            nodeTypes={nodeTypes}
-            nodesConnectable={false}
-            onNodeClick={onNodeClick}
-            onInit={(instance: ReactFlowInstance<Node, Edge>) => {
-              rfInstance.current = instance;
-            }}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            fitView
-            fitViewOptions={{ padding: 0.08 }}
-            minZoom={0.1}
-            onPaneClick={onPaneClick}
-          >
-            <Controls />
-            <Background
-              variant={BackgroundVariant.Dots}
-              color="#1E293B"
-              gap={20}
-            />
-          </ReactFlow>
-        </div>
-      </DeleteDetailContext.Provider>
+        </DeleteDetailContext.Provider>
+      </SubconceptReorderContext.Provider>
     </ConceptContentContext.Provider>
   );
 }

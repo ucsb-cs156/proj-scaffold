@@ -18,6 +18,7 @@ import QuestionSearch from "main/components/Scaffold/QuestionSearch";
 import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
 import { conceptContent, type ConceptContent } from "main/data/conceptContent";
 import { useCurrentUser } from "main/utils/currentUser";
+import { StaffToolsProvider } from "main/utils/staffTools";
 import {
   normalize,
   toPastel,
@@ -33,7 +34,17 @@ interface SavedDetailCard {
   posY: number;
 }
 
+// The staff tools (debug tooltips) act on this page's concept graph, so their
+// provider is mounted here rather than at the app root.
 export default function LegacyHomePage() {
+  return (
+    <StaffToolsProvider>
+      <LegacyHomePageContent />
+    </StaffToolsProvider>
+  );
+}
+
+function LegacyHomePageContent() {
   const currentUser = useCurrentUser();
   // Derive the numeric id from the users table; null when not logged in.
   const userId: number | null = currentUser?.loggedIn

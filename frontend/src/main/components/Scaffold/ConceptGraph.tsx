@@ -28,7 +28,7 @@ import { buildGraphElements } from "main/utils/layout";
 import { majorConcepts, prereqEdgeData } from "main/data/conceptGraph";
 import { positions } from "main/data/conceptGraphPositions";
 import { conceptContent, type ConceptContent } from "main/data/conceptContent";
-import { useDebugMode } from "main/utils/useDebugMode";
+import { useStaffTools } from "main/utils/useStaffTools";
 
 const cardKeyMap: Record<string, keyof ConceptContent> = {
   Description: "description",
@@ -147,7 +147,7 @@ function MajorNode({ data, id }: NodeProps) {
   const onSubconceptMastered = data.onSubconceptMastered as
     ((sub: string) => void) | undefined;
 
-  const { debugMode } = useDebugMode();
+  const { debugMode } = useStaffTools();
   const conceptContentForNode = conceptContent[id];
   const debugTitle = useMemo(
     () =>

@@ -1883,4 +1883,386 @@ public class ConceptsControllerTests extends ControllerTestCase {
     verify(conceptEdgeRepository).deleteAll(captor.capture());
     assertEquals(List.of(shortcut), captor.getValue());
   }
+
+  // ---------- subconcept ordering (sortOrder) ----------
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void graph_orders_subconcepts_by_sortOrder_then_id_with_nulls_last() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent =
+        Concept.builder().id(1L).course(course).label("Recursion").color("#fe9a71").build();
+    // Deliberately inverted: ids ascend 2,3,5,6 but the author's order is 3,6,2 with the
+    // never-positioned 5 (null sortOrder) last. 3 and 6 tie on sortOrder 0 so id breaks the
+    // tie; 6 is listed before 3 here so a stable sort without the id tiebreaker gets it wrong.
+    Concept subA =
+        Concept.builder().id(2L).course(course).label("A").parent(parent).sortOrder(2).build();
+    Concept subB =
+        Concept.builder().id(3L).course(course).label("B").parent(parent).sortOrder(0).build();
+    Concept subC = Concept.builder().id(5L).course(course).label("C").parent(parent).build();
+    Concept subD =
+        Concept.builder().id(6L).course(course).label("D").parent(parent).sortOrder(0).build();
+    when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(parent, subD, subC, subB, subA));
+
+    String expectedJson =
+        """
+        [
+          {
+            "id": 1,
+            "labelHtml": "Recursion",
+            "color": "#fe9a71",
+            "subconcepts": [
+              { "id": 3, "parentId": 1, "labelHtml": "B" },
+              { "id": 6, "parentId": 1, "labelHtml": "D" },
+              { "id": 2, "parentId": 1, "labelHtml": "A" },
+              { "id": 5, "parentId": 1, "labelHtml": "C" }
+            ]
+          }
+        ]
+        """;
+
+    mockMvc
+        .perform(get("/api/concepts/graph").param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(content().json(expectedJson, true));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_subconcept_assigns_sortOrder_0_when_the_parent_has_no_subconcepts()
+      throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(1L).course(course).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
+    when(conceptRepository.findByParentId(1L)).thenReturn(List.of());
+    when(conceptRepository.save(any(Concept.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    mockMvc
+        .perform(
+            post("/api/concept/subconcept")
+                .with(csrf())
+                .contentType(YAML)
+                .content("courseId: 42\nparentConceptId: 1\nlabel: Base case"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.sortOrder").value(0));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_subconcept_appends_after_the_highest_existing_sortOrder() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(1L).course(course).build();
+    // Sibling sortOrders 5 and 0, plus a pre-backfill sibling with none: the next
+    // position is max+1 = 6, ignoring the null.
+    Concept sibA = Concept.builder().id(2L).course(course).parent(parent).sortOrder(5).build();
+    Concept sibB = Concept.builder().id(3L).course(course).parent(parent).sortOrder(0).build();
+    Concept sibC = Concept.builder().id(4L).course(course).parent(parent).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
+    when(conceptRepository.findByParentId(1L)).thenReturn(List.of(sibA, sibB, sibC));
+    when(conceptRepository.save(any(Concept.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    mockMvc
+        .perform(
+            post("/api/concept/subconcept")
+                .with(csrf())
+                .contentType(YAML)
+                .content("courseId: 42\nparentConceptId: 1\nlabel: Base case"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.sortOrder").value(6));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void designate_appends_the_concept_after_the_new_parents_subconcepts() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept c1 = Concept.builder().id(1L).course(course).label("Recursion").build();
+    Concept parent = Concept.builder().id(2L).course(course).color("#222222").build();
+    Concept existingSub =
+        Concept.builder().id(3L).course(course).parent(parent).sortOrder(1).build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(c1));
+    when(conceptRepository.findById(2L)).thenReturn(Optional.of(parent));
+    when(conceptRepository.findByParentId(1L)).thenReturn(List.of());
+    when(conceptRepository.findByParentId(2L)).thenReturn(List.of(existingSub));
+    when(conceptEdgeRepository.findBySourceIdOrTargetId(1L, 1L)).thenReturn(List.of());
+    when(conceptRepository.findByParentIdAndLabel(2L, "Recursion")).thenReturn(Optional.empty());
+    when(conceptRepository.save(any(Concept.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    mockMvc
+        .perform(
+            put("/api/concepts/designate")
+                .with(csrf())
+                .param("conceptId", "1")
+                .param("parentConceptId", "2"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.sortOrder").value(2));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void split_off_clears_the_subconcepts_sortOrder() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(1L).course(course).color("#111111").build();
+    Concept sub =
+        Concept.builder()
+            .id(2L)
+            .course(course)
+            .parent(parent)
+            .label("Base case")
+            .sortOrder(3)
+            .build();
+    when(conceptRepository.findById(2L)).thenReturn(Optional.of(sub));
+    when(conceptRepository.save(any(Concept.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    mockMvc
+        .perform(
+            put("/api/concepts/splitoff")
+                .with(csrf())
+                .param("conceptId", "2")
+                .param("x", "500")
+                .param("y", "600"))
+        .andExpect(status().isOk());
+
+    ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
+    verify(conceptRepository).save(captor.capture());
+    assertNull(captor.getValue().getSortOrder());
+  }
+
+  // ---------- PUT /api/concepts/subconcepts/reorder ----------
+
+  @Test
+  public void anonymous_user_cannot_reorder_subconcepts() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/concepts/subconcepts/reorder")
+                .with(csrf())
+                .param("parentConceptId", "1")
+                .contentType("application/json")
+                .content("[2, 3]"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void user_without_course_permissions_cannot_reorder_subconcepts() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/concepts/subconcepts/reorder")
+                .with(csrf())
+                .param("parentConceptId", "1")
+                .contentType("application/json")
+                .content("[2, 3]"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void instructor_can_reorder_subconcepts() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(1L).course(course).build();
+    Concept subA =
+        Concept.builder().id(2L).course(course).parent(parent).label("A").sortOrder(0).build();
+    Concept subB =
+        Concept.builder().id(3L).course(course).parent(parent).label("B").sortOrder(1).build();
+    Concept subC =
+        Concept.builder().id(5L).course(course).parent(parent).label("C").sortOrder(2).build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
+    when(conceptRepository.findByParentId(1L)).thenReturn(List.of(subA, subB, subC));
+
+    String expectedJson =
+        """
+        [
+          { "id": 5, "parentId": 1, "labelHtml": "C" },
+          { "id": 2, "parentId": 1, "labelHtml": "A" },
+          { "id": 3, "parentId": 1, "labelHtml": "B" }
+        ]
+        """;
+
+    mockMvc
+        .perform(
+            put("/api/concepts/subconcepts/reorder")
+                .with(csrf())
+                .param("parentConceptId", "1")
+                .contentType("application/json")
+                .content("[5, 2, 3]"))
+        .andExpect(status().isOk())
+        .andExpect(content().json(expectedJson, true));
+
+    ArgumentCaptor<List<Concept>> captor = ArgumentCaptor.forClass(List.class);
+    verify(conceptRepository).saveAll(captor.capture());
+    assertEquals(
+        1,
+        captor.getValue().stream()
+            .filter(c -> c.getId() == 2L)
+            .findFirst()
+            .orElseThrow()
+            .getSortOrder());
+    assertEquals(
+        2,
+        captor.getValue().stream()
+            .filter(c -> c.getId() == 3L)
+            .findFirst()
+            .orElseThrow()
+            .getSortOrder());
+    assertEquals(
+        0,
+        captor.getValue().stream()
+            .filter(c -> c.getId() == 5L)
+            .findFirst()
+            .orElseThrow()
+            .getSortOrder());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reorder_accepts_an_empty_list_for_a_parent_with_no_subconcepts() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(1L).course(course).build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
+    when(conceptRepository.findByParentId(1L)).thenReturn(List.of());
+
+    mockMvc
+        .perform(
+            put("/api/concepts/subconcepts/reorder")
+                .with(csrf())
+                .param("parentConceptId", "1")
+                .contentType("application/json")
+                .content("[]"))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]", true));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reorder_returns_404_when_the_parent_does_not_exist() throws Exception {
+    when(conceptRepository.findById(99L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/concepts/subconcepts/reorder")
+                    .with(csrf())
+                    .param("parentConceptId", "99")
+                    .contentType("application/json")
+                    .content("[2, 3]"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Concept with id 99 not found", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reorder_rejects_a_parent_that_is_itself_a_subconcept() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept grandparent = Concept.builder().id(1L).course(course).build();
+    Concept parent = Concept.builder().id(2L).course(course).parent(grandparent).build();
+    when(conceptRepository.findById(2L)).thenReturn(Optional.of(parent));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/concepts/subconcepts/reorder")
+                    .with(csrf())
+                    .param("parentConceptId", "2")
+                    .contentType("application/json")
+                    .content("[3]"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(
+        "concept 2 is a subconcept; only top-level concepts have subconcepts to reorder",
+        json.get("message"));
+    verify(conceptRepository, never()).saveAll(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reorder_rejects_a_list_with_duplicate_ids() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(1L).course(course).build();
+    Concept subA = Concept.builder().id(2L).course(course).parent(parent).build();
+    Concept subB = Concept.builder().id(3L).course(course).parent(parent).build();
+    Concept subC = Concept.builder().id(5L).course(course).parent(parent).build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
+    when(conceptRepository.findByParentId(1L)).thenReturn(List.of(subA, subB, subC));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/concepts/subconcepts/reorder")
+                    .with(csrf())
+                    .param("parentConceptId", "1")
+                    .contentType("application/json")
+                    .content("[2, 2, 3]"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(
+        "orderedSubconceptIds must contain the id of each subconcept of concept 1 exactly once",
+        json.get("message"));
+    verify(conceptRepository, never()).saveAll(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reorder_rejects_a_list_that_is_missing_a_subconcept() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(1L).course(course).build();
+    Concept subA = Concept.builder().id(2L).course(course).parent(parent).build();
+    Concept subB = Concept.builder().id(3L).course(course).parent(parent).build();
+    Concept subC = Concept.builder().id(5L).course(course).parent(parent).build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
+    when(conceptRepository.findByParentId(1L)).thenReturn(List.of(subA, subB, subC));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/concepts/subconcepts/reorder")
+                    .with(csrf())
+                    .param("parentConceptId", "1")
+                    .contentType("application/json")
+                    .content("[2, 3]"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(
+        "orderedSubconceptIds must contain the id of each subconcept of concept 1 exactly once",
+        json.get("message"));
+    verify(conceptRepository, never()).saveAll(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void reorder_rejects_a_list_containing_an_id_that_is_not_a_subconcept_of_the_parent()
+      throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(1L).course(course).build();
+    Concept subA = Concept.builder().id(2L).course(course).parent(parent).build();
+    Concept subB = Concept.builder().id(3L).course(course).parent(parent).build();
+    Concept subC = Concept.builder().id(5L).course(course).parent(parent).build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
+    when(conceptRepository.findByParentId(1L)).thenReturn(List.of(subA, subB, subC));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/concepts/subconcepts/reorder")
+                    .with(csrf())
+                    .param("parentConceptId", "1")
+                    .contentType("application/json")
+                    .content("[2, 3, 99]"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(
+        "orderedSubconceptIds must contain the id of each subconcept of concept 1 exactly once",
+        json.get("message"));
+    verify(conceptRepository, never()).saveAll(any());
+  }
 }
