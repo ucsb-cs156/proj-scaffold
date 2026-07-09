@@ -76,6 +76,8 @@ describe("InstructorCourseShowPage tests", () => {
       .reply(200, coursesFixtures.severalCourses[0]);
     axiosMock.onGet("/api/concepts/course?courseId=1").reply(200, []);
     axiosMock.onGet("/api/concepts/course?courseId=7").reply(200, []);
+    axiosMock.onGet("/api/concepts/edges?courseId=1").reply(200, []);
+    axiosMock.onGet("/api/concepts/edges?courseId=7").reply(200, []);
     axiosMock
       .onGet("/api/systemInfo")
       .reply(200, systemInfoFixtures.showingNeither);

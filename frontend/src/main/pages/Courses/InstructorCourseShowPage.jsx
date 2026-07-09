@@ -146,7 +146,10 @@ export default function InstructorCourseShowPage({
               <SubConceptTabComponent testIdPrefix={testId} />
             </Tab>
             <Tab eventKey={"edges"} title={"Edges"} className="pt-2">
-              <EdgeConceptTabComponent testIdPrefix={testId} />
+              <EdgeConceptTabComponent
+                courseId={courseId}
+                testIdPrefix={testId}
+              />
             </Tab>
           </Tabs>
         </div>
