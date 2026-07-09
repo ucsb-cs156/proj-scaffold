@@ -223,6 +223,24 @@ body.scaffold-canvas-active input::placeholder {
   transition: stroke 0.15s;
 }
 
+/* Markdown rendered inside a concept detail card (ConceptGraphV2.tsx,
+   ConceptGraphPage.tsx): undo the default <p> margins so single-paragraph
+   descriptions don't get extra whitespace, and keep images inside the card. */
+
+.concept-detail-content {
+  p {
+    margin: 0;
+  }
+
+  p + p {
+    margin-top: 0.5em;
+  }
+
+  img {
+    max-width: 100%;
+  }
+}
+
 /* Shared dropdown option row (AssessmentSelect.tsx, QuestionSearch.tsx) */
 
 .dropdown-option {

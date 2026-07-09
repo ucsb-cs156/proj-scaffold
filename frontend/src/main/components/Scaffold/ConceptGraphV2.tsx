@@ -27,6 +27,7 @@ import "@xyflow/react/dist/style.css";
 import {
   buildGraphElementsV2,
   type MajorConceptLike,
+  type SubconceptLike,
   type EdgeLike,
 } from "main/utils/layout";
 import type { ConceptContentDTO } from "main/api/client";
@@ -39,8 +40,8 @@ import type { ConceptContentDTO } from "main/api/client";
 // untouched; once this version is proven out, one of the two can be retired.
 
 const cardKeyMap: Record<string, keyof ConceptContentDTO> = {
-  Description: "description",
-  Example: "example",
+  Description: "descriptionHtml",
+  Example: "exampleHtml",
   "PrairieLearn Practice": "practiceUrl",
 };
 
@@ -80,6 +81,10 @@ interface ConceptGraphV2Props {
     posX: number,
     posY: number,
   ) => void;
+  // Called when the user finishes dragging a top-level concept node. The position is a
+  // private, per-user override (see ConceptGraphPage) until an instructor's course-wide
+  // reset recomputes the shared, canonical position.
+  onMajorMoved?: (name: string, posX: number, posY: number) => void;
   masteredSubconcepts: Set<string>;
   onSubconceptMastered: (sub: string) => void;
   onPaneClick?: () => void;
@@ -147,8 +152,8 @@ function ResetButton({ onReset }: { onReset: () => void }) {
 
 function MajorNode({ data, id }: NodeProps) {
   const color = data.color as string;
-  const label = data.label as string;
-  const subconcepts = data.subconcepts as string[];
+  const labelHtml = data.labelHtml as string;
+  const subconcepts = data.subconcepts as SubconceptLike[];
   const highlighted = data.highlighted as boolean;
   const hasSelection = data.hasSelection as boolean;
   const highlightedSubconcepts = data.highlightedSubconcepts as Set<string>;
@@ -163,6 +168,7 @@ function MajorNode({ data, id }: NodeProps) {
 
   return (
     <div
+      data-testid={`major-node-${id}`}
       style={{
         width: 280,
         borderRadius: 10,
@@ -208,7 +214,7 @@ function MajorNode({ data, id }: NodeProps) {
           position: "relative",
         }}
       >
-        {label}
+        <span dangerouslySetInnerHTML={{ __html: labelHtml }} />
         <div
           data-testid={`star-button-${id}`}
           onClick={(e) => {
@@ -256,13 +262,14 @@ function MajorNode({ data, id }: NodeProps) {
         }}
       >
         {subconcepts.map((sub, i) => {
-          const isMastered = masteredSubconcepts?.has(sub) ?? false;
+          const isMastered = masteredSubconcepts?.has(sub.labelHtml) ?? false;
           return (
             <div
-              key={i}
+              key={sub.id}
+              data-testid={`subconcept-row-${id}-${i}`}
               style={{
                 position: "relative",
-                background: highlightedSubconcepts?.has(sub)
+                background: highlightedSubconcepts?.has(sub.labelHtml)
                   ? toPastel(color)
                   : "#fff",
                 padding: "5px 6px",
@@ -279,7 +286,7 @@ function MajorNode({ data, id }: NodeProps) {
                 data-testid={`subconcept-checkbox-${id}-${i}`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onSubconceptMastered?.(sub);
+                  onSubconceptMastered?.(sub.labelHtml);
                 }}
                 style={{
                   position: "absolute",
@@ -316,7 +323,7 @@ function MajorNode({ data, id }: NodeProps) {
                   </svg>
                 )}
               </div>
-              {sub}
+              <span dangerouslySetInnerHTML={{ __html: sub.labelHtml }} />
             </div>
           );
         })}
@@ -434,7 +441,8 @@ function DetailNode({ data, id }: NodeProps) {
         }}
       >
         {cardType === "Example" ? (
-          <pre
+          <div
+            className="concept-detail-content"
             style={{
               fontFamily: "monospace",
               fontSize: 12,
@@ -447,22 +455,27 @@ function DetailNode({ data, id }: NodeProps) {
               color: textColor,
               lineHeight: 1.5,
             }}
-          >
-            {(data.cardContent as string) ||
-              `Example for "${itemLabel}" will appear here.`}
-          </pre>
+            dangerouslySetInnerHTML={{
+              __html:
+                (data.cardContent as string) ||
+                `Example for "${itemLabel}" will appear here.`,
+            }}
+          />
         ) : (
           <div
+            className="concept-detail-content"
             style={{
               fontFamily: "Helvetica, Arial, sans-serif",
               fontSize: 12,
               color: "#1E293B",
               lineHeight: 1.5,
             }}
-          >
-            {(data.cardContent as string) ||
-              `${cardType} for "${itemLabel}" will appear here.`}
-          </div>
+            dangerouslySetInnerHTML={{
+              __html:
+                (data.cardContent as string) ||
+                `${cardType} for "${itemLabel}" will appear here.`,
+            }}
+          />
         )}
       </div>
 
@@ -492,6 +505,7 @@ export default function ConceptGraphV2({
   onDetailDeleted,
   restoredDetailCards,
   onDetailMoved,
+  onMajorMoved,
   masteredSubconcepts,
   onSubconceptMastered,
   onPaneClick,
@@ -524,12 +538,20 @@ export default function ConceptGraphV2({
     restoredRef.current = true;
 
     const newNodes = restoredDetailCards.map((card, i) => {
-      const concept = majorConcepts.find((c) => c.name === card.conceptId);
-      const conceptLabel = concept?.label.replace(/\n/g, " ") ?? "";
+      // card.conceptId is the parent concept's numeric id as a string (the React
+      // Flow node id). Content is keyed by each concept's own numeric id, so a
+      // subconcept card resolves its subconcept id via its label.
+      const concept = majorConcepts.find(
+        (c) => String(c.id) === card.conceptId,
+      );
+      const conceptLabel = concept?.labelHtml.replace(/\n/g, " ") ?? "";
       const isConceptItself = card.itemLabel === conceptLabel;
+      const subconceptId = concept?.subconcepts.find(
+        (s) => s.labelHtml === card.itemLabel,
+      )?.id;
       const contentKey = isConceptItself
         ? card.conceptId
-        : `${card.conceptId}:${card.itemLabel}`;
+        : String(subconceptId);
       const cardContent =
         conceptContent[contentKey]?.[cardKeyMap[card.cardType]] ?? "";
 
@@ -717,14 +739,18 @@ export default function ConceptGraphV2({
     }
     setEdges((eds) => [
       ...prereqEdgeData.map((e) => {
+        const source = String(e.sourceId);
+        const target = String(e.targetId);
         const isHighlighted =
-          highlightedIds.has(e.source) && highlightedIds.has(e.target);
+          highlightedIds.has(source) && highlightedIds.has(target);
         const color =
-          majorConcepts.find((c) => c.name === e.source)?.color ?? "#64748B";
+          e.color ??
+          majorConcepts.find((c) => c.id === e.sourceId)?.color ??
+          "#64748B";
         return {
-          id: `prereq-${e.source}-${e.target}`,
-          source: e.source,
-          target: e.target,
+          id: `prereq-${e.id}`,
+          source,
+          target,
           sourceHandle: "top",
           targetHandle: "bottom",
           type: "default",
@@ -798,11 +824,13 @@ export default function ConceptGraphV2({
               change.position.x,
               change.position.y,
             );
+          } else if (node?.type === "major") {
+            onMajorMoved?.(node.id, change.position.x, change.position.y);
           }
         }
       });
     },
-    [onNodesChange, onDetailMoved],
+    [onNodesChange, onDetailMoved, onMajorMoved],
   );
 
   return (

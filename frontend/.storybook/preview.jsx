@@ -1,12 +1,10 @@
 import "bootstrap/dist/css/bootstrap.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
-import { initialize, mswLoader } from 'msw-storybook-addon';
-
+import { initialize, mswLoader } from "msw-storybook-addon";
 
 // Initialize MSW
 initialize();
-
 
 export const loaders = [mswLoader];
 

@@ -59,6 +59,7 @@ vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
       posX: number,
       posY: number,
     ) => void;
+    onMajorMoved?: (name: string, posX: number, posY: number) => void;
     onSubconceptMastered: (sub: string) => void;
     onPaneClick?: () => void;
   }) => (
@@ -68,13 +69,11 @@ vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
         {props.restoredDetailCards?.length ?? 0}
       </div>
       <div data-testid="mastered-count">{props.masteredSubconcepts.size}</div>
-      <button onClick={() => props.onConceptClick("recursion")}>
+      <button onClick={() => props.onConceptClick("1")}>
         trigger-concept-click
       </button>
-      <button onClick={() => props.onStarClick("recursion")}>
-        trigger-star-click
-      </button>
-      <button onClick={() => props.onStarClick("loops")}>
+      <button onClick={() => props.onStarClick("1")}>trigger-star-click</button>
+      <button onClick={() => props.onStarClick("4")}>
         trigger-unstar-click
       </button>
       <button onClick={props.onReset}>trigger-reset</button>
@@ -83,7 +82,7 @@ vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
           props.onDetailAdded?.({
             cardType: "Description",
             itemLabel: "Recursion",
-            conceptId: "recursion",
+            conceptId: "1",
             conceptColor: "#fe9a71",
             posX: 1,
             posY: 2,
@@ -99,6 +98,9 @@ vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
         onClick={() => props.onDetailMoved?.("Description", "Loops", 5, 6)}
       >
         trigger-detail-moved
+      </button>
+      <button onClick={() => props.onMajorMoved?.("1", 30, 40)}>
+        trigger-major-moved
       </button>
       <button onClick={() => props.onSubconceptMastered("Base case")}>
         trigger-subconcept-mastered
@@ -125,55 +127,63 @@ const questionConcepts: QuestionConcept[] = [
   {
     id: "qc1",
     question_id: "q1",
-    concept_id: "recursion",
+    concept_id: "1",
     subconcept_label: "Base case",
   },
 ];
 
 const majorConcepts: MajorConceptDTO[] = [
   {
-    name: "recursion",
-    label: "Recursion",
+    id: 1,
+    labelHtml: "Recursion",
     color: "#fe9a71",
-    subconcepts: ["Base case", "State change"],
+    subconcepts: [
+      { id: 2, parentId: 1, labelHtml: "Base case" },
+      { id: 3, parentId: 1, labelHtml: "State change" },
+    ],
   },
   {
-    name: "loops",
-    label: "Loops",
+    id: 4,
+    labelHtml: "Loops",
     color: "#93ebff",
-    subconcepts: ["For loops"],
+    subconcepts: [{ id: 5, parentId: 4, labelHtml: "For loops" }],
   },
 ];
 
 const positions: Record<string, { x: number; y: number }> = {
-  recursion: { x: 100, y: 100 },
-  loops: { x: 300, y: 100 },
+  "1": { x: 100, y: 100 },
+  "4": { x: 300, y: 100 },
 };
 
 const conceptContent: Record<string, ConceptContentDTO> = {
-  recursion: {
-    description: "Recursion description",
-    example: "def f(): ...",
+  "1": {
+    id: 1,
+    parentId: null,
+    descriptionHtml: "<p>Recursion description</p>",
+    exampleHtml: "<p>def f(): ...</p>",
     practiceUrl:
       "https://us.prairielearn.com/pl/course_instance/213067/instance_question/698000011/",
   },
 };
 
-const prereqEdgeData: EdgeDTO[] = [{ source: "loops", target: "recursion" }];
+const prereqEdgeData: EdgeDTO[] = [
+  { id: 20, sourceId: 4, targetId: 1, color: null },
+];
 
 const userState: UserStateV2Response = {
-  starred_ids: ["loops"],
+  starred_ids: ["4"],
   detail_cards: [
     {
       cardType: "Description",
       itemLabel: "Loops",
-      conceptId: "loops",
+      conceptId: "4",
       conceptColor: "#fe9a71",
       posX: 10,
       posY: 20,
     },
   ] as unknown as UserStateV2Response["detail_cards"],
   mastered_subconcepts: ["For loops"],
+  top_level_positions: {},
 };
 
 const loggedInWithId = {
@@ -412,7 +422,7 @@ describe("ConceptGraphPage", () => {
 
     expect(setData).toHaveBeenCalledWith(
       "application/scaffold-card",
-      expect.stringContaining('"conceptId":"recursion"'),
+      expect.stringContaining('"conceptId":"1"'),
     );
   });
 
@@ -428,7 +438,7 @@ describe("ConceptGraphPage", () => {
         expect.objectContaining({
           userid: 42,
           courseId: 1,
-          starred_ids: expect.arrayContaining(["loops", "recursion"]),
+          starred_ids: expect.arrayContaining(["4", "1"]),
         }),
       ),
     );
@@ -462,6 +472,7 @@ describe("ConceptGraphPage", () => {
         starred_ids: [],
         detail_cards: [],
         mastered_subconcepts: [],
+        top_level_positions: {},
       }),
     );
   });
@@ -480,7 +491,7 @@ describe("ConceptGraphPage", () => {
         payload: {
           cardType: "Description",
           itemLabel: "Recursion",
-          conceptId: "recursion",
+          conceptId: "1",
         },
       }),
     );
@@ -518,6 +529,21 @@ describe("ConceptGraphPage", () => {
       expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
         expect.objectContaining({
           detail_cards: [expect.objectContaining({ posX: 5, posY: 6 })],
+        }),
+      ),
+    );
+  });
+
+  test("triggering onMajorMoved persists a private top-level position override", async () => {
+    renderConceptGraphPage(loggedInWithId);
+    await screen.findByTestId("concept-graph-stub");
+
+    fireEvent.click(screen.getByText("trigger-major-moved"));
+
+    await waitFor(() =>
+      expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
+        expect.objectContaining({
+          top_level_positions: { "1": { x: 30, y: 40 } },
         }),
       ),
     );

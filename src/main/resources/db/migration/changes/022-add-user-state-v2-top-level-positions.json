@@ -1,0 +1,38 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "022-add-user-state-v2-top-level-positions",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          {
+            "not": {
+              "columnExists": {
+                "tableName": "user_state_v2",
+                "columnName": "top_level_positions"
+              }
+            }
+          }
+        ],
+        "changes": [
+          {
+            "addColumn": {
+              "tableName": "user_state_v2",
+              "columns": [
+                {
+                  "column": {
+                    "name": "top_level_positions",
+                    "type": "VARCHAR(1048576)",
+                    "defaultValue": "{}",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
