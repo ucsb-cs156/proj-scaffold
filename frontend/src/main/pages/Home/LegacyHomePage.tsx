@@ -165,6 +165,7 @@ export default function LegacyHomePage() {
       setQuestions([]);
       return;
     }
+    setQuestions([]);
     fetchQuestions(selectedAssessmentId).then(setQuestions);
     setSelectedQuestionId("");
     setHighlightedIds(new Set());

@@ -18,11 +18,13 @@ export default function QuestionSearch({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Reset when the questions list changes (new assessment selected)
+  // Reset when the questions list is cleared (assessment deselected or changed)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setInputValue("");
-    setIsOpen(false);
+    if (questions.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setInputValue("");
+      setIsOpen(false);
+    }
   }, [questions]);
 
   // Reset if question is cleared externally

@@ -266,7 +266,7 @@ describe("QuestionSearch", () => {
     expect(screen.getByText("Recursion basics")).not.toHaveClass("is-selected");
   });
 
-  test("resets the input when the questions list changes", () => {
+  test("resets the input when the questions list is cleared", () => {
     const onSelect = vi.fn();
     const { rerender } = render(
       <QuestionSearch
@@ -290,6 +290,17 @@ describe("QuestionSearch", () => {
         title: "Dictionaries",
       },
     ];
+    // Simulate the two-step transition that ConceptGraphPage / LegacyHomePage
+    // performs: clear questions first (triggering the reset), then populate
+    // with the new list.
+    rerender(
+      <QuestionSearch
+        questions={[]}
+        selectedQuestionId="1"
+        onSelect={onSelect}
+        disabled={false}
+      />,
+    );
     rerender(
       <QuestionSearch
         questions={newQuestions}
