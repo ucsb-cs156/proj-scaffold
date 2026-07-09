@@ -157,6 +157,29 @@ export async function fetchConceptPositions(
   return res.json();
 }
 
+// Rewrites the author-chosen order of a top-level concept's subconcepts.
+// orderedSubconceptIds must be the complete list of the parent's subconcept
+// ids in the desired display order; the backend rejects partial lists.
+// Returns the subconcepts in their new order.
+export async function reorderSubconcepts(
+  parentConceptId: number,
+  orderedSubconceptIds: number[],
+): Promise<SubconceptDTO[]> {
+  const res = await fetch(
+    `${API_BASE}/concepts/subconcepts/reorder?parentConceptId=${parentConceptId}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderedSubconceptIds),
+    },
+  );
+  if (!res.ok)
+    throw new Error(
+      `Failed to reorder subconcepts of concept ${parentConceptId}`,
+    );
+  return res.json();
+}
+
 export async function fetchConceptEdges(courseId: number): Promise<EdgeDTO[]> {
   const res = await fetch(`${API_BASE}/concepts/edges?courseId=${courseId}`);
   if (!res.ok)

@@ -24,9 +24,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -51,6 +53,13 @@ public class ConceptsController extends ApiController {
   // styling (e.g. an SVG edge with no stroke color renders with stroke: none and is
   // invisible). Matches the "Level 1" swatch in the frontend's concept-graph legend.
   public static final String DEFAULT_TOP_LEVEL_COLOR = "#c99ffe";
+
+  // The display order of subconcepts within a parent. sortOrder is author-controlled
+  // (see reorderSubconcepts); the id tiebreaker makes the order deterministic even for
+  // rows with equal or missing sortOrder (pre-backfill data, concurrent-create ties).
+  private static final Comparator<Concept> SUBCONCEPT_DISPLAY_ORDER =
+      Comparator.comparing(Concept::getSortOrder, Comparator.nullsLast(Comparator.naturalOrder()))
+          .thenComparing(Concept::getId);
 
   private final ConceptRepository conceptRepository;
   private final PracticeProblemRepository practiceProblemRepository;
@@ -93,7 +102,7 @@ public class ConceptsController extends ApiController {
     Map<Long, List<Concept>> subconceptsByParentId =
         concepts.stream()
             .filter(Concept::isSubconcept)
-            .sorted(Comparator.comparing(Concept::getId))
+            .sorted(SUBCONCEPT_DISPLAY_ORDER)
             .collect(
                 Collectors.groupingBy(
                     concept -> concept.getParent().getId(),
@@ -291,6 +300,7 @@ public class ConceptsController extends ApiController {
             .description(markdownService.clean(dto.getDescription()))
             .example(markdownService.clean(dto.getExample()))
             .parent(parent)
+            .sortOrder(nextSortOrder(parent.getId()))
             .build();
     return conceptRepository.save(concept);
   }
@@ -380,6 +390,7 @@ public class ConceptsController extends ApiController {
 
     concept.setParent(parent);
     concept.setColor(parent.getColor());
+    concept.setSortOrder(nextSortOrder(parent.getId()));
     return conceptRepository.save(concept);
   }
 
@@ -413,9 +424,68 @@ public class ConceptsController extends ApiController {
       concept.setColor(concept.getParent().getColor());
     }
     concept.setParent(null);
+    concept.setSortOrder(null);
     concept.setX(x);
     concept.setY(y);
     return conceptRepository.save(concept);
+  }
+
+  @Operation(
+      summary = "Reorder the subconcepts of a top-level concept",
+      description =
+          """
+          Takes the complete ordered list of the parent's subconcept ids and rewrites every
+          subconcept's sort position to its index in the list. Sending the whole permutation
+          (rather than individual move operations) makes the update atomic and idempotent:
+          concurrent reorders resolve to one complete, coherent ordering (last writer wins),
+          and any sort-position ties left by concurrent subconcept creation are cleaned up as
+          a side effect. The list must contain each current subconcept of the parent exactly
+          once. Returns the subconcepts in their new order.
+          """)
+  @PreAuthorize("@CourseSecurity.hasConceptManagementPermissions(#root, #parentConceptId)")
+  @PutMapping("/api/concepts/subconcepts/reorder")
+  public List<SubconceptDTO> reorderSubconcepts(
+      @Parameter(name = "parentConceptId") @RequestParam Long parentConceptId,
+      @RequestBody List<Long> orderedSubconceptIds)
+      throws EntityNotFoundException {
+
+    Concept parent =
+        conceptRepository
+            .findById(parentConceptId)
+            .orElseThrow(() -> new EntityNotFoundException(Concept.class, parentConceptId));
+    if (parent.isSubconcept()) {
+      throw new IllegalArgumentException(
+          "concept %d is a subconcept; only top-level concepts have subconcepts to reorder"
+              .formatted(parentConceptId));
+    }
+
+    List<Concept> subconcepts = conceptRepository.findByParentId(parentConceptId);
+    Map<Long, Concept> subconceptById = new HashMap<>();
+    for (Concept subconcept : subconcepts) {
+      subconceptById.put(subconcept.getId(), subconcept);
+    }
+    if (new HashSet<>(orderedSubconceptIds).size() != orderedSubconceptIds.size()
+        || orderedSubconceptIds.size() != subconcepts.size()
+        || !subconceptById.keySet().containsAll(orderedSubconceptIds)) {
+      throw new IllegalArgumentException(
+          "orderedSubconceptIds must contain the id of each subconcept of concept %d exactly once"
+              .formatted(parentConceptId));
+    }
+
+    for (int i = 0; i < orderedSubconceptIds.size(); i++) {
+      subconceptById.get(orderedSubconceptIds.get(i)).setSortOrder(i);
+    }
+    conceptRepository.saveAll(subconcepts);
+
+    return orderedSubconceptIds.stream()
+        .map(subconceptById::get)
+        .map(
+            sub ->
+                new SubconceptDTO(
+                    sub.getId(),
+                    sub.getParent().getId(),
+                    markdownService.toInlineHtml(sub.getLabel())))
+        .toList();
   }
 
   @Operation(summary = "Create a prerequisite edge between two top-level concepts")
@@ -579,6 +649,22 @@ public class ConceptsController extends ApiController {
               .formatted(renderedLength, MAX_RENDERED_CONCEPT_LABEL_LENGTH));
     }
     return cleanLabel;
+  }
+
+  /**
+   * The sort position for a subconcept newly added to the given parent: one past the highest
+   * existing position, so new subconcepts always append at the end of the author's ordering.
+   * Subconcepts predating the sort_order column may have null positions; they are ignored here
+   * (they display last, after positioned rows, until the author reorders).
+   */
+  private int nextSortOrder(Long parentId) {
+    return conceptRepository.findByParentId(parentId).stream()
+            .map(Concept::getSortOrder)
+            .filter(Objects::nonNull)
+            .mapToInt(Integer::intValue)
+            .max()
+            .orElse(-1)
+        + 1;
   }
 
   private void rejectDuplicateLabelUnderParent(Concept parent, String label) {

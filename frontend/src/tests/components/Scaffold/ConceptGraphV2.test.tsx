@@ -1,7 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import ConceptGraphV2 from "main/components/Scaffold/ConceptGraphV2";
-import { DebugModeContext } from "main/utils/debugModeContext";
+import { StaffToolsContext } from "main/utils/staffToolsContext";
 import type { ReactElement } from "react";
 
 // @xyflow/react measures its container via ResizeObserver and
@@ -379,11 +379,16 @@ describe("ConceptGraphV2", () => {
 describe("ConceptGraphV2 debug mode tooltips", () => {
   function renderWithDebugMode(ui: ReactElement, debugMode: boolean) {
     return render(
-      <DebugModeContext.Provider
-        value={{ debugMode, setDebugMode: vi.fn(), canUseDebugMode: true }}
+      <StaffToolsContext.Provider
+        value={{
+          debugMode,
+          unlockSubconcepts: false,
+          setStaffTool: vi.fn(),
+          canUseStaffTools: true,
+        }}
       >
         {ui}
-      </DebugModeContext.Provider>,
+      </StaffToolsContext.Provider>,
     );
   }
 
@@ -425,5 +430,112 @@ describe("ConceptGraphV2 debug mode tooltips", () => {
     });
     // Pretty-printed (multi-line), not a single-line blob.
     expect(title).toContain("\n");
+  });
+});
+
+describe("ConceptGraphV2 subconcept drag-and-drop reordering", () => {
+  function renderWithUnlock(ui: ReactElement, unlockSubconcepts: boolean) {
+    return render(
+      <StaffToolsContext.Provider
+        value={{
+          debugMode: false,
+          unlockSubconcepts,
+          setStaffTool: vi.fn(),
+          canUseStaffTools: true,
+        }}
+      >
+        {ui}
+      </StaffToolsContext.Provider>,
+    );
+  }
+
+  const dataTransfer = {
+    effectAllowed: "",
+    setData: vi.fn(),
+    getData: vi.fn(),
+  };
+
+  test("rows are not draggable and show no drag handle when locked", () => {
+    render(<ConceptGraphV2 {...baseProps()} />);
+    const row = screen.getByTestId("subconcept-row-1-0");
+    expect(row).not.toHaveAttribute("draggable", "true");
+    expect(
+      screen.queryByTestId("subconcept-drag-handle-1-0"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("rows are draggable and show a drag handle when unlocked", () => {
+    renderWithUnlock(<ConceptGraphV2 {...baseProps()} />, true);
+    const row = screen.getByTestId("subconcept-row-1-0");
+    expect(row).toHaveAttribute("draggable", "true");
+    expect(
+      screen.getByTestId("subconcept-drag-handle-1-0"),
+    ).toBeInTheDocument();
+  });
+
+  test("dropping a row on another reorders the card and reports the new id order", () => {
+    const props = { ...baseProps(), onSubconceptsReordered: vi.fn() };
+    renderWithUnlock(<ConceptGraphV2 {...props} />, true);
+
+    // "Recursion" (node 1) starts as [Base case (2), State change (3)];
+    // drag row 0 onto row 1.
+    fireEvent.dragStart(screen.getByTestId("subconcept-row-1-0"), {
+      dataTransfer,
+    });
+    fireEvent.dragOver(screen.getByTestId("subconcept-row-1-1"), {
+      dataTransfer,
+    });
+    fireEvent.drop(screen.getByTestId("subconcept-row-1-1"), { dataTransfer });
+
+    expect(props.onSubconceptsReordered).toHaveBeenCalledWith(1, [3, 2]);
+    // The card re-renders in the new order.
+    expect(screen.getByTestId("subconcept-row-1-0")).toHaveTextContent(
+      "State change",
+    );
+    expect(screen.getByTestId("subconcept-row-1-1")).toHaveTextContent(
+      "Base case",
+    );
+  });
+
+  test("dropping a row back on itself changes nothing and reports nothing", () => {
+    const props = { ...baseProps(), onSubconceptsReordered: vi.fn() };
+    renderWithUnlock(<ConceptGraphV2 {...props} />, true);
+
+    fireEvent.dragStart(screen.getByTestId("subconcept-row-1-0"), {
+      dataTransfer,
+    });
+    fireEvent.drop(screen.getByTestId("subconcept-row-1-0"), { dataTransfer });
+
+    expect(props.onSubconceptsReordered).not.toHaveBeenCalled();
+    expect(screen.getByTestId("subconcept-row-1-0")).toHaveTextContent(
+      "Base case",
+    );
+  });
+
+  test("dropping something that is not a row drag (no dragStart) is ignored", () => {
+    const props = { ...baseProps(), onSubconceptsReordered: vi.fn() };
+    renderWithUnlock(<ConceptGraphV2 {...props} />, true);
+
+    // e.g. a detail-card drag entering a row: dragIndex is null, so the row
+    // must not intercept it.
+    fireEvent.dragOver(screen.getByTestId("subconcept-row-1-1"), {
+      dataTransfer,
+    });
+    fireEvent.drop(screen.getByTestId("subconcept-row-1-1"), { dataTransfer });
+
+    expect(props.onSubconceptsReordered).not.toHaveBeenCalled();
+  });
+
+  test("dragEnd clears the in-progress drag state", () => {
+    const props = { ...baseProps(), onSubconceptsReordered: vi.fn() };
+    renderWithUnlock(<ConceptGraphV2 {...props} />, true);
+
+    const row0 = screen.getByTestId("subconcept-row-1-0");
+    fireEvent.dragStart(row0, { dataTransfer });
+    fireEvent.dragEnd(row0, { dataTransfer });
+    // The abandoned drag leaves no pending dragIndex, so a later drop does nothing.
+    fireEvent.drop(screen.getByTestId("subconcept-row-1-1"), { dataTransfer });
+
+    expect(props.onSubconceptsReordered).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,32 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "024-add-concept-sort-order",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          {
+            "not": {
+              "columnExists": { "tableName": "concepts", "columnName": "sort_order" }
+            }
+          }
+        ],
+        "changes": [
+          {
+            "addColumn": {
+              "tableName": "concepts",
+              "columns": [{ "column": { "name": "sort_order", "type": "INT" } }]
+            }
+          },
+          {
+            "sql": {
+              "comment": "Backfill existing subconcepts with their rank by id within their parent (0-based), preserving the de-facto display order that predates this column.",
+              "sql": "UPDATE concepts SET sort_order = (SELECT COUNT(*) FROM concepts c2 WHERE c2.parent_id = concepts.parent_id AND c2.id < concepts.id) WHERE parent_id IS NOT NULL"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

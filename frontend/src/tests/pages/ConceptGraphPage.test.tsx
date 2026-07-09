@@ -33,6 +33,7 @@ vi.mock("main/api/client", () => ({
   fetchUserStateV2: vi.fn(),
   saveUserStateV2: vi.fn(),
   logUserActivityV2: vi.fn(),
+  reorderSubconcepts: vi.fn(),
 }));
 
 vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
@@ -62,6 +63,11 @@ vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
     onMajorMoved?: (name: string, posX: number, posY: number) => void;
     onSubconceptMastered: (sub: string) => void;
     onPaneClick?: () => void;
+    majorConcepts: { id: number; subconcepts: { id: number }[] }[];
+    onSubconceptsReordered?: (
+      parentConceptId: number,
+      orderedSubconceptIds: number[],
+    ) => void;
   }) => (
     <div data-testid="concept-graph-stub">
       <div data-testid="highlighted-count">{props.highlightedIds.size}</div>
@@ -109,6 +115,15 @@ vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
         trigger-unmaster-subconcept
       </button>
       <button onClick={() => props.onPaneClick?.()}>trigger-pane-click</button>
+      <button onClick={() => props.onSubconceptsReordered?.(1, [3, 2])}>
+        trigger-subconcepts-reordered
+      </button>
+      <div data-testid="node-1-subconcept-order">
+        {props.majorConcepts
+          .find((c) => c.id === 1)
+          ?.subconcepts.map((s) => s.id)
+          .join(",")}
+      </div>
     </div>
   ),
 }));
@@ -224,6 +239,7 @@ describe("ConceptGraphPage", () => {
     mockedClient.fetchUserStateV2.mockResolvedValue(userState);
     mockedClient.saveUserStateV2.mockResolvedValue(undefined);
     mockedClient.logUserActivityV2.mockResolvedValue(undefined);
+    mockedClient.reorderSubconcepts.mockResolvedValue([]);
 
     axiosMock.reset();
     axiosMock.resetHistory();
@@ -616,5 +632,46 @@ describe("ConceptGraphPage", () => {
     );
     expect(await screen.findByText("0 / 2")).toBeInTheDocument();
     expect(screen.getByTestId("restored-count")).toHaveTextContent("0");
+  });
+
+  test("reordering subconcepts persists the complete order and updates the local graph data", async () => {
+    renderConceptGraphPage(loggedInWithId);
+    await screen.findByTestId("concept-graph-stub");
+    expect(screen.getByTestId("node-1-subconcept-order")).toHaveTextContent(
+      "2,3",
+    );
+
+    fireEvent.click(screen.getByText("trigger-subconcepts-reordered"));
+
+    expect(mockedClient.reorderSubconcepts).toHaveBeenCalledWith(1, [3, 2]);
+    expect(screen.getByTestId("node-1-subconcept-order")).toHaveTextContent(
+      "3,2",
+    );
+    // The optimistic update alone suffices; no graph refetch on success.
+    expect(mockedClient.fetchConceptGraph).toHaveBeenCalledTimes(1);
+  });
+
+  test("a rejected reorder refetches the graph so the order snaps back", async () => {
+    mockedClient.reorderSubconcepts.mockRejectedValue(
+      new Error("400 bad request"),
+    );
+    renderConceptGraphPage(loggedInWithId);
+    await screen.findByTestId("concept-graph-stub");
+
+    fireEvent.click(screen.getByText("trigger-subconcepts-reordered"));
+
+    // Optimistic update shows the new order first...
+    expect(screen.getByTestId("node-1-subconcept-order")).toHaveTextContent(
+      "3,2",
+    );
+    // ...then the failure triggers a refetch of the authoritative order.
+    await waitFor(() =>
+      expect(mockedClient.fetchConceptGraph).toHaveBeenCalledTimes(2),
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("node-1-subconcept-order")).toHaveTextContent(
+        "2,3",
+      ),
+    );
   });
 });

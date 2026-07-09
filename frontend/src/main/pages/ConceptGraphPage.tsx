@@ -16,7 +16,9 @@ import {
   fetchUserStateV2,
   logUserActivityV2,
   saveUserStateV2,
+  reorderSubconcepts,
   type MajorConceptDTO,
+  type SubconceptDTO,
   type ConceptContentDTO,
   type EdgeDTO,
 } from "main/api/client";
@@ -25,6 +27,7 @@ import LoginScreen from "main/components/Auth/LoginScreen";
 import QuestionSearch from "main/components/Scaffold/QuestionSearch";
 import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
 import { useCurrentUser } from "main/utils/currentUser";
+import { StaffToolsProvider } from "main/utils/staffTools";
 import {
   normalize,
   toPastel,
@@ -46,7 +49,18 @@ interface SavedDetailCard {
   posY: number;
 }
 
+// The staff tools (debug tooltips, subconcept reordering) act on this page's
+// concept graph, so their provider is mounted here — not at the app root —
+// and the Footer's toggles only appear here.
 export default function ConceptGraphPage() {
+  return (
+    <StaffToolsProvider>
+      <ConceptGraphPageContent />
+    </StaffToolsProvider>
+  );
+}
+
+function ConceptGraphPageContent() {
   const { courseId: courseIdParam } = useParams<{ courseId: string }>();
   const courseId = Number(courseIdParam);
   const courseIdIsValid =
@@ -236,6 +250,34 @@ export default function ConceptGraphPage() {
       }
       persistState(starredIdsRef.current, savedDetailCardsRef.current, next);
       return next;
+    });
+  };
+
+  // An author (with subconcepts unlocked) drag-and-dropped a card's
+  // subconcepts. ConceptGraphV2 already updated its own nodes; mirror the new
+  // order in our copy of the graph data (so anything rebuilt from it agrees)
+  // and persist it. If the backend rejects the reorder, refetch the graph so
+  // the local order snaps back to the authoritative one.
+  const handleSubconceptsReordered = (
+    parentConceptId: number,
+    orderedSubconceptIds: number[],
+  ) => {
+    setMajorConcepts((prev) =>
+      prev.map((concept) =>
+        concept.id === parentConceptId
+          ? {
+              ...concept,
+              subconcepts: orderedSubconceptIds
+                .map((subId) =>
+                  concept.subconcepts.find((sub) => sub.id === subId),
+                )
+                .filter((sub): sub is SubconceptDTO => sub !== undefined),
+            }
+          : concept,
+      ),
+    );
+    reorderSubconcepts(parentConceptId, orderedSubconceptIds).catch(() => {
+      fetchConceptGraph(courseId).then(setMajorConcepts);
     });
   };
 
@@ -584,6 +626,7 @@ export default function ConceptGraphPage() {
             onMajorMoved={handleMajorMoved}
             masteredSubconcepts={masteredSubconcepts}
             onSubconceptMastered={handleSubconceptMastered}
+            onSubconceptsReordered={handleSubconceptsReordered}
             onPaneClick={handlePaneClick}
           />
         </div>

@@ -39,6 +39,12 @@ public class Concept {
   // recomputed by ConceptGraphService.reset(); see /api/course/scaffold/reset.
   private Integer level;
 
+  // Author-chosen position of a subconcept within its parent's list, 0-based. Subconcepts
+  // only (null for top-level concepts). Not unique: a concurrent create can leave two
+  // subconcepts with the same value, which is harmless because display order always breaks
+  // ties by id, and the next reorder rewrites the whole list to 0..n-1.
+  private Integer sortOrder;
+
   @ManyToOne
   @JoinColumn(name = "parent_id")
   @ToString.Exclude

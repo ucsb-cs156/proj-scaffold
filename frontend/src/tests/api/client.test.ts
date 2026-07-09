@@ -13,6 +13,7 @@ import {
   fetchUserStateV2,
   saveUserStateV2,
   logUserActivityV2,
+  reorderSubconcepts,
 } from "main/api/client";
 
 function mockFetchOnce(
@@ -336,6 +337,36 @@ describe("api/client", () => {
 
       await expect(saveUserStateV2(body)).rejects.toThrow(
         "Failed to save user state for userid 1 in course 2",
+      );
+    });
+  });
+
+  describe("reorderSubconcepts", () => {
+    test("puts the complete ordered id list and returns the reordered DTOs", async () => {
+      const reordered = [
+        { id: 5, parentId: 1, labelHtml: "C" },
+        { id: 2, parentId: 1, labelHtml: "A" },
+      ];
+      mockFetchOnce(reordered);
+
+      const result = await reorderSubconcepts(1, [5, 2]);
+
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        "/api/concepts/subconcepts/reorder?parentConceptId=1",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify([5, 2]),
+        },
+      );
+      expect(result).toEqual(reordered);
+    });
+
+    test("throws when the response is not ok", async () => {
+      mockFetchOnce(null, { status: 400, ok: false });
+
+      await expect(reorderSubconcepts(1, [5, 2])).rejects.toThrow(
+        "Failed to reorder subconcepts of concept 1",
       );
     });
   });
