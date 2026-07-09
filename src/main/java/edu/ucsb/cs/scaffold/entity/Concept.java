@@ -10,6 +10,11 @@ import lombok.*;
 @Entity
 @Table(name = "concepts")
 public class Concept {
+
+  // Longest a label may be once its Markdown is rendered to plain text; enforced everywhere
+  // labels enter the system (single-concept endpoints and YAML upload).
+  public static final int MAX_RENDERED_LABEL_LENGTH = 32;
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;

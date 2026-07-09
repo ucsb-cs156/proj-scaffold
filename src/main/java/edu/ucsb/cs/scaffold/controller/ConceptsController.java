@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ConceptsController extends ApiController {
 
-  public static final int MAX_RENDERED_CONCEPT_LABEL_LENGTH = 32;
+  public static final int MAX_RENDERED_CONCEPT_LABEL_LENGTH = Concept.MAX_RENDERED_LABEL_LENGTH;
 
   // Applied to every new top-level concept; users cannot assign a color at creation time for
   // now. Top-level concepts are assumed throughout the frontend (node styling, drag-out
