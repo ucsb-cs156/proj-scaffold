@@ -18,7 +18,7 @@ Both operations are available to instructors and course staff on the
 
 ```yaml
 # Concept graph for course 42 (CMPSC 8)
-# Exported 2026-07-08. See docs/yaml-format.md for the format.
+# See docs/yaml-format.md for the format.
 format: 1
 concepts:
   - id: 1
@@ -98,7 +98,7 @@ referred to.)
 | `example`          | no       | none             | Markdown example (code blocks encouraged).                  |
 | `color`            | no       | level-1 color    | Hex node color, e.g. `"#c99ffe"`. Quote it: `#` starts a YAML comment. |
 | `level`            | no       | `1`              | Longest-path level (1-based).                               |
-| `x`, `y`           | no       | `0`              | Graph position.                                             |
+| `x`, `y`           | no       | `0`              | Graph position. (Downloads write the key as `"y"` because bare `y` is a YAML 1.1 boolean; unquoted `y:` is also accepted on upload.) |
 | `practiceProblems` | no       | none             | List of practice problem URLs (unique per concept).         |
 | `subconcepts`      | no       | none             | List of subconcepts, in display order.                      |
 
