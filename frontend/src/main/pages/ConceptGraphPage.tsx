@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams } from "react-router";
 import { Spinner } from "react-bootstrap";
 import ConceptGraphV2 from "main/components/Scaffold/ConceptGraphV2";
-import "App.css";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 
@@ -29,7 +28,7 @@ import { useCurrentUser } from "main/utils/currentUser";
 import {
   normalize,
   toPastel,
-  computeSubgraph,
+  computeSubgraphV2,
 } from "main/utils/conceptGraphUtils";
 
 // Database-driven counterpart to LegacyHomePage.tsx, rendered at /course/{courseId}.
@@ -90,6 +89,12 @@ export default function ConceptGraphPage() {
   const [positions, setPositions] = useState<
     Record<string, { x: number; y: number }>
   >({});
+  // Private, per-user overrides of top-level concept positions (dragged by this user);
+  // takes precedence over the shared `positions` above, which only an instructor's
+  // POST /api/course/scaffold/reset can change. Cleared course-wide by that same reset.
+  const [topLevelPositions, setTopLevelPositions] = useState<
+    Record<string, { x: number; y: number }>
+  >({});
   const [conceptContent, setConceptContent] = useState<
     Record<string, ConceptContentDTO>
   >({});
@@ -111,6 +116,12 @@ export default function ConceptGraphPage() {
   useEffect(() => {
     savedDetailCardsRef.current = savedDetailCards;
   }, [savedDetailCards]);
+
+  const topLevelPositionsRef =
+    useRef<Record<string, { x: number; y: number }>>(topLevelPositions);
+  useEffect(() => {
+    topLevelPositionsRef.current = topLevelPositions;
+  }, [topLevelPositions]);
 
   // Fetch the concept graph data for this course once on mount.
   useEffect(() => {
@@ -168,6 +179,7 @@ export default function ConceptGraphPage() {
         setMasteredSubconcepts(
           new Set((data.mastered_subconcepts ?? []) as string[]),
         );
+        setTopLevelPositions(data.top_level_positions ?? {});
       }
     });
   }, [userId, courseId, courseIdIsValid]);
@@ -177,6 +189,10 @@ export default function ConceptGraphPage() {
       stars: Set<string>,
       cards: SavedDetailCard[],
       mastered: Set<string> = masteredSubconceptsRef.current,
+      topLevelPos: Record<
+        string,
+        { x: number; y: number }
+      > = topLevelPositionsRef.current,
     ) => {
       if (!userId || !courseIdIsValid) return;
       await saveUserStateV2({
@@ -185,10 +201,30 @@ export default function ConceptGraphPage() {
         starred_ids: Array.from(stars),
         detail_cards: cards,
         mastered_subconcepts: Array.from(mastered),
+        top_level_positions: topLevelPos,
       });
     },
     [userId, courseId, courseIdIsValid],
   );
+
+  // Private overrides take precedence over the shared, instructor-controlled positions.
+  const effectivePositions = useMemo(
+    () => ({ ...positions, ...topLevelPositions }),
+    [positions, topLevelPositions],
+  );
+
+  const handleMajorMoved = (name: string, posX: number, posY: number) => {
+    setTopLevelPositions((prev) => {
+      const next = { ...prev, [name]: { x: posX, y: posY } };
+      persistState(
+        starredIdsRef.current,
+        savedDetailCardsRef.current,
+        masteredSubconceptsRef.current,
+        next,
+      );
+      return next;
+    });
+  };
 
   const handleSubconceptMastered = (sub: string) => {
     setMasteredSubconcepts((prev) => {
@@ -250,7 +286,12 @@ export default function ConceptGraphPage() {
       return;
     }
     fetchQuestionConcepts(selectedQuestionId).then((concepts) => {
-      setHighlightedIds(computeSubgraph(concepts.map((c) => c.concept_id)));
+      setHighlightedIds(
+        computeSubgraphV2(
+          concepts.map((c) => c.concept_id),
+          prereqEdgeData,
+        ),
+      );
       const subMap = new Map<string, Set<string>>();
       concepts.forEach((c) => {
         if (c.subconcept_label) {
@@ -262,7 +303,10 @@ export default function ConceptGraphPage() {
     });
     setSelectedConceptId(null);
     logActivity("question_viewed", { questionId: selectedQuestionId });
-  }, [logActivity, selectedQuestionId]);
+    // Including prereqEdgeData also re-runs this when the edges finish loading,
+    // so a question selected before that point still gets its full
+    // prerequisite chain highlighted rather than only the tagged concepts.
+  }, [logActivity, selectedQuestionId, prereqEdgeData]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -278,13 +322,13 @@ export default function ConceptGraphPage() {
   }, [logActivity, selectedConceptId, selectedItem]);
 
   const selectedConcept = selectedConceptId
-    ? majorConcepts.find((c) => c.name === selectedConceptId)
+    ? majorConcepts.find((c) => String(c.id) === selectedConceptId)
     : null;
 
   const handleConceptClick = (id: string) => {
     setSelectedConceptId(id);
     if (!selectedQuestionId) {
-      setHighlightedIds(computeSubgraph([id]));
+      setHighlightedIds(computeSubgraphV2([id], prereqEdgeData));
     }
     logActivity("concept_clicked", { conceptId: id });
   };
@@ -312,7 +356,8 @@ export default function ConceptGraphPage() {
     setSavedDetailCards([]);
     setAddedDetailKeys(new Set());
     setMasteredSubconcepts(new Set());
-    persistState(new Set(), [], new Set());
+    setTopLevelPositions({});
+    persistState(new Set(), [], new Set(), {});
   };
 
   const handleDetailAdded = (card: SavedDetailCard) => {
@@ -409,7 +454,7 @@ export default function ConceptGraphPage() {
   }
 
   return (
-    <BasicLayout>
+    <BasicLayout lockScroll>
       <div
         style={{
           display: "flex",
@@ -522,7 +567,7 @@ export default function ConceptGraphPage() {
         <div style={{ flex: 1, minHeight: 0, background: "#ffffff" }}>
           <ConceptGraphV2
             majorConcepts={majorConcepts}
-            positions={positions}
+            positions={effectivePositions}
             conceptContent={conceptContent}
             prereqEdgeData={prereqEdgeData}
             highlightedIds={highlightedIds}
@@ -535,6 +580,7 @@ export default function ConceptGraphPage() {
             onDetailAdded={handleDetailAdded}
             onDetailDeleted={handleDetailDeleted}
             onDetailMoved={handleDetailMoved}
+            onMajorMoved={handleMajorMoved}
             masteredSubconcepts={masteredSubconcepts}
             onSubconceptMastered={handleSubconceptMastered}
             onPaneClick={handlePaneClick}
@@ -566,14 +612,14 @@ export default function ConceptGraphPage() {
                 <button
                   onClick={() =>
                     setSelectedItem(
-                      selectedItem === selectedConcept.name
+                      selectedItem === String(selectedConcept.id)
                         ? null
-                        : selectedConcept.name,
+                        : String(selectedConcept.id),
                     )
                   }
                   style={{
                     background:
-                      selectedItem === selectedConcept.name
+                      selectedItem === String(selectedConcept.id)
                         ? selectedConcept.color
                         : "#ffffff",
                     color: "#000000",
@@ -591,7 +637,11 @@ export default function ConceptGraphPage() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {selectedConcept.label.replace(/\n/g, " ")}
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: selectedConcept.labelHtml.replace(/\n/g, " "),
+                    }}
+                  />
                 </button>
 
                 {/* Divider */}
@@ -616,13 +666,15 @@ export default function ConceptGraphPage() {
                 >
                   {selectedConcept.subconcepts.map((sub) => (
                     <button
-                      key={sub}
+                      key={sub.id}
                       onClick={() =>
-                        setSelectedItem(selectedItem === sub ? null : sub)
+                        setSelectedItem(
+                          selectedItem === sub.labelHtml ? null : sub.labelHtml,
+                        )
                       }
                       style={{
                         background:
-                          selectedItem === sub
+                          selectedItem === sub.labelHtml
                             ? selectedConcept.color
                             : "#ffffff",
                         color: "#000000",
@@ -635,7 +687,11 @@ export default function ConceptGraphPage() {
                         cursor: "pointer",
                       }}
                     >
-                      {sub.replace(/\n/g, " ")}
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html: sub.labelHtml.replace(/\n/g, " "),
+                        }}
+                      />
                     </button>
                   ))}
                 </div>
@@ -679,25 +735,35 @@ export default function ConceptGraphPage() {
           {selectedConcept &&
             selectedItem !== null &&
             (() => {
-              const selectedItemLabel =
-                selectedItem === selectedConcept.name
-                  ? selectedConcept.label.replace(/\n/g, " ")
-                  : (selectedItem ?? "");
-              const contentKey =
-                selectedItem === selectedConcept.name
-                  ? selectedConcept.name
-                  : `${selectedConcept.name}:${selectedItem}`;
+              // selectedItem holds a subconcept's labelHtml, or the major
+              // concept's node id (its numeric id as a string). Content is
+              // keyed by each concept's own numeric id.
+              const isMajorConcept =
+                selectedItem === String(selectedConcept.id);
+              const selectedItemLabel = isMajorConcept
+                ? selectedConcept.labelHtml.replace(/\n/g, " ")
+                : (selectedItem ?? "");
+              const subconceptId = selectedConcept.subconcepts.find(
+                (s) => s.labelHtml === selectedItem,
+              )?.id;
+              const contentKey = isMajorConcept
+                ? String(selectedConcept.id)
+                : String(subconceptId);
               const content = conceptContent[contentKey];
-              const isMajorConcept = selectedItem === selectedConcept.name;
 
               return (
                 <div
                   style={{ padding: "0 20px 20px", display: "flex", gap: 12 }}
                 >
-                  {[
-                    { label: "Description", key: "description" },
-                    { label: "Example", key: "example" },
-                  ].map((card) => {
+                  {(
+                    [
+                      { label: "Description", key: "descriptionHtml" },
+                      { label: "Example", key: "exampleHtml" },
+                    ] as {
+                      label: string;
+                      key: "descriptionHtml" | "exampleHtml";
+                    }[]
+                  ).map((card) => {
                     const isAdded = addedDetailKeys.has(
                       `${card.label}:${selectedItemLabel}`,
                     );
@@ -714,12 +780,9 @@ export default function ConceptGraphPage() {
                                   JSON.stringify({
                                     cardType: card.label,
                                     itemLabel: selectedItemLabel,
-                                    conceptId: selectedConcept.name,
+                                    conceptId: String(selectedConcept.id),
                                     conceptColor: selectedConcept.color,
-                                    cardContent:
-                                      content?.[
-                                        card.key as keyof ConceptContentDTO
-                                      ] ?? "",
+                                    cardContent: content?.[card.key] ?? "",
                                   }),
                                 );
                                 e.dataTransfer.effectAllowed = "move";
@@ -763,8 +826,9 @@ export default function ConceptGraphPage() {
                             whiteSpace: "pre-wrap",
                           }}
                         >
-                          {card.key === "example" ? (
-                            <pre
+                          {card.key === "exampleHtml" ? (
+                            <div
+                              className="concept-detail-content"
                               style={{
                                 fontFamily: "monospace",
                                 border: "1px solid #000000",
@@ -776,13 +840,21 @@ export default function ConceptGraphPage() {
                                 whiteSpace: "pre-wrap",
                                 color: "#1E293B",
                               }}
-                            >
-                              {content?.[card.key as keyof ConceptContentDTO] ??
-                                `Example for "${selectedItemLabel}" will appear here.`}
-                            </pre>
+                              dangerouslySetInnerHTML={{
+                                __html:
+                                  content?.[card.key] ??
+                                  `Example for "${selectedItemLabel}" will appear here.`,
+                              }}
+                            />
                           ) : (
-                            (content?.[card.key as keyof ConceptContentDTO] ??
-                            `${card.label} for "${selectedItemLabel}" will appear here.`)
+                            <div
+                              className="concept-detail-content"
+                              dangerouslySetInnerHTML={{
+                                __html:
+                                  content?.[card.key] ??
+                                  `${card.label} for "${selectedItemLabel}" will appear here.`,
+                              }}
+                            />
                           )}
                         </div>
                       </div>

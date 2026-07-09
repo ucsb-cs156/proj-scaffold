@@ -86,16 +86,32 @@ export async function logUserActivity(body: {
 
 // ── Database-driven concept graph (per-course) ──────────────────────────────
 
+/**
+ * An HTML string that has already been rendered from Markdown and sanitized
+ * server-side (OWASP HTML sanitizer) — see MarkdownService on the backend.
+ * Safe to render via `dangerouslySetInnerHTML`; do not re-escape or otherwise
+ * transform it before doing so.
+ */
+export type SafeHtml = string;
+
+export interface SubconceptDTO {
+  id: number;
+  parentId: number;
+  labelHtml: SafeHtml;
+}
+
 export interface MajorConceptDTO {
-  name: string;
-  label: string;
+  id: number;
+  labelHtml: SafeHtml;
   color: string;
-  subconcepts: string[];
+  subconcepts: SubconceptDTO[];
 }
 
 export interface ConceptContentDTO {
-  description: string | null;
-  example: string | null;
+  id: number;
+  parentId: number | null;
+  descriptionHtml: SafeHtml | null;
+  exampleHtml: SafeHtml | null;
   practiceUrl: string | null;
 }
 
@@ -105,8 +121,11 @@ export interface PositionDTO {
 }
 
 export interface EdgeDTO {
-  source: string;
-  target: string;
+  id: number;
+  sourceId: number;
+  targetId: number;
+  // Set (bright red) when the edge is part of a prerequisite cycle; null otherwise.
+  color: string | null;
 }
 
 export async function fetchConceptGraph(
@@ -151,6 +170,7 @@ export interface UserStateV2Response {
   starred_ids: string[];
   detail_cards: unknown[];
   mastered_subconcepts: string[];
+  top_level_positions: Record<string, { x: number; y: number }>;
 }
 
 export async function fetchUserStateV2(
@@ -174,6 +194,7 @@ export async function saveUserStateV2(body: {
   starred_ids: string[];
   detail_cards: unknown[];
   mastered_subconcepts: string[];
+  top_level_positions: Record<string, { x: number; y: number }>;
 }): Promise<void> {
   const res = await fetch(`${API_BASE}/user-state-v2`, {
     method: "POST",

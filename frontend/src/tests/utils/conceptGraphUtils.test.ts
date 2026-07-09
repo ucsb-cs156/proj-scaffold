@@ -3,6 +3,7 @@ import {
   normalize,
   toPastel,
   computeSubgraph,
+  computeSubgraphV2,
 } from "main/utils/conceptGraphUtils";
 
 describe("utils/conceptGraphUtils", () => {
@@ -76,6 +77,33 @@ describe("utils/conceptGraphUtils", () => {
 
     test("returns an empty set for an empty input", () => {
       expect(computeSubgraph([])).toEqual(new Set());
+    });
+  });
+
+  describe("computeSubgraphV2", () => {
+    // 1 -> 2 -> 3 and 4 -> 3: two prerequisite chains meeting at 3.
+    const edges = [
+      { sourceId: 1, targetId: 2 },
+      { sourceId: 2, targetId: 3 },
+      { sourceId: 4, targetId: 3 },
+    ];
+
+    test("includes the tagged id itself when it has no prerequisites", () => {
+      expect(computeSubgraphV2(["1"], edges)).toEqual(new Set(["1"]));
+    });
+
+    test("walks upward transitively through the supplied edges", () => {
+      expect(computeSubgraphV2(["3"], edges)).toEqual(
+        new Set(["3", "2", "1", "4"]),
+      );
+    });
+
+    test("uses only the supplied edges, not the hardcoded legacy data", () => {
+      expect(computeSubgraphV2(["3"], [])).toEqual(new Set(["3"]));
+    });
+
+    test("returns an empty set for an empty input", () => {
+      expect(computeSubgraphV2([], edges)).toEqual(new Set());
     });
   });
 });

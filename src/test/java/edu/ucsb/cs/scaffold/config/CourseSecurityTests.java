@@ -3,12 +3,16 @@ package edu.ucsb.cs.scaffold.config;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+import edu.ucsb.cs.scaffold.entity.Concept;
+import edu.ucsb.cs.scaffold.entity.ConceptEdge;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.CourseStaff;
 import edu.ucsb.cs.scaffold.entity.RosterStudent;
 import edu.ucsb.cs.scaffold.entity.User;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.model.CurrentUser;
+import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
+import edu.ucsb.cs.scaffold.repository.ConceptRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
@@ -56,6 +60,10 @@ public class CourseSecurityTests {
   @MockitoBean UserRepository userRepository;
 
   @MockitoBean RosterStudentRepository rosterStudentRepository;
+
+  @MockitoBean ConceptRepository conceptRepository;
+
+  @MockitoBean ConceptEdgeRepository conceptEdgeRepository;
 
   @Autowired DummyCourseSecurity DummyCourseSecurity;
 
@@ -357,6 +365,225 @@ public class CourseSecurityTests {
         roles = {"INSTRUCTOR"})
     public void returns_properly() {
       assertThrows(AccessDeniedException.class, () -> DummyCourseSecurity.loadRosterStudent(1L));
+    }
+  }
+
+  @Nested
+  public class NullCourseId {
+
+    @BeforeEach
+    public void setup() {
+      // A non-owner instructor: if the null guard were absent, this user would be denied
+      // (or findById(null) would throw); with the guard, access is granted so the
+      // controller can produce a proper validation error for the missing courseId.
+      User user = User.builder().id(1L).email("notowner@example.com").build();
+      when(currentUserService.getCurrentUser())
+          .thenReturn(
+              CurrentUser.builder()
+                  .user(user)
+                  .roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR")))
+                  .build());
+      when(courseRepository.findById(null)).thenReturn(Optional.empty());
+    }
+
+    @Test
+    @WithMockUser(
+        setupBefore = TestExecutionEvent.TEST_EXECUTION,
+        roles = {"INSTRUCTOR"})
+    public void null_course_id_is_allowed_through_for_controller_validation() {
+      assertTrue(DummyCourseSecurity.nullTest(null));
+    }
+  }
+
+  @Nested
+  public class NotFoundConcept {
+
+    @BeforeEach
+    public void setup() {
+      User user = User.builder().id(1L).build();
+      when(currentUserService.getCurrentUser())
+          .thenReturn(
+              CurrentUser.builder()
+                  .user(user)
+                  .roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR")))
+                  .build());
+      when(conceptRepository.findById(1L)).thenReturn(Optional.empty());
+    }
+
+    @Test
+    @WithMockUser(
+        setupBefore = TestExecutionEvent.TEST_EXECUTION,
+        roles = {"INSTRUCTOR"})
+    public void permission_granted_but_load_throws_when_concept_missing() {
+      assertThrows(EntityNotFoundException.class, () -> DummyCourseSecurity.loadConcept(1L));
+    }
+  }
+
+  @Nested
+  public class DeniedConcept {
+
+    Concept concept;
+
+    @BeforeEach
+    public void setup() {
+      User user = User.builder().id(1L).email("instructoremail2@ucsb.edu").build();
+      when(currentUserService.getCurrentUser())
+          .thenReturn(
+              CurrentUser.builder()
+                  .user(user)
+                  .roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR")))
+                  .build());
+      concept =
+          Concept.builder()
+              .id(1L)
+              .course(
+                  Course.builder()
+                      .id(1L)
+                      .instructorEmail("instructoremail@ucsb.edu")
+                      .courseStaff(List.of())
+                      .build())
+              .build();
+      when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
+    }
+
+    @Test
+    @WithMockUser(
+        setupBefore = TestExecutionEvent.TEST_EXECUTION,
+        roles = {"INSTRUCTOR"})
+    public void non_owner_is_denied() {
+      assertThrows(AccessDeniedException.class, () -> DummyCourseSecurity.loadConcept(1L));
+    }
+  }
+
+  @Nested
+  public class AllowedConcept {
+
+    Concept concept;
+
+    @BeforeEach
+    public void setup() {
+      User user = User.builder().id(1L).email("instructoremail@ucsb.edu").build();
+      when(currentUserService.getCurrentUser())
+          .thenReturn(
+              CurrentUser.builder()
+                  .user(user)
+                  .roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR")))
+                  .build());
+      concept =
+          Concept.builder()
+              .id(1L)
+              .course(
+                  Course.builder()
+                      .id(1L)
+                      .instructorEmail("instructoremail@ucsb.edu")
+                      .courseStaff(List.of())
+                      .build())
+              .build();
+      when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
+    }
+
+    @Test
+    @WithMockUser(
+        setupBefore = TestExecutionEvent.TEST_EXECUTION,
+        roles = {"INSTRUCTOR"})
+    public void course_instructor_is_allowed() {
+      assertEquals(concept, DummyCourseSecurity.loadConcept(1L));
+    }
+  }
+
+  @Nested
+  public class NotFoundConceptEdge {
+
+    @BeforeEach
+    public void setup() {
+      User user = User.builder().id(1L).build();
+      when(currentUserService.getCurrentUser())
+          .thenReturn(
+              CurrentUser.builder()
+                  .user(user)
+                  .roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR")))
+                  .build());
+      when(conceptEdgeRepository.findById(1L)).thenReturn(Optional.empty());
+    }
+
+    @Test
+    @WithMockUser(
+        setupBefore = TestExecutionEvent.TEST_EXECUTION,
+        roles = {"INSTRUCTOR"})
+    public void permission_granted_but_load_throws_when_edge_missing() {
+      assertThrows(EntityNotFoundException.class, () -> DummyCourseSecurity.loadConceptEdge(1L));
+    }
+  }
+
+  @Nested
+  public class DeniedConceptEdge {
+
+    ConceptEdge edge;
+
+    @BeforeEach
+    public void setup() {
+      User user = User.builder().id(1L).email("instructoremail2@ucsb.edu").build();
+      when(currentUserService.getCurrentUser())
+          .thenReturn(
+              CurrentUser.builder()
+                  .user(user)
+                  .roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR")))
+                  .build());
+      edge =
+          ConceptEdge.builder()
+              .id(1L)
+              .course(
+                  Course.builder()
+                      .id(1L)
+                      .instructorEmail("instructoremail@ucsb.edu")
+                      .courseStaff(List.of())
+                      .build())
+              .build();
+      when(conceptEdgeRepository.findById(1L)).thenReturn(Optional.of(edge));
+    }
+
+    @Test
+    @WithMockUser(
+        setupBefore = TestExecutionEvent.TEST_EXECUTION,
+        roles = {"INSTRUCTOR"})
+    public void non_owner_is_denied() {
+      assertThrows(AccessDeniedException.class, () -> DummyCourseSecurity.loadConceptEdge(1L));
+    }
+  }
+
+  @Nested
+  public class AllowedConceptEdge {
+
+    ConceptEdge edge;
+
+    @BeforeEach
+    public void setup() {
+      User user = User.builder().id(1L).email("instructoremail@ucsb.edu").build();
+      when(currentUserService.getCurrentUser())
+          .thenReturn(
+              CurrentUser.builder()
+                  .user(user)
+                  .roles(Set.of(new SimpleGrantedAuthority("ROLE_INSTRUCTOR")))
+                  .build());
+      edge =
+          ConceptEdge.builder()
+              .id(1L)
+              .course(
+                  Course.builder()
+                      .id(1L)
+                      .instructorEmail("instructoremail@ucsb.edu")
+                      .courseStaff(List.of())
+                      .build())
+              .build();
+      when(conceptEdgeRepository.findById(1L)).thenReturn(Optional.of(edge));
+    }
+
+    @Test
+    @WithMockUser(
+        setupBefore = TestExecutionEvent.TEST_EXECUTION,
+        roles = {"INSTRUCTOR"})
+    public void course_instructor_is_allowed() {
+      assertEquals(edge, DummyCourseSecurity.loadConceptEdge(1L));
     }
   }
 

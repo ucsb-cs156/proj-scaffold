@@ -316,6 +316,7 @@ describe("api/client", () => {
       starred_ids: ["1"],
       detail_cards: [],
       mastered_subconcepts: [],
+      top_level_positions: {},
     };
 
     test("posts the body as json on success", async () => {

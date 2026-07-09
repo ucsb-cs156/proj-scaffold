@@ -1,0 +1,34 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "023-remove-concept-name",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "columnExists": { "tableName": "concepts", "columnName": "name" } }
+        ],
+        "changes": [
+          {
+            "sql": {
+              "comment": "question_concepts.concept_id used to store top-level concept names; repoint each row at the concept's numeric id (as a string) before the name column disappears. Rows that match no concept are left untouched.",
+              "sql": "UPDATE question_concepts qc SET concept_id = (SELECT CAST(MIN(c.id) AS VARCHAR(255)) FROM concepts c WHERE c.name = qc.concept_id) WHERE EXISTS (SELECT 1 FROM concepts c WHERE c.name = qc.concept_id)"
+            }
+          },
+          {
+            "dropUniqueConstraint": {
+              "tableName": "concepts",
+              "constraintName": "UK_CONCEPTS_COURSE_CONCEPT"
+            }
+          },
+          {
+            "dropColumn": {
+              "tableName": "concepts",
+              "columnName": "name"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
