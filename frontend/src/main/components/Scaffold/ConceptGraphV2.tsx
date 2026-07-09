@@ -177,7 +177,7 @@ function MajorNode({ data, id }: NodeProps) {
         ? JSON.stringify(
             {
               id,
-              label,
+              label: labelHtml,
               color,
               subconcepts,
               conceptContent: conceptContentForNode,
@@ -186,7 +186,7 @@ function MajorNode({ data, id }: NodeProps) {
             2,
           )
         : undefined,
-    [debugMode, id, color, subconcepts, conceptContentForNode],
+    [debugMode, id, labelHtml, color, subconcepts, conceptContentForNode],
   );
 
   const showColor = !hasSelection || highlighted;
