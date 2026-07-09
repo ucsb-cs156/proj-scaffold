@@ -61,6 +61,11 @@ public class ConceptsController extends ApiController {
       Comparator.comparing(Concept::getSortOrder, Comparator.nullsLast(Comparator.naturalOrder()))
           .thenComparing(Concept::getId);
 
+  private static final Comparator<Concept> COURSE_CONCEPT_TABLE_ORDER =
+      Comparator.comparing(Concept::getLevel, Comparator.nullsLast(Comparator.naturalOrder()))
+          .thenComparing(Concept::getX, Comparator.nullsLast(Comparator.naturalOrder()))
+          .thenComparing(Concept::getId);
+
   private final ConceptRepository conceptRepository;
   private final PracticeProblemRepository practiceProblemRepository;
   private final ConceptEdgeRepository conceptEdgeRepository;
@@ -90,6 +95,25 @@ public class ConceptsController extends ApiController {
               urlByConceptId.get(concept.getId())));
     }
     return result;
+  }
+
+  @Operation(summary = "Get the top-level concepts for a course in table order")
+  @PreAuthorize("hasRole('ROLE_USER')")
+  @GetMapping("/api/concepts/course")
+  public List<CourseConceptDTO> getCourseConcepts(
+      @Parameter(description = "id of the course") @RequestParam Long courseId) {
+    return conceptRepository.findByCourseId(courseId).stream()
+        .filter(concept -> !concept.isSubconcept())
+        .sorted(COURSE_CONCEPT_TABLE_ORDER)
+        .map(
+            concept ->
+                new CourseConceptDTO(
+                    concept.getId(),
+                    concept.getLabel(),
+                    concept.getLevel(),
+                    concept.getX(),
+                    concept.getY()))
+        .toList();
   }
 
   @Operation(summary = "Get the major concepts and their subconcepts for a course")
@@ -739,6 +763,8 @@ public class ConceptsController extends ApiController {
 
   public record ConceptContentDTO(
       Long id, Long parentId, String descriptionHtml, String exampleHtml, String practiceUrl) {}
+
+  public record CourseConceptDTO(Long id, String label, Integer level, Integer x, Integer y) {}
 
   public record MajorConceptDTO(
       Long id, String labelHtml, String color, List<SubconceptDTO> subconcepts) {}

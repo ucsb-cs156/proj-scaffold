@@ -207,6 +207,36 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @Test
   @WithMockUser(roles = {"USER"})
+  public void logged_in_user_can_get_course_concepts_sorted_by_level_then_x() throws Exception {
+    Course course = Course.builder().id(42L).courseName("CMPSC 8").build();
+    Concept levelTwo =
+        Concept.builder().id(1L).course(course).label("Recursion").level(2).x(800).y(300).build();
+    Concept subconcept =
+        Concept.builder().id(2L).course(course).label("Base case").parent(levelTwo).build();
+    Concept earlyLevelOne =
+        Concept.builder().id(3L).course(course).label("Variables").level(1).x(125).y(250).build();
+    Concept laterLevelOne =
+        Concept.builder().id(4L).course(course).label("Loops").level(1).x(490).y(300).build();
+    when(conceptRepository.findByCourseId(42L))
+        .thenReturn(List.of(levelTwo, subconcept, laterLevelOne, earlyLevelOne));
+
+    String expectedJson =
+        """
+        [
+          { "id": 3, "label": "Variables", "level": 1, "x": 125, "y": 250 },
+          { "id": 4, "label": "Loops", "level": 1, "x": 490, "y": 300 },
+          { "id": 1, "label": "Recursion", "level": 2, "x": 800, "y": 300 }
+        ]
+        """;
+
+    mockMvc
+        .perform(get("/api/concepts/course").param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(content().json(expectedJson, true));
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
   public void logged_in_user_can_get_concept_positions() throws Exception {
     List<Concept> concepts = buildSampleConcepts();
     when(conceptRepository.findByCourseId(42L)).thenReturn(concepts);
@@ -283,6 +313,11 @@ public class ConceptsControllerTests extends ControllerTestCase {
         .andExpect(content().json("[]"));
 
     mockMvc
+        .perform(get("/api/concepts/course").param("courseId", "99"))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+
+    mockMvc
         .perform(get("/api/concepts/positions").param("courseId", "99"))
         .andExpect(status().isOk())
         .andExpect(content().json("{}"));
@@ -304,6 +339,13 @@ public class ConceptsControllerTests extends ControllerTestCase {
   public void anonymous_user_cannot_get_concept_graph() throws Exception {
     mockMvc
         .perform(get("/api/concepts/graph").param("courseId", "42"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  public void anonymous_user_cannot_get_course_concepts() throws Exception {
+    mockMvc
+        .perform(get("/api/concepts/course").param("courseId", "42"))
         .andExpect(status().isForbidden());
   }
 
