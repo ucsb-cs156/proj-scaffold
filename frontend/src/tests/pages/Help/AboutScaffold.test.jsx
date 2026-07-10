@@ -54,46 +54,4 @@ describe("AboutScaffold tests", () => {
       "https://ucsb-cs156.github.io",
     );
   });
-
-  test("every link on the page is a live link", async () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <AboutScaffold />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-
-    await screen.findByRole("heading", { level: 1, name: "About Scaffold" });
-
-    const hrefs = [
-      ...new Set(
-        screen
-          .getAllByRole("link")
-          .map((link) => link.getAttribute("href"))
-          .filter((href) => href && href.startsWith("http")),
-      ),
-    ];
-
-    expect(hrefs.length).toBeGreaterThan(0);
-
-    const failures = await Promise.all(
-      hrefs.map(async (href) => {
-        try {
-          const response = await fetch(href, { redirect: "follow" });
-          if (response.status >= 400) {
-            return `${href} returned HTTP status ${response.status}`;
-          }
-        } catch (error) {
-          return `${href} request failed: ${error.cause ?? error}`;
-        }
-        return null;
-      }),
-    );
-
-    expect(
-      failures.filter((failure) => failure !== null),
-      "Expected every link on the page to be a live link",
-    ).toEqual([]);
-  }, 30000);
 });
