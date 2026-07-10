@@ -62,13 +62,13 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;plQuestionId&quot;) @RequestParam Long plQuestionId) {
 <span class="fc" id="L63">    plRepoRepository</span>
 <span class="fc" id="L64">        .findById(plRepoId)</span>
-<span class="pc" id="L65">        .orElseThrow(() -&gt; new EntityNotFoundException(PlRepo.class, plRepoId));</span>
+<span class="fc" id="L65">        .orElseThrow(() -&gt; new EntityNotFoundException(PlRepo.class, plRepoId));</span>
 <span class="fc" id="L66">    plInstanceRepository</span>
 <span class="fc" id="L67">        .findById(plInstanceId)</span>
-<span class="pc" id="L68">        .orElseThrow(() -&gt; new EntityNotFoundException(PlInstance.class, plInstanceId));</span>
+<span class="fc" id="L68">        .orElseThrow(() -&gt; new EntityNotFoundException(PlInstance.class, plInstanceId));</span>
 <span class="fc" id="L69">    plQuestionRepository</span>
 <span class="fc" id="L70">        .findById(plQuestionId)</span>
-<span class="pc" id="L71">        .orElseThrow(() -&gt; new EntityNotFoundException(PlQuestion.class, plQuestionId));</span>
+<span class="fc" id="L71">        .orElseThrow(() -&gt; new EntityNotFoundException(PlQuestion.class, plQuestionId));</span>
 
 <span class="fc bfc" id="L73" title="All 2 branches covered.">    if (plScaffoldAssessmentRepository.existsByPlRepoIdAndPlInstanceIdAndPlQuestionId(</span>
         plRepoId, plInstanceId, plQuestionId)) {

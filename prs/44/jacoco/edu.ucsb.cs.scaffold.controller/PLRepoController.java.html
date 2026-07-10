@@ -56,7 +56,7 @@ import org.springframework.web.bind.annotation.RestController;
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @PostMapping(&quot;&quot;)
   public PlRepo postPlRepo(@Parameter(name = &quot;repoName&quot;) @RequestParam String repoName) {
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">    String trimmedRepoName = repoName == null ? null : repoName.strip();</span>
+<span class="fc" id="L59">    String trimmedRepoName = repoName.strip();</span>
 <span class="fc" id="L60">    validateRepoName(trimmedRepoName);</span>
 
 <span class="fc bfc" id="L62" title="All 2 branches covered.">    if (plRepoRepository.existsByRepoName(trimmedRepoName)) {</span>
@@ -90,8 +90,8 @@ import org.springframework.web.bind.annotation.RestController;
   }
 
   private void validateRepoName(String repoName) {
-<span class="pc bpc" id="L93" title="2 of 4 branches missed.">    if (repoName == null || repoName.isBlank()) {</span>
-<span class="nc" id="L94">      throw new IllegalArgumentException(&quot;repoName is required&quot;);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">    if (repoName.isBlank()) {</span>
+<span class="fc" id="L94">      throw new IllegalArgumentException(&quot;repoName is required&quot;);</span>
     }
 <span class="fc bfc" id="L96" title="All 2 branches covered.">    if (!REPO_NAME_PATTERN.matcher(repoName).matches()) {</span>
 <span class="fc" id="L97">      throw new IllegalArgumentException(</span>

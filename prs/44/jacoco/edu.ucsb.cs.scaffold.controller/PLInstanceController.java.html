@@ -50,9 +50,9 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;name&quot;) @RequestParam String name) {
 <span class="fc" id="L51">    ensurePlRepoExists(plRepoId);</span>
 
-<span class="pc bpc" id="L53" title="1 of 2 branches missed.">    String trimmedName = name == null ? null : name.strip();</span>
-<span class="pc bpc" id="L54" title="2 of 4 branches missed.">    if (trimmedName == null || trimmedName.isBlank()) {</span>
-<span class="nc" id="L55">      throw new IllegalArgumentException(&quot;name is required&quot;);</span>
+<span class="fc" id="L53">    String trimmedName = name.strip();</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">    if (trimmedName.isBlank()) {</span>
+<span class="fc" id="L55">      throw new IllegalArgumentException(&quot;name is required&quot;);</span>
     }
 
 <span class="fc bfc" id="L58" title="All 2 branches covered.">    if (plInstanceRepository.existsByPlRepoIdAndName(plRepoId, trimmedName)) {</span>
