@@ -147,6 +147,60 @@ public class PLScaffoldAssessmentControllerTests extends ControllerTestCase {
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
+  public void admin_cannot_post_assessment_for_non_existent_repo() throws Exception {
+    when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/pScaffoldAssessment?plRepoId=1&plInstanceId=2&plQuestionId=3")
+                    .with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("PlRepo with id 1 not found", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_cannot_post_assessment_for_non_existent_instance() throws Exception {
+    when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.of(repo));
+    when(plInstanceRepository.findById(eq(2L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/pScaffoldAssessment?plRepoId=1&plInstanceId=2&plQuestionId=3")
+                    .with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("PlInstance with id 2 not found", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_cannot_post_assessment_for_non_existent_question() throws Exception {
+    when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.of(repo));
+    when(plInstanceRepository.findById(eq(2L))).thenReturn(Optional.of(instance));
+    when(plQuestionRepository.findById(eq(3L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/pScaffoldAssessment?plRepoId=1&plInstanceId=2&plQuestionId=3")
+                    .with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("PlQuestion with id 3 not found", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
   public void admin_can_post_a_new_assessment() throws Exception {
     when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.of(repo));
     when(plInstanceRepository.findById(eq(2L))).thenReturn(Optional.of(instance));

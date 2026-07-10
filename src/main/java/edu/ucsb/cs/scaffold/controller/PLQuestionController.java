@@ -53,8 +53,8 @@ public class PLQuestionController extends ApiController {
       @Parameter(name = "title") @RequestParam String title) {
     ensurePlRepoExists(plRepoId);
 
-    String trimmedQuestionId = questionId == null ? null : questionId.strip();
-    if (trimmedQuestionId == null || trimmedQuestionId.isBlank()) {
+    String trimmedQuestionId = questionId.strip();
+    if (trimmedQuestionId.isBlank()) {
       throw new IllegalArgumentException("questionId is required");
     }
 

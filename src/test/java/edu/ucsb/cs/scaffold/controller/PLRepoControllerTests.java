@@ -138,6 +138,19 @@ public class PLRepoControllerTests extends ControllerTestCase {
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
+  public void admin_cannot_post_a_blank_repo_name() throws Exception {
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/plrepo?repoName= ").with(csrf()))
+            .andExpect(status().is(400))
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("repoName is required", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
   public void admin_cannot_post_an_invalid_repo_name() throws Exception {
     MvcResult response =
         mockMvc

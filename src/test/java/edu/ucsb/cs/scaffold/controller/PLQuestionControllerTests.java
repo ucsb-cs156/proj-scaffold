@@ -147,6 +147,23 @@ public class PLQuestionControllerTests extends ControllerTestCase {
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
+  public void admin_cannot_post_a_blank_question_id() throws Exception {
+    when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.of(repo));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/plQuestion?plRepoId=1&questionId= &uuid=%s&title=Title".formatted(uuid))
+                    .with(csrf()))
+            .andExpect(status().is(400))
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("questionId is required", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
   public void admin_cannot_post_a_duplicate_question_id() throws Exception {
     when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.of(repo));
     when(plQuestionRepository.existsByPlRepoIdAndQuestionId(eq(1L), eq("q1"))).thenReturn(true);

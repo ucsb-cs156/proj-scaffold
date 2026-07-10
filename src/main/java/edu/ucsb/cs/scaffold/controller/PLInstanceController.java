@@ -50,8 +50,8 @@ public class PLInstanceController extends ApiController {
       @Parameter(name = "name") @RequestParam String name) {
     ensurePlRepoExists(plRepoId);
 
-    String trimmedName = name == null ? null : name.strip();
-    if (trimmedName == null || trimmedName.isBlank()) {
+    String trimmedName = name.strip();
+    if (trimmedName.isBlank()) {
       throw new IllegalArgumentException("name is required");
     }
 

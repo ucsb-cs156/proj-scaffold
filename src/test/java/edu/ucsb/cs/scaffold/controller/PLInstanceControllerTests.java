@@ -133,6 +133,21 @@ public class PLInstanceControllerTests extends ControllerTestCase {
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
+  public void admin_cannot_post_a_blank_instance_name() throws Exception {
+    when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.of(repo));
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/plinstance?plRepoId=1&name= ").with(csrf()))
+            .andExpect(status().is(400))
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("name is required", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
   public void admin_cannot_post_a_duplicate_instance_name() throws Exception {
     when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.of(repo));
     when(plInstanceRepository.existsByPlRepoIdAndName(eq(1L), eq("Fall2025"))).thenReturn(true);

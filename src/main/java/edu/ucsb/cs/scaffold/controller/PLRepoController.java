@@ -56,7 +56,7 @@ public class PLRepoController extends ApiController {
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @PostMapping("")
   public PlRepo postPlRepo(@Parameter(name = "repoName") @RequestParam String repoName) {
-    String trimmedRepoName = repoName == null ? null : repoName.strip();
+    String trimmedRepoName = repoName.strip();
     validateRepoName(trimmedRepoName);
 
     if (plRepoRepository.existsByRepoName(trimmedRepoName)) {
@@ -90,7 +90,7 @@ public class PLRepoController extends ApiController {
   }
 
   private void validateRepoName(String repoName) {
-    if (repoName == null || repoName.isBlank()) {
+    if (repoName.isBlank()) {
       throw new IllegalArgumentException("repoName is required");
     }
     if (!REPO_NAME_PATTERN.matcher(repoName).matches()) {
