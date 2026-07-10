@@ -1,11 +1,16 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import Footer from "main/components/Nav/Footer";
 
 describe("Footer tests", () => {
   test("renders correctly", () => {
-    render(<Footer />);
-    expect(
-      screen.getByText(/UCSB Computer Science project/),
-    ).toBeInTheDocument();
+    render(
+      <MemoryRouter>
+        <Footer />
+      </MemoryRouter>,
+    );
+    const aboutLink = screen.getByRole("link", { name: "About Scaffold" });
+    expect(aboutLink).toBeInTheDocument();
+    expect(aboutLink).toHaveAttribute("href", "/about");
   });
 });
