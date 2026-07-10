@@ -22,4 +22,5 @@ frontend/coverage
 .env.local
 .DS_Store
 
+.vscode/node_modules
 .vscode/
