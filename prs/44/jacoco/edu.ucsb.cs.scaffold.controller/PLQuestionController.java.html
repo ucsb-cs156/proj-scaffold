@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PLQuestionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.controller</a> &gt; <span class="el_source">PLQuestionController.java</span></div><h1>PLQuestionController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.controller;
+
+import edu.ucsb.cs.scaffold.entity.PlQuestion;
+import edu.ucsb.cs.scaffold.entity.PlRepo;
+import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
+import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
+import edu.ucsb.cs.scaffold.repository.PlScaffoldAssessmentRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@Tag(name = &quot;PlQuestion&quot;)
+@RequestMapping(&quot;/api/plQuestion&quot;)
+@RestController
+<span class="fc" id="L28">@Slf4j</span>
+<span class="fc" id="L29">public class PLQuestionController extends ApiController {</span>
+
+  @Autowired private PlQuestionRepository plQuestionRepository;
+
+  @Autowired private PlRepoRepository plRepoRepository;
+
+  @Autowired private PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
+
+  @Operation(summary = &quot;List all PlQuestions for a PlRepo&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+  @GetMapping(&quot;&quot;)
+  public List&lt;PlQuestion&gt; allPlQuestions(
+      @Parameter(name = &quot;plrepoId&quot;) @RequestParam Long plrepoId) {
+<span class="fc" id="L42">    ensurePlRepoExists(plrepoId);</span>
+<span class="fc" id="L43">    return plQuestionRepository.findByPlRepoId(plrepoId);</span>
+  }
+
+  @Operation(summary = &quot;Create a new PlQuestion&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @PostMapping(&quot;&quot;)
+  public PlQuestion postPlQuestion(
+      @Parameter(name = &quot;plRepoId&quot;) @RequestParam Long plRepoId,
+      @Parameter(name = &quot;questionId&quot;) @RequestParam String questionId,
+      @Parameter(name = &quot;uuid&quot;) @RequestParam UUID uuid,
+      @Parameter(name = &quot;title&quot;) @RequestParam String title) {
+<span class="fc" id="L54">    ensurePlRepoExists(plRepoId);</span>
+
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">    String trimmedQuestionId = questionId == null ? null : questionId.strip();</span>
+<span class="pc bpc" id="L57" title="2 of 4 branches missed.">    if (trimmedQuestionId == null || trimmedQuestionId.isBlank()) {</span>
+<span class="nc" id="L58">      throw new IllegalArgumentException(&quot;questionId is required&quot;);</span>
+    }
+
+<span class="fc bfc" id="L61" title="All 2 branches covered.">    if (plQuestionRepository.existsByPlRepoIdAndQuestionId(plRepoId, trimmedQuestionId)) {</span>
+<span class="fc" id="L62">      throw new IllegalArgumentException(</span>
+          &quot;PlQuestion with questionId %s already exists for plRepoId %s&quot;
+<span class="fc" id="L64">              .formatted(trimmedQuestionId, plRepoId));</span>
+    }
+
+    PlQuestion plQuestion =
+<span class="fc" id="L68">        PlQuestion.builder()</span>
+<span class="fc" id="L69">            .plRepoId(plRepoId)</span>
+<span class="fc" id="L70">            .questionId(trimmedQuestionId)</span>
+<span class="fc" id="L71">            .uuid(uuid)</span>
+<span class="fc" id="L72">            .title(title)</span>
+<span class="fc" id="L73">            .build();</span>
+<span class="fc" id="L74">    return plQuestionRepository.save(plQuestion);</span>
+  }
+
+  @Operation(summary = &quot;Delete a PlQuestion, cascading the delete to its PlScaffoldAssessments&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @DeleteMapping(&quot;&quot;)
+  @Transactional
+  public Object deletePlQuestion(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
+<span class="fc" id="L82">    PlQuestion plQuestion =</span>
+        plQuestionRepository
+<span class="fc" id="L84">            .findById(id)</span>
+<span class="fc" id="L85">            .orElseThrow(() -&gt; new EntityNotFoundException(PlQuestion.class, id));</span>
+
+<span class="fc" id="L87">    plScaffoldAssessmentRepository.deleteByPlQuestionId(id);</span>
+<span class="fc" id="L88">    plQuestionRepository.delete(plQuestion);</span>
+
+<span class="fc" id="L90">    return genericMessage(&quot;PlQuestion with id %s deleted&quot;.formatted(id));</span>
+  }
+
+  private void ensurePlRepoExists(Long plRepoId) {
+<span class="fc" id="L94">    plRepoRepository</span>
+<span class="fc" id="L95">        .findById(plRepoId)</span>
+<span class="fc" id="L96">        .orElseThrow(() -&gt; new EntityNotFoundException(PlRepo.class, plRepoId));</span>
+<span class="fc" id="L97">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
