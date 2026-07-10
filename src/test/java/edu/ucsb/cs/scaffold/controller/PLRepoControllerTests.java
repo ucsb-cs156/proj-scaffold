@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import edu.ucsb.cs.scaffold.ControllerTestCase;
 import edu.ucsb.cs.scaffold.entity.PlRepo;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
@@ -38,6 +39,8 @@ public class PLRepoControllerTests extends ControllerTestCase {
   @MockitoBean PlQuestionRepository plQuestionRepository;
 
   @MockitoBean PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
+
+  @MockitoBean PlAssessmentRepository plAssessmentRepository;
 
   // Authorization tests
 
@@ -177,6 +180,7 @@ public class PLRepoControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(plScaffoldAssessmentRepository, times(1)).deleteByPlRepoId(1L);
+    verify(plAssessmentRepository, times(1)).deleteByPlRepoId(1L);
     verify(plInstanceRepository, times(1)).deleteByPlRepoId(1L);
     verify(plQuestionRepository, times(1)).deleteByPlRepoId(1L);
     verify(plRepoRepository, times(1)).delete(any());

@@ -2,6 +2,7 @@ package edu.ucsb.cs.scaffold.controller;
 
 import edu.ucsb.cs.scaffold.entity.PlRepo;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
@@ -45,6 +46,8 @@ public class PLRepoController extends ApiController {
 
   @Autowired private PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
 
+  @Autowired private PlAssessmentRepository plAssessmentRepository;
+
   @Operation(summary = "List all PlRepos")
   @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
   @GetMapping("")
@@ -71,7 +74,7 @@ public class PLRepoController extends ApiController {
   @Operation(
       summary =
           "Delete a PlRepo, cascading the delete to its PlInstances, PlQuestions, "
-              + "and PlScaffoldAssessments")
+              + "PlScaffoldAssessments, and PlAssessments")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @DeleteMapping("")
   @Transactional
@@ -82,6 +85,7 @@ public class PLRepoController extends ApiController {
             .orElseThrow(() -> new EntityNotFoundException(PlRepo.class, id));
 
     plScaffoldAssessmentRepository.deleteByPlRepoId(id);
+    plAssessmentRepository.deleteByPlRepoId(id);
     plInstanceRepository.deleteByPlRepoId(id);
     plQuestionRepository.deleteByPlRepoId(id);
     plRepoRepository.delete(plRepo);
