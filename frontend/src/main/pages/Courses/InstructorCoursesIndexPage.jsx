@@ -16,8 +16,8 @@ export default function InstructorCoursesIndexPage() {
     error: _error,
     status: _status,
   } = useBackend(
-    ["/api/courses/allForInstructors"],
-    { method: "GET", url: "/api/courses/allForInstructors" },
+    ["/api/courses/list/instructors"],
+    { method: "GET", url: "/api/courses/list/instructors" },
     // Stryker disable next-line all : don't test default value of empty list
     [],
   );
@@ -40,7 +40,7 @@ export default function InstructorCoursesIndexPage() {
   };
 
   const mutation = useBackendMutation(objectToAxiosParams, { onSuccess }, [
-    "/api/courses/allForInstructors",
+    "/api/courses/list/instructors",
   ]);
 
   const onSubmit = async (data) => {

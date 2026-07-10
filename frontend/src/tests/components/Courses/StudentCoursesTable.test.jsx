@@ -38,7 +38,7 @@ describe("StudentCoursesTable tests", () => {
 
   test("renders correctly with courses", async () => {
     axiosMock
-      .onGet("/api/courses/list")
+      .onGet("/api/courses/list/students")
       .reply(200, coursesFixtures.severalCourses);
 
     render(
@@ -75,7 +75,7 @@ describe("StudentCoursesTable tests", () => {
   });
 
   test("renders empty message when no courses", async () => {
-    axiosMock.onGet("/api/courses/list").reply(200, []);
+    axiosMock.onGet("/api/courses/list/students").reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>

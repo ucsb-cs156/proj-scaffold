@@ -41,7 +41,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     queryClient.clear();
-    axiosMock.onGet("/api/courses/allForInstructors").reply(200, []);
+    axiosMock.onGet("/api/courses/list/instructors").reply(200, []);
     axiosMock
       .onGet("/api/currentUser")
       .reply(200, apiCurrentUserFixtures.userOnly);
@@ -68,7 +68,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
 
   test("Renders empty table for admin user correctly", async () => {
     setupInstructorUser();
-    axiosMock.onGet("/api/courses/allForInstructors").reply(200, []);
+    axiosMock.onGet("/api/courses/list/instructors").reply(200, []);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -86,7 +86,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
   test("Renders course data correctly for admin user", async () => {
     setupInstructorUser();
     axiosMock
-      .onGet("/api/courses/allForInstructors")
+      .onGet("/api/courses/list/instructors")
       .reply(200, coursesFixtures.severalCourses);
 
     render(
@@ -118,7 +118,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
   test("renders empty table when backend unavailable, admin only", async () => {
     setupInstructorUser();
 
-    axiosMock.onGet("/api/courses/allForInstructors").timeout();
+    axiosMock.onGet("/api/courses/list/instructors").timeout();
 
     const restoreConsole = mockConsole();
 
@@ -136,7 +136,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
 
     const errorMessage = console.error.mock.calls[0][0];
     expect(errorMessage).toMatch(
-      "Error communicating with backend via GET on /api/courses/allForInstructors",
+      "Error communicating with backend via GET on /api/courses/list/instructors",
     );
     restoreConsole();
   });
@@ -147,7 +147,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
       .onPost("/api/courses/post")
       .reply(200, coursesFixtures.severalCourses[0]);
     axiosMock
-      .onGet("/api/courses/allForInstructors")
+      .onGet("/api/courses/list/instructors")
       .reply(200, coursesFixtures.severalCourses);
     axiosMock.onGet("/api/systemInfo/schools").reply(200, schoolList);
 
@@ -183,7 +183,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
       school: "UCSB",
     });
     expect(
-      queryClient.getQueryState(["/api/courses/allForInstructors"]),
+      queryClient.getQueryState(["/api/courses/list/instructors"]),
     ).toBeTruthy();
     await waitFor(() =>
       expect(screen.queryByTestId("CourseModal-base")).not.toBeInTheDocument(),
@@ -194,7 +194,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
     setupInstructorUser();
 
     axiosMock
-      .onGet("/api/courses/allForInstructors")
+      .onGet("/api/courses/list/instructors")
       .reply(200, coursesFixtures.severalCourses);
 
     render(
@@ -223,7 +223,7 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
     setupInstructorUser();
 
     axiosMock
-      .onGet("/api/courses/allForInstructors")
+      .onGet("/api/courses/list/instructors")
       .reply(200, coursesFixtures.severalCourses);
 
     render(
@@ -260,15 +260,15 @@ describe("InstructorInstructorCoursesIndexPage tests", () => {
     );
 
     expect(useBackendSpy).toHaveBeenCalledWith(
-      [`/api/courses/allForInstructors`],
-      { method: "GET", url: `/api/courses/allForInstructors` },
+      [`/api/courses/list/instructors`],
+      { method: "GET", url: `/api/courses/list/instructors` },
       [],
     );
 
     expect(useBackendMutationSpy).toHaveBeenCalledWith(
       expect.any(Function),
       { onSuccess: expect.any(Function) },
-      [`/api/courses/allForInstructors`],
+      [`/api/courses/list/instructors`],
     );
   });
 });

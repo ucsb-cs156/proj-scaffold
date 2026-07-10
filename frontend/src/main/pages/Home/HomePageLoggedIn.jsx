@@ -17,9 +17,9 @@ export default function HomePageLoggedIn() {
     error: _staffError,
     status: _staffStatus,
   } = useBackend(
-    ["/api/courses/staffCourses"],
+    ["/api/courses/list/staff"],
     // Stryker disable next-line StringLiteral : The default value for an empty ("") method is GET.
-    { method: "GET", url: "/api/courses/staffCourses" },
+    { method: "GET", url: "/api/courses/list/staff" },
     // Stryker disable next-line all : don't test default value of empty list
     [],
   );
@@ -28,9 +28,9 @@ export default function HomePageLoggedIn() {
     error: _instructorError,
     status: _instructorStatus,
   } = useBackend(
-    ["/api/courses/allForInstructors"],
+    ["/api/courses/list/instructors"],
     // Stryker disable next-line StringLiteral : The default value for an empty ("") method is GET. Therefore, there is no way to kill a mutation that transforms "GET" to ""
-    { method: "GET", url: "/api/courses/allForInstructors" },
+    { method: "GET", url: "/api/courses/list/instructors" },
     // Stryker disable next-line all : don't test default value of empty list
     [],
     false,
@@ -57,7 +57,7 @@ export default function HomePageLoggedIn() {
   };
 
   const mutation = useBackendMutation(objectToAxiosParams, { onSuccess }, [
-    "/api/courses/allForInstructors",
+    "/api/courses/list/instructors",
   ]);
 
   const onSubmit = async (data) => {

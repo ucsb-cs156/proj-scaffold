@@ -20,9 +20,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.extern.slf4j.Slf4j;
@@ -122,7 +124,7 @@ public class CoursesController extends ApiController {
    */
   @Operation(summary = "List all courses for an instructor")
   @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
-  @GetMapping("/allForInstructors")
+  @GetMapping("/list/instructors")
   public Iterable<InstructorCourseView> allForInstructors() {
     CurrentUser currentUser = getCurrentUser();
     String instructorEmail = currentUser.getUser().getEmail();
@@ -140,7 +142,7 @@ public class CoursesController extends ApiController {
    */
   @Operation(summary = "List all courses for an admin")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
-  @GetMapping("/allForAdmins")
+  @GetMapping("/list/admins")
   public Iterable<InstructorCourseView> allForAdmins() {
     List<Course> courses = courseRepository.findAll();
 
@@ -213,7 +215,7 @@ public class CoursesController extends ApiController {
    */
   @Operation(summary = "List all courses for the current student, including their org status")
   @PreAuthorize("hasRole('ROLE_USER')")
-  @GetMapping("/list")
+  @GetMapping("/list/students")
   public List<RosterStudentCoursesDTO> listCoursesForCurrentUser() {
     String email = getCurrentUser().getUser().getEmail();
     Iterable<RosterStudent> rosterStudentsIterable = rosterStudentRepository.findAllByEmail(email);
@@ -257,7 +259,7 @@ public class CoursesController extends ApiController {
    */
   @Operation(summary = "Student see what courses they appear as staff in")
   @PreAuthorize("hasRole('ROLE_USER')")
-  @GetMapping("/staffCourses")
+  @GetMapping("/list/staff")
   public List<StaffCoursesDTO> staffCourses() {
     CurrentUser currentUser = getCurrentUser();
     User user = currentUser.getUser();
@@ -279,6 +281,121 @@ public class CoursesController extends ApiController {
               return sDto;
             })
         .collect(Collectors.toList());
+  }
+
+  /** DTO representing a course along with the ways in which the current user has access to it. */
+  public record CourseListDTO(
+      Long id,
+      String courseName,
+      String term,
+      School school,
+      String instructorEmail,
+      boolean studentAccess,
+      boolean staffAccess,
+      boolean instructorAccess,
+      boolean adminAccess) {}
+
+  /**
+   * This method returns a unified list of courses that the current user has access to, whether as a
+   * student, staff member, instructor, or admin.
+   *
+   * @return a list of courses along with the access flags for the current user.
+   */
+  @Operation(summary = "List all courses the current user has access to")
+  @PreAuthorize("hasRole('ROLE_USER')")
+  @GetMapping("/list")
+  public List<CourseListDTO> listCoursesForCurrentUserUnified() {
+    String email = getCurrentUser().getUser().getEmail();
+
+    boolean isAdmin = adminRepository.existsByEmail(email);
+
+    Set<Long> studentCourseIds =
+        rosterStudentRepository.findAllByEmail(email).stream()
+            .map(rs -> rs.getCourse().getId())
+            .collect(Collectors.toSet());
+
+    Set<Long> staffCourseIds =
+        courseStaffRepository.findAllByEmail(email).stream()
+            .map(cs -> cs.getCourse().getId())
+            .collect(Collectors.toSet());
+
+    Set<Long> instructorCourseIds =
+        courseRepository.findByInstructorEmail(email).stream()
+            .map(Course::getId)
+            .collect(Collectors.toSet());
+
+    List<Course> courses;
+    if (isAdmin) {
+      courses = courseRepository.findAll();
+    } else {
+      Set<Long> accessibleCourseIds = new HashSet<>();
+      accessibleCourseIds.addAll(studentCourseIds);
+      accessibleCourseIds.addAll(staffCourseIds);
+      accessibleCourseIds.addAll(instructorCourseIds);
+      courses = courseRepository.findAllById(accessibleCourseIds);
+    }
+
+    return courses.stream()
+        .map(
+            c ->
+                new CourseListDTO(
+                    c.getId(),
+                    c.getCourseName(),
+                    c.getTerm(),
+                    c.getSchool(),
+                    c.getInstructorEmail(),
+                    studentCourseIds.contains(c.getId()),
+                    staffCourseIds.contains(c.getId()),
+                    instructorCourseIds.contains(c.getId()),
+                    isAdmin))
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * This method returns the unified access info for a single course, if the current user has access
+   * to it. If the user does not have access, or the course does not exist, a 404 is returned.
+   *
+   * @param courseId the id of the course
+   * @return the course along with the access flags for the current user.
+   */
+  @Operation(summary = "Get unified course access info for a single course")
+  @PreAuthorize("hasRole('ROLE_USER')")
+  @GetMapping("/list/{courseId}")
+  public CourseListDTO getCourseAccessInfo(
+      @Parameter(name = "courseId") @PathVariable Long courseId) {
+    String email = getCurrentUser().getUser().getEmail();
+
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    boolean isAdmin = adminRepository.existsByEmail(email);
+
+    boolean studentAccess =
+        rosterStudentRepository.findAllByEmail(email).stream()
+            .anyMatch(rs -> rs.getCourse().getId().equals(courseId));
+
+    boolean staffAccess =
+        courseStaffRepository.findAllByEmail(email).stream()
+            .anyMatch(cs -> cs.getCourse().getId().equals(courseId));
+
+    boolean instructorAccess = email.equals(course.getInstructorEmail());
+
+    if (!isAdmin && !studentAccess && !staffAccess && !instructorAccess) {
+      throw new EntityNotFoundException(Course.class, courseId);
+    }
+
+    return new CourseListDTO(
+        course.getId(),
+        course.getCourseName(),
+        course.getTerm(),
+        course.getSchool(),
+        course.getInstructorEmail(),
+        studentAccess,
+        staffAccess,
+        instructorAccess,
+        isAdmin);
   }
 
   @Operation(summary = "Update instructor email for a course (admin only)")

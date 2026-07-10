@@ -4,9 +4,9 @@ import React from "react";
 
 export function StudentCoursesTable({ testid }) {
   const { data: courses } = useBackend(
-    ["/api/courses/list"],
+    ["/api/courses/list/students"],
     // Stryker disable next-line StringLiteral : The default value for an empty ("") method is GET. Therefore, there is no way to kill a mutation that transforms "GET" to ""
-    { method: "GET", url: "/api/courses/list" },
+    { method: "GET", url: "/api/courses/list/students" },
     // Stryker disable next-line all : don't test default value of empty list
     [],
   );
