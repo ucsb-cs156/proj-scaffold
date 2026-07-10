@@ -3,6 +3,7 @@ package edu.ucsb.cs.scaffold.controller;
 import edu.ucsb.cs.scaffold.entity.PlInstance;
 import edu.ucsb.cs.scaffold.entity.PlRepo;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
 import edu.ucsb.cs.scaffold.repository.PlScaffoldAssessmentRepository;
@@ -32,6 +33,8 @@ public class PLInstanceController extends ApiController {
   @Autowired private PlRepoRepository plRepoRepository;
 
   @Autowired private PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
+
+  @Autowired private PlAssessmentRepository plAssessmentRepository;
 
   @Operation(summary = "List all PlInstances for a PlRepo")
   @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
@@ -65,7 +68,10 @@ public class PLInstanceController extends ApiController {
     return plInstanceRepository.save(plInstance);
   }
 
-  @Operation(summary = "Delete a PlInstance, cascading the delete to its PlScaffoldAssessments")
+  @Operation(
+      summary =
+          "Delete a PlInstance, cascading the delete to its PlScaffoldAssessments and"
+              + " PlAssessments")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
   @DeleteMapping("")
   @Transactional
@@ -76,6 +82,7 @@ public class PLInstanceController extends ApiController {
             .orElseThrow(() -> new EntityNotFoundException(PlInstance.class, id));
 
     plScaffoldAssessmentRepository.deleteByPlInstanceId(id);
+    plAssessmentRepository.deleteByPlInstanceId(id);
     plInstanceRepository.delete(plInstance);
 
     return genericMessage("PlInstance with id %s deleted".formatted(id));

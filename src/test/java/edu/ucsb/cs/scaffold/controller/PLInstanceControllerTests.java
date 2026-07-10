@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import edu.ucsb.cs.scaffold.ControllerTestCase;
 import edu.ucsb.cs.scaffold.entity.PlInstance;
 import edu.ucsb.cs.scaffold.entity.PlRepo;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
 import edu.ucsb.cs.scaffold.repository.PlScaffoldAssessmentRepository;
@@ -36,6 +37,8 @@ public class PLInstanceControllerTests extends ControllerTestCase {
   @MockitoBean PlRepoRepository plRepoRepository;
 
   @MockitoBean PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
+
+  @MockitoBean PlAssessmentRepository plAssessmentRepository;
 
   private final PlRepo repo =
       PlRepo.builder().id(1L).repoName("PrairieLearn/pl-ucsb-cmpsc5b").build();
@@ -191,6 +194,7 @@ public class PLInstanceControllerTests extends ControllerTestCase {
             .andReturn();
 
     verify(plScaffoldAssessmentRepository, times(1)).deleteByPlInstanceId(1L);
+    verify(plAssessmentRepository, times(1)).deleteByPlInstanceId(1L);
     verify(plInstanceRepository, times(1)).delete(any());
     Map<String, Object> json = responseToJson(response);
     assertEquals("PlInstance with id 1 deleted", json.get("message"));
