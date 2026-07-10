@@ -123,6 +123,23 @@ public class PLQuestionControllerTests extends ControllerTestCase {
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
+  public void admin_cannot_post_a_question_for_non_existent_repo() throws Exception {
+    when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/plQuestion?plRepoId=1&questionId=q1&uuid=%s&title=Title".formatted(uuid))
+                    .with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("PlRepo with id 1 not found", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
   public void admin_can_post_a_new_question() throws Exception {
     when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.of(repo));
     when(plQuestionRepository.existsByPlRepoIdAndQuestionId(eq(1L), eq("q1"))).thenReturn(false);
