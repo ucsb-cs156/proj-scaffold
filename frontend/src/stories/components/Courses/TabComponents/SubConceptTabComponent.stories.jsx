@@ -1,6 +1,6 @@
 import React from "react";
 import { http, HttpResponse } from "msw";
-import SubConceptTabComponent from "main/components/Courses/TabComponents/SubConceptTabComponent";
+import SubConceptTabComponent from "main/components/Courses/TabComponent/SubConceptTabComponent";
 import subConceptsFixtures from "fixtures/subConceptsFixtures";
 import conceptsFixtures from "fixtures/conceptsFixtures";
 

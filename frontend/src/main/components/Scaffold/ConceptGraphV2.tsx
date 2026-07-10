@@ -33,6 +33,8 @@ import {
 } from "main/utils/layout";
 import type { ConceptContentDTO } from "main/api/client";
 import { useStaffTools } from "main/utils/useStaffTools";
+import LevelLegend from "main/components/Scaffold/LevelLegend";
+import ResetButton from "main/components/Scaffold/ResetButton";
 
 // This is a parallel, database-driven version of ConceptGraph.tsx: instead of
 // importing majorConcepts/prereqEdgeData/positions/conceptContent from the
@@ -120,54 +122,6 @@ const ConceptContentContext = createContext<Record<string, ConceptContentDTO>>(
 const SubconceptReorderContext = createContext<
   (nodeId: string, reordered: SubconceptLike[]) => void
 >(() => {});
-
-const LEVELS = [
-  { label: "Level 5", color: "#2bcd9c" },
-  { label: "Level 4", color: "#fe9a71" },
-  { label: "Level 3", color: "#93ebff" },
-  { label: "Level 2", color: "#feaef2" },
-  { label: "Level 1", color: "#c99ffe" },
-];
-
-function LevelLegend() {
-  return (
-    <div className="concept-graph-legend">
-      {LEVELS.map((level, i) => (
-        <div key={i} className="concept-graph-legend-row">
-          <div
-            className="concept-graph-legend-swatch"
-            style={{ background: level.color }}
-          />
-          <span className="concept-graph-legend-label">{level.label}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ResetButton({ onReset }: { onReset: () => void }) {
-  return (
-    <div className="concept-graph-reset-button" onClick={onReset}>
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#1E293B"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        style={{ flexShrink: 0 }}
-      >
-        <path d="M23 4v6h-6" />
-        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-      </svg>
-      <span className="concept-graph-reset-button-label">
-        Click to reset graph
-      </span>
-    </div>
-  );
-}
 
 function MajorNode({ data, id }: NodeProps) {
   const color = data.color as string;

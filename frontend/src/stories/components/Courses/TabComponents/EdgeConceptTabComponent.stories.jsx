@@ -1,6 +1,6 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import EdgeConceptTabComponent from "main/components/Courses/TabComponents/EdgeConceptTabComponent";
+import EdgeConceptTabComponent from "main/components/Courses/TabComponent/EdgeConceptTabComponent";
 import conceptsFixtures from "fixtures/conceptsFixtures";
 import edgesFixtures from "fixtures/edgesFixtures";
 import { http, HttpResponse } from "msw";

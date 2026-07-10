@@ -1,3 +1,5 @@
+import type { SystemInfo } from "main/utils/systemInfo";
+
 export const systemInfoFixtures = {
   showingNeither: {
     springH2ConsoleEnabled: false,
@@ -11,4 +13,4 @@ export const systemInfoFixtures = {
     oauthLogin: "/oauth2/authorization/google",
     sourceRepo: "https://github.com/ucsb-cs156/proj-scaffold",
   },
-};
+} satisfies Record<string, SystemInfo>;

@@ -1,6 +1,6 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import ConceptTabComponent from "main/components/Courses/TabComponents/ConceptTabComponent";
+import ConceptTabComponent from "main/components/Courses/TabComponent/ConceptTabComponent";
 import conceptsFixtures from "fixtures/conceptsFixtures";
 import { http, HttpResponse } from "msw";
 

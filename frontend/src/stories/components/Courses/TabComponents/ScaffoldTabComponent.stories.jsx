@@ -1,6 +1,6 @@
 import React from "react";
 import { http, HttpResponse } from "msw";
-import ScaffoldTabComponent from "main/components/Courses/TabComponents/ScaffoldTabComponent";
+import ScaffoldTabComponent from "main/components/Courses/TabComponent/ScaffoldTabComponent";
 
 export default {
   title: "components/Courses/TabComponents/ScaffoldTabComponent",

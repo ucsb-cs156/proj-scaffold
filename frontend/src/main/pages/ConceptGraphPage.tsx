@@ -24,8 +24,6 @@ import {
 } from "main/api/client";
 import type { Assessment, Question } from "main/api/client";
 import LoginScreen from "main/components/Auth/LoginScreen";
-import QuestionSearch from "main/components/Scaffold/QuestionSearch";
-import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
 import ScaffoldBrand from "main/components/Scaffold/ScaffoldBrand";
 import { useCurrentUser } from "main/utils/currentUser";
 import { StaffToolsProvider } from "main/utils/staffTools";
@@ -34,6 +32,9 @@ import {
   toPastel,
   computeSubgraphV2,
 } from "main/utils/conceptGraphUtils";
+import StarStatus from "main/components/Scaffold/StarStatus";
+import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
+import QuestionSearch from "main/components/Scaffold/QuestionSearch";
 
 // Database-driven counterpart to LegacyHomePage.tsx, rendered at /course/{courseId}.
 // Everything here is fetched from the concepts/* and user-state-v2/
@@ -70,7 +71,7 @@ function ConceptGraphPageContent() {
   const currentUser = useCurrentUser();
   // Derive the numeric id from the users table; null when not logged in.
   const userId: number | null = currentUser?.loggedIn
-    ? ((currentUser.root as { user?: { id?: number } })?.user?.id ?? null)
+    ? (currentUser.root.user?.id ?? null)
     : null;
 
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -538,57 +539,10 @@ function ConceptGraphPageContent() {
               disabled={!selectedAssessmentId || questions.length === 0}
             />
           </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginLeft: "auto",
-              paddingRight: 0,
-            }}
-          >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 6,
-                borderTop: "1.5px solid #1E293B",
-                borderLeft: "1.5px solid #1E293B",
-                borderRight: "4px solid #1E293B",
-                borderBottom: "4px solid #1E293B",
-                background: "#FACC15",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="#1E293B"
-                stroke="#1E293B"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-            </div>
-            <span
-              style={{
-                fontFamily: "Helvetica, Arial, sans-serif",
-                fontSize: "clamp(11px, 2vw, 16px)",
-                fontWeight: 700,
-                color: "#1E293B",
-                letterSpacing: "0.03em",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {starredIds.size} / {majorConcepts.length}
-            </span>
-          </div>
+          <StarStatus
+            numStarredConcepts={starredIds.size}
+            numTotalConcepts={majorConcepts.length}
+          />
         </div>
 
         {/* ── Graph ── */}

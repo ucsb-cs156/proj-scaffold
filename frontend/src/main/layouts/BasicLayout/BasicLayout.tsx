@@ -1,7 +1,8 @@
 import { useEffect, type ReactNode } from "react";
-import AppNavbar from "../../components/Nav/AppNavbar";
-import Footer from "../../components/Nav/Footer";
-import { useLogout } from "../../utils/currentUser";
+import AppNavbar from "main/components/Nav/AppNavbar";
+import Footer from "main/components/Nav/Footer";
+import { useCurrentUser, useLogout } from "main/utils/currentUser";
+import { useSystemInfo } from "main/utils/systemInfo";
 
 interface BasicLayoutProps {
   children: ReactNode;
@@ -17,6 +18,8 @@ export default function BasicLayout({
   lockScroll = false,
 }: BasicLayoutProps) {
   const doLogout = useLogout().mutate;
+  const currentUser = useCurrentUser();
+  const { data: systemInfo } = useSystemInfo();
 
   useEffect(() => {
     if (!lockScroll) return;
@@ -25,27 +28,13 @@ export default function BasicLayout({
   }, [lockScroll]);
 
   return (
-    <div
-      style={{
-        minHeight: "100svh",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <AppNavbar doLogout={doLogout} />
-      <main
-        style={{
-          width: "1126px",
-          maxWidth: "100%",
-          margin: "0 auto",
-          borderInline: "1px solid var(--border)",
-          background: "#f7ede1",
-          flex: 1,
-          minHeight: 0,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+    <div className="BasicLayout" data-testid="BasicLayout">
+      <AppNavbar
+        doLogout={doLogout}
+        currentUser={currentUser}
+        systemInfo={systemInfo}
+      />
+      <main className="main-content" data-testid="BasicLayout-main-content">
         {children}
       </main>
       <Footer />
