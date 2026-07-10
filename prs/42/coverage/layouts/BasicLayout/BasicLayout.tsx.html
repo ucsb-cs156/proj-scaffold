@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>8/8</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>6/6</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
@@ -106,18 +106,7 @@
 <a name='L41'></a><a href='#L41'>41</a>
 <a name='L42'></a><a href='#L42'>42</a>
 <a name='L43'></a><a href='#L43'>43</a>
-<a name='L44'></a><a href='#L44'>44</a>
-<a name='L45'></a><a href='#L45'>45</a>
-<a name='L46'></a><a href='#L46'>46</a>
-<a name='L47'></a><a href='#L47'>47</a>
-<a name='L48'></a><a href='#L48'>48</a>
-<a name='L49'></a><a href='#L49'>49</a>
-<a name='L50'></a><a href='#L50'>50</a>
-<a name='L51'></a><a href='#L51'>51</a>
-<a name='L52'></a><a href='#L52'>52</a>
-<a name='L53'></a><a href='#L53'>53</a>
-<a name='L54'></a><a href='#L54'>54</a>
-<a name='L55'></a><a href='#L55'>55</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L44'></a><a href='#L44'>44</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -135,29 +124,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">363x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">363x</span>
-<span class="cline-any cline-yes">150x</span>
+<span class="cline-any cline-yes">369x</span>
+<span class="cline-any cline-yes">369x</span>
+<span class="cline-any cline-yes">369x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">369x</span>
+<span class="cline-any cline-yes">151x</span>
 <span class="cline-any cline-yes">52x</span>
 <span class="cline-any cline-yes">52x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">363x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">369x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -172,9 +150,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useEffect, type ReactNode } from "react";
-import AppNavbar from "../../components/Nav/AppNavbar";
-import Footer from "../../components/Nav/Footer";
-import { useLogout } from "../../utils/currentUser";
+import AppNavbar from "main/components/Nav/AppNavbar";
+import Footer from "main/components/Nav/Footer";
+import { useCurrentUser, useLogout } from "main/utils/currentUser";
+import { useSystemInfo } from "main/utils/systemInfo";
 &nbsp;
 interface BasicLayoutProps {
   children: ReactNode;
@@ -190,6 +169,8 @@ export default function BasicLayout({
   lockScroll = false,
 }: BasicLayoutProps) {
   const doLogout = useLogout().mutate;
+  const currentUser = useCurrentUser();
+  const { data: systemInfo } = useSystemInfo();
 &nbsp;
   useEffect(() =&gt; {
     if (!lockScroll) return;
@@ -198,27 +179,13 @@ export default function BasicLayout({
   }, [lockScroll]);
 &nbsp;
   return (
-    &lt;div
-      style={{
-        minHeight: "100svh",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    &gt;
-      &lt;AppNavbar doLogout={doLogout} /&gt;
-      &lt;main
-        style={{
-          width: "1126px",
-          maxWidth: "100%",
-          margin: "0 auto",
-          borderInline: "1px solid var(--border)",
-          background: "#f7ede1",
-          flex: 1,
-          minHeight: 0,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      &gt;
+    &lt;div className="BasicLayout" data-testid="BasicLayout"&gt;
+      &lt;AppNavbar
+        doLogout={doLogout}
+        currentUser={currentUser}
+        systemInfo={systemInfo}
+      /&gt;
+      &lt;main className="main-content" data-testid="BasicLayout-main-content"&gt;
         {children}
       &lt;/main&gt;
       &lt;Footer /&gt;
@@ -232,7 +199,7 @@ export default function BasicLayout({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-09T22:32:52.481Z
+                at 2026-07-10T22:37:34.951Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

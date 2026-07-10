@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>5/5</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">92.85% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>10/10</span>
+                <span class='fraction'>13/14</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>5/5</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
@@ -154,7 +154,18 @@
 <a name='L89'></a><a href='#L89'>89</a>
 <a name='L90'></a><a href='#L90'>90</a>
 <a name='L91'></a><a href='#L91'>91</a>
-<a name='L92'></a><a href='#L92'>92</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -165,8 +176,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">377x</span>
-<span class="cline-any cline-yes">377x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">377x</span>
 <span class="cline-any cline-yes">2x</span>
@@ -245,95 +261,112 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Link } from "react-router";
-import { hasRole, useCurrentUser } from "main/utils/currentUser";
-import { useSystemInfo } from "main/utils/systemInfo";
+import { hasRole, type CurrentUser } from "main/utils/currentUser";
+import type { SystemInfo } from "main/utils/systemInfo";
 import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import GoogleLogin from "main/components/Nav/GoogleLogin";
+import AppNavbarLocalhost from "main/components/Nav/AppNavbarLocalhost";
+import ScaffoldBrand from "main/components/Scaffold/ScaffoldBrand";
 &nbsp;
 export default function AppNavbar({
+  currentUser,
+  systemInfo,
   doLogout,
+  currentUrl = window.location.href,
 }: {
+  currentUser: CurrentUser;
+  systemInfo?: SystemInfo;
   doLogout: () =&gt; void;
+  currentUrl?: string;
 }): React.JSX.Element {
-  const currentUser = useCurrentUser();
-  const { data: systemInfo } = useSystemInfo();
-&nbsp;
   const handleLogin = () =&gt; {
     window.location.href =
       systemInfo?.oauthLogin ?? "/oauth2/authorization/google";
   };
 &nbsp;
   return (
-    &lt;Navbar expand="md" sticky="top" data-testid="AppNavbar"&gt;
-      &lt;Container&gt;
-        &lt;Navbar.Brand as={Link} to="/"&gt;
-          Scaffold
-        &lt;/Navbar.Brand&gt;
+    &lt;&gt;
+      {(currentUrl.startsWith("http://localhost:3000") ||
+<span class="branch-1 cbranch-no" title="branch not covered" >        currentUrl.startsWith("http://127.0.0.1:3000")) &amp;&amp; (</span>
+        &lt;AppNavbarLocalhost url={currentUrl} /&gt;
+      )}
+      &lt;Navbar expand="md" sticky="top" data-testid="AppNavbar"&gt;
+        &lt;Container&gt;
+          &lt;Navbar.Brand as={Link} to="/"&gt;
+            &lt;ScaffoldBrand /&gt;
+          &lt;/Navbar.Brand&gt;
 &nbsp;
-        &lt;Navbar.Toggle /&gt;
+          &lt;Navbar.Toggle /&gt;
 &nbsp;
-        &lt;&gt;
-          {/* be sure that each NavDropdown has a unique id and data-testid  */}
-        &lt;/&gt;
+          &lt;&gt;
+            {/* be sure that each NavDropdown has a unique id and data-testid  */}
+          &lt;/&gt;
 &nbsp;
-        &lt;Navbar.Collapse className="justify-content-between"&gt;
-          &lt;Nav className="mr-auto"&gt;
-            {systemInfo?.showSwaggerUILink &amp;&amp; (
-              &lt;&gt;
-                &lt;Nav.Link href="/swagger-ui/index.html"&gt;Swagger&lt;/Nav.Link&gt;
-              &lt;/&gt;
-            )}
-            {systemInfo?.springH2ConsoleEnabled &amp;&amp; (
-              &lt;&gt;
-                &lt;Nav.Link href="/h2-console"&gt;H2Console&lt;/Nav.Link&gt;
-              &lt;/&gt;
-            )}
-            {hasRole(currentUser, "ROLE_ADMIN") &amp;&amp; (
-              &lt;NavDropdown
-                title="Admin"
-                id="appnavbar-admin-dropdown"
-                data-testid="appnavbar-admin-dropdown"
-              &gt;
-                &lt;NavDropdown.Item as={Link} to="/admin/admins"&gt;
-                  Admins
-                &lt;/NavDropdown.Item&gt;
-                &lt;NavDropdown.Item as={Link} to="/admin/instructors"&gt;
-                  Instructors
-                &lt;/NavDropdown.Item&gt;
-                &lt;NavDropdown.Item as={Link} to="/admin/courses"&gt;
-                  Courses
-                &lt;/NavDropdown.Item&gt;
-                &lt;NavDropdown.Item as={Link} to="/admin/developer"&gt;
-                  Developer Info
-                &lt;/NavDropdown.Item&gt;
-                &lt;NavDropdown.Item as={Link} to="/LegacyHomePage"&gt;
-                  LegacyHomePage
-                &lt;/NavDropdown.Item&gt;
-              &lt;/NavDropdown&gt;
-            )}
-            {hasRole(currentUser, "ROLE_INSTRUCTOR") &amp;&amp; (
-              &lt;NavDropdown
-                title="Instructor"
-                id="appnavbar-instructor-dropdown"
-                data-testid="appnavbar-instructor-dropdown"
-              &gt;
-                &lt;NavDropdown.Item as={Link} to="/courses"&gt;
-                  Courses
-                &lt;/NavDropdown.Item&gt;
-              &lt;/NavDropdown&gt;
-            )}
-          &lt;/Nav&gt;
-          &lt;Nav className="ml-auto"&gt;
-            &lt;GoogleLogin
-              currentUser={currentUser}
-              handleLogin={handleLogin}
-              doLogout={doLogout}
-            /&gt;
-          &lt;/Nav&gt;
-        &lt;/Navbar.Collapse&gt;
-      &lt;/Container&gt;
-    &lt;/Navbar&gt;
+          &lt;Navbar.Collapse className="justify-content-between"&gt;
+            &lt;Nav className="mr-auto"&gt;
+              {systemInfo?.showSwaggerUILink &amp;&amp; (
+                &lt;&gt;
+                  &lt;Nav.Link href="/swagger-ui/index.html"&gt;Swagger&lt;/Nav.Link&gt;
+                &lt;/&gt;
+              )}
+              {systemInfo?.springH2ConsoleEnabled &amp;&amp; (
+                &lt;&gt;
+                  &lt;Nav.Link href="/h2-console"&gt;H2Console&lt;/Nav.Link&gt;
+                &lt;/&gt;
+              )}
+              {hasRole(currentUser, "ROLE_ADMIN") &amp;&amp; (
+                &lt;NavDropdown
+                  title="Admin"
+                  id="appnavbar-admin-dropdown"
+                  data-testid="appnavbar-admin-dropdown"
+                &gt;
+                  &lt;NavDropdown.Item as={Link} to="/admin/admins"&gt;
+                    Admins
+                  &lt;/NavDropdown.Item&gt;
+                  &lt;NavDropdown.Item as={Link} to="/admin/instructors"&gt;
+                    Instructors
+                  &lt;/NavDropdown.Item&gt;
+                  &lt;NavDropdown.Item as={Link} to="/admin/courses"&gt;
+                    Courses
+                  &lt;/NavDropdown.Item&gt;
+                  &lt;NavDropdown.Item as={Link} to="/admin/developer"&gt;
+                    Developer Info
+                  &lt;/NavDropdown.Item&gt;
+                  &lt;NavDropdown.Item as={Link} to="/LegacyHomePage"&gt;
+                    LegacyHomePage
+                  &lt;/NavDropdown.Item&gt;
+                &lt;/NavDropdown&gt;
+              )}
+              {hasRole(currentUser, "ROLE_INSTRUCTOR") &amp;&amp; (
+                &lt;NavDropdown
+                  title="Instructor"
+                  id="appnavbar-instructor-dropdown"
+                  data-testid="appnavbar-instructor-dropdown"
+                &gt;
+                  &lt;NavDropdown.Item as={Link} to="/courses"&gt;
+                    Courses
+                  &lt;/NavDropdown.Item&gt;
+                &lt;/NavDropdown&gt;
+              )}
+            &lt;/Nav&gt;
+            &lt;Nav className="ml-auto"&gt;
+              &lt;GoogleLogin
+                currentUser={currentUser}
+                handleLogin={handleLogin}
+                doLogout={doLogout}
+              /&gt;
+            &lt;/Nav&gt;
+          &lt;/Navbar.Collapse&gt;
+        &lt;/Container&gt;
+      &lt;/Navbar&gt;
+    &lt;/&gt;
   );
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -343,7 +376,7 @@ export default function AppNavbar({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-09T22:32:52.481Z
+                at 2026-07-10T22:37:34.951Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
