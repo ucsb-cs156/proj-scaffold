@@ -1,0 +1,75 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "027-create-pl-question-table",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "pl_question" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "pl_question",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGINT",
+                    "autoIncrement": true,
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "pl_repo_id",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "question_id",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "uuid",
+                    "type": "UUID",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "title",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "pl_question",
+              "baseColumnNames": "pl_repo_id",
+              "referencedTableName": "pl_repo",
+              "referencedColumnNames": "id",
+              "constraintName": "FK_PL_QUESTION_PL_REPO_ID"
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "pl_question",
+              "columnNames": "pl_repo_id, question_id",
+              "constraintName": "UQ_PL_QUESTION_PL_REPO_ID_QUESTION_ID"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

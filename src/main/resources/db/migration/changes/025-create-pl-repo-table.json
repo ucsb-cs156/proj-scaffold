@@ -1,0 +1,38 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "025-create-pl-repo-table",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "pl_repo" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "pl_repo",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGINT",
+                    "autoIncrement": true,
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "repo_name",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false, "unique": true }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

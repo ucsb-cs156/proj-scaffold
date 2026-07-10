@@ -1,0 +1,84 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "029-create-pl-assessment-table",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "pl_assessment" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "pl_assessment",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGINT",
+                    "autoIncrement": true,
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "pl_repo_id",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "pl_instance_id",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "name",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "url",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "pl_assessment",
+              "baseColumnNames": "pl_repo_id",
+              "referencedTableName": "pl_repo",
+              "referencedColumnNames": "id",
+              "constraintName": "FK_PL_ASSESSMENT_PL_REPO_ID"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "pl_assessment",
+              "baseColumnNames": "pl_instance_id",
+              "referencedTableName": "pl_instance",
+              "referencedColumnNames": "id",
+              "constraintName": "FK_PL_ASSESSMENT_PL_INSTANCE_ID"
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "pl_assessment",
+              "columnNames": "pl_repo_id, pl_instance_id, name",
+              "constraintName": "UQ_PL_ASSESSMENT_PL_REPO_ID_PL_INSTANCE_ID_NAME"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
