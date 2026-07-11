@@ -127,7 +127,7 @@ export default function UserProfilePage(): React.JSX.Element {
 
         {canSeePat && (
           <div data-testid={`${testIdPrefix}-pat-section`}>
-            <h2>Github PAT</h2>
+            <h2>GitHub PAT</h2>
             {patCredential ? (
               <p data-testid={`${testIdPrefix}-pat-status`}>
                 PAT: ******{patCredential.lastFour}, expires:{" "}
