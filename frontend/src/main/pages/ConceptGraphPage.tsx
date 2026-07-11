@@ -1,40 +1,38 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams } from "react-router";
 import { Spinner } from "react-bootstrap";
-import ConceptGraphV2 from "main/components/Scaffold/ConceptGraphV2";
+import ScaffoldConceptGraph from "main/components/Scaffold/ScaffoldConceptGraph";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 
 import {
   fetchAssessments,
+  fetchCourse,
   fetchQuestions,
   fetchQuestionConcepts,
   fetchConceptGraph,
   fetchConceptContent,
   fetchConceptPositions,
   fetchConceptEdges,
-  fetchUserStateV2,
-  logUserActivityV2,
-  saveUserStateV2,
+  fetchScaffoldUserState,
+  logScaffoldUserActivity,
+  saveScaffoldUserState,
   reorderSubconcepts,
   type MajorConceptDTO,
   type SubconceptDTO,
   type ConceptContentDTO,
   type EdgeDTO,
 } from "main/api/client";
-import type { Assessment, Question } from "main/api/client";
+import type { Assessment, Course, Question } from "main/api/client";
 import LoginScreen from "main/components/Auth/LoginScreen";
-import ScaffoldBrand from "main/components/Scaffold/ScaffoldBrand";
+import ScaffoldTopBar from "main/components/Scaffold/ScaffoldTopBar";
 import { useCurrentUser } from "main/utils/currentUser";
 import { StaffToolsProvider } from "main/utils/staffTools";
 import {
   normalize,
   toPastel,
-  computeSubgraphV2,
+  computeScaffoldSubgraph,
 } from "main/utils/conceptGraphUtils";
-import StarStatus from "main/components/Scaffold/StarStatus";
-import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
-import QuestionSearch from "main/components/Scaffold/QuestionSearch";
 
 // Database-driven counterpart to LegacyHomePage.tsx, rendered at /course/{courseId}.
 // Everything here is fetched from the concepts/* and user-state-v2/
@@ -74,6 +72,7 @@ function ConceptGraphPageContent() {
     ? (currentUser.root.user?.id ?? null)
     : null;
 
+  const [course, setCourse] = useState<Course | undefined>(undefined);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
@@ -176,14 +175,14 @@ function ConceptGraphPageContent() {
     if (!userId || !courseIdIsValid || userStateLoadedRef.current) return;
     userStateLoadedRef.current = true;
 
-    logUserActivityV2({
+    logScaffoldUserActivity({
       userid: userId,
       courseId,
       event_type: "login",
       payload: { consented: true },
     });
 
-    fetchUserStateV2(userId, courseId).then((data) => {
+    fetchScaffoldUserState(userId, courseId).then((data) => {
       if (data) {
         setStarredIds(new Set(data.starred_ids as string[]));
         const cards = (data.detail_cards as SavedDetailCard[]) ?? [];
@@ -211,7 +210,7 @@ function ConceptGraphPageContent() {
       > = topLevelPositionsRef.current,
     ) => {
       if (!userId || !courseIdIsValid) return;
-      await saveUserStateV2({
+      await saveScaffoldUserState({
         userid: userId,
         courseId,
         starred_ids: Array.from(stars),
@@ -256,7 +255,7 @@ function ConceptGraphPageContent() {
   };
 
   // An author (with subconcepts unlocked) drag-and-dropped a card's
-  // subconcepts. ConceptGraphV2 already updated its own nodes; mirror the new
+  // subconcepts. ScaffoldConceptGraph already updated its own nodes; mirror the new
   // order in our copy of the graph data (so anything rebuilt from it agrees)
   // and persist it. If the backend rejects the reorder, refetch the graph so
   // the local order snaps back to the authoritative one.
@@ -286,7 +285,7 @@ function ConceptGraphPageContent() {
   const logActivity = useCallback(
     async (eventType: string, payload: object) => {
       if (!userId || !courseIdIsValid) return;
-      await logUserActivityV2({
+      await logScaffoldUserActivity({
         userid: userId,
         courseId,
         event_type: eventType,
@@ -307,6 +306,11 @@ function ConceptGraphPageContent() {
   useEffect(() => {
     fetchAssessments().then(setAssessments);
   }, []);
+
+  useEffect(() => {
+    if (!courseIdIsValid) return;
+    fetchCourse(courseId).then(setCourse);
+  }, [courseId, courseIdIsValid]);
 
   useEffect(() => {
     if (!selectedAssessmentId) {
@@ -332,7 +336,7 @@ function ConceptGraphPageContent() {
     }
     fetchQuestionConcepts(selectedQuestionId).then((concepts) => {
       setHighlightedIds(
-        computeSubgraphV2(
+        computeScaffoldSubgraph(
           concepts.map((c) => c.concept_id),
           prereqEdgeData,
         ),
@@ -373,7 +377,7 @@ function ConceptGraphPageContent() {
   const handleConceptClick = (id: string) => {
     setSelectedConceptId(id);
     if (!selectedQuestionId) {
-      setHighlightedIds(computeSubgraphV2([id], prereqEdgeData));
+      setHighlightedIds(computeScaffoldSubgraph([id], prereqEdgeData));
     }
     logActivity("concept_clicked", { conceptId: id });
   };
@@ -511,43 +515,24 @@ function ConceptGraphPageContent() {
         }}
       >
         {/* ── Top bar ── */}
-        <div
-          style={{
-            height: 60,
-            flexShrink: 0,
-            background: "#f4e87b",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "0 20px",
+        <ScaffoldTopBar
+          course={course}
+          assessments={assessments}
+          selectedAssessmentId={selectedAssessmentId}
+          onSelectAssessment={(id) => {
+            setSelectedAssessmentId(id);
+            setSelectedQuestionId("");
           }}
-        >
-          <ScaffoldBrand />
-          <AssessmentSelect
-            assessments={assessments}
-            selectedAssessmentId={selectedAssessmentId}
-            onSelect={(id) => {
-              setSelectedAssessmentId(id);
-              setSelectedQuestionId("");
-            }}
-          />
-          <div style={{ flex: 1, maxWidth: 300 }}>
-            <QuestionSearch
-              questions={questions}
-              selectedQuestionId={selectedQuestionId}
-              onSelect={setSelectedQuestionId}
-              disabled={!selectedAssessmentId || questions.length === 0}
-            />
-          </div>
-          <StarStatus
-            numStarredConcepts={starredIds.size}
-            numTotalConcepts={majorConcepts.length}
-          />
-        </div>
+          questions={questions}
+          selectedQuestionId={selectedQuestionId}
+          onSelectQuestion={setSelectedQuestionId}
+          numStarredConcepts={starredIds.size}
+          numTotalConcepts={majorConcepts.length}
+        />
 
         {/* ── Graph ── */}
         <div style={{ flex: 1, minHeight: 0, background: "#ffffff" }}>
-          <ConceptGraphV2
+          <ScaffoldConceptGraph
             majorConcepts={majorConcepts}
             positions={effectivePositions}
             conceptContent={conceptContent}

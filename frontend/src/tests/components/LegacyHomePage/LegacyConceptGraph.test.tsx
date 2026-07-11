@@ -1,8 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import ConceptGraphV2 from "main/components/Scaffold/ConceptGraphV2";
+import LegacyConceptGraph from "main/components/LegacyHomePage/LegacyConceptGraph";
 import { StaffToolsContext } from "main/utils/staffToolsContext";
-import type { ReactElement } from "react";
 
 // @xyflow/react measures its container via ResizeObserver and
 // getBoundingClientRect, neither of which jsdom implements with real
@@ -29,37 +28,8 @@ beforeEach(() => {
     }) as DOMRect;
 });
 
-const sampleMajorConcepts = [
-  {
-    id: 1,
-    labelHtml: "Recursion",
-    color: "#fe9a71",
-    subconcepts: [
-      { id: 2, parentId: 1, labelHtml: "Base case" },
-      { id: 3, parentId: 1, labelHtml: "State change" },
-    ],
-  },
-  {
-    id: 4,
-    labelHtml: "Loops",
-    color: "#93ebff",
-    subconcepts: [{ id: 5, parentId: 4, labelHtml: "For loops" }],
-  },
-];
-const samplePositions = {
-  "1": { x: 100, y: 100 },
-  "4": { x: 300, y: 100 },
-};
-const samplePrereqEdgeData = [
-  { id: 20, sourceId: 4, targetId: 1, color: null },
-];
-
 function baseProps() {
   return {
-    majorConcepts: sampleMajorConcepts,
-    positions: samplePositions,
-    conceptContent: {},
-    prereqEdgeData: samplePrereqEdgeData,
     highlightedIds: new Set<string>(),
     highlightedSubconcepts: new Map<string, Set<string>>(),
     onConceptClick: vi.fn(),
@@ -71,25 +41,30 @@ function baseProps() {
   };
 }
 
-describe("ConceptGraphV2", () => {
-  test("renders the major concept nodes from the supplied data", () => {
-    render(<ConceptGraphV2 {...baseProps()} />);
+describe("LegacyConceptGraph", () => {
+  test("contains the word Scaffold", () => {
+    render(<LegacyConceptGraph {...baseProps()} />);
+    expect(screen.getByText(/Scaffold/i)).toBeInTheDocument();
+  });
+
+  test("renders the major concept nodes", () => {
+    render(<LegacyConceptGraph {...baseProps()} />);
     expect(screen.getByText("Recursion")).toBeInTheDocument();
     expect(screen.getByText("Loops")).toBeInTheDocument();
   });
 
   test("clicking a concept node calls onConceptClick with its id", () => {
     const props = baseProps();
-    render(<ConceptGraphV2 {...props} />);
+    render(<LegacyConceptGraph {...props} />);
 
     fireEvent.click(screen.getByText("Recursion"));
 
-    expect(props.onConceptClick).toHaveBeenCalledWith("1");
+    expect(props.onConceptClick).toHaveBeenCalledWith("recursion");
   });
 
   test("clicking the reset control calls onReset", () => {
     const props = baseProps();
-    render(<ConceptGraphV2 {...props} />);
+    render(<LegacyConceptGraph {...props} />);
 
     fireEvent.click(screen.getByText("Click to reset graph"));
 
@@ -100,7 +75,7 @@ describe("ConceptGraphV2", () => {
     const props = baseProps();
     const onPaneClick = vi.fn();
     const { container } = render(
-      <ConceptGraphV2 {...props} onPaneClick={onPaneClick} />,
+      <LegacyConceptGraph {...props} onPaneClick={onPaneClick} />,
     );
 
     const pane = container.querySelector(".react-flow__pane");
@@ -113,13 +88,13 @@ describe("ConceptGraphV2", () => {
   test("renders restored detail cards", () => {
     const props = baseProps();
     render(
-      <ConceptGraphV2
+      <LegacyConceptGraph
         {...props}
         restoredDetailCards={[
           {
             cardType: "Description",
             itemLabel: "Recursion",
-            conceptId: "1",
+            conceptId: "recursion",
             conceptColor: "#fe9a71",
             posX: 100,
             posY: 100,
@@ -135,20 +110,20 @@ describe("ConceptGraphV2", () => {
 
   test("clicking a node's star button calls onStarClick with its id, not onConceptClick", () => {
     const props = baseProps();
-    render(<ConceptGraphV2 {...props} />);
+    render(<LegacyConceptGraph {...props} />);
 
-    fireEvent.click(screen.getByTestId("star-button-1"));
+    fireEvent.click(screen.getByTestId("star-button-recursion"));
 
-    expect(props.onStarClick).toHaveBeenCalledWith("1");
+    expect(props.onStarClick).toHaveBeenCalledWith("recursion");
     expect(props.onConceptClick).not.toHaveBeenCalled();
   });
 
   test("clicking a subconcept checkbox calls onSubconceptMastered with its label", () => {
     const props = baseProps();
-    render(<ConceptGraphV2 {...props} />);
+    render(<LegacyConceptGraph {...props} />);
 
-    // The "Recursion" node (id 1) has "Base case" as its first subconcept.
-    fireEvent.click(screen.getByTestId("subconcept-checkbox-1-0"));
+    // "recursion" node's first subconcept is "Base case".
+    fireEvent.click(screen.getByTestId("subconcept-checkbox-recursion-0"));
 
     expect(props.onSubconceptMastered).toHaveBeenCalledWith("Base case");
   });
@@ -157,7 +132,7 @@ describe("ConceptGraphV2", () => {
     const props = baseProps();
     const onDetailAdded = vi.fn();
     const { container } = render(
-      <ConceptGraphV2 {...props} onDetailAdded={onDetailAdded} />,
+      <LegacyConceptGraph {...props} onDetailAdded={onDetailAdded} />,
     );
 
     // ReactFlow's onInit (which populates the instance used for
@@ -169,7 +144,7 @@ describe("ConceptGraphV2", () => {
     const payload = {
       cardType: "Example",
       itemLabel: "Recursion",
-      conceptId: "1",
+      conceptId: "recursion",
       conceptColor: "#fe9a71",
       cardContent: "def factorial(n): ...",
     };
@@ -185,7 +160,7 @@ describe("ConceptGraphV2", () => {
       expect.objectContaining({
         cardType: "Example",
         itemLabel: "Recursion",
-        conceptId: "1",
+        conceptId: "recursion",
         conceptColor: "#fe9a71",
       }),
     );
@@ -196,14 +171,14 @@ describe("ConceptGraphV2", () => {
     const props = baseProps();
     const onDetailDeleted = vi.fn();
     render(
-      <ConceptGraphV2
+      <LegacyConceptGraph
         {...props}
         onDetailDeleted={onDetailDeleted}
         restoredDetailCards={[
           {
             cardType: "Description",
             itemLabel: "Recursion",
-            conceptId: "1",
+            conceptId: "recursion",
             conceptColor: "#fe9a71",
             posX: 100,
             posY: 100,
@@ -227,34 +202,36 @@ describe("ConceptGraphV2", () => {
   test("greys out non-highlighted concepts and highlights selected ones, and highlights matching subconcepts", () => {
     const props = baseProps();
     render(
-      <ConceptGraphV2
+      <LegacyConceptGraph
         {...props}
-        highlightedIds={new Set(["1"])}
-        highlightedSubconcepts={new Map([["1", new Set(["Base case"])]])}
+        highlightedIds={new Set(["arithmetic-ops", "recursion"])}
+        highlightedSubconcepts={
+          new Map([["recursion", new Set(["Base case"])]])
+        }
       />,
     );
 
-    const recursionCard = screen.getByTestId("major-node-1");
-    const loopsCard = screen.getByTestId("major-node-4");
+    const recursionCard = screen.getByText("Recursion").parentElement!;
+    const loopsCard = screen.getByText("Loops").parentElement!;
 
     expect(recursionCard.style.opacity).toBe("1");
     expect(loopsCard.style.opacity).toBe("0.25");
 
-    const highlightedSubconcept = screen.getByTestId("subconcept-row-1-0");
+    const highlightedSubconcept = screen.getByText("Base case");
     expect(highlightedSubconcept.style.background).not.toBe("");
   });
 
   test("greys out a detail card when its concept is not in the highlighted set", () => {
     const props = baseProps();
     const { container } = render(
-      <ConceptGraphV2
+      <LegacyConceptGraph
         {...props}
-        highlightedIds={new Set(["4"])}
+        highlightedIds={new Set(["loops"])}
         restoredDetailCards={[
           {
             cardType: "Description",
             itemLabel: "Recursion",
-            conceptId: "1",
+            conceptId: "recursion",
             conceptColor: "#fe9a71",
             posX: 100,
             posY: 100,
@@ -272,14 +249,14 @@ describe("ConceptGraphV2", () => {
   test("keeps a detail card at full color when its concept is highlighted", () => {
     const props = baseProps();
     const { container } = render(
-      <ConceptGraphV2
+      <LegacyConceptGraph
         {...props}
-        highlightedIds={new Set(["1"])}
+        highlightedIds={new Set(["recursion"])}
         restoredDetailCards={[
           {
             cardType: "Description",
             itemLabel: "Recursion",
-            conceptId: "1",
+            conceptId: "recursion",
             conceptColor: "#fe9a71",
             posX: 100,
             posY: 100,
@@ -296,7 +273,7 @@ describe("ConceptGraphV2", () => {
 
   test("dragging over the canvas allows a drop", () => {
     const props = baseProps();
-    const { container } = render(<ConceptGraphV2 {...props} />);
+    const { container } = render(<LegacyConceptGraph {...props} />);
     const flowWrapper = container.querySelector(".react-flow") as Element;
 
     const event = new Event("dragover", { bubbles: true, cancelable: true });
@@ -313,7 +290,7 @@ describe("ConceptGraphV2", () => {
     const props = baseProps();
     const onDetailAdded = vi.fn();
     const { container } = render(
-      <ConceptGraphV2 {...props} onDetailAdded={onDetailAdded} />,
+      <LegacyConceptGraph {...props} onDetailAdded={onDetailAdded} />,
     );
     const flowWrapper = container.querySelector(".react-flow") as Element;
 
@@ -330,13 +307,13 @@ describe("ConceptGraphV2", () => {
     const props = baseProps();
     const onDetailAdded = vi.fn();
     const { container } = render(
-      <ConceptGraphV2 {...props} onDetailAdded={onDetailAdded} />,
+      <LegacyConceptGraph {...props} onDetailAdded={onDetailAdded} />,
     );
     const flowWrapper = container.querySelector(".react-flow") as Element;
     const payload = {
       cardType: "Example",
       itemLabel: "Recursion",
-      conceptId: "1",
+      conceptId: "recursion",
       conceptColor: "#fe9a71",
       cardContent: "def factorial(n): ...",
     };
@@ -355,13 +332,13 @@ describe("ConceptGraphV2", () => {
   test("clicking a detail card does not call onConceptClick", () => {
     const props = baseProps();
     render(
-      <ConceptGraphV2
+      <LegacyConceptGraph
         {...props}
         restoredDetailCards={[
           {
             cardType: "Description",
             itemLabel: "Unique Detail Label",
-            conceptId: "1",
+            conceptId: "recursion",
             conceptColor: "#fe9a71",
             posX: 100,
             posY: 100,
@@ -376,166 +353,36 @@ describe("ConceptGraphV2", () => {
   });
 });
 
-describe("ConceptGraphV2 debug mode tooltips", () => {
-  function renderWithDebugMode(ui: ReactElement, debugMode: boolean) {
-    return render(
+describe("LegacyConceptGraph debug mode tooltips", () => {
+  test("nodes have no title tooltip when debug mode is off", () => {
+    render(<LegacyConceptGraph {...baseProps()} />);
+    expect(screen.getByText("Recursion").closest("[title]")).toBeNull();
+  });
+
+  test("nodes show the full concept JSON as a tooltip when debug mode is on", () => {
+    render(
       <StaffToolsContext.Provider
         value={{
-          debugMode,
+          debugMode: true,
           unlockSubconcepts: false,
           setStaffTool: vi.fn(),
           canUseStaffTools: true,
         }}
       >
-        {ui}
+        <LegacyConceptGraph {...baseProps()} />
       </StaffToolsContext.Provider>,
     );
-  }
 
-  test("nodes have no title tooltip when debug mode is off", () => {
-    renderWithDebugMode(<ConceptGraphV2 {...baseProps()} />, false);
-    expect(screen.getByTestId("major-node-1")).not.toHaveAttribute("title");
-  });
-
-  test("nodes show the full concept JSON as a tooltip when debug mode is on", () => {
-    const props = baseProps();
-    props.conceptContent = {
-      "1": {
-        id: 1,
-        parentId: null,
-        descriptionHtml: "<p>desc</p>",
-        exampleHtml: null,
-        practiceUrl: null,
-      },
-    };
-    renderWithDebugMode(<ConceptGraphV2 {...props} />, true);
-
-    const title = screen.getByTestId("major-node-1").getAttribute("title");
-    expect(title).not.toBeNull();
-    expect(JSON.parse(title!)).toEqual({
-      id: "1",
-      label: "Recursion",
-      color: "#fe9a71",
-      subconcepts: [
-        { id: 2, parentId: 1, labelHtml: "Base case" },
-        { id: 3, parentId: 1, labelHtml: "State change" },
-      ],
-      conceptContent: {
-        id: 1,
-        parentId: null,
-        descriptionHtml: "<p>desc</p>",
-        exampleHtml: null,
-        practiceUrl: null,
-      },
-    });
+    const node = screen.getByText("Recursion").closest("[title]");
+    expect(node).not.toBeNull();
+    const title = node!.getAttribute("title")!;
+    const parsed = JSON.parse(title);
+    expect(parsed.label).toBe("Recursion");
+    expect(parsed).toHaveProperty("id");
+    expect(parsed).toHaveProperty("color");
+    expect(parsed).toHaveProperty("subconcepts");
+    expect(parsed).toHaveProperty("conceptContent");
     // Pretty-printed (multi-line), not a single-line blob.
     expect(title).toContain("\n");
-  });
-});
-
-describe("ConceptGraphV2 subconcept drag-and-drop reordering", () => {
-  function renderWithUnlock(ui: ReactElement, unlockSubconcepts: boolean) {
-    return render(
-      <StaffToolsContext.Provider
-        value={{
-          debugMode: false,
-          unlockSubconcepts,
-          setStaffTool: vi.fn(),
-          canUseStaffTools: true,
-        }}
-      >
-        {ui}
-      </StaffToolsContext.Provider>,
-    );
-  }
-
-  const dataTransfer = {
-    effectAllowed: "",
-    setData: vi.fn(),
-    getData: vi.fn(),
-  };
-
-  test("rows are not draggable and show no drag handle when locked", () => {
-    render(<ConceptGraphV2 {...baseProps()} />);
-    const row = screen.getByTestId("subconcept-row-1-0");
-    expect(row).not.toHaveAttribute("draggable", "true");
-    expect(
-      screen.queryByTestId("subconcept-drag-handle-1-0"),
-    ).not.toBeInTheDocument();
-  });
-
-  test("rows are draggable and show a drag handle when unlocked", () => {
-    renderWithUnlock(<ConceptGraphV2 {...baseProps()} />, true);
-    const row = screen.getByTestId("subconcept-row-1-0");
-    expect(row).toHaveAttribute("draggable", "true");
-    expect(
-      screen.getByTestId("subconcept-drag-handle-1-0"),
-    ).toBeInTheDocument();
-  });
-
-  test("dropping a row on another reorders the card and reports the new id order", () => {
-    const props = { ...baseProps(), onSubconceptsReordered: vi.fn() };
-    renderWithUnlock(<ConceptGraphV2 {...props} />, true);
-
-    // "Recursion" (node 1) starts as [Base case (2), State change (3)];
-    // drag row 0 onto row 1.
-    fireEvent.dragStart(screen.getByTestId("subconcept-row-1-0"), {
-      dataTransfer,
-    });
-    fireEvent.dragOver(screen.getByTestId("subconcept-row-1-1"), {
-      dataTransfer,
-    });
-    fireEvent.drop(screen.getByTestId("subconcept-row-1-1"), { dataTransfer });
-
-    expect(props.onSubconceptsReordered).toHaveBeenCalledWith(1, [3, 2]);
-    // The card re-renders in the new order.
-    expect(screen.getByTestId("subconcept-row-1-0")).toHaveTextContent(
-      "State change",
-    );
-    expect(screen.getByTestId("subconcept-row-1-1")).toHaveTextContent(
-      "Base case",
-    );
-  });
-
-  test("dropping a row back on itself changes nothing and reports nothing", () => {
-    const props = { ...baseProps(), onSubconceptsReordered: vi.fn() };
-    renderWithUnlock(<ConceptGraphV2 {...props} />, true);
-
-    fireEvent.dragStart(screen.getByTestId("subconcept-row-1-0"), {
-      dataTransfer,
-    });
-    fireEvent.drop(screen.getByTestId("subconcept-row-1-0"), { dataTransfer });
-
-    expect(props.onSubconceptsReordered).not.toHaveBeenCalled();
-    expect(screen.getByTestId("subconcept-row-1-0")).toHaveTextContent(
-      "Base case",
-    );
-  });
-
-  test("dropping something that is not a row drag (no dragStart) is ignored", () => {
-    const props = { ...baseProps(), onSubconceptsReordered: vi.fn() };
-    renderWithUnlock(<ConceptGraphV2 {...props} />, true);
-
-    // e.g. a detail-card drag entering a row: dragIndex is null, so the row
-    // must not intercept it.
-    fireEvent.dragOver(screen.getByTestId("subconcept-row-1-1"), {
-      dataTransfer,
-    });
-    fireEvent.drop(screen.getByTestId("subconcept-row-1-1"), { dataTransfer });
-
-    expect(props.onSubconceptsReordered).not.toHaveBeenCalled();
-  });
-
-  test("dragEnd clears the in-progress drag state", () => {
-    const props = { ...baseProps(), onSubconceptsReordered: vi.fn() };
-    renderWithUnlock(<ConceptGraphV2 {...props} />, true);
-
-    const row0 = screen.getByTestId("subconcept-row-1-0");
-    fireEvent.dragStart(row0, { dataTransfer });
-    fireEvent.dragEnd(row0, { dataTransfer });
-    // The abandoned drag leaves no pending dragIndex, so a later drop does nothing.
-    fireEvent.drop(screen.getByTestId("subconcept-row-1-1"), { dataTransfer });
-
-    expect(props.onSubconceptsReordered).not.toHaveBeenCalled();
   });
 });

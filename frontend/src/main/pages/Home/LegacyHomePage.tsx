@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import ConceptGraph from "main/components/Scaffold/ConceptGraph";
+import LegacyConceptGraph from "main/components/LegacyHomePage/LegacyConceptGraph";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 
@@ -7,22 +7,21 @@ import {
   fetchAssessments,
   fetchQuestions,
   fetchQuestionConcepts,
-  fetchUserState,
-  logUserActivity,
-  saveUserState,
+  fetchLegacyUserState,
+  logLegacyUserActivity,
+  saveLegacyUserState,
 } from "main/api/client";
 import type { Assessment, Question } from "main/api/client";
 import { majorConcepts } from "main/data/conceptGraph";
-import LoginScreen from "main/components/Auth/LoginScreen";
-import QuestionSearch from "main/components/Scaffold/QuestionSearch";
-import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
+import QuestionSearch from "main/components/LegacyHomePage/QuestionSearch";
+import AssessmentSelect from "main/components/LegacyHomePage/AssessmentSelect";
 import { conceptContent, type ConceptContent } from "main/data/conceptContent";
 import { useCurrentUser } from "main/utils/currentUser";
 import { StaffToolsProvider } from "main/utils/staffTools";
 import {
   normalize,
   toPastel,
-  computeSubgraph,
+  computeLegacySubgraph,
 } from "main/utils/conceptGraphUtils";
 
 interface SavedDetailCard {
@@ -98,13 +97,13 @@ function LegacyHomePageContent() {
     if (!userId || userStateLoadedRef.current) return;
     userStateLoadedRef.current = true;
 
-    logUserActivity({
+    logLegacyUserActivity({
       userid: userId,
       event_type: "login",
       payload: { consented: true },
     });
 
-    fetchUserState(userId).then((data) => {
+    fetchLegacyUserState(userId).then((data) => {
       if (data) {
         setStarredIds(new Set(data.starred_ids as string[]));
         const cards = (data.detail_cards as SavedDetailCard[]) ?? [];
@@ -127,7 +126,7 @@ function LegacyHomePageContent() {
       mastered: Set<string> = masteredSubconceptsRef.current,
     ) => {
       if (!userId) return;
-      await saveUserState({
+      await saveLegacyUserState({
         userid: userId,
         starred_ids: Array.from(stars),
         detail_cards: cards,
@@ -153,7 +152,11 @@ function LegacyHomePageContent() {
   const logActivity = useCallback(
     async (eventType: string, payload: object) => {
       if (!userId) return;
-      await logUserActivity({ userid: userId, event_type: eventType, payload });
+      await logLegacyUserActivity({
+        userid: userId,
+        event_type: eventType,
+        payload,
+      });
     },
     [userId],
   );
@@ -193,7 +196,9 @@ function LegacyHomePageContent() {
       return;
     }
     fetchQuestionConcepts(selectedQuestionId).then((concepts) => {
-      setHighlightedIds(computeSubgraph(concepts.map((c) => c.concept_id)));
+      setHighlightedIds(
+        computeLegacySubgraph(concepts.map((c) => c.concept_id)),
+      );
       const subMap = new Map<string, Set<string>>();
       concepts.forEach((c) => {
         if (c.subconcept_label) {
@@ -227,7 +232,7 @@ function LegacyHomePageContent() {
   const handleConceptClick = (id: string) => {
     setSelectedConceptId(id);
     if (!selectedQuestionId) {
-      setHighlightedIds(computeSubgraph([id]));
+      setHighlightedIds(computeLegacySubgraph([id]));
     }
     logActivity("concept_clicked", { conceptId: id });
   };
@@ -305,14 +310,6 @@ function LegacyHomePageContent() {
       return next;
     });
   };
-
-  if (!currentUser?.loggedIn) {
-    return (
-      <BasicLayout>
-        <LoginScreen />
-      </BasicLayout>
-    );
-  }
 
   return (
     <BasicLayout lockScroll>
@@ -426,7 +423,7 @@ function LegacyHomePageContent() {
 
         {/* ── Graph ── */}
         <div style={{ flex: 1, minHeight: 0, background: "#ffffff" }}>
-          <ConceptGraph
+          <LegacyConceptGraph
             highlightedIds={highlightedIds}
             highlightedSubconcepts={highlightedSubconcepts}
             onConceptClick={handleConceptClick}

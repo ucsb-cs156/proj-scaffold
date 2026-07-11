@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import ConceptGraphV2 from "main/components/Scaffold/ConceptGraphV2";
+import ScaffoldConceptGraph from "main/components/Scaffold/ScaffoldConceptGraph";
 
-const meta: Meta<typeof ConceptGraphV2> = {
-  title: "components/Scaffold/ConceptGraphV2",
-  component: ConceptGraphV2,
+const meta: Meta<typeof ScaffoldConceptGraph> = {
+  title: "components/Scaffold/ScaffoldConceptGraph",
+  component: ScaffoldConceptGraph,
   parameters: {
     layout: "fullscreen",
   },
@@ -18,7 +18,7 @@ const meta: Meta<typeof ConceptGraphV2> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof ConceptGraphV2>;
+type Story = StoryObj<typeof ScaffoldConceptGraph>;
 
 const sampleMajorConcepts = [
   {

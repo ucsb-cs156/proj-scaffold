@@ -3,16 +3,16 @@ import {
   fetchAssessments,
   fetchQuestions,
   fetchQuestionConcepts,
-  fetchUserState,
-  saveUserState,
-  logUserActivity,
+  fetchLegacyUserState,
+  saveLegacyUserState,
+  logLegacyUserActivity,
   fetchConceptGraph,
   fetchConceptContent,
   fetchConceptPositions,
   fetchConceptEdges,
-  fetchUserStateV2,
-  saveUserStateV2,
-  logUserActivityV2,
+  fetchScaffoldUserState,
+  saveScaffoldUserState,
+  logScaffoldUserActivity,
   reorderSubconcepts,
 } from "main/api/client";
 
@@ -95,7 +95,7 @@ describe("api/client", () => {
     });
   });
 
-  describe("fetchUserState", () => {
+  describe("fetchLegacyUserState", () => {
     test("returns the parsed user state on success", async () => {
       const userState = {
         starred_ids: ["1"],
@@ -104,7 +104,7 @@ describe("api/client", () => {
       };
       mockFetchOnce(userState);
 
-      const result = await fetchUserState(1);
+      const result = await fetchLegacyUserState(1);
 
       expect(globalThis.fetch).toHaveBeenCalledWith("/api/user-state/1");
       expect(result).toEqual(userState);
@@ -113,7 +113,7 @@ describe("api/client", () => {
     test("returns null when the response is a 404", async () => {
       mockFetchOnce(null, { status: 404, ok: false });
 
-      const result = await fetchUserState(1);
+      const result = await fetchLegacyUserState(1);
 
       expect(result).toBeNull();
     });
@@ -121,13 +121,13 @@ describe("api/client", () => {
     test("throws when the response is not ok and not a 404", async () => {
       mockFetchOnce(null, { status: 500, ok: false });
 
-      await expect(fetchUserState(1)).rejects.toThrow(
+      await expect(fetchLegacyUserState(1)).rejects.toThrow(
         "Failed to fetch user state for userid 1",
       );
     });
   });
 
-  describe("saveUserState", () => {
+  describe("saveLegacyUserState", () => {
     const body = {
       userid: 1,
       starred_ids: ["1"],
@@ -138,7 +138,7 @@ describe("api/client", () => {
     test("posts the body as json on success", async () => {
       mockFetchOnce(null, { status: 200 });
 
-      await saveUserState(body);
+      await saveLegacyUserState(body);
 
       expect(globalThis.fetch).toHaveBeenCalledWith("/api/user-state", {
         method: "POST",
@@ -150,13 +150,13 @@ describe("api/client", () => {
     test("throws when the response is not ok", async () => {
       mockFetchOnce(null, { status: 500, ok: false });
 
-      await expect(saveUserState(body)).rejects.toThrow(
+      await expect(saveLegacyUserState(body)).rejects.toThrow(
         "Failed to save user state for userid 1",
       );
     });
   });
 
-  describe("logUserActivity", () => {
+  describe("logLegacyUserActivity", () => {
     const body = {
       userid: 1,
       event_type: "click",
@@ -166,7 +166,7 @@ describe("api/client", () => {
     test("posts the body as json on success", async () => {
       mockFetchOnce(null, { status: 200 });
 
-      await logUserActivity(body);
+      await logLegacyUserActivity(body);
 
       expect(globalThis.fetch).toHaveBeenCalledWith("/api/user-activity", {
         method: "POST",
@@ -178,7 +178,7 @@ describe("api/client", () => {
     test("throws when the response is not ok", async () => {
       mockFetchOnce(null, { status: 500, ok: false });
 
-      await expect(logUserActivity(body)).rejects.toThrow(
+      await expect(logLegacyUserActivity(body)).rejects.toThrow(
         "Failed to log user activity for userid 1",
       );
     });
@@ -276,7 +276,7 @@ describe("api/client", () => {
     });
   });
 
-  describe("fetchUserStateV2", () => {
+  describe("fetchScaffoldUserState", () => {
     test("returns the parsed user state on success", async () => {
       const userState = {
         starred_ids: ["1"],
@@ -285,7 +285,7 @@ describe("api/client", () => {
       };
       mockFetchOnce(userState);
 
-      const result = await fetchUserStateV2(1, 2);
+      const result = await fetchScaffoldUserState(1, 2);
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         "/api/user-state-v2?userid=1&courseId=2",
@@ -296,7 +296,7 @@ describe("api/client", () => {
     test("returns null when the response is a 404", async () => {
       mockFetchOnce(null, { status: 404, ok: false });
 
-      const result = await fetchUserStateV2(1, 2);
+      const result = await fetchScaffoldUserState(1, 2);
 
       expect(result).toBeNull();
     });
@@ -304,13 +304,13 @@ describe("api/client", () => {
     test("throws when the response is not ok and not a 404", async () => {
       mockFetchOnce(null, { status: 500, ok: false });
 
-      await expect(fetchUserStateV2(1, 2)).rejects.toThrow(
+      await expect(fetchScaffoldUserState(1, 2)).rejects.toThrow(
         "Failed to fetch user state for userid 1 in course 2",
       );
     });
   });
 
-  describe("saveUserStateV2", () => {
+  describe("saveScaffoldUserState", () => {
     const body = {
       userid: 1,
       courseId: 2,
@@ -323,7 +323,7 @@ describe("api/client", () => {
     test("posts the body as json on success", async () => {
       mockFetchOnce(null, { status: 200 });
 
-      await saveUserStateV2(body);
+      await saveScaffoldUserState(body);
 
       expect(globalThis.fetch).toHaveBeenCalledWith("/api/user-state-v2", {
         method: "POST",
@@ -335,7 +335,7 @@ describe("api/client", () => {
     test("throws when the response is not ok", async () => {
       mockFetchOnce(null, { status: 500, ok: false });
 
-      await expect(saveUserStateV2(body)).rejects.toThrow(
+      await expect(saveScaffoldUserState(body)).rejects.toThrow(
         "Failed to save user state for userid 1 in course 2",
       );
     });
@@ -371,7 +371,7 @@ describe("api/client", () => {
     });
   });
 
-  describe("logUserActivityV2", () => {
+  describe("logScaffoldUserActivity", () => {
     const body = {
       userid: 1,
       courseId: 2,
@@ -382,7 +382,7 @@ describe("api/client", () => {
     test("posts the body as json on success", async () => {
       mockFetchOnce(null, { status: 200 });
 
-      await logUserActivityV2(body);
+      await logScaffoldUserActivity(body);
 
       expect(globalThis.fetch).toHaveBeenCalledWith("/api/user-activity-v2", {
         method: "POST",
@@ -394,7 +394,7 @@ describe("api/client", () => {
     test("throws when the response is not ok", async () => {
       mockFetchOnce(null, { status: 500, ok: false });
 
-      await expect(logUserActivityV2(body)).rejects.toThrow(
+      await expect(logScaffoldUserActivity(body)).rejects.toThrow(
         "Failed to log user activity for userid 1 in course 2",
       );
     });

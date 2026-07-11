@@ -2,8 +2,8 @@ import { describe, test, expect } from "vitest";
 import {
   normalize,
   toPastel,
-  computeSubgraph,
-  computeSubgraphV2,
+  computeLegacySubgraph,
+  computeScaffoldSubgraph,
 } from "main/utils/conceptGraphUtils";
 
 describe("utils/conceptGraphUtils", () => {
@@ -42,22 +42,22 @@ describe("utils/conceptGraphUtils", () => {
     });
   });
 
-  describe("computeSubgraph", () => {
+  describe("computeLegacySubgraph", () => {
     test("returns just the tagged ids when they have no prerequisites", () => {
-      const result = computeSubgraph(["data-types"]);
+      const result = computeLegacySubgraph(["data-types"]);
       expect(result).toEqual(new Set(["data-types"]));
     });
 
     test("walks upward through direct prerequisites", () => {
       // variables requires data-types (see prereqEdgeData)
-      const result = computeSubgraph(["variables"]);
+      const result = computeLegacySubgraph(["variables"]);
       expect(result.has("variables")).toBe(true);
       expect(result.has("data-types")).toBe(true);
     });
 
     test("walks upward transitively through multiple levels", () => {
       // nested-loops <- loops <- boolean-expr / arithmetic-ops <- data-types
-      const result = computeSubgraph(["nested-loops"]);
+      const result = computeLegacySubgraph(["nested-loops"]);
       expect(result.has("nested-loops")).toBe(true);
       expect(result.has("loops")).toBe(true);
       expect(result.has("boolean-expr")).toBe(true);
@@ -66,7 +66,7 @@ describe("utils/conceptGraphUtils", () => {
     });
 
     test("unions ancestors across multiple tagged ids without duplicates", () => {
-      const result = computeSubgraph(["variables", "conditionals"]);
+      const result = computeLegacySubgraph(["variables", "conditionals"]);
       expect(result.has("variables")).toBe(true);
       expect(result.has("conditionals")).toBe(true);
       expect(result.has("boolean-expr")).toBe(true);
@@ -76,11 +76,11 @@ describe("utils/conceptGraphUtils", () => {
     });
 
     test("returns an empty set for an empty input", () => {
-      expect(computeSubgraph([])).toEqual(new Set());
+      expect(computeLegacySubgraph([])).toEqual(new Set());
     });
   });
 
-  describe("computeSubgraphV2", () => {
+  describe("computeScaffoldSubgraph", () => {
     // 1 -> 2 -> 3 and 4 -> 3: two prerequisite chains meeting at 3.
     const edges = [
       { sourceId: 1, targetId: 2 },
@@ -89,21 +89,21 @@ describe("utils/conceptGraphUtils", () => {
     ];
 
     test("includes the tagged id itself when it has no prerequisites", () => {
-      expect(computeSubgraphV2(["1"], edges)).toEqual(new Set(["1"]));
+      expect(computeScaffoldSubgraph(["1"], edges)).toEqual(new Set(["1"]));
     });
 
     test("walks upward transitively through the supplied edges", () => {
-      expect(computeSubgraphV2(["3"], edges)).toEqual(
+      expect(computeScaffoldSubgraph(["3"], edges)).toEqual(
         new Set(["3", "2", "1", "4"]),
       );
     });
 
     test("uses only the supplied edges, not the hardcoded legacy data", () => {
-      expect(computeSubgraphV2(["3"], [])).toEqual(new Set(["3"]));
+      expect(computeScaffoldSubgraph(["3"], [])).toEqual(new Set(["3"]));
     });
 
     test("returns an empty set for an empty input", () => {
-      expect(computeSubgraphV2([], edges)).toEqual(new Set());
+      expect(computeScaffoldSubgraph([], edges)).toEqual(new Set());
     });
   });
 });

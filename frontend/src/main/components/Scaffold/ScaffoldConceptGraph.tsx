@@ -26,7 +26,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
-  buildGraphElementsV2,
+  buildScaffoldGraphElements,
   type MajorConceptLike,
   type SubconceptLike,
   type EdgeLike,
@@ -58,7 +58,7 @@ interface SavedDetailCard {
   posY: number;
 }
 
-interface ConceptGraphV2Props {
+interface ScaffoldConceptGraphProps {
   majorConcepts: MajorConceptLike[];
   positions: Record<string, { x: number; y: number }>;
   conceptContent: Record<string, ConceptContentDTO>;
@@ -117,7 +117,7 @@ const ConceptContentContext = createContext<Record<string, ConceptContentDTO>>(
 );
 // Lets a MajorNode report that the author drag-and-dropped its subconcepts into
 // a new order (nodeId is the parent's React Flow node id, i.e. its numeric
-// concept id as a string). Provided by ConceptGraphV2, which updates the node's
+// concept id as a string). Provided by ScaffoldConceptGraph, which updates the node's
 // data and notifies the page so it can persist the order.
 const SubconceptReorderContext = createContext<
   (nodeId: string, reordered: SubconceptLike[]) => void
@@ -544,7 +544,7 @@ function DetailNode({ data, id }: NodeProps) {
 
 const nodeTypes: NodeTypes = { major: MajorNode, detail: DetailNode };
 
-export default function ConceptGraphV2({
+export default function ScaffoldConceptGraph({
   majorConcepts,
   positions,
   conceptContent,
@@ -564,13 +564,13 @@ export default function ConceptGraphV2({
   onSubconceptMastered,
   onPaneClick,
   onSubconceptsReordered,
-}: ConceptGraphV2Props) {
+}: ScaffoldConceptGraphProps) {
   // majorConcepts/positions/prereqEdgeData are only expected to be stable for
   // the lifetime of a mounted instance (the page that renders this component
   // waits for all backend fetches to resolve before rendering it at all), so
   // computing these once via useMemo is safe.
   const { nodes: initialNodes, edges: initialEdges } = useMemo(
-    () => buildGraphElementsV2(positions, majorConcepts, prereqEdgeData),
+    () => buildScaffoldGraphElements(positions, majorConcepts, prereqEdgeData),
     [positions, majorConcepts, prereqEdgeData],
   );
 

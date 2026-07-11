@@ -113,7 +113,7 @@ body.scaffold-canvas-active input::placeholder {
   overflow: hidden;
 }
 
-/* ConceptGraph.tsx / ConceptGraphV2.tsx overlay controls */
+/* LegacyConceptGraph.tsx / ScaffoldConceptGraph.tsx overlay controls */
 
 .concept-graph-legend,
 .concept-graph-reset-button {
@@ -223,7 +223,7 @@ body.scaffold-canvas-active input::placeholder {
   transition: stroke 0.15s;
 }
 
-/* Markdown rendered inside a concept detail card (ConceptGraphV2.tsx,
+/* Markdown rendered inside a concept detail card (ScaffoldConceptGraph.tsx,
    ConceptGraphPage.tsx): undo the default <p> margins so single-paragraph
    descriptions don't get extra whitespace, and keep images inside the card. */
 
@@ -296,6 +296,16 @@ body.scaffold-canvas-active input::placeholder {
   min-height: 100svh;
   display: flex;
   flex-direction: column;
+}
+
+.scaffold-top-bar {
+  height: 60px;
+  flex-shrink: 0;
+  background: #f4e87b;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
 }
 
 .main-content {

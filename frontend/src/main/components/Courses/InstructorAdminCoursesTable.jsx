@@ -1,7 +1,6 @@
 import OurTable from "main/components/Common/OurTable";
 import { hasRole } from "main/utils/currentUser";
 import { Tooltip, OverlayTrigger, Button, Fade } from "react-bootstrap";
-import { Link } from "react-router";
 import { useState } from "react";
 import { useBackendMutation } from "main/utils/useBackend";
 import { toast } from "react-toastify";
@@ -9,8 +8,8 @@ import UpdateInstructorForm from "main/components/Courses/UpdateInstructorForm";
 import CourseModal from "main/components/Courses/CourseModal";
 import Modal from "react-bootstrap/Modal";
 import { useLocation } from "react-router";
-import { GraphIcon, UserListIcon } from "main/components/Common/Icons";
-import LinkToScaffold from "main/components/Courses/LinkToScaffold";
+import LinkToScaffold from "main/components/Scaffold/LinkToScaffold";
+import LinkToSettings from "main/components/Scaffold/LinkToSettings";
 
 export default function InstructorAdminCoursesTable({
   courses,
@@ -19,7 +18,6 @@ export default function InstructorAdminCoursesTable({
   testId = "InstructorAdminCoursesTable",
   enableInstructorUpdate = false,
   deleteCourseButton = false,
-  courseNameLinkPrefix = "/course",
   canEditCourse,
   mutationQueryKeys = [
     "/api/courses/list/admins",
@@ -73,11 +71,10 @@ export default function InstructorAdminCoursesTable({
       header: "Course Name",
       id: "courseName",
       cell: ({ cell }) => {
+        const course = cell.row.original;
         return (
           <LinkToScaffold
-            courseName={cell.row.original.courseName}
-            rowIndex={cell.row.index}
-            courseId={cell.row.original.id}
+            course={course}
             testId={`InstructorAdminCoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
           />
         );
@@ -87,22 +84,12 @@ export default function InstructorAdminCoursesTable({
       header: "Settings",
       id: "settings",
       cell: ({ cell }) => {
+        const course = cell.row.original;
         return (
-          <OverlayTrigger
-            placement="right"
-            overlay={
-              <Tooltip id={`tooltip-coursename-${cell.row.index}`}>
-                Settings and Course Roster for {cell.row.original.courseName}
-              </Tooltip>
-            }
-          >
-            <Link
-              to={`${courseNameLinkPrefix}/${cell.row.original.id}/settings`}
-              data-testid={`InstructorAdminCoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
-            >
-              <UserListIcon />
-            </Link>
-          </OverlayTrigger>
+          <LinkToSettings
+            course={course}
+            testId={`InstructorAdminCoursesTable-cell-row-${cell.row.index}-col-${cell.column.id}-link`}
+          />
         );
       },
     },
