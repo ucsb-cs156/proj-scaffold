@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for components/Nav/HelpMenu.tsx</title>
+    <title>Code coverage report for components/Scaffold/LevelLegend.tsx</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,13 +19,13 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Nav</a> HelpMenu.tsx</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Scaffold</a> LevelLegend.tsx</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
@@ -39,14 +39,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
@@ -83,14 +83,10 @@
 <a name='L18'></a><a href='#L18'>18</a>
 <a name='L19'></a><a href='#L19'>19</a>
 <a name='L20'></a><a href='#L20'>20</a>
-<a name='L21'></a><a href='#L21'>21</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">373x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -99,28 +95,41 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">56x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">280x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NavDropdown } from "react-bootstrap";
-import { Link } from "react-router";
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const LEVELS = [
+  { label: "Level 5", color: "#2bcd9c" },
+  { label: "Level 4", color: "#fe9a71" },
+  { label: "Level 3", color: "#93ebff" },
+  { label: "Level 2", color: "#feaef2" },
+  { label: "Level 1", color: "#c99ffe" },
+];
 &nbsp;
-export default function HelpMenu(): React.JSX.Element {
+export default function LevelLegend() {
   return (
-    &lt;&gt;
-      &lt;NavDropdown
-        title="Help"
-        id="appnavbar-help-dropdown"
-        data-testid="appnavbar-help-dropdown"
-        className="narrow-dropdown" // Add the custom class
-        align="end" // Align the menu to the right
-      &gt;
-        &lt;NavDropdown.Item as={Link} to="/help/about"&gt;
-          About Scaffold
-        &lt;/NavDropdown.Item&gt;
-      &lt;/NavDropdown&gt;
-    &lt;/&gt;
+    &lt;div className="concept-graph-legend"&gt;
+      {LEVELS.map((level, i) =&gt; (
+        &lt;div key={i} className="concept-graph-legend-row"&gt;
+          &lt;div
+            className="concept-graph-legend-swatch"
+            style={{ background: level.color }}
+          /&gt;
+          &lt;span className="concept-graph-legend-label"&gt;{level.label}&lt;/span&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
   );
 }
 &nbsp;</pre></td></tr></table></pre>

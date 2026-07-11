@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for components/Nav/HelpMenu.tsx</title>
+    <title>Code coverage report for components/Scaffold/ScaffoldBrand.tsx</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,7 +19,7 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Nav</a> HelpMenu.tsx</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">components/Scaffold</a> ScaffoldBrand.tsx</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
@@ -83,13 +83,9 @@
 <a name='L18'></a><a href='#L18'>18</a>
 <a name='L19'></a><a href='#L19'>19</a>
 <a name='L20'></a><a href='#L20'>20</a>
-<a name='L21'></a><a href='#L21'>21</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">373x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">438x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -103,24 +99,31 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NavDropdown } from "react-bootstrap";
-import { Link } from "react-router";
-&nbsp;
-export default function HelpMenu(): React.JSX.Element {
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export default function ScaffoldBrand() {
   return (
-    &lt;&gt;
-      &lt;NavDropdown
-        title="Help"
-        id="appnavbar-help-dropdown"
-        data-testid="appnavbar-help-dropdown"
-        className="narrow-dropdown" // Add the custom class
-        align="end" // Align the menu to the right
-      &gt;
-        &lt;NavDropdown.Item as={Link} to="/help/about"&gt;
-          About Scaffold
-        &lt;/NavDropdown.Item&gt;
-      &lt;/NavDropdown&gt;
-    &lt;/&gt;
+    &lt;div
+      style={{
+        fontFamily: "Helvetica, Arial, sans-serif",
+        fontWeight: 800,
+        fontSize: 20,
+        color: "#1E293B",
+        background: "#d9f9ff",
+        padding: "4px 12px",
+        borderRadius: 8,
+        borderTop: "1.5px solid #1E293B",
+        borderLeft: "1.5px solid #1E293B",
+        borderRight: "4px solid #1E293B",
+        borderBottom: "4px solid #1E293B",
+      }}
+    &gt;
+      Scaffold
+    &lt;/div&gt;
   );
 }
 &nbsp;</pre></td></tr></table></pre>
