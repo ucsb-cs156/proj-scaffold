@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 
 public class PatEncryptionServiceTests {
 
-  private static final String PLAINTEXT = "github_pat_11FAKEFAKE_notARealTokenJustATestValue";
+  private static final String PLAINTEXT = "ghp_FAKEfakeNotARealTokenJustATestValue0";
 
   /** Deterministic 32-byte key material; a different seed gives a different key. */
   private static String keyMaterial(int seed) {

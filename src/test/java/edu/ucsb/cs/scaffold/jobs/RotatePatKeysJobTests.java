@@ -43,9 +43,8 @@ public class RotatePatKeysJobTests {
         PatCredential.builder().id(2L).userId(20L).ciphertext("CURRENT").keyVersion(2).build();
     when(patCredentialRepository.findAll()).thenReturn(List.of(oldRow, currentRow));
     when(patEncryptionService.currentKeyVersion()).thenReturn(2);
-    when(patEncryptionService.decrypt(eq("OLD"), eq(1))).thenReturn("github_pat_plaintext");
-    when(patEncryptionService.encrypt(eq("github_pat_plaintext")))
-        .thenReturn(new EncryptedPat("NEW", 2));
+    when(patEncryptionService.decrypt(eq("OLD"), eq(1))).thenReturn("ghp_plaintext");
+    when(patEncryptionService.encrypt(eq("ghp_plaintext"))).thenReturn(new EncryptedPat("NEW", 2));
 
     job().accept(ctx);
 

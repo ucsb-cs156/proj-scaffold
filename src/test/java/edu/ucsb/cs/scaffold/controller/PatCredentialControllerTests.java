@@ -36,9 +36,8 @@ public class PatCredentialControllerTests extends ControllerTestCase {
 
   @MockitoBean PatEncryptionService patEncryptionService;
 
-  // A syntactically valid fine-grained PAT shape (not a real token).
-  private static final String VALID_TOKEN =
-      "github_pat_11FAKEFAKE0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456";
+  // A syntactically valid classic PAT shape (not a real token).
+  private static final String VALID_TOKEN = "ghp_FAKEfake0123456789FAKEfake0123456789";
 
   // MockCurrentUserServiceImpl returns a user with id 1
   private static final long USER_ID = 1L;
@@ -231,19 +230,39 @@ public class PatCredentialControllerTests extends ControllerTestCase {
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
-  public void post_rejects_a_classic_token() throws Exception {
+  public void post_rejects_a_fine_grained_token_with_an_explanation() throws Exception {
     MvcResult response =
         mockMvc
             .perform(
                 post("/api/pat")
-                    .param("token", "ghp_0123456789abcdefghijklmnopqrstuvwxyzAB")
+                    .param(
+                        "token", "github_pat_11FAKEFAKE0123456789_abcdefghijklmnopqrstuvwxyzABCDEF")
                     .with(csrf()))
             .andExpect(status().isBadRequest())
             .andReturn();
 
     Map<String, Object> json = responseToJson(response);
     assertEquals(
-        "token must be a GitHub fine-grained personal access token (starting with github_pat_); see docs/PAT.md",
+        "fine-grained tokens (github_pat_...) cannot reach this app's repositories; create a classic token (ghp_...) instead — see docs/PAT.md",
+        json.get("message"));
+    verify(patCredentialRepository, never()).save(any());
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void post_rejects_a_token_with_an_unrecognized_prefix() throws Exception {
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/pat")
+                    .param("token", "gho_FAKEfake0123456789FAKEfake0123456789")
+                    .with(csrf()))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(
+        "token must be a GitHub classic personal access token (starting with ghp_); see docs/PAT.md",
         json.get("message"));
     verify(patCredentialRepository, never()).save(any());
   }
@@ -252,7 +271,7 @@ public class PatCredentialControllerTests extends ControllerTestCase {
   @Test
   public void post_rejects_a_token_that_is_too_short() throws Exception {
     mockMvc
-        .perform(post("/api/pat").param("token", "github_pat_tooShort").with(csrf()))
+        .perform(post("/api/pat").param("token", "ghp_tooShort").with(csrf()))
         .andExpect(status().isBadRequest());
 
     verify(patCredentialRepository, never()).save(any());
