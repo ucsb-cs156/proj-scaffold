@@ -309,7 +309,7 @@ function ConceptGraphPageContent() {
 
   useEffect(() => {
     if (!courseIdIsValid) return;
-    fetchCourse(courseId).then(setCourse);
+    fetchCourse(courseId).then((c) => setCourse(c ?? undefined));
   }, [courseId, courseIdIsValid]);
 
   useEffect(() => {

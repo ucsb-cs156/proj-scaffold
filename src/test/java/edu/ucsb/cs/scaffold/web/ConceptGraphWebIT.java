@@ -2,11 +2,8 @@ package edu.ucsb.cs.scaffold.web;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
-import com.microsoft.playwright.Locator;
-import com.microsoft.playwright.options.AriaRole;
 import edu.ucsb.cs.scaffold.WebTestCase;
 import edu.ucsb.cs.scaffold.testconfig.IntegrationConfig;
-import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -41,13 +38,11 @@ public class ConceptGraphWebIT extends WebTestCase {
     // Navigate to the database-driven concept graph page for course 1, which the
     // application always seeds on startup.
     page.navigate(page.url().replaceAll("(http://localhost:\\d+).*", "$1/course/1"));
-    assertThat(
-            page.locator("div")
-                .filter(
-                    new Locator.FilterOptions()
-                        .setHasText(Pattern.compile("^ScaffoldSelect assessment…0 \\/ 26$")))
-                .getByRole(AriaRole.IMG)
-                .first())
-        .isVisible();
+    // The top bar renders once the graph data loads; the star counter shows the
+    // seeded course's 26 concepts, and the settings link appears once the course
+    // itself has been fetched.
+    assertThat(page.getByTestId("ScaffoldTopBar")).isVisible();
+    assertThat(page.getByTestId("ScaffoldTopBar").getByText("0 / 26")).isVisible();
+    assertThat(page.getByTestId("ScaffoldTopBar-linkToSettings")).isVisible();
   }
 }

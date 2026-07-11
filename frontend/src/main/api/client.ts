@@ -25,8 +25,12 @@ export interface Course {
   courseName: string;
 }
 
-export async function fetchCourse(courseId: number): Promise<Course> {
+// Returns null when the caller may not view the course (the endpoint is
+// staff-only), so the UI can simply omit staff affordances like the
+// settings link rather than render from an error body.
+export async function fetchCourse(courseId: number): Promise<Course | null> {
   const res = await fetch(`${API_BASE}/courses/${courseId}`);
+  if (!res.ok) return null;
   return res.json();
 }
 

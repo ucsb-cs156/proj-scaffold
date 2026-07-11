@@ -1,6 +1,7 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   fetchAssessments,
+  fetchCourse,
   fetchQuestions,
   fetchQuestionConcepts,
   fetchLegacyUserState,
@@ -50,6 +51,26 @@ describe("api/client", () => {
 
       expect(globalThis.fetch).toHaveBeenCalledWith("/api/assessments");
       expect(result).toEqual(assessments);
+    });
+  });
+
+  describe("fetchCourse", () => {
+    test("fetches the course by id and returns json", async () => {
+      const course = { id: 1, courseName: "CMPSC 8" };
+      mockFetchOnce(course);
+
+      const result = await fetchCourse(1);
+
+      expect(globalThis.fetch).toHaveBeenCalledWith("/api/courses/1");
+      expect(result).toEqual(course);
+    });
+
+    test("returns null when the caller may not view the course", async () => {
+      mockFetchOnce({ message: "Access is denied" }, { status: 403 });
+
+      const result = await fetchCourse(1);
+
+      expect(result).toBeNull();
     });
   });
 
