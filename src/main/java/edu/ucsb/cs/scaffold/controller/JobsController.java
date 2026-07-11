@@ -6,11 +6,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs.scaffold.entity.Job;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.jobs.RotatePatKeysJob;
 import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
+import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
+import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
 import edu.ucsb.cs.scaffold.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,6 +47,8 @@ public class JobsController extends ApiController {
   @Autowired private RosterStudentRepository rosterStudentRepository;
   @Autowired private CourseRepository courseRepository;
   @Autowired private CourseStaffRepository courseStaffRepository;
+  @Autowired private PatEncryptionService patEncryptionService;
+  @Autowired private PatCredentialRepository patCredentialRepository;
 
   @Operation(summary = "List all jobs")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -99,6 +104,21 @@ public class JobsController extends ApiController {
   public Job launchUpdateAllJob() {
 
     UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();
+    return jobService.runAsJob(job);
+  }
+
+  @Operation(
+      summary =
+          "Launch RotatePatKeys job (re-encrypt stored PATs under the current PAT_ENCRYPTION_KEY)")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PostMapping("/launch/rotatePatKeys")
+  public Job launchRotatePatKeysJob() {
+
+    RotatePatKeysJob job =
+        RotatePatKeysJob.builder()
+            .patEncryptionService(patEncryptionService)
+            .patCredentialRepository(patCredentialRepository)
+            .build();
     return jobService.runAsJob(job);
   }
 
