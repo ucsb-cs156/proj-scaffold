@@ -42,6 +42,11 @@ function baseProps() {
 }
 
 describe("ConceptGraph", () => {
+  test("contains the word Scaffold", () => {
+    render(<ConceptGraph {...baseProps()} />);
+    expect(screen.getByText(/Scaffold/i)).toBeInTheDocument();
+  });
+
   test("renders the major concept nodes", () => {
     render(<ConceptGraph {...baseProps()} />);
     expect(screen.getByText("Recursion")).toBeInTheDocument();

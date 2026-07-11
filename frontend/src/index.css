@@ -290,3 +290,22 @@ body.scaffold-canvas-active input::placeholder {
   stroke: #1e293b;
   transition: stroke 0.15s;
 }
+
+
+.BasicLayout {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  width: 1126px;
+  max-width: 100%;
+  margin: 0 auto;
+  border-inline: 1px solid var(--border);
+  background: #f7ede1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}

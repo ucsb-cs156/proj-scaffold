@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import SubConceptTabComponent from "main/components/Courses/TabComponents/SubConceptTabComponent";
+import SubConceptTabComponent from "main/components/Courses/TabComponent/SubConceptTabComponent";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import subConceptsFixtures from "fixtures/subConceptsFixtures";

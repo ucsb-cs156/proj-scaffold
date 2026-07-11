@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import ScaffoldTabComponent from "main/components/Courses/TabComponents/ScaffoldTabComponent";
+import ScaffoldTabComponent from "main/components/Courses/TabComponent/ScaffoldTabComponent";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { vi } from "vitest";

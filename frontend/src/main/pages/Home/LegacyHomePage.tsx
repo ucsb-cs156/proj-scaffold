@@ -48,7 +48,7 @@ function LegacyHomePageContent() {
   const currentUser = useCurrentUser();
   // Derive the numeric id from the users table; null when not logged in.
   const userId: number | null = currentUser?.loggedIn
-    ? ((currentUser.root as { user?: { id?: number } })?.user?.id ?? null)
+    ? (currentUser.root.user?.id ?? null)
     : null;
 
   const [assessments, setAssessments] = useState<Assessment[]>([]);

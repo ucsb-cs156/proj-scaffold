@@ -14,10 +14,10 @@ import JobTabComponent from "main/components/Courses/TabComponent/JobTabComponen
 import { hasRole } from "main/utils/currentUser";
 import DownloadsTabComponent from "main/components/Courses/TabComponent/DownloadsTabComponent";
 import LinkToScaffold from "main/components/Courses/LinkToScaffold";
-import ScaffoldTabComponent from "main/components/Courses/TabComponents/ScaffoldTabComponent";
-import ConceptTabComponent from "main/components/Courses/TabComponents/ConceptTabComponent";
-import SubConceptTabComponent from "main/components/Courses/TabComponents/SubConceptTabComponent";
-import EdgeConceptTabComponent from "main/components/Courses/TabComponents/EdgeConceptTabComponent";
+import ScaffoldTabComponent from "main/components/Courses/TabComponent/ScaffoldTabComponent";
+import ConceptTabComponent from "main/components/Courses/TabComponent/ConceptTabComponent";
+import SubConceptTabComponent from "main/components/Courses/TabComponent/SubConceptTabComponent";
+import EdgeConceptTabComponent from "main/components/Courses/TabComponent/EdgeConceptTabComponent";
 
 export default function InstructorCourseShowPage({
   testId = "InstructorCourseShowPage",

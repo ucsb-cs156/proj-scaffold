@@ -1,7 +1,7 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import EdgeConceptTabComponent from "main/components/Courses/TabComponents/EdgeConceptTabComponent";
+import EdgeConceptTabComponent from "main/components/Courses/TabComponent/EdgeConceptTabComponent";
 import conceptsFixtures from "fixtures/conceptsFixtures";
 import edgesFixtures from "fixtures/edgesFixtures";
 import { HttpResponse, http } from "msw";
@@ -83,15 +83,22 @@ describe("EdgeConceptTabComponent tests", () => {
 
   test("renders the Edges heading and correct data-testid", async () => {
     renderComponent();
-    expect(screen.getByText("Edges")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("Edges")).toBeInTheDocument();
+    });
+
     expect(screen.getByTestId("test-edgeConceptTab")).toBeInTheDocument();
   });
 
-  test("renders with custom testIdPrefix", () => {
+  test("renders with custom testIdPrefix", async () => {
     renderComponent({ testIdPrefix: "InstructorCourseShowPage" });
-    expect(
-      screen.getByTestId("InstructorCourseShowPage-edgeConceptTab"),
-    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("InstructorCourseShowPage-edgeConceptTab"),
+      ).toBeInTheDocument();
+    });
   });
 
   test("renders fetched edges with concept labels", async () => {
@@ -158,13 +165,22 @@ describe("EdgeConceptTabComponent tests", () => {
     });
 
     fireEvent.change(sourceSelect, { target: { value: "1" } });
-    expect(createButton).toBeDisabled();
+
+    await waitFor(() => {
+      expect(createButton).toBeDisabled();
+    });
 
     fireEvent.change(targetSelect, { target: { value: "1" } });
-    expect(createButton).toBeDisabled();
+
+    await waitFor(() => {
+      expect(createButton).toBeDisabled();
+    });
 
     fireEvent.change(targetSelect, { target: { value: "2" } });
-    expect(createButton).toBeEnabled();
+
+    await waitFor(() => {
+      expect(createButton).toBeEnabled();
+    });
   });
 
   test("submits a new edge with the selected concepts", async () => {
@@ -235,19 +251,24 @@ describe("EdgeConceptTabComponent tests", () => {
     );
     renderComponent();
 
-    expect(
-      screen.queryByTestId("test-create-edge-error"),
-    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId("test-create-edge-error"),
+      ).not.toBeInTheDocument();
+    });
 
-    await selectAndSubmitEdge();
+    await waitFor(() => selectAndSubmitEdge());
 
     const errorAlert = await screen.findByTestId("test-create-edge-error");
     expect(errorAlert).toHaveTextContent(
       "edge from concept 1 to concept 2 would create a cycle",
     );
-    expect(mockToast).toHaveBeenCalledWith(
-      "edge from concept 1 to concept 2 would create a cycle",
-    );
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        "edge from concept 1 to concept 2 would create a cycle",
+      );
+    });
 
     // selections are preserved so the user can adjust them
     expect(screen.getByTestId("test-source-select")).toHaveValue("1");
@@ -263,7 +284,7 @@ describe("EdgeConceptTabComponent tests", () => {
     );
     renderComponent();
 
-    await selectAndSubmitEdge();
+    await waitFor(() => selectAndSubmitEdge());
 
     const errorAlert = await screen.findByTestId("test-create-edge-error");
     expect(errorAlert).toHaveTextContent(
@@ -288,7 +309,7 @@ describe("EdgeConceptTabComponent tests", () => {
     );
     renderComponent();
 
-    await selectAndSubmitEdge();
+    await waitFor(() => selectAndSubmitEdge());
     await screen.findByTestId("test-create-edge-error");
 
     server.resetHandlers();
@@ -316,7 +337,7 @@ describe("EdgeConceptTabComponent tests", () => {
     );
     renderComponent();
 
-    await selectAndSubmitEdge();
+    await waitFor(() => selectAndSubmitEdge());
     await screen.findByTestId("test-create-edge-error");
 
     fireEvent.click(

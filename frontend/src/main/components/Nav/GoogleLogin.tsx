@@ -19,8 +19,7 @@ export default function GoogleLogin({
       {currentUser && currentUser.loggedIn ? (
         <>
           <Navbar.Text className="me-3" as={Link} to="/profile">
-            Welcome,{" "}
-            {(currentUser.root as { user: { email: string } }).user.email}
+            Welcome, {currentUser.root.user.email}
           </Navbar.Text>
           <HelpMenu />
           <Button onClick={doLogout}>Log Out</Button>

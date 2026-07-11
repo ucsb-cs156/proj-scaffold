@@ -8,13 +8,15 @@ import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 
 function renderNavbar(currentUser, systemInfo) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  qc.setQueryData(["current user"], currentUser);
-  qc.setQueryData(["systemInfo"], systemInfo);
+  const queryClient = new QueryClient();
   return render(
-    <QueryClientProvider client={qc}>
+    <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        <AppNavbar />
+        <AppNavbar
+          currentUser={currentUser}
+          systemInfo={systemInfo}
+          doLogout={() => {}}
+        />
       </MemoryRouter>
     </QueryClientProvider>,
   );
