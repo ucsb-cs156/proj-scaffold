@@ -20,4 +20,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/ux-updates","number":58,"title":"UX updates: relocate YAML upload/download, add PrairieLearn tab, add User Profile page","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/58"}]
+pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/ux-updates","number":58,"title":"UX updates + frontend refactor: Scaffold top bar, LegacyHomePage isolation, retire V2 naming","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/58"}]
