@@ -1,6 +1,8 @@
 package edu.ucsb.cs.scaffold.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -173,5 +175,74 @@ public class GithubServiceTests {
 
     assertEquals(
         "", githubService.getFileContent("ucsb-cs156/pl-demo", "questions/foo/info.json", "ghp_x"));
+  }
+
+  // ────────────────────────── hasWriteAccess ──────────────────────────
+
+  @SuppressWarnings("unchecked")
+  private void mockRepoResponse(Map<String, Object> body) {
+    when(restTemplate.exchange(
+            any(String.class),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            any(ParameterizedTypeReference.class)))
+        .thenReturn(new ResponseEntity<>(body, HttpStatus.OK));
+  }
+
+  @Test
+  public void hasWriteAccess_is_true_when_the_permissions_block_reports_push() {
+    mockRepoResponse(
+        Map.of(
+            "full_name", "ucsb-cs156/pl-demo", "permissions", Map.of("push", true, "pull", true)));
+
+    assertTrue(githubService.hasWriteAccess("ucsb-cs156/pl-demo", "ghp_x"));
+  }
+
+  @Test
+  public void hasWriteAccess_is_false_when_the_permissions_block_reports_no_push() {
+    mockRepoResponse(
+        Map.of(
+            "full_name", "ucsb-cs156/pl-demo", "permissions", Map.of("push", false, "pull", true)));
+
+    assertFalse(githubService.hasWriteAccess("ucsb-cs156/pl-demo", "ghp_x"));
+  }
+
+  @Test
+  public void hasWriteAccess_is_false_when_the_permissions_block_is_missing() {
+    mockRepoResponse(Map.of("full_name", "ucsb-cs156/pl-demo"));
+
+    assertFalse(githubService.hasWriteAccess("ucsb-cs156/pl-demo", "ghp_x"));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void hasWriteAccess_is_false_when_the_body_is_null() {
+    when(restTemplate.exchange(
+            any(String.class),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            any(ParameterizedTypeReference.class)))
+        .thenReturn(new ResponseEntity<>(null, HttpStatus.OK));
+
+    assertFalse(githubService.hasWriteAccess("ucsb-cs156/pl-demo", "ghp_x"));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void hasWriteAccess_builds_the_repo_url_and_authorization_header_from_its_arguments() {
+    mockRepoResponse(Map.of("permissions", Map.of("push", true)));
+
+    githubService.hasWriteAccess("ucsb-cs156/pl-demo", "ghp_x");
+
+    ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<HttpEntity<Void>> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+    verify(restTemplate)
+        .exchange(
+            urlCaptor.capture(),
+            eq(HttpMethod.GET),
+            entityCaptor.capture(),
+            any(ParameterizedTypeReference.class));
+    assertEquals("https://api.github.example/repos/ucsb-cs156/pl-demo", urlCaptor.getValue());
+    assertEquals("Bearer ghp_x", entityCaptor.getValue().getHeaders().getFirst("Authorization"));
   }
 }
