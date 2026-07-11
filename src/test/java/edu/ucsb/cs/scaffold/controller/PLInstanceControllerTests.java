@@ -1,7 +1,6 @@
 package edu.ucsb.cs.scaffold.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -15,10 +14,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import edu.ucsb.cs.scaffold.ControllerTestCase;
 import edu.ucsb.cs.scaffold.entity.PlInstance;
 import edu.ucsb.cs.scaffold.entity.PlRepo;
-import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
-import edu.ucsb.cs.scaffold.repository.PlScaffoldAssessmentRepository;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
@@ -35,10 +32,6 @@ public class PLInstanceControllerTests extends ControllerTestCase {
   @MockitoBean PlInstanceRepository plInstanceRepository;
 
   @MockitoBean PlRepoRepository plRepoRepository;
-
-  @MockitoBean PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
-
-  @MockitoBean PlAssessmentRepository plAssessmentRepository;
 
   private final PlRepo repo =
       PlRepo.builder().id(1L).repoName("PrairieLearn/pl-ucsb-cmpsc5b").build();
@@ -67,8 +60,8 @@ public class PLInstanceControllerTests extends ControllerTestCase {
     mockMvc.perform(get("/api/plinstance/all")).andExpect(status().is(403));
   }
 
-  // PlInstances are created by the SyncPlRepo job (issue #45), not by POST; the endpoint was
-  // removed, so even an admin gets 405 Method Not Allowed.
+  // PlInstances are created, updated, and deleted by the SyncPlRepo job (issues #45/#47), not by
+  // POST/DELETE; the endpoints were removed, so even an admin gets 405 Method Not Allowed.
   @WithMockUser(roles = {"ADMIN"})
   @Test
   public void post_endpoint_no_longer_exists() throws Exception {
@@ -77,15 +70,10 @@ public class PLInstanceControllerTests extends ControllerTestCase {
         .andExpect(status().is(405));
   }
 
+  @WithMockUser(roles = {"ADMIN"})
   @Test
-  public void logged_out_users_cannot_delete() throws Exception {
-    mockMvc.perform(delete("/api/plinstance?id=1")).andExpect(status().is(403));
-  }
-
-  @WithMockUser(roles = {"INSTRUCTOR"})
-  @Test
-  public void instructors_cannot_delete() throws Exception {
-    mockMvc.perform(delete("/api/plinstance?id=1").with(csrf())).andExpect(status().is(403));
+  public void delete_endpoint_no_longer_exists() throws Exception {
+    mockMvc.perform(delete("/api/plinstance?id=1").with(csrf())).andExpect(status().is(405));
   }
 
   // Functionality tests
@@ -148,40 +136,5 @@ public class PLInstanceControllerTests extends ControllerTestCase {
 
     Map<String, Object> json = responseToJson(response);
     assertEquals("PlRepo with id 7 not found", json.get("message"));
-  }
-
-  @WithMockUser(roles = {"ADMIN"})
-  @Test
-  public void admin_can_delete_an_instance_and_cascades_to_assessments() throws Exception {
-    PlInstance instance = PlInstance.builder().id(1L).plRepoId(1L).name("Fall2025").build();
-    when(plInstanceRepository.findById(eq(1L))).thenReturn(Optional.of(instance));
-
-    MvcResult response =
-        mockMvc
-            .perform(delete("/api/plinstance?id=1").with(csrf()))
-            .andExpect(status().isOk())
-            .andReturn();
-
-    verify(plScaffoldAssessmentRepository, times(1)).deleteByPlInstanceId(1L);
-    verify(plAssessmentRepository, times(1)).deleteByPlInstanceId(1L);
-    verify(plInstanceRepository, times(1)).delete(any());
-    Map<String, Object> json = responseToJson(response);
-    assertEquals("PlInstance with id 1 deleted", json.get("message"));
-  }
-
-  @WithMockUser(roles = {"ADMIN"})
-  @Test
-  public void admin_tries_to_delete_non_existant_instance_and_gets_right_error_message()
-      throws Exception {
-    when(plInstanceRepository.findById(eq(7L))).thenReturn(Optional.empty());
-
-    MvcResult response =
-        mockMvc
-            .perform(delete("/api/plinstance?id=7").with(csrf()))
-            .andExpect(status().isNotFound())
-            .andReturn();
-
-    Map<String, Object> json = responseToJson(response);
-    assertEquals("PlInstance with id 7 not found", json.get("message"));
   }
 }
