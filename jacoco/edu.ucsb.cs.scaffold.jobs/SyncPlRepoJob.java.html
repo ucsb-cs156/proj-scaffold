@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SyncPlRepoJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.jobs</a> &gt; <span class="el_source">SyncPlRepoJob.java</span></div><h1>SyncPlRepoJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.jobs;
+
+import edu.ucsb.cs.scaffold.entity.PatCredential;
+import edu.ucsb.cs.scaffold.entity.PlInstance;
+import edu.ucsb.cs.scaffold.entity.PlRepo;
+import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
+import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
+import edu.ucsb.cs.scaffold.services.GithubService;
+import edu.ucsb.cs.scaffold.services.PatEncryptionService;
+import edu.ucsb.cs.scaffold.services.jobs.JobContext;
+import edu.ucsb.cs.scaffold.services.jobs.JobContextConsumer;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import lombok.Builder;
+import org.springframework.web.client.HttpClientErrorException;
+
+/**
+ * Populates the PlInstance table for one PlRepo from GitHub: each subdirectory of the repo's {@code
+ * courseInstances} directory becomes a PlInstance (issue #45).
+ *
+ * &lt;p&gt;The job runs with the PAT of the user who launched it ({@code userId}), since the app has no
+ * credential of its own that can reach every repo. Names already in the table are kept as-is; names
+ * in the table but no longer on GitHub are reported in the job log but deliberately not deleted
+ * (deleting would have to cascade to assessments — out of scope for this proof of concept).
+ */
+@Builder
+public class SyncPlRepoJob implements JobContextConsumer {
+
+  static final String COURSE_INSTANCES_PATH = &quot;courseInstances&quot;;
+
+  private long userId;
+  private long plRepoId;
+  private PatCredentialRepository patCredentialRepository;
+  private PatEncryptionService patEncryptionService;
+  private PlRepoRepository plRepoRepository;
+  private PlInstanceRepository plInstanceRepository;
+  private GithubService githubService;
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L44">    PlRepo plRepo =</span>
+        plRepoRepository
+<span class="fc" id="L46">            .findById(plRepoId)</span>
+<span class="fc" id="L47">            .orElseThrow(() -&gt; new EntityNotFoundException(PlRepo.class, plRepoId));</span>
+<span class="fc" id="L48">    ctx.log(</span>
+        &quot;Syncing course instances for repo %s (PlRepo id %d)&quot;
+<span class="fc" id="L50">            .formatted(plRepo.getRepoName(), plRepoId));</span>
+
+<span class="fc" id="L52">    PatCredential credential =</span>
+        patCredentialRepository
+<span class="fc" id="L54">            .findByUserId(userId)</span>
+<span class="fc" id="L55">            .orElseThrow(</span>
+                () -&gt;
+<span class="fc" id="L57">                    new Exception(</span>
+                        &quot;No PAT is stored for user id %d; enter one first (see docs/PAT.md)&quot;
+<span class="fc" id="L59">                            .formatted(userId)));</span>
+<span class="fc" id="L60">    String token =</span>
+<span class="fc" id="L61">        patEncryptionService.decrypt(credential.getCiphertext(), credential.getKeyVersion());</span>
+
+    List&lt;String&gt; githubNames;
+    try {
+<span class="fc" id="L65">      githubNames =</span>
+<span class="fc" id="L66">          githubService.listSubdirectories(plRepo.getRepoName(), COURSE_INSTANCES_PATH, token);</span>
+<span class="fc" id="L67">    } catch (HttpClientErrorException.NotFound e) {</span>
+<span class="fc" id="L68">      ctx.log(</span>
+          &quot;Repo %s has no %s directory (or the token cannot see the repo); nothing to sync&quot;
+<span class="fc" id="L70">              .formatted(plRepo.getRepoName(), COURSE_INSTANCES_PATH));</span>
+<span class="fc" id="L71">      return;</span>
+<span class="fc" id="L72">    } catch (HttpClientErrorException.Unauthorized | HttpClientErrorException.Forbidden e) {</span>
+<span class="fc" id="L73">      throw new Exception(</span>
+          &quot;GitHub rejected the stored PAT (HTTP %d). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/PAT.md)&quot;
+<span class="fc" id="L75">              .formatted(e.getStatusCode().value()));</span>
+<span class="fc" id="L76">    }</span>
+
+<span class="fc" id="L78">    Set&lt;String&gt; existingNames =</span>
+<span class="fc" id="L79">        plInstanceRepository.findByPlRepoId(plRepoId).stream()</span>
+<span class="fc" id="L80">            .map(PlInstance::getName)</span>
+<span class="fc" id="L81">            .collect(Collectors.toSet());</span>
+
+<span class="fc" id="L83">    int added = 0;</span>
+<span class="fc" id="L84">    int alreadyPresent = 0;</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">    for (String name : githubNames) {</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">      if (existingNames.contains(name)) {</span>
+<span class="fc" id="L87">        alreadyPresent++;</span>
+<span class="fc" id="L88">        continue;</span>
+      }
+<span class="fc" id="L90">      plInstanceRepository.save(PlInstance.builder().plRepoId(plRepoId).name(name).build());</span>
+<span class="fc" id="L91">      added++;</span>
+<span class="fc" id="L92">      ctx.log(&quot;Added course instance %s&quot;.formatted(name));</span>
+<span class="fc" id="L93">    }</span>
+
+<span class="fc" id="L95">    List&lt;String&gt; stale =</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        existingNames.stream().filter(name -&gt; !githubNames.contains(name)).sorted().toList();</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">    if (!stale.isEmpty()) {</span>
+<span class="fc" id="L98">      ctx.log(</span>
+          &quot;Note: %d course instance(s) in the database but not on GitHub (left untouched): %s&quot;
+<span class="fc" id="L100">              .formatted(stale.size(), String.join(&quot;, &quot;, stale)));</span>
+    }
+
+<span class="fc" id="L103">    ctx.log(&quot;Done: %d added, %d already present&quot;.formatted(added, alreadyPresent));</span>
+<span class="fc" id="L104">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
