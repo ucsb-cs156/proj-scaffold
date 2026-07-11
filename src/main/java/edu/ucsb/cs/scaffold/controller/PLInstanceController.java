@@ -17,7 +17,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,29 +42,6 @@ public class PLInstanceController extends ApiController {
       @Parameter(name = "plrepoId") @RequestParam Long plrepoId) {
     ensurePlRepoExists(plrepoId);
     return plInstanceRepository.findByPlRepoId(plrepoId);
-  }
-
-  @Operation(summary = "Create a new PlInstance")
-  @PreAuthorize("hasRole('ROLE_ADMIN')")
-  @PostMapping("")
-  public PlInstance postPlInstance(
-      @Parameter(name = "plRepoId") @RequestParam Long plRepoId,
-      @Parameter(name = "name") @RequestParam String name) {
-    ensurePlRepoExists(plRepoId);
-
-    String trimmedName = name.strip();
-    if (trimmedName.isBlank()) {
-      throw new IllegalArgumentException("name is required");
-    }
-
-    if (plInstanceRepository.existsByPlRepoIdAndName(plRepoId, trimmedName)) {
-      throw new IllegalArgumentException(
-          "PlInstance with name %s already exists for plRepoId %s"
-              .formatted(trimmedName, plRepoId));
-    }
-
-    PlInstance plInstance = PlInstance.builder().plRepoId(plRepoId).name(trimmedName).build();
-    return plInstanceRepository.save(plInstance);
   }
 
   @Operation(

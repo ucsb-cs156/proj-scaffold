@@ -24,8 +24,11 @@ import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
+import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
+import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
 import edu.ucsb.cs.scaffold.services.jobs.JobService;
@@ -75,6 +78,12 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
   @MockitoBean PatEncryptionService patEncryptionService;
 
   @MockitoBean PatCredentialRepository patCredentialRepository;
+
+  @MockitoBean PlRepoRepository plRepoRepository;
+
+  @MockitoBean PlInstanceRepository plInstanceRepository;
+
+  @MockitoBean GithubService githubService;
 
   @Autowired ObjectMapper objectMapper;
 
