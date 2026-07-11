@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="../style.css">
+</head>
+<body>
+
+
+<h1>YamlMessageConverterConfig.java</h1>
+
+<table class="src">
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_1'/>
+1
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_1'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>package edu.ucsb.cs.scaffold.config;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_2'/>
+2
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_2'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_3'/>
+3
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_3'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import com.fasterxml.jackson.databind.DeserializationFeature;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_4'/>
+4
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_4'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_5'/>
+5
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_5'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.List;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_6'/>
+6
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_6'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.context.annotation.Configuration;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_7'/>
+7
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_7'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.http.MediaType;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_8'/>
+8
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_8'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.http.converter.HttpMessageConverter;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_9'/>
+9
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_9'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_10'/>
+10
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_10'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_11'/>
+11
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_11'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_12'/>
+12
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_12'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>/**</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_13'/>
+13
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_13'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * Registers a YAML HttpMessageConverter so that endpoints can accept {@code application/yaml}</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_14'/>
+14
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_14'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * request bodies (e.g. {@code POST /api/concept}). YAML block scalars make multi-line Markdown</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_15'/>
+15
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_15'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * fields far easier to enter through Swagger than JSON&#39;s escaped one-line strings.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_16'/>
+16
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_16'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> *</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_17'/>
+17
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_17'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * &#60;p&#62;The converter is &#60;b&#62;read-only&#60;/b&#62; ({@code canWrite} is false): it only deserializes request</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_18'/>
+18
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_18'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * bodies. Responses continue to be serialized as JSON by the default converters, even for clients</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_19'/>
+19
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_19'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> * that send {@code Accept: *&#38;#47;*}.</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_20'/>
+20
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_20'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''> */</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_21'/>
+21
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_21'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>@Configuration</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_22'/>
+22
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_22'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>public class YamlMessageConverterConfig implements WebMvcConfigurer {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_23'/>
+23
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_23'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_24'/>
+24
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_24'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Override</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_25'/>
+25
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_25'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public void extendMessageConverters(List&#60;HttpMessageConverter&#60;?&#62;&#62; converters) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_26'/>
+26
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_26'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    converters.add(new YamlHttpMessageConverter());</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_27'/>
+27
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_27'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_28'/>
+28
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_28'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_29'/>
+29
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_29'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  static class YamlHttpMessageConverter extends AbstractJackson2HttpMessageConverter {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_30'/>
+30
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_30'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    YamlHttpMessageConverter() {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_31'/>
+31
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_31'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>      // Unknown properties are ignored, matching Spring Boot&#39;s default JSON behavior.</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_32'/>
+32
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_32'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>      super(</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_33'/>
+33
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_33'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>          YAMLMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build(),</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_34'/>
+34
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_34'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>          MediaType.parseMediaType(&#34;application/yaml&#34;),</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_35'/>
+35
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_35'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>          MediaType.parseMediaType(&#34;application/x-yaml&#34;),</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_36'/>
+36
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_36'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>          MediaType.parseMediaType(&#34;text/yaml&#34;));</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_37'/>
+37
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_37'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_38'/>
+38
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_38'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_39'/>
+39
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_39'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    @Override</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_40'/>
+40
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_40'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    public boolean canWrite(Class&#60;?&#62; clazz, MediaType mediaType) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_41'/>
+41
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_41'>1</a>
+<span>
+1. canWrite : replaced boolean return with true for edu/ucsb/cs/scaffold/config/YamlMessageConverterConfig$YamlHttpMessageConverter::canWrite &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return false;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_42'/>
+42
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_42'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_43'/>
+43
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_43'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@a74d87b_44'/>
+44
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_44'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>}</span></pre></td></tr>
+
+
+
+<tr><td></td><td></td><td><h2>Mutations</h2></td></tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@a74d87b_41'>41</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@a74d87b_41'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>canWrite<br/><b>Killed by : </b>edu.ucsb.cs.scaffold.config.YamlMessageConverterConfigTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.config.YamlMessageConverterConfigTests]/[method:converter_never_writes_so_responses_stay_json()]</span></span> replaced boolean return with true for edu/ucsb/cs/scaffold/config/YamlMessageConverterConfig$YamlHttpMessageConverter::canWrite &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+
+</table>
+
+
+<h2>Active mutators</h2>
+<ul>
+<li class='mutator'>CONDITIONALS_BOUNDARY</li>
+<li class='mutator'>EMPTY_RETURNS</li>
+<li class='mutator'>FALSE_RETURNS</li>
+<li class='mutator'>INCREMENTS</li>
+<li class='mutator'>INVERT_NEGS</li>
+<li class='mutator'>MATH</li>
+<li class='mutator'>NEGATE_CONDITIONALS</li>
+<li class='mutator'>NULL_RETURNS</li>
+<li class='mutator'>PRIMITIVE_RETURNS</li>
+<li class='mutator'>TRUE_RETURNS</li>
+<li class='mutator'>VOID_METHOD_CALLS</li>
+
+</ul>
+
+<h2>Tests examined</h2>
+<ul>
+<li>edu.ucsb.cs.scaffold.config.YamlMessageConverterConfigTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.config.YamlMessageConverterConfigTests]/[method:converter_never_writes_so_responses_stay_json()] (0 ms)</li><li>edu.ucsb.cs.scaffold.config.YamlMessageConverterConfigTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.config.YamlMessageConverterConfigTests]/[method:testYamlHttpMessageConverter()] (1 ms)</li><li>edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests]/[method:non_oauth_authentication_passes_through_unchanged()] (2 ms)</li><li>edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests]/[method:oauth2_non_oidc_authentication_passes_through_unchanged()] (2 ms)</li><li>edu.ucsb.cs.scaffold.controller.UserActivityControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.UserActivityControllerTests]/[method:post_with_null_userid_returns_400()] (2 ms)</li><li>edu.ucsb.cs.scaffold.controller.UserActivityControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.UserActivityControllerTests]/[method:post_with_null_event_type_returns_400()] (2 ms)</li><li>edu.ucsb.cs.scaffold.controller.UserActivityV2ControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.UserActivityV2ControllerTests]/[method:post_with_null_event_type_returns_400()] (2 ms)</li><li>edu.ucsb.cs.scaffold.controller.UserActivityV2ControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.UserActivityV2ControllerTests]/[method:post_with_null_course_id_returns_400()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests]/[method:test_getJobLogs_admin_can_get_empty_log()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLRepoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLRepoControllerTests]/[method:logged_in_instructor_can_get_all()] (4 ms)</li><li>edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests]/[method:instructor_role_removed_when_user_loses_instructor_status()] (2 ms)</li><li>edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests]/[method:regular_user_has_only_user_role()] (2 ms)</li><li>edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests]/[method:admin_in_db_gets_admin_role()] (2 ms)</li><li>edu.ucsb.cs.scaffold.controller.UserActivityV2ControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.UserActivityV2ControllerTests]/[method:post_with_null_userid_returns_400()] (5 ms)</li><li>edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests]/[method:admin_role_removed_when_user_loses_admin_status()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.InstructorsControllerTests]/[method:admin_try_to_delete_a_instructor_not_found()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:top_level_concepts_empty_for_course_with_no_concepts()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests]/[method:post_rejects_a_blank_token()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLRepoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLRepoControllerTests]/[method:admin_cannot_post_an_invalid_repo_name()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.UserActivityControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.UserActivityControllerTests]/[method:post_with_payload_saves_serialized_json_string()] (2 ms)</li><li>edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests]/[method:post_rejects_a_token_that_is_too_short()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.InstructorsControllerTests]/[method:logged_in_admins_can_get()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.SystemInfoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.SystemInfoControllerTests]/[method:systemInfo__admin_logged_in()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:subconcepts_empty_for_course_with_no_concepts()] (4 ms)</li><li>edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests]/[method:instructor_in_db_gets_instructor_role()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests]/[method:post_rejects_a_classic_token()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.UserActivityControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.UserActivityControllerTests]/[method:post_with_null_payload_saves_empty_json_object()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLRepoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLRepoControllerTests]/[method:admin_cannot_post_a_blank_repo_name()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests]/[method:admin_cannot_post_a_question_for_non_existent_repo()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_subconcept_requires_a_courseId()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests]/[method:get_all_questions_for_non_existant_repo_returns_404()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests]/[method:admin_can_delete_all_jobs()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reset_course_scaffold_returns_404_when_course_does_not_exist()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests]/[method:admin_cannot_post_a_blank_question_id()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests]/[method:post_returns_503_when_encryption_is_not_configured_on_the_server()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests]/[method:test_getJobLogs_admin_can_get_job_log()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests]/[method:admin_tries_to_delete_non_existant_question_and_gets_right_error_message()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testGetCanvasInfo_courseDoesNotExist()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLRepoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLRepoControllerTests]/[method:admin_tries_to_delete_non_existant_repo_and_gets_right_error_message()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests]/[method:get_all_instances_for_non_existant_repo_returns_404()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests]/[method:admin_can_delete_specific_job()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_edge_returns_404_when_source_does_not_exist()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:updateCourseCanvasToken_not_found_returns_not_found()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.InstructorsControllerTests]/[method:logged_in_admins_can_post()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_concept_requires_a_courseId()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_practice_problem_returns_404_when_concept_does_not_exist()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:split_off_returns_404_when_concept_does_not_exist()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsYamlControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsYamlControllerTests]/[method:upload_returns_400_with_the_report_when_the_file_is_invalid()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_subconcept_requires_a_parentConceptId()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.InstructorsControllerTests]/[method:logged_in_admins_can_post_and_email_is_sanitized()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_concept_returns_404_when_course_does_not_exist()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testUpdateInstructorEmail_courseDoesNotExist()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.AdminsControllerTests]/[method:an_admin_user_can_post_a_new_admin()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.AdminsControllerTests]/[method:logged_in_admin_can_get_all()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:delete_edge_returns_404_when_edge_does_not_exist()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testGetCourseById_courseDoesNotExist()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests]/[method:admin_cannot_post_an_instance_for_non_existent_repo()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests]/[method:adminCanGetCourseOptions()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:update_course_not_found_returns_not_found()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.AdminsControllerTests]/[method:admin_tries_to_delete_an_ADMIN_EMAIL_and_gets_right_error_message()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.InstructorsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.InstructorsControllerTests]/[method:logged_in_admins_can_delete()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.AdminsControllerTests]/[method:admin_tries_to_delete_non_existant_admin_and_gets_right_error_message()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests]/[method:admin_tries_to_delete_non_existant_instance_and_gets_right_error_message()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffCSVControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffCSVControllerTests]/[method:upload_returns_not_found_for_missing_course()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:designate_returns_404_when_concept_does_not_exist()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests]/[method:admin_cannot_post_a_duplicate_instance_name()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_subconcept_returns_404_when_course_does_not_exist()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.UserActivityV2ControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.UserActivityV2ControllerTests]/[method:post_with_payload_saves_serialized_json_string()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reorder_returns_404_when_the_parent_does_not_exist()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests]/[method:admin_cannot_post_an_assessment_for_non_existent_instance()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests]/[method:admin_gets_reasonable_error_when_deleting_non_existing_job()] (8 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:insertUserActivityWithNullEventTypeReturnsBadRequest()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests]/[method:getCourseOptions_missingCourse_returnsNotFound()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.AdminsControllerTests]/[method:logged_in_admin_can_get_all_admins()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests]/[method:admin_cannot_post_a_blank_assessment_name()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:delete_not_found_returns_not_found()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:getCourseEmails_defaults_to_students_one_per_line()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests]/[method:admin_cannot_post_an_assessment_for_non_existent_repo()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests]/[method:getCourseOptions_invalidOption_returnsBadRequest()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:getCourseEmails_all_comma_separated_staff_first()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLRepoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLRepoControllerTests]/[method:admin_cannot_post_a_duplicate_repo_name()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests]/[method:instructor_can_get_all_questions_for_a_repo()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests]/[method:admin_can_get_all_jobs()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests]/[method:instructor_can_get_all_instances_for_a_repo()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:getCourseEmails_students_blank_team_is_unfiltered()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests]/[method:api_getJobLogById__admin_logged_in__returns_not_found_for_missing_job()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsYamlControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsYamlControllerTests]/[method:upload_replaces_content_and_returns_the_report()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests]/[method:get_non_existant_assessment_returns_404()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:designate_rejects_making_a_concept_its_own_parent()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests]/[method:admin_cannot_post_a_duplicate_question_id()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:delete_success_returns_ok()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:subconcepts_empty_for_course_with_only_top_level_concepts()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:delete_course_with_staff_throws_illegal_argument()] (3 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:upsertUserStateWithNullUseridReturnsBadRequest()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests]/[method:admin_cannot_post_a_duplicate_assessment_name()] (4 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:healthCheckReturnsOk()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests]/[method:admin_cannot_post_assessment_for_non_existent_repo()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.UserActivityV2ControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.UserActivityV2ControllerTests]/[method:post_with_null_payload_saves_empty_json_object()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_concept_rejects_a_label_that_cleans_to_empty()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests]/[method:getCourseOptions_withOptionParam_returnsSingleOption()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reorder_accepts_an_empty_list_for_a_parent_with_no_subconcepts()] (4 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:insertUserActivityV2WithNullUseridReturnsBadRequest()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:split_off_rejects_a_concept_that_is_already_top_level()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_edge_rejects_a_self_edge()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testAllCourses_ROLE_ADMIN()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:delete_course_with_students_throws_illegal_argument()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests]/[method:getCourseOptions_withUnknownOptionInDb_skipsUnknownOption()] (3 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:upsertUserStateV2WithNullUseridReturnsBadRequest()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.AssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.AssessmentControllerTests]/[method:any_user_can_get_questions_for_assessment()] (11 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests]/[method:admin_can_delete_an_instance_and_cascades_to_assessments()] (5 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:insertUserActivityWithBlankEventTypeReturnsBadRequest()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_practice_problem_rejects_a_blank_url()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests]/[method:setCourseOption_missingCourse_returnsNotFound()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests]/[method:admin_can_delete_an_assessment()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.AdminsControllerTests]/[method:an_admin_user_can_post_a_new_admin_and_email_is_sanitized()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests]/[method:getCourseOptions_withBlankOptionParam_returnsAllOptions()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests]/[method:instructor_can_get_all_assessments_for_a_repo_and_instance()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLRepoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLRepoControllerTests]/[method:admin_can_delete_a_repo_and_cascades_to_instances_and_questions()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_edge_returns_404_when_target_does_not_exist()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.PrairieLearnControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PrairieLearnControllerTests]/[method:testPrairieLearnSetsPrivateTokenHeader()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests]/[method:get_returns_404_when_user_has_no_credential()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLRepoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLRepoControllerTests]/[method:admin_can_post_a_new_repo()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:getCourseEmails_students_explicit_type_comma_separated()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.JobsControllerJobsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.JobsControllerJobsTests]/[method:admin_can_launch_updateAll_job()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testGetCourseAccessInfo_courseDoesNotExist()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.JobsControllerJobsTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.JobsControllerJobsTests]/[method:admin_can_launch_rotatePatKeys_job()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:designate_rejects_a_parent_that_is_itself_a_subconcept()] (3 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:getConceptsForQuestionReturnsEmptyList()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_edge_rejects_concepts_from_different_courses()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests]/[method:admin_tries_to_delete_non_existant_assessment_and_gets_right_error_message()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests]/[method:getCourseOptions_returnsAllOptionsWithDefaultsAndOverrides()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reorder_rejects_a_parent_that_is_itself_a_subconcept()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_concept_requires_a_label()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testUpdateInstructorEmail_emailNotFound()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests]/[method:admin_cannot_post_assessment_for_non_existent_question()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:getCourseEmails_staff_only_sorted_lexicographically()] (7 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:getAssessmentsReturnsEmptyList()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests]/[method:admin_cannot_post_a_blank_instance_name()] (9 ms)</li><li>edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests]/[method:admin_can_get_jobs_by_course()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests]/[method:test_AdminCannotPostCourseStaffForCourseThatDoesNotExist()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_concept_requires_x()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:designate_returns_404_when_parent_does_not_exist()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests]/[method:setCourseOption_updatesExistingValue()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsYamlControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsYamlControllerTests]/[method:upload_returns_404_when_course_not_found()] (11 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_concept_requires_y()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_subconcept_returns_404_when_parent_does_not_exist()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:designate_rejects_a_parent_from_a_different_course()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.PrairieLearnControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PrairieLearnControllerTests]/[method:testPrairieLearnReturnsBodyFromApi()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests]/[method:admin_can_delete_a_question_and_cascades_to_assessments()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:instructor_can_delete_a_concept_edge()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:test_InstructorCannotPostRosterStudentForCourseThatDoesNotExist()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_notFound()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testRestoreRosterStudent_notFound()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests]/[method:testUpdateCourseStaff_course_not_found()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests]/[method:admin_can_launch_updateAll_job()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testDeleteRosterStudent_withGithubLogin_noOrgName_success()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:instructor_can_split_off_a_subconcept()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:designate_rejects_a_concept_that_has_subconcepts()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testDeleteRosterStudent_success()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:top_level_concepts_sorted_by_id()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_edge_rejects_a_subconcept_target()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsCSVControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsCSVControllerTests]/[method:instructor_cannot_upload_students_for_a_course_that_does_not_exist()] (11 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests]/[method:admin_can_delete_an_assessment()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:updateCourseCanvasToken_success_admin()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:split_off_clears_the_subconcepts_sortOrder()] (5 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:missingUserStateReturns404()] (10 ms)</li><li>edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests]/[method:instructor_can_get_own_credential_metadata_but_never_the_ciphertext()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:logged_in_user_can_get_concept_positions()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:logged_in_user_can_get_course_concepts_sorted_by_level_then_x()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:subconcepts_level_takes_priority_over_x_in_sort()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testDeleteRosterStudent_notFound()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:split_off_keeps_the_subconcepts_own_color_when_it_has_one()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_concept_rejects_a_label_whose_rendered_length_is_too_long()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests]/[method:admin_cannot_post_duplicate_assessment()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:logged_in_user_can_get_top_level_concepts()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:top_level_concepts_excludes_subconcepts()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reorder_rejects_a_list_with_duplicate_ids()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_edge_rejects_a_subconcept_source()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testGetCourseById()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reorder_rejects_a_list_containing_an_id_that_is_not_a_subconcept_of_the_parent()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:getCanvasInfo_obscuresCorrectlyForThreeCharacters()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:getCanvasInfo_obscuresCorrectlyForLessThanThreeCharacters()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests]/[method:post_strips_surrounding_whitespace_from_the_token()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:updateCourse_success_admin()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:getCanvasInfo_returnsCorrectOutput()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testAllCourses_ROLE_INSTRUCTOR()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reorder_rejects_a_list_that_is_missing_a_subconcept()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_edge_rejects_a_duplicate_edge()] (4 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:insertUserActivityWithNullUseridReturnsBadRequest()] (11 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:upsertUserStateV2WithNullCourseIdReturnsBadRequest()] (11 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_subconcept_rejects_a_parent_that_is_itself_a_subconcept()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:designate_rejects_a_duplicate_label_under_the_new_parent()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests]/[method:post_records_the_expiration_date_when_given()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffCSVControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffCSVControllerTests]/[method:instructor_can_upload_staff_csv()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:logged_in_user_sees_an_edges_cycle_color_when_set()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:instructor_can_add_a_practice_problem_url()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:designate_rejects_a_concept_that_has_prerequisite_edges()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testGetCourseById_AdminCanGetCourseCreatedBySomeoneElse()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_subconcept_rejects_a_duplicate_label_under_the_same_parent()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:delete_course_with_students_and_staff_throws_illegal_argument()] (10 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:logged_in_user_can_get_concept_edges()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:getCanvasInfo_obscuresCorrectlyForNoChars()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLQuestionControllerTests]/[method:admin_can_post_a_new_question()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLInstanceControllerTests]/[method:admin_can_post_a_new_instance()] (9 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testRosterStudentsByCourse()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:updateCourseCanvasToken_null_params_no_change()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests]/[method:admin_cannot_post_assessment_for_non_existent_instance()] (11 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:getCanvasInfo_obscuresCorrectlyForFourCharacters()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_sameStudentIdWithWhitespace()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:instructor_can_post_a_top_level_concept_with_a_json_body()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:test_post_fails_on_matching()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests]/[method:testPostCourseStaffEmailSanitized()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests]/[method:post_replaces_the_existing_credential_for_the_user()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests]/[method:test_post_course_staff_join_course_status()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_updatesSectionWhenProvided()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_concept_ignores_unknown_fields_such_as_color()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_subconcept_rejects_a_parent_from_a_different_course()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:updateCourseCanvasToken_empty_string_no_change()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests]/[method:admin_can_post_a_new_assessment()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testGetAssociatedRosterStudents_noStudentsFound()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:subconcepts_sorted_by_parent_level_then_x_then_sort_order()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testPostRosterStudent_withSection()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:updateCourseCanvasToken_same_value_does_not_change()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests]/[method:admin_can_get_course_staff_for_a_non_existing_course()] (13 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:logged_in_user_can_get_concept_graph()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testGetCourseAccessInfo_withAdminAccessOnly()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_newStudentIdNotExists()] (3 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:insertUserActivityWithNullPayloadSucceeds()] (12 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_success()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:endpoints_return_empty_results_for_a_course_with_no_concepts()] (10 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:getQuestionsForAssessmentReturnsEmptyList()] (17 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:instructor_can_post_a_top_level_concept_without_optional_markdown()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_edge_rejects_an_edge_that_would_create_a_cycle()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testUpdateInstructorEmail_byAdmin_email_is_admin()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testGetCourseAccessInfo_withStaffAccess()] (4 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:userActivityCanBeLogged()] (13 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:missingUserStateV2Returns404()] (17 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:designate_appends_the_concept_after_the_new_parents_subconcepts()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testUpdateRosterStudent_doesNotChangeSectionWhenNotProvided()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_practice_problem_rejects_a_duplicate_url()] (13 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testGetCourseAccessInfo_withStudentAccess()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testUpdateInstructorEmail_byAdmin_email_is_sanitized()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:instructor_can_designate_a_concept_as_a_subconcept()] (5 ms)</li><li>edu.ucsb.cs.scaffold.FrontendProxyControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.FrontendProxyControllerTests]/[method:nonApiPathProxiesToFrontendInDevelopment()] (18 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:instructor_can_post_a_top_level_concept()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests]/[method:testUpdateCourseStaff_success()] (12 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_subconcept_assigns_sortOrder_0_when_the_parent_has_no_subconcepts()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests]/[method:testDeleteCourseStaff_success()] (9 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_subconcept_appends_after_the_highest_existing_sortOrder()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests]/[method:testPostCourseStaff()] (9 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:instructor_can_reorder_subconcepts()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.SystemInfoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.SystemInfoControllerTests]/[method:school_list_matches()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testGetCourseAccessInfo_noAccess()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testPostCourse_byInstructor()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.UserActivityControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.UserActivityControllerTests]/[method:post_with_blank_event_type_returns_400()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_subconcept_ignores_unknown_fields_such_as_name_and_position()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests]/[method:admin_can_post_a_new_assessment()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:logged_in_user_can_get_concept_content()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testUpdateInstructorEmail_byAdmin_email_is_instructor()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testListCoursesForCurrentUserUnified_admin()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests]/[method:testCourseStaffByCourse()] (17 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testPostRosterStudentWithNoInstallationId()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:update_course_success_returns_ok()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testGetAssociatedRosterStudents()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:instructor_can_post_a_concept_edge()] (10 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testGetCourseAccessInfo_withInstructorAccess()] (12 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:admin_can_update_course_created_by_someone_else()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:instructor_can_post_a_subconcept()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testRestoreRosterStudent_success()] (9 ms)</li><li>edu.ucsb.cs.scaffold.controller.QuestionControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.QuestionControllerTests]/[method:any_user_can_get_concepts_for_question()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testStudenIsStaffInCourse()] (10 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testPostCourse_byAdmin()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:admin_can_updateCourseCanvasToken_created_by_someone_else()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testPostRosterStudent_emailSanitized()] (4 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:userStateCanBeUpsertedAndFetchedByUserId()] (16 ms)</li><li>edu.ucsb.cs.scaffold.UserInfoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.UserInfoControllerTests]/[method:getCurrentUserWhenAuthenticatedReturns200()] (22 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testPostRosterStudent_withUmail()] (3 ms)</li><li>edu.ucsb.cs.scaffold.controller.UserActivityV2ControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.UserActivityV2ControllerTests]/[method:post_with_blank_event_type_returns_400()] (14 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testPostRosterStudent()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testListCoursesForCurrentUserUnified_nonAdmin()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testUpsertStudentUpdatingTheEmail()] (4 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:updateCourseCanvasToken_success_returns_ok()] (11 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsYamlControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsYamlControllerTests]/[method:download_returns_404_when_course_not_found()] (14 ms)</li><li>edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.interceptors.RoleUpdateInterceptorTests]/[method:custom_authorities_preserved_when_promoting_to_admin()] (16 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:logged_in_user_can_get_subconcepts()] (22 ms)</li><li>edu.ucsb.cs.scaffold.controller.AssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.AssessmentControllerTests]/[method:any_user_can_get_assessments()] (13 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:graph_orders_subconcepts_by_sortOrder_then_id_with_nulls_last()] (23 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsCSVControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsCSVControllerTests]/[method:students_with_non_matching_student_id_and_email_are_rejected()] (10 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLRepoControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLRepoControllerTests]/[method:admin_can_get_all_repos()] (15 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsCSVControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsCSVControllerTests]/[method:updates_in_upsert_correctly()] (6 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLScaffoldAssessmentControllerTests]/[method:instructor_can_get_an_assessment()] (13 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseOptionsControllerTests]/[method:setCourseOption_createsNewValue()] (10 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:upsertUserStateWithNullFieldsUsesDefaults()] (31 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:getting_roster_students_for_a_non_existing_course_returns_appropriate_error()] (16 ms)</li><li>edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PLAssessmentControllerTests]/[method:admin_tries_to_delete_non_existant_assessment_and_gets_right_error_message()] (9 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:userStateV2IsScopedPerCourseNotJustUserid()] (28 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:upsertUserStateV2WithNullFieldsUsesDefaults()] (30 ms)</li><li>edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PatCredentialControllerTests]/[method:instructor_can_post_a_new_credential()] (12 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsControllerTests]/[method:testUpsertStudentWithDuplicateEmail()] (16 ms)</li><li>edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.JobsControllerDetailedTests]/[method:api_getJobLogById__admin_logged_in__returns_job_by_id()] (22 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffCSVControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffCSVControllerTests]/[method:upload_strips_whitespace_from_fields()] (16 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsCSVControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsCSVControllerTests]/[method:drops_handled_correctly()] (15 ms)</li><li>edu.ucsb.cs.scaffold.controller.AdminsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.AdminsControllerTests]/[method:admin_can_delete_an_admin()] (24 ms)</li><li>edu.ucsb.cs.scaffold.FrontendProxyControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.FrontendProxyControllerTests]/[method:apiPathIsNotProxied()] (50 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:userStateV2CanBeUpsertedAndFetchedByUserIdAndCourseId()] (40 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reset_excludes_subconcepts_from_the_top_level_analysis()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reset_sorts_by_the_callers_private_position_override_instead_of_the_saved_x()] (5 ms)</li><li>edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CourseStaffControllerTests]/[method:testDeleteCourseStaff_notFound()] (30 ms)</li><li>edu.ucsb.cs.scaffold.controller.RosterStudentsCSVControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.RosterStudentsCSVControllerTests]/[method:instructor_can_upload_students_for_an_existing_course_chico()] (22 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reset_clears_every_users_private_top_level_position_overrides()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reset_falls_back_to_saved_x_when_the_override_has_no_x_value()] (10 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:insertUserActivityV2WithNullCourseIdReturnsBadRequest()] (61 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:post_concept_accepts_a_label_whose_rendered_length_is_exactly_the_maximum()] (55 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reset_ranks_and_lays_out_a_simple_chain()] (7 ms)</li><li>edu.ucsb.cs.scaffold.controller.PrairieLearnControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.PrairieLearnControllerTests]/[method:testPrairieLearnBuildsCorrectUrl()] (24 ms)</li><li>edu.ucsb.cs.scaffold.FrontendProxyControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.FrontendProxyControllerTests]/[method:rootPathProxiesToFrontendInDevelopment()] (75 ms)</li><li>edu.ucsb.cs.scaffold.controller.CoursesControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.CoursesControllerTests]/[method:testListCoursesForCurrentUser()] (64 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reset_deletes_an_edge_made_redundant_by_a_longer_path()] (8 ms)</li><li>edu.ucsb.cs.scaffold.controller.ConceptsControllerTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.controller.ConceptsControllerTests]/[method:reset_colors_a_two_node_cycle_red_and_falls_both_concepts_back_to_level_one()] (20 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:userActivityV2CanBeLogged()] (79 ms)</li><li>edu.ucsb.cs.scaffold.ScaffoldApplicationTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.ScaffoldApplicationTests]/[method:getSystemInfoReturnsOk()] (27 ms)</li>
+</ul>
+
+<br/>
+
+Report generated by <a href='https://pitest.org'>PIT</a> 1.17.0
+
+</body>
+</html>
