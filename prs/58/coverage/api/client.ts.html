@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">96.22% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>51/51</span>
+                <span class='fraction'>51/53</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">93.33% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>14/14</span>
+                <span class='fraction'>14/15</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">96.07% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>49/49</span>
+                <span class='fraction'>49/51</span>
             </div>
         
             
@@ -311,7 +311,18 @@
 <a name='L246'></a><a href='#L246'>246</a>
 <a name='L247'></a><a href='#L247'>247</a>
 <a name='L248'></a><a href='#L248'>248</a>
-<a name='L249'></a><a href='#L249'>249</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L249'></a><a href='#L249'>249</a>
+<a name='L250'></a><a href='#L250'>250</a>
+<a name='L251'></a><a href='#L251'>251</a>
+<a name='L252'></a><a href='#L252'>252</a>
+<a name='L253'></a><a href='#L253'>253</a>
+<a name='L254'></a><a href='#L254'>254</a>
+<a name='L255'></a><a href='#L255'>255</a>
+<a name='L256'></a><a href='#L256'>256</a>
+<a name='L257'></a><a href='#L257'>257</a>
+<a name='L258'></a><a href='#L258'>258</a>
+<a name='L259'></a><a href='#L259'>259</a>
+<a name='L260'></a><a href='#L260'>260</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -331,6 +342,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -498,6 +519,7 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -581,6 +603,16 @@ export interface QuestionConcept {
   subconcept_label: string | null;
 }
 &nbsp;
+export interface Course {
+  id: number;
+  courseName: string;
+}
+&nbsp;
+export async function <span class="fstat-no" title="function not covered" >fetchCourse(c</span>ourseId: number): Promise&lt;Course&gt; {
+  const res = <span class="cstat-no" title="statement not covered" >await fetch(`${API_BASE}/courses/${courseId}`);</span>
+<span class="cstat-no" title="statement not covered" >  return res.json();</span>
+}
+&nbsp;
 export async function fetchAssessments(): Promise&lt;Assessment[]&gt; {
   const res = await fetch(`${API_BASE}/assessments`);
   return res.json();
@@ -600,15 +632,15 @@ export async function fetchQuestionConcepts(
   return res.json();
 }
 &nbsp;
-export interface UserStateResponse {
+export interface LegacyUserStateResponse {
   starred_ids: string[];
   detail_cards: unknown[];
   mastered_subconcepts: string[];
 }
 &nbsp;
-export async function fetchUserState(
+export async function fetchLegacyUserState(
   userid: number,
-): Promise&lt;UserStateResponse | null&gt; {
+): Promise&lt;LegacyUserStateResponse | null&gt; {
   const res = await fetch(`${API_BASE}/user-state/${userid}`);
   if (res.status === 404) return null;
   if (!res.ok)
@@ -616,7 +648,7 @@ export async function fetchUserState(
   return res.json();
 }
 &nbsp;
-export async function saveUserState(body: {
+export async function saveLegacyUserState(body: {
   userid: number;
   starred_ids: string[];
   detail_cards: unknown[];
@@ -631,7 +663,7 @@ export async function saveUserState(body: {
     throw new Error(`Failed to save user state for userid ${body.userid}`);
 }
 &nbsp;
-export async function logUserActivity(body: {
+export async function logLegacyUserActivity(body: {
   userid: number;
   event_type: string;
   payload: object;
@@ -748,19 +780,20 @@ export async function fetchConceptEdges(courseId: number): Promise&lt;EdgeDTO[]&
   return res.json();
 }
 &nbsp;
-// ── Course-scoped user state / activity (V2) ────────────────────────────────
+// ── Course-scoped user state / activity (Scaffold) ──────────────────────────
+// The wire paths still say "v2"; renaming them requires backend + DB changes.
 &nbsp;
-export interface UserStateV2Response {
+export interface ScaffoldUserStateResponse {
   starred_ids: string[];
   detail_cards: unknown[];
   mastered_subconcepts: string[];
   top_level_positions: Record&lt;string, { x: number; y: number }&gt;;
 }
 &nbsp;
-export async function fetchUserStateV2(
+export async function fetchScaffoldUserState(
   userid: number,
   courseId: number,
-): Promise&lt;UserStateV2Response | null&gt; {
+): Promise&lt;ScaffoldUserStateResponse | null&gt; {
   const res = await fetch(
     `${API_BASE}/user-state-v2?userid=${userid}&amp;courseId=${courseId}`,
   );
@@ -772,7 +805,7 @@ export async function fetchUserStateV2(
   return res.json();
 }
 &nbsp;
-export async function saveUserStateV2(body: {
+export async function saveScaffoldUserState(body: {
   userid: number;
   courseId: number;
   starred_ids: string[];
@@ -791,7 +824,7 @@ export async function saveUserStateV2(body: {
     );
 }
 &nbsp;
-export async function logUserActivityV2(body: {
+export async function logScaffoldUserActivity(body: {
   userid: number;
   courseId: number;
   event_type: string;
@@ -814,7 +847,7 @@ export async function logUserActivityV2(body: {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-11T03:06:09.077Z
+                at 2026-07-11T21:36:27.836Z
             </div>
         <script src="../prettify.js"></script>
         <script>
