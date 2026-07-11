@@ -56,6 +56,17 @@ public class PLInstanceControllerTests extends ControllerTestCase {
     mockMvc.perform(get("/api/plinstance?plrepoId=1")).andExpect(status().is(403));
   }
 
+  @Test
+  public void logged_out_users_cannot_get_all_instances() throws Exception {
+    mockMvc.perform(get("/api/plinstance/all")).andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_regular_users_cannot_get_all_instances() throws Exception {
+    mockMvc.perform(get("/api/plinstance/all")).andExpect(status().is(403));
+  }
+
   // PlInstances are created by the SyncPlRepo job (issue #45), not by POST; the endpoint was
   // removed, so even an admin gets 405 Method Not Allowed.
   @WithMockUser(roles = {"ADMIN"})
@@ -78,6 +89,34 @@ public class PLInstanceControllerTests extends ControllerTestCase {
   }
 
   // Functionality tests
+
+  @WithMockUser(roles = {"INSTRUCTOR"})
+  @Test
+  public void instructor_can_get_all_instances_across_repos() throws Exception {
+    PlInstance instance1 = PlInstance.builder().id(1L).plRepoId(1L).name("Fall2025").build();
+    PlInstance instance2 = PlInstance.builder().id(2L).plRepoId(2L).name("Winter2026").build();
+    ArrayList<PlInstance> expected = new ArrayList<>(Arrays.asList(instance1, instance2));
+    when(plInstanceRepository.findAll()).thenReturn(expected);
+
+    MvcResult response =
+        mockMvc.perform(get("/api/plinstance/all")).andExpect(status().isOk()).andReturn();
+
+    verify(plInstanceRepository, times(1)).findAll();
+    String expectedJson = mapper.writeValueAsString(expected);
+    assertEquals(expectedJson, response.getResponse().getContentAsString());
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_can_get_all_instances_across_repos() throws Exception {
+    when(plInstanceRepository.findAll()).thenReturn(new ArrayList<>());
+
+    MvcResult response =
+        mockMvc.perform(get("/api/plinstance/all")).andExpect(status().isOk()).andReturn();
+
+    verify(plInstanceRepository, times(1)).findAll();
+    assertEquals("[]", response.getResponse().getContentAsString());
+  }
 
   @WithMockUser(roles = {"INSTRUCTOR"})
   @Test

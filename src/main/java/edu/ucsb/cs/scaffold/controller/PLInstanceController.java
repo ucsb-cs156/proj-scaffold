@@ -35,10 +35,17 @@ public class PLInstanceController extends ApiController {
 
   @Autowired private PlAssessmentRepository plAssessmentRepository;
 
+  @Operation(summary = "List all PlInstances")
+  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @GetMapping("/all")
+  public Iterable<PlInstance> allPlInstances() {
+    return plInstanceRepository.findAll();
+  }
+
   @Operation(summary = "List all PlInstances for a PlRepo")
   @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
   @GetMapping("")
-  public List<PlInstance> allPlInstances(
+  public List<PlInstance> allPlInstancesForRepo(
       @Parameter(name = "plrepoId") @RequestParam Long plrepoId) {
     ensurePlRepoExists(plrepoId);
     return plInstanceRepository.findByPlRepoId(plrepoId);
