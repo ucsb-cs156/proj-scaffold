@@ -14,22 +14,28 @@ import edu.ucsb.cs.scaffold.ControllerTestCase;
 import edu.ucsb.cs.scaffold.entity.Job;
 import edu.ucsb.cs.scaffold.entity.User;
 import edu.ucsb.cs.scaffold.jobs.RotatePatKeysJob;
+import edu.ucsb.cs.scaffold.jobs.SyncPlRepoJob;
 import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
+import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
+import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
 import edu.ucsb.cs.scaffold.services.jobs.JobService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
@@ -61,6 +67,12 @@ public class JobsControllerJobsTests extends ControllerTestCase {
   @MockitoBean PatEncryptionService patEncryptionService;
 
   @MockitoBean PatCredentialRepository patCredentialRepository;
+
+  @MockitoBean PlRepoRepository plRepoRepository;
+
+  @MockitoBean PlInstanceRepository plInstanceRepository;
+
+  @MockitoBean GithubService githubService;
 
   @Autowired ObjectMapper objectMapper;
 
@@ -138,5 +150,69 @@ public class JobsControllerJobsTests extends ControllerTestCase {
   @Test
   public void logged_out_users_cannot_launch_rotatePatKeys_job() throws Exception {
     mockMvc.perform(post("/api/jobs/launch/rotatePatKeys")).andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"INSTRUCTOR"})
+  @Test
+  public void instructor_can_launch_syncPlRepo_job_with_their_own_userId() throws Exception {
+
+    // arrange
+
+    User user = currentUserService.getUser();
+
+    Job jobStarted =
+        Job.builder()
+            .id(0L)
+            .createdBy(user)
+            .createdAt(null)
+            .updatedAt(null)
+            .status("started")
+            .build();
+
+    when(jobService.runAsJob(any(SyncPlRepoJob.class))).thenReturn(jobStarted);
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/jobs/launch/syncPlRepo?plRepoId=3").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    ArgumentCaptor<SyncPlRepoJob> jobCaptor = ArgumentCaptor.forClass(SyncPlRepoJob.class);
+    verify(jobService, times(1)).runAsJob(jobCaptor.capture());
+    // the job runs with the launching user's id (MockCurrentUserServiceImpl returns id 1)
+    assertEquals(1L, ReflectionTestUtils.getField(jobCaptor.getValue(), "userId"));
+    assertEquals(3L, ReflectionTestUtils.getField(jobCaptor.getValue(), "plRepoId"));
+
+    String expectedJson = objectMapper.writeValueAsString(jobStarted);
+    assertEquals(expectedJson, response.getResponse().getContentAsString());
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_can_launch_syncPlRepo_job() throws Exception {
+    Job jobStarted = Job.builder().id(0L).status("started").build();
+    when(jobService.runAsJob(any(SyncPlRepoJob.class))).thenReturn(jobStarted);
+
+    mockMvc
+        .perform(post("/api/jobs/launch/syncPlRepo?plRepoId=3").with(csrf()))
+        .andExpect(status().isOk());
+
+    verify(jobService, times(1)).runAsJob(any(SyncPlRepoJob.class));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void regular_users_cannot_launch_syncPlRepo_job() throws Exception {
+    mockMvc
+        .perform(post("/api/jobs/launch/syncPlRepo?plRepoId=3").with(csrf()))
+        .andExpect(status().is(403));
+  }
+
+  @Test
+  public void logged_out_users_cannot_launch_syncPlRepo_job() throws Exception {
+    mockMvc.perform(post("/api/jobs/launch/syncPlRepo?plRepoId=3")).andExpect(status().is(403));
   }
 }

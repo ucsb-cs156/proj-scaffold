@@ -56,17 +56,14 @@ public class PLInstanceControllerTests extends ControllerTestCase {
     mockMvc.perform(get("/api/plinstance?plrepoId=1")).andExpect(status().is(403));
   }
 
+  // PlInstances are created by the SyncPlRepo job (issue #45), not by POST; the endpoint was
+  // removed, so even an admin gets 405 Method Not Allowed.
+  @WithMockUser(roles = {"ADMIN"})
   @Test
-  public void logged_out_users_cannot_post() throws Exception {
-    mockMvc.perform(post("/api/plinstance?plRepoId=1&name=Fall2025")).andExpect(status().is(403));
-  }
-
-  @WithMockUser(roles = {"INSTRUCTOR"})
-  @Test
-  public void instructors_cannot_post() throws Exception {
+  public void post_endpoint_no_longer_exists() throws Exception {
     mockMvc
         .perform(post("/api/plinstance?plRepoId=1&name=Fall2025").with(csrf()))
-        .andExpect(status().is(403));
+        .andExpect(status().is(405));
   }
 
   @Test
@@ -112,73 +109,6 @@ public class PLInstanceControllerTests extends ControllerTestCase {
 
     Map<String, Object> json = responseToJson(response);
     assertEquals("PlRepo with id 7 not found", json.get("message"));
-  }
-
-  @WithMockUser(roles = {"ADMIN"})
-  @Test
-  public void admin_cannot_post_an_instance_for_non_existent_repo() throws Exception {
-    when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.empty());
-
-    MvcResult response =
-        mockMvc
-            .perform(post("/api/plinstance?plRepoId=1&name=Fall2025").with(csrf()))
-            .andExpect(status().isNotFound())
-            .andReturn();
-
-    Map<String, Object> json = responseToJson(response);
-    assertEquals("PlRepo with id 1 not found", json.get("message"));
-  }
-
-  @WithMockUser(roles = {"ADMIN"})
-  @Test
-  public void admin_can_post_a_new_instance() throws Exception {
-    when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.of(repo));
-    when(plInstanceRepository.existsByPlRepoIdAndName(eq(1L), eq("Fall2025"))).thenReturn(false);
-    PlInstance instance = PlInstance.builder().plRepoId(1L).name("Fall2025").build();
-    PlInstance savedInstance = PlInstance.builder().id(1L).plRepoId(1L).name("Fall2025").build();
-    when(plInstanceRepository.save(eq(instance))).thenReturn(savedInstance);
-
-    MvcResult response =
-        mockMvc
-            .perform(post("/api/plinstance?plRepoId=1&name=Fall2025").with(csrf()))
-            .andExpect(status().isOk())
-            .andReturn();
-
-    verify(plInstanceRepository, times(1)).save(instance);
-    String expectedJson = mapper.writeValueAsString(savedInstance);
-    assertEquals(expectedJson, response.getResponse().getContentAsString());
-  }
-
-  @WithMockUser(roles = {"ADMIN"})
-  @Test
-  public void admin_cannot_post_a_blank_instance_name() throws Exception {
-    when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.of(repo));
-
-    MvcResult response =
-        mockMvc
-            .perform(post("/api/plinstance?plRepoId=1&name= ").with(csrf()))
-            .andExpect(status().is(400))
-            .andReturn();
-
-    Map<String, Object> json = responseToJson(response);
-    assertEquals("name is required", json.get("message"));
-  }
-
-  @WithMockUser(roles = {"ADMIN"})
-  @Test
-  public void admin_cannot_post_a_duplicate_instance_name() throws Exception {
-    when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.of(repo));
-    when(plInstanceRepository.existsByPlRepoIdAndName(eq(1L), eq("Fall2025"))).thenReturn(true);
-
-    MvcResult response =
-        mockMvc
-            .perform(post("/api/plinstance?plRepoId=1&name=Fall2025").with(csrf()))
-            .andExpect(status().is(400))
-            .andReturn();
-
-    Map<String, Object> json = responseToJson(response);
-    assertEquals(
-        "PlInstance with name Fall2025 already exists for plRepoId 1", json.get("message"));
   }
 
   @WithMockUser(roles = {"ADMIN"})

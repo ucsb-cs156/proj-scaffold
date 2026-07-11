@@ -7,12 +7,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs.scaffold.entity.Job;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.jobs.RotatePatKeysJob;
+import edu.ucsb.cs.scaffold.jobs.SyncPlRepoJob;
 import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
+import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
+import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
 import edu.ucsb.cs.scaffold.services.jobs.JobService;
@@ -49,6 +53,9 @@ public class JobsController extends ApiController {
   @Autowired private CourseStaffRepository courseStaffRepository;
   @Autowired private PatEncryptionService patEncryptionService;
   @Autowired private PatCredentialRepository patCredentialRepository;
+  @Autowired private PlRepoRepository plRepoRepository;
+  @Autowired private PlInstanceRepository plInstanceRepository;
+  @Autowired private GithubService githubService;
 
   @Operation(summary = "List all jobs")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -118,6 +125,27 @@ public class JobsController extends ApiController {
         RotatePatKeysJob.builder()
             .patEncryptionService(patEncryptionService)
             .patCredentialRepository(patCredentialRepository)
+            .build();
+    return jobService.runAsJob(job);
+  }
+
+  @Operation(
+      summary =
+          "Launch SyncPlRepo job (populate PlInstances from the repo's courseInstances directory"
+              + " on GitHub, using the launching user's PAT)")
+  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @PostMapping("/launch/syncPlRepo")
+  public Job launchSyncPlRepoJob(@Parameter(name = "plRepoId") @RequestParam Long plRepoId) {
+
+    SyncPlRepoJob job =
+        SyncPlRepoJob.builder()
+            .userId(getCurrentUser().getUser().getId())
+            .plRepoId(plRepoId)
+            .patCredentialRepository(patCredentialRepository)
+            .patEncryptionService(patEncryptionService)
+            .plRepoRepository(plRepoRepository)
+            .plInstanceRepository(plInstanceRepository)
+            .githubService(githubService)
             .build();
     return jobService.runAsJob(job);
   }
