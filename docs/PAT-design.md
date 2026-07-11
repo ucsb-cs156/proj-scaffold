@@ -60,6 +60,20 @@ several private GitHub repos:
   the token targets — far smaller than per-repo webhook asks. Test with one repo.
 - Classic PAT is the fallback only if fine-grained PATs are policy-blocked; it's
   coarse (broad scope, wide blast radius) so avoid unless forced.
+- **UPDATE (2026-07-10): we are forced — classic PATs are the only option.**
+  Fine-grained PATs can only be scoped to repos owned by the user's own account
+  or an org the user is a *member* of. Our users are outside collaborators on
+  repos owned by another org, so **no user of this app can create a
+  fine-grained PAT that reaches those repos at all** — the "Resource owner"
+  dropdown never offers the owning org. Org membership and a dedicated
+  machine-user account were both considered and ruled out. Decisions:
+  - The app accepts **only** classic PATs (`ghp_...`) and rejects fine-grained
+    tokens (`github_pat_...`) with an error explaining they can't reach the
+    repos — accepting one would just produce confusing 404s at sync time.
+  - User-facing docs (docs/PAT.md) mention fine-grained only as a
+    "this will NOT work" warning, since GitHub's UI steers users toward it.
+  - Revisit if the "bring your own repo" option lands (users would then own
+    their repos and fine-grained would work as originally designed).
 
 ## Loop-breaking & conflict handling (bidirectional sync essentials)
 

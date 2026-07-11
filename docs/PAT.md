@@ -1,19 +1,27 @@
 # Creating a GitHub Personal Access Token (PAT) for this app
 
-To sync course content with your GitHub repositories, this app needs
-permission to read and write files in those repositories *as you*. You grant
-that permission by creating a **fine-grained personal access token (PAT)** on
-GitHub and pasting it into the app once.
+To sync course content with GitHub repositories, this app needs permission to
+read and write files in those repositories *as you*. You grant that permission
+by creating a **classic personal access token** on GitHub and pasting it into
+the app once.
 
-A fine-grained PAT is much safer than an old-style ("classic") token:
+> **Use a *classic* token — a fine-grained token will NOT work.**
+> When you create the token, GitHub will steer you toward its newer
+> "fine-grained" tokens (`github_pat_...`). Those tokens **cannot access the
+> repositories this app syncs**, and the app will not accept one. Make sure
+> you are on the **Tokens (classic)** page and your token starts with
+> `ghp_`.
 
-- it works **only on the specific repositories you select** — not everything
-  your account can reach;
-- it can be limited to **only the permissions the app actually needs**
-  (reading and writing repository file contents — nothing else);
-- it **expires automatically** on a date you choose.
+## Before you start: treat this token like a password
 
-The app will only accept fine-grained tokens (they start with `github_pat_`).
+A classic token is not limited to specific repositories — it can access
+**everything your GitHub account can access**. The app protects it carefully
+(see below), but you should too:
+
+- paste it only into this app — never into email, chat, or another site;
+- always give it an **expiration date**;
+- if you ever suspect it leaked, revoke it on GitHub immediately (Settings →
+  Developer settings → Tokens (classic) → Delete) and create a new one.
 
 ## What the app does (and doesn't do) with your token
 
@@ -30,34 +38,19 @@ The app will only accept fine-grained tokens (they start with `github_pat_`).
 1. Sign in to GitHub, and go to **Settings** (click your profile photo in the
    upper right corner, then *Settings*).
 2. In the left sidebar, scroll to the bottom and click **Developer settings**.
-3. Click **Personal access tokens → Fine-grained tokens**, then
-   **Generate new token**.
-4. Fill in the form:
-   - **Token name**: something you'll recognize later, e.g.
-     `scaffold-app-sync`.
-   - **Expiration**: pick a date. Shorter is safer; you'll paste in a new
-     token when it expires. (The app will show you the expiration date you
-     record so you know when a replacement is due.)
-   - **Resource owner**: choose the account or organization that owns the
-     repositories the app should access. If the repositories belong to an
-     organization, select that organization here — *not* your personal
-     account.
-   - **Repository access**: choose **Only select repositories**, then select
-     exactly the repositories the app should sync. Do **not** choose "All
-     repositories".
-   - **Permissions → Repository permissions**: set **Contents** to
-     **Read and write**. GitHub will automatically add **Metadata:
-     Read-only**; that's expected. Leave every other permission at
-     **No access**.
-5. Click **Generate token**, and copy the token. It starts with
-   `github_pat_`. **This is the only time GitHub will show it to you.**
-
-> **If the repositories belong to an organization:** the organization may
-> require an owner to approve fine-grained tokens. In that case your token
-> shows as "pending approval" until an org owner approves it — a one-time
-> approval that covers all the repositories you selected. If the app's sync
-> doesn't work right away, check the token's status on the same GitHub page
-> where you created it.
+3. Click **Personal access tokens → Tokens (classic)** — *not* "Fine-grained
+   tokens".
+4. Click **Generate new token → Generate new token (classic)**.
+5. Fill in the form:
+   - **Note**: something you'll recognize later, e.g. `scaffold-app-sync`.
+   - **Expiration**: pick a date — do **not** choose "No expiration". Shorter
+     is safer; you'll paste in a new token when it expires, and the app will
+     show you the date so you know when a replacement is due.
+   - **Select scopes**: check the **`repo`** checkbox (the whole `repo`
+     group). That is the only scope the app needs — leave everything else
+     unchecked.
+6. Click **Generate token**, and copy the token. It starts with `ghp_`.
+   **This is the only time GitHub will show it to you.**
 
 ## Entering the token in the app
 
@@ -69,7 +62,7 @@ Currently the token is entered via the API endpoint `POST /api/pat` (for
 example, through the Swagger UI at `/swagger-ui/index.html`, under
 **PatCredential**), with:
 
-- `token` — the `github_pat_...` value you copied;
+- `token` — the `ghp_...` value you copied;
 - `expiresAt` — the expiration date you picked, in `YYYY-MM-DD` format
   (optional but recommended).
 
