@@ -13,6 +13,7 @@ import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
@@ -61,6 +62,7 @@ public class JobsController extends ApiController {
   @Autowired private PlQuestionRepository plQuestionRepository;
   @Autowired private PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
   @Autowired private PlAssessmentRepository plAssessmentRepository;
+  @Autowired private PlAssessmentQuestionRepository plAssessmentQuestionRepository;
   @Autowired private GithubService githubService;
 
   @Operation(summary = "List all jobs")
@@ -154,6 +156,7 @@ public class JobsController extends ApiController {
             .plQuestionRepository(plQuestionRepository)
             .plScaffoldAssessmentRepository(plScaffoldAssessmentRepository)
             .plAssessmentRepository(plAssessmentRepository)
+            .plAssessmentQuestionRepository(plAssessmentQuestionRepository)
             .githubService(githubService)
             .build();
     return jobService.runAsJob(job);

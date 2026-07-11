@@ -34,6 +34,7 @@ public class PlAssessment {
   @Column(name = "name", nullable = false)
   private String name;
 
-  @Column(name = "url", nullable = false)
+  // Nullable: assessments synced from infoAssessment.json have no URL (column kept for future use)
+  @Column(name = "url")
   private String url;
 }

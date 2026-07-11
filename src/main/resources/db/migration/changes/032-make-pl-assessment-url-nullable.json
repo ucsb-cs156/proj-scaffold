@@ -1,0 +1,20 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "032-make-pl-assessment-url-nullable",
+        "author": "claude",
+        "comment": "Assessments are now created by the SyncPlRepoJob from infoAssessment.json, which has no URL field; the column stays for future use but can no longer be required.",
+        "changes": [
+          {
+            "dropNotNullConstraint": {
+              "tableName": "pl_assessment",
+              "columnName": "url",
+              "columnDataType": "VARCHAR(255)"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

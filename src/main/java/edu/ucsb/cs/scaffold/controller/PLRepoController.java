@@ -2,6 +2,7 @@ package edu.ucsb.cs.scaffold.controller;
 
 import edu.ucsb.cs.scaffold.entity.PlRepo;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
@@ -48,6 +49,8 @@ public class PLRepoController extends ApiController {
 
   @Autowired private PlAssessmentRepository plAssessmentRepository;
 
+  @Autowired private PlAssessmentQuestionRepository plAssessmentQuestionRepository;
+
   @Operation(summary = "List all PlRepos")
   @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
   @GetMapping("")
@@ -84,6 +87,7 @@ public class PLRepoController extends ApiController {
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException(PlRepo.class, id));
 
+    plAssessmentQuestionRepository.deleteByPlRepoId(id);
     plScaffoldAssessmentRepository.deleteByPlRepoId(id);
     plAssessmentRepository.deleteByPlRepoId(id);
     plInstanceRepository.deleteByPlRepoId(id);
