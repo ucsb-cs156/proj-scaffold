@@ -55,7 +55,7 @@ public class SyncPlRepoJobTests {
       PatCredential.builder().id(9L).userId(7L).ciphertext("CIPHER").keyVersion(2).build();
 
   static final String REPO = "ucsb-cs156/pl-demo";
-  static final String TOKEN = "github_pat_secret";
+  static final String TOKEN = "ghp_secret";
   static final UUID UUID_1 = UUID.fromString("fafd1202-4acc-4bbf-a867-7be5223dc2be");
   static final UUID UUID_2 = UUID.fromString("11111111-2222-3333-4444-555555555555");
 

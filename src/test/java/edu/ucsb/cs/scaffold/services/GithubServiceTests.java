@@ -46,7 +46,7 @@ public class GithubServiceTests {
             Map.of("name", "notes.txt", "type", "file")));
 
     List<String> names =
-        githubService.listSubdirectories("ucsb-cs156/pl-demo", "courseInstances", "github_pat_x");
+        githubService.listSubdirectories("ucsb-cs156/pl-demo", "courseInstances", "ghp_x");
 
     assertEquals(List.of("Fall2025", "Winter2026"), names);
   }
@@ -56,7 +56,7 @@ public class GithubServiceTests {
   public void builds_the_contents_url_and_authorization_header_from_its_arguments() {
     mockResponse(List.of());
 
-    githubService.listSubdirectories("ucsb-cs156/pl-demo", "courseInstances", "github_pat_x");
+    githubService.listSubdirectories("ucsb-cs156/pl-demo", "courseInstances", "ghp_x");
 
     ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
     @SuppressWarnings("rawtypes")
@@ -71,8 +71,7 @@ public class GithubServiceTests {
     assertEquals(
         "https://api.github.example/repos/ucsb-cs156/pl-demo/contents/courseInstances",
         urlCaptor.getValue());
-    assertEquals(
-        "Bearer github_pat_x", entityCaptor.getValue().getHeaders().getFirst("Authorization"));
+    assertEquals("Bearer ghp_x", entityCaptor.getValue().getHeaders().getFirst("Authorization"));
     assertEquals(
         "application/vnd.github+json", entityCaptor.getValue().getHeaders().getFirst("Accept"));
     assertEquals(
@@ -84,7 +83,7 @@ public class GithubServiceTests {
     mockResponse(null);
 
     List<String> names =
-        githubService.listSubdirectories("ucsb-cs156/pl-demo", "courseInstances", "github_pat_x");
+        githubService.listSubdirectories("ucsb-cs156/pl-demo", "courseInstances", "ghp_x");
 
     assertEquals(List.of(), names);
   }
@@ -94,7 +93,7 @@ public class GithubServiceTests {
     mockResponse(List.of(Map.of("name", "README.md", "type", "file")));
 
     List<String> names =
-        githubService.listSubdirectories("ucsb-cs156/pl-demo", "courseInstances", "github_pat_x");
+        githubService.listSubdirectories("ucsb-cs156/pl-demo", "courseInstances", "ghp_x");
 
     assertEquals(List.of(), names);
   }
@@ -106,7 +105,7 @@ public class GithubServiceTests {
             Map.of("name", "info.json", "type", "file"), Map.of("name", "tests", "type", "dir")));
 
     List<GithubService.DirectoryEntry> entries =
-        githubService.listDirectory("ucsb-cs156/pl-demo", "questions/foo", "github_pat_x");
+        githubService.listDirectory("ucsb-cs156/pl-demo", "questions/foo", "ghp_x");
 
     assertEquals(
         List.of(
@@ -120,7 +119,7 @@ public class GithubServiceTests {
     mockResponse(null);
 
     assertEquals(
-        List.of(), githubService.listDirectory("ucsb-cs156/pl-demo", "questions", "github_pat_x"));
+        List.of(), githubService.listDirectory("ucsb-cs156/pl-demo", "questions", "ghp_x"));
   }
 
   @SuppressWarnings("unchecked")
@@ -144,8 +143,7 @@ public class GithubServiceTests {
     mockFileResponse(Map.of("content", base64WithNewlines, "encoding", "base64"));
 
     String content =
-        githubService.getFileContent(
-            "ucsb-cs156/pl-demo", "questions/foo/info.json", "github_pat_x");
+        githubService.getFileContent("ucsb-cs156/pl-demo", "questions/foo/info.json", "ghp_x");
 
     assertEquals("{ \"uuid\": \"abc\" }", content);
 
@@ -166,9 +164,7 @@ public class GithubServiceTests {
     mockFileResponse(null);
 
     assertEquals(
-        "",
-        githubService.getFileContent(
-            "ucsb-cs156/pl-demo", "questions/foo/info.json", "github_pat_x"));
+        "", githubService.getFileContent("ucsb-cs156/pl-demo", "questions/foo/info.json", "ghp_x"));
   }
 
   @Test
@@ -176,8 +172,6 @@ public class GithubServiceTests {
     mockFileResponse(Map.of("encoding", "base64"));
 
     assertEquals(
-        "",
-        githubService.getFileContent(
-            "ucsb-cs156/pl-demo", "questions/foo/info.json", "github_pat_x"));
+        "", githubService.getFileContent("ucsb-cs156/pl-demo", "questions/foo/info.json", "ghp_x"));
   }
 }

@@ -15,9 +15,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
- * Thin wrapper around the GitHub REST API, authenticated per call with a user's fine-grained
- * personal access token. Callers handle GitHub's HTTP errors (401/403 = bad or unapproved token,
- * 404 = missing repo or path), which RestTemplate surfaces as HttpClientErrorException subclasses.
+ * Thin wrapper around the GitHub REST API, authenticated per call with a user's personal access
+ * token. Callers handle GitHub's HTTP errors (401/403 = bad or unapproved token, 404 = missing repo
+ * or path), which RestTemplate surfaces as HttpClientErrorException subclasses.
  */
 @Service
 public class GithubService {
@@ -41,7 +41,7 @@ public class GithubService {
    *
    * @param repoName the repository in {@code owner/repo} form
    * @param path the directory path within the repository, e.g. {@code questions/foo}
-   * @param token the user's fine-grained PAT (plaintext)
+   * @param token the user's PAT (plaintext)
    * @return the entries, in the order GitHub returns them (alphabetical)
    */
   public List<DirectoryEntry> listDirectory(String repoName, String path, String token) {
@@ -78,7 +78,7 @@ public class GithubService {
    *
    * @param repoName the repository in {@code owner/repo} form
    * @param path the file path within the repository, e.g. {@code questions/foo/info.json}
-   * @param token the user's fine-grained PAT (plaintext)
+   * @param token the user's PAT (plaintext)
    */
   public String getFileContent(String repoName, String path, String token) {
     ResponseEntity<Map<String, Object>> response =
