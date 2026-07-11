@@ -1,0 +1,67 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "035-rename-pl-instance-name-to-short-name",
+        "author": "claude",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          {
+            "columnExists": {
+              "tableName": "pl_instance",
+              "columnName": "name"
+            }
+          }
+        ],
+        "changes": [
+          {
+            "renameColumn": {
+              "tableName": "pl_instance",
+              "oldColumnName": "name",
+              "newColumnName": "short_name",
+              "columnDataType": "VARCHAR(255)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "035-add-pl-instance-long-name-and-numeric-id",
+        "author": "claude",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          {
+            "not": {
+              "columnExists": {
+                "tableName": "pl_instance",
+                "columnName": "long_name"
+              }
+            }
+          }
+        ],
+        "changes": [
+          {
+            "addColumn": {
+              "tableName": "pl_instance",
+              "columns": [
+                {
+                  "column": {
+                    "name": "long_name",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "numeric_id",
+                    "type": "BIGINT"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

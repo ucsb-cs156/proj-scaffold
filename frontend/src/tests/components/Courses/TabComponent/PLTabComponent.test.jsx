@@ -38,6 +38,14 @@ async function submitRepoName(repoName) {
   await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
 }
 
+async function submitInstanceId(instanceId) {
+  fireEvent.change(screen.getByTestId("test-plTab-instanceId"), {
+    target: { value: instanceId },
+  });
+  fireEvent.click(screen.getByTestId("test-plTab-instance-submit"));
+  await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+}
+
 describe("PLTabComponent tests", () => {
   beforeEach(() => {
     axiosMock.reset();
@@ -45,17 +53,36 @@ describe("PLTabComponent tests", () => {
     mockToast.mockClear();
   });
 
-  test("renders the headings and repo form with correct testids", () => {
+  test("renders the instructions and both forms with correct testids", () => {
     renderTab();
     expect(screen.getByText("PrairieLearn")).toBeInTheDocument();
-    expect(screen.getByText("GitHub Repo")).toBeInTheDocument();
+    expect(
+      screen.getByText("To configure your course for PrairieLearn:"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Create a Github PAT and enter it on the profile page."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Create a PrairieLearn PAT and enter it on the profile page.",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("test-plTab")).toBeInTheDocument();
     expect(screen.getByTestId("test-plTab-repoName")).toBeInTheDocument();
     expect(screen.getByTestId("test-plTab-repo-submit")).toBeInTheDocument();
+    expect(screen.getByTestId("test-plTab-instanceId")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("test-plTab-instance-submit"),
+    ).toBeInTheDocument();
     expect(
       screen.queryByTestId("test-plTab-repo-error"),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("test-plTab-instance-error"),
+    ).not.toBeInTheDocument();
   });
+
+  // ────────────────────────── repo form ──────────────────────────
 
   test("submits the repo name to updateGithubRepo and shows a success toast", async () => {
     axiosMock.onPut("/api/courses/updateGithubRepo").reply(200, {
@@ -85,7 +112,7 @@ describe("PLTabComponent tests", () => {
     ["No access to repo via Github PAT token"],
     ["Read/write access to repo via Github PAT is required"],
   ])(
-    "shows the expected 403 error '%s' on the page, not in a toast",
+    "shows the expected repo 403 error '%s' on the page, not in a toast",
     async (message) => {
       axiosMock.onPut("/api/courses/updateGithubRepo").reply(403, {
         type: "ForbiddenException",
@@ -102,7 +129,7 @@ describe("PLTabComponent tests", () => {
     },
   );
 
-  test("uses a toast for an unexpected error status", async () => {
+  test("uses a toast for an unexpected repo error status", async () => {
     axiosMock.onPut("/api/courses/updateGithubRepo").reply(404, {
       type: "EntityNotFoundException",
       message: "Course with id 7 not found",
@@ -119,7 +146,7 @@ describe("PLTabComponent tests", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("uses a toast for a 403 with an unexpected message", async () => {
+  test("uses a toast for a repo 403 with an unexpected message", async () => {
     axiosMock.onPut("/api/courses/updateGithubRepo").reply(403, {
       message: "Access Denied",
     });
@@ -135,7 +162,7 @@ describe("PLTabComponent tests", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("uses a generic toast when the failure has no message at all", async () => {
+  test("uses a generic toast when the repo failure has no message at all", async () => {
     axiosMock.onPut("/api/courses/updateGithubRepo").networkError();
 
     renderTab();
@@ -146,7 +173,7 @@ describe("PLTabComponent tests", () => {
     );
   });
 
-  test("clears a previous on-page error after a later successful submit", async () => {
+  test("clears a previous repo error after a later successful submit", async () => {
     axiosMock.onPut("/api/courses/updateGithubRepo").replyOnce(403, {
       message: "must set up Github PAT first",
     });
@@ -174,6 +201,118 @@ describe("PLTabComponent tests", () => {
 
     await waitFor(() =>
       expect(screen.getByText("A repo name is required.")).toBeInTheDocument(),
+    );
+    expect(axiosMock.history.put.length).toBe(0);
+  });
+
+  // ────────────────────────── course instance form ──────────────────────────
+
+  test("submits the instance id to updatePLInstance and shows a success toast", async () => {
+    axiosMock.onPut("/api/courses/updatePLInstance").reply(200, {
+      id: 7,
+      plInstanceId: 77,
+    });
+
+    renderTab();
+    await submitInstanceId("213133");
+
+    expect(axiosMock.history.put[0].params).toEqual({
+      courseId: 7,
+      instanceId: "213133",
+    });
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith(
+        "PrairieLearn course instance associated with course",
+      ),
+    );
+    expect(
+      screen.queryByTestId("test-plTab-instance-error"),
+    ).not.toBeInTheDocument();
+  });
+
+  test.each([
+    ["must set up Github PAT first"],
+    ["must set up PrairieLearn PAT first"],
+    ["must associate course with PlRepo first"],
+    ["course instance id not found"],
+  ])(
+    "shows the expected instance 403 error '%s' on the page, not in a toast",
+    async (message) => {
+      axiosMock.onPut("/api/courses/updatePLInstance").reply(403, {
+        type: "ForbiddenException",
+        message,
+      });
+
+      renderTab();
+      await submitInstanceId("213133");
+
+      expect(
+        await screen.findByTestId("test-plTab-instance-error"),
+      ).toHaveTextContent(message);
+      expect(mockToast).not.toHaveBeenCalled();
+    },
+  );
+
+  test("uses a toast for an unexpected instance error status", async () => {
+    axiosMock.onPut("/api/courses/updatePLInstance").reply(404, {
+      type: "EntityNotFoundException",
+      message: "Course with id 7 not found",
+    });
+
+    renderTab();
+    await submitInstanceId("213133");
+
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith("Course with id 7 not found"),
+    );
+    expect(
+      screen.queryByTestId("test-plTab-instance-error"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("uses a generic toast when the instance failure has no message at all", async () => {
+    axiosMock.onPut("/api/courses/updatePLInstance").networkError();
+
+    renderTab();
+    await submitInstanceId("213133");
+
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith(
+        "Error associating PrairieLearn course instance",
+      ),
+    );
+  });
+
+  test("clears a previous instance error after a later successful submit", async () => {
+    axiosMock.onPut("/api/courses/updatePLInstance").replyOnce(403, {
+      message: "course instance id not found",
+    });
+
+    renderTab();
+    await submitInstanceId("213133");
+    expect(
+      await screen.findByTestId("test-plTab-instance-error"),
+    ).toBeInTheDocument();
+
+    axiosMock.onPut("/api/courses/updatePLInstance").reply(200, { id: 7 });
+    fireEvent.click(screen.getByTestId("test-plTab-instance-submit"));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("test-plTab-instance-error"),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  test("requires a course instance id before submitting", async () => {
+    renderTab();
+
+    fireEvent.click(screen.getByTestId("test-plTab-instance-submit"));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("A course instance id is required."),
+      ).toBeInTheDocument(),
     );
     expect(axiosMock.history.put.length).toBe(0);
   });

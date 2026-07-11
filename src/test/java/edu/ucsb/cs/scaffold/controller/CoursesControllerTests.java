@@ -25,6 +25,7 @@ import edu.ucsb.cs.scaffold.controller.CoursesController.StaffCoursesDTO;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.CourseStaff;
 import edu.ucsb.cs.scaffold.entity.PatCredential;
+import edu.ucsb.cs.scaffold.entity.PlInstance;
 import edu.ucsb.cs.scaffold.entity.PlRepo;
 import edu.ucsb.cs.scaffold.entity.RosterStudent;
 import edu.ucsb.cs.scaffold.entity.User;
@@ -36,12 +37,15 @@ import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.InstructorRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
 import edu.ucsb.cs.scaffold.services.CurrentUserService;
 import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
+import edu.ucsb.cs.scaffold.services.PrairieLearnService;
+import edu.ucsb.cs.scaffold.services.PrairieLearnService.CourseInstanceInfo;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -90,6 +94,10 @@ public class CoursesControllerTests extends ControllerTestCase {
   @MockitoBean private PlRepoRepository plRepoRepository;
 
   @MockitoBean private GithubService githubService;
+
+  @MockitoBean private PlInstanceRepository plInstanceRepository;
+
+  @MockitoBean private PrairieLearnService prairieLearnService;
 
   /** Test that ROLE_ADMIN can create a course */
   @Test
@@ -2345,5 +2353,279 @@ public class CoursesControllerTests extends ControllerTestCase {
 
     verify(githubService, times(1)).hasWriteAccess(eq("ucsb-cs156/pl-demo"), eq("ghp_token"));
     verify(plRepoRepository, times(1)).findByRepoName(eq("ucsb-cs156/pl-demo"));
+  }
+
+  // ────────────────────────── updatePLInstance ──────────────────────────
+
+  private static final String INFO_COURSE_INSTANCE_JSON =
+      """
+      { "uuid": "eb2647dc-9e3d-46cf-b365-b952dbe617e4", "longName": "Spring 2026" }
+      """;
+
+  private Course courseWithRepo() {
+    Course course = courseForRepoTests();
+    course.setPlRepoId(9L);
+    return course;
+  }
+
+  private void setupBothPats() {
+    setupGithubPat();
+    PatCredential plCredential =
+        PatCredential.builder()
+            .id(6L)
+            .userId(currentUserService.getCurrentUser().getUser().getId())
+            .platform(PatPlatform.PRAIRIELEARN)
+            .ciphertext("PL_CIPHER")
+            .keyVersion(2)
+            .lastFour("3395")
+            .build();
+    when(patCredentialRepository.findByUserIdAndPlatform(anyLong(), eq(PatPlatform.PRAIRIELEARN)))
+        .thenReturn(Optional.of(plCredential));
+    when(patEncryptionService.decrypt(eq("PL_CIPHER"), eq(2))).thenReturn("pl_token");
+  }
+
+  private void setupVerifiedInstance() {
+    when(plRepoRepository.findById(eq(9L)))
+        .thenReturn(Optional.of(PlRepo.builder().id(9L).repoName("ucsb-cs156/pl-demo").build()));
+    when(prairieLearnService.getCourseInstance(eq(213133L), eq("pl_token")))
+        .thenReturn(new CourseInstanceInfo(213133L, "Spring 2026", "S26"));
+    when(githubService.getFileContent(
+            eq("ucsb-cs156/pl-demo"),
+            eq("courseInstances/S26/infoCourseInstance.json"),
+            eq("ghp_token")))
+        .thenReturn(INFO_COURSE_INSTANCE_JSON);
+  }
+
+  private MvcResult performUpdatePLInstance(int expectedStatus) throws Exception {
+    return mockMvc
+        .perform(
+            put("/api/courses/updatePLInstance")
+                .param("courseId", "1")
+                .param("instanceId", "213133")
+                .with(csrf()))
+        .andExpect(status().is(expectedStatus))
+        .andReturn();
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void updatePLInstance_forbidden_without_course_manage_permissions() throws Exception {
+    performUpdatePLInstance(403);
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void updatePLInstance_returns_404_when_course_not_found() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    MvcResult response = performUpdatePLInstance(404);
+    assertEquals("Course with id 1 not found", responseToJson(response).get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updatePLInstance_returns_403_when_user_has_no_github_pat() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseWithRepo()));
+    when(patCredentialRepository.findByUserIdAndPlatform(anyLong(), eq(PatPlatform.GITHUB)))
+        .thenReturn(Optional.empty());
+
+    MvcResult response = performUpdatePLInstance(403);
+    assertEquals("must set up Github PAT first", responseToJson(response).get("message"));
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updatePLInstance_returns_403_when_user_has_no_prairielearn_pat() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseWithRepo()));
+    setupGithubPat();
+    when(patCredentialRepository.findByUserIdAndPlatform(anyLong(), eq(PatPlatform.PRAIRIELEARN)))
+        .thenReturn(Optional.empty());
+
+    MvcResult response = performUpdatePLInstance(403);
+    assertEquals("must set up PrairieLearn PAT first", responseToJson(response).get("message"));
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updatePLInstance_returns_403_when_course_has_no_pl_repo() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseForRepoTests()));
+    setupBothPats();
+
+    MvcResult response = performUpdatePLInstance(403);
+    assertEquals(
+        "must associate course with PlRepo first", responseToJson(response).get("message"));
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updatePLInstance_returns_404_when_the_pl_repo_row_is_missing() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseWithRepo()));
+    setupBothPats();
+    when(plRepoRepository.findById(eq(9L))).thenReturn(Optional.empty());
+
+    MvcResult response = performUpdatePLInstance(404);
+    assertEquals("PlRepo with id 9 not found", responseToJson(response).get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updatePLInstance_returns_403_when_prairielearn_rejects_the_instance_id()
+      throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseWithRepo()));
+    setupBothPats();
+    when(plRepoRepository.findById(eq(9L)))
+        .thenReturn(Optional.of(PlRepo.builder().id(9L).repoName("ucsb-cs156/pl-demo").build()));
+    when(prairieLearnService.getCourseInstance(eq(213133L), eq("pl_token")))
+        .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
+    MvcResult response = performUpdatePLInstance(403);
+    assertEquals("course instance id not found", responseToJson(response).get("message"));
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updatePLInstance_returns_403_when_prairielearn_returns_no_usable_body()
+      throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseWithRepo()));
+    setupBothPats();
+    when(plRepoRepository.findById(eq(9L)))
+        .thenReturn(Optional.of(PlRepo.builder().id(9L).repoName("ucsb-cs156/pl-demo").build()));
+    when(prairieLearnService.getCourseInstance(eq(213133L), eq("pl_token"))).thenReturn(null);
+
+    MvcResult response = performUpdatePLInstance(403);
+    assertEquals("course instance id not found", responseToJson(response).get("message"));
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updatePLInstance_returns_403_when_the_repo_has_no_matching_instance_directory()
+      throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseWithRepo()));
+    setupBothPats();
+    setupVerifiedInstance();
+    when(githubService.getFileContent(
+            eq("ucsb-cs156/pl-demo"),
+            eq("courseInstances/S26/infoCourseInstance.json"),
+            eq("ghp_token")))
+        .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
+    MvcResult response = performUpdatePLInstance(403);
+    assertEquals("course instance id not found", responseToJson(response).get("message"));
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updatePLInstance_returns_403_when_the_long_names_do_not_match() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseWithRepo()));
+    setupBothPats();
+    setupVerifiedInstance();
+    when(githubService.getFileContent(
+            eq("ucsb-cs156/pl-demo"),
+            eq("courseInstances/S26/infoCourseInstance.json"),
+            eq("ghp_token")))
+        .thenReturn("{ \"longName\": \"Fall 2024\" }");
+
+    MvcResult response = performUpdatePLInstance(403);
+    assertEquals("course instance id not found", responseToJson(response).get("message"));
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updatePLInstance_returns_403_when_the_long_name_is_missing_from_the_repo_json()
+      throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseWithRepo()));
+    setupBothPats();
+    setupVerifiedInstance();
+    when(githubService.getFileContent(
+            eq("ucsb-cs156/pl-demo"),
+            eq("courseInstances/S26/infoCourseInstance.json"),
+            eq("ghp_token")))
+        .thenReturn("{ \"uuid\": \"eb2647dc\" }");
+
+    MvcResult response = performUpdatePLInstance(403);
+    assertEquals("course instance id not found", responseToJson(response).get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updatePLInstance_returns_403_when_the_repo_json_is_unparseable() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseWithRepo()));
+    setupBothPats();
+    setupVerifiedInstance();
+    when(githubService.getFileContent(
+            eq("ucsb-cs156/pl-demo"),
+            eq("courseInstances/S26/infoCourseInstance.json"),
+            eq("ghp_token")))
+        .thenReturn("not json at all {{{");
+
+    MvcResult response = performUpdatePLInstance(403);
+    assertEquals("course instance id not found", responseToJson(response).get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updatePLInstance_creates_the_pl_instance_when_it_does_not_exist() throws Exception {
+    Course course = courseWithRepo();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    setupBothPats();
+    setupVerifiedInstance();
+    when(plInstanceRepository.findByPlRepoIdAndShortName(eq(9L), eq("S26")))
+        .thenReturn(Optional.empty());
+    when(plInstanceRepository.save(any(PlInstance.class)))
+        .thenAnswer(
+            inv -> {
+              PlInstance saved = inv.getArgument(0);
+              saved.setId(77L);
+              return saved;
+            });
+    when(courseRepository.save(any(Course.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    MvcResult response = performUpdatePLInstance(200);
+
+    ArgumentCaptor<PlInstance> instanceCaptor = ArgumentCaptor.forClass(PlInstance.class);
+    verify(plInstanceRepository, times(1)).save(instanceCaptor.capture());
+    PlInstance saved = instanceCaptor.getValue();
+    assertEquals(Long.valueOf(9L), saved.getPlRepoId());
+    assertEquals("S26", saved.getShortName());
+    assertEquals("Spring 2026", saved.getLongName());
+    assertEquals(Long.valueOf(213133L), saved.getNumericId());
+
+    ArgumentCaptor<Course> courseCaptor = ArgumentCaptor.forClass(Course.class);
+    verify(courseRepository, times(1)).save(courseCaptor.capture());
+    assertEquals(Long.valueOf(77L), courseCaptor.getValue().getPlInstanceId());
+    assertEquals(77, responseToJson(response).get("plInstanceId"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updatePLInstance_updates_the_numeric_id_when_the_pl_instance_exists()
+      throws Exception {
+    Course course = courseWithRepo();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    setupBothPats();
+    setupVerifiedInstance();
+    PlInstance existing = PlInstance.builder().id(55L).plRepoId(9L).shortName("S26").build();
+    when(plInstanceRepository.findByPlRepoIdAndShortName(eq(9L), eq("S26")))
+        .thenReturn(Optional.of(existing));
+    when(plInstanceRepository.save(any(PlInstance.class))).thenAnswer(inv -> inv.getArgument(0));
+    when(courseRepository.save(any(Course.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    MvcResult response = performUpdatePLInstance(200);
+
+    ArgumentCaptor<PlInstance> instanceCaptor = ArgumentCaptor.forClass(PlInstance.class);
+    verify(plInstanceRepository, times(1)).save(instanceCaptor.capture());
+    PlInstance saved = instanceCaptor.getValue();
+    assertEquals(Long.valueOf(55L), saved.getId()); // same row, updated in place
+    assertEquals(Long.valueOf(213133L), saved.getNumericId());
+    assertEquals("Spring 2026", saved.getLongName());
+    assertEquals(55, responseToJson(response).get("plInstanceId"));
   }
 }

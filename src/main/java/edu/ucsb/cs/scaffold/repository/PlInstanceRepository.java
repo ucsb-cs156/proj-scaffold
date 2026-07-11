@@ -10,9 +10,9 @@ import org.springframework.stereotype.Repository;
 public interface PlInstanceRepository extends JpaRepository<PlInstance, Long> {
   List<PlInstance> findByPlRepoId(Long plRepoId);
 
-  Optional<PlInstance> findByPlRepoIdAndName(Long plRepoId, String name);
+  Optional<PlInstance> findByPlRepoIdAndShortName(Long plRepoId, String name);
 
-  boolean existsByPlRepoIdAndName(Long plRepoId, String name);
+  boolean existsByPlRepoIdAndShortName(Long plRepoId, String name);
 
   void deleteByPlRepoId(Long plRepoId);
 }

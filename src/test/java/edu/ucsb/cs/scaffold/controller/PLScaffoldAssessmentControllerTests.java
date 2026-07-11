@@ -44,7 +44,7 @@ public class PLScaffoldAssessmentControllerTests extends ControllerTestCase {
   private final PlRepo repo =
       PlRepo.builder().id(1L).repoName("PrairieLearn/pl-ucsb-cmpsc5b").build();
   private final PlInstance instance =
-      PlInstance.builder().id(2L).plRepoId(1L).name("Fall2025").build();
+      PlInstance.builder().id(2L).plRepoId(1L).shortName("Fall2025").build();
   private final PlQuestion question =
       PlQuestion.builder()
           .id(3L)
