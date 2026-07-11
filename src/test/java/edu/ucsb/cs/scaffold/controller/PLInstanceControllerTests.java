@@ -83,8 +83,8 @@ public class PLInstanceControllerTests extends ControllerTestCase {
   @Test
   public void instructor_can_get_all_instances_for_a_repo() throws Exception {
     when(plRepoRepository.findById(eq(1L))).thenReturn(Optional.of(repo));
-    PlInstance instance1 = PlInstance.builder().id(1L).plRepoId(1L).name("Fall2025").build();
-    PlInstance instance2 = PlInstance.builder().id(2L).plRepoId(1L).name("Winter2026").build();
+    PlInstance instance1 = PlInstance.builder().id(1L).plRepoId(1L).shortName("Fall2025").build();
+    PlInstance instance2 = PlInstance.builder().id(2L).plRepoId(1L).shortName("Winter2026").build();
     ArrayList<PlInstance> expected = new ArrayList<>(Arrays.asList(instance1, instance2));
     when(plInstanceRepository.findByPlRepoId(eq(1L))).thenReturn(expected);
 
@@ -114,7 +114,7 @@ public class PLInstanceControllerTests extends ControllerTestCase {
   @WithMockUser(roles = {"ADMIN"})
   @Test
   public void admin_can_delete_an_instance_and_cascades_to_assessments() throws Exception {
-    PlInstance instance = PlInstance.builder().id(1L).plRepoId(1L).name("Fall2025").build();
+    PlInstance instance = PlInstance.builder().id(1L).plRepoId(1L).shortName("Fall2025").build();
     when(plInstanceRepository.findById(eq(1L))).thenReturn(Optional.of(instance));
 
     MvcResult response =

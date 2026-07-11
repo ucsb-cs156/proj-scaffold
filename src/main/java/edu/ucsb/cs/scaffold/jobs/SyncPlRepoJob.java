@@ -114,7 +114,7 @@ public class SyncPlRepoJob implements JobContextConsumer {
 
     Map<String, PlInstance> existingByName = new LinkedHashMap<>();
     for (PlInstance instance : plInstanceRepository.findByPlRepoId(plRepoId)) {
-      existingByName.put(instance.getName(), instance);
+      existingByName.put(instance.getShortName(), instance);
     }
 
     int added = 0;
@@ -124,7 +124,7 @@ public class SyncPlRepoJob implements JobContextConsumer {
         unchanged++;
         continue;
       }
-      plInstanceRepository.save(PlInstance.builder().plRepoId(plRepoId).name(name).build());
+      plInstanceRepository.save(PlInstance.builder().plRepoId(plRepoId).shortName(name).build());
       added++;
       ctx.log("Added course instance %s".formatted(name));
     }

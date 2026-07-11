@@ -36,6 +36,12 @@ public class Course {
   @Column(name = "pl_repo_id")
   private Long plRepoId;
 
+  // Id of the PlInstance (PrairieLearn course instance) associated with this
+  // course; null until an instructor associates one via
+  // PUT /api/courses/updatePLInstance.
+  @Column(name = "pl_instance_id")
+  private Long plInstanceId;
+
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
   @Fetch(FetchMode.JOIN)
   @JsonIgnore
