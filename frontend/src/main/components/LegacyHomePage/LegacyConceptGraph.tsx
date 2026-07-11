@@ -24,7 +24,7 @@ import {
   type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { buildGraphElements } from "main/utils/layout";
+import { buildLegacyGraphElements } from "main/utils/layout";
 import { majorConcepts, prereqEdgeData } from "main/data/conceptGraph";
 import { positions } from "main/data/conceptGraphPositions";
 import { conceptContent, type ConceptContent } from "main/data/conceptContent";
@@ -486,9 +486,9 @@ function DetailNode({ data, id }: NodeProps) {
 
 const nodeTypes: NodeTypes = { major: MajorNode, detail: DetailNode };
 const { nodes: initialNodes, edges: initialEdges } =
-  buildGraphElements(positions);
+  buildLegacyGraphElements(positions);
 
-export default function ConceptGraph({
+export default function LegacyConceptGraph({
   highlightedIds,
   highlightedSubconcepts,
   onConceptClick,

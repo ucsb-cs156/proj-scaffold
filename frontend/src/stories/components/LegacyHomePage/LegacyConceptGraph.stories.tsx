@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import ConceptGraph from "main/components/Scaffold/ConceptGraph";
+import LegacyConceptGraph from "main/components/LegacyHomePage/LegacyConceptGraph";
 
-const meta: Meta<typeof ConceptGraph> = {
-  title: "components/Scaffold/ConceptGraph",
-  component: ConceptGraph,
+const meta: Meta<typeof LegacyConceptGraph> = {
+  title: "components/LegacyHomePage/LegacyConceptGraph",
+  component: LegacyConceptGraph,
   parameters: {
     layout: "fullscreen",
   },
@@ -11,7 +11,7 @@ const meta: Meta<typeof ConceptGraph> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof ConceptGraph>;
+type Story = StoryObj<typeof LegacyConceptGraph>;
 
 export const Default: Story = {
   args: {

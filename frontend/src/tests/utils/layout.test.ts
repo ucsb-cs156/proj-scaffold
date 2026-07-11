@@ -1,18 +1,21 @@
 import { describe, test, expect } from "vitest";
 import { MarkerType, Position } from "@xyflow/react";
-import { buildGraphElements, buildGraphElementsV2 } from "main/utils/layout";
+import {
+  buildLegacyGraphElements,
+  buildScaffoldGraphElements,
+} from "main/utils/layout";
 import { majorConcepts, prereqEdgeData } from "main/data/conceptGraph";
 import { positions } from "main/data/conceptGraphPositions";
 
 describe("utils/layout", () => {
-  describe("buildGraphElements", () => {
+  describe("buildLegacyGraphElements", () => {
     test("creates one node per major concept", () => {
-      const { nodes } = buildGraphElements(positions);
+      const { nodes } = buildLegacyGraphElements(positions);
       expect(nodes).toHaveLength(majorConcepts.length);
     });
 
     test("each node carries the concept's id, type, and data", () => {
-      const { nodes } = buildGraphElements(positions);
+      const { nodes } = buildLegacyGraphElements(positions);
       majorConcepts.forEach((concept) => {
         const node = nodes.find((n) => n.id === concept.name);
         expect(node).toBeDefined();
@@ -28,7 +31,7 @@ describe("utils/layout", () => {
     });
 
     test("places each node at its position from the provided positions map", () => {
-      const { nodes } = buildGraphElements(positions);
+      const { nodes } = buildLegacyGraphElements(positions);
       const recursionNode = nodes.find((n) => n.id === "recursion");
       expect(recursionNode?.position).toEqual(positions["recursion"]);
     });
@@ -39,18 +42,18 @@ describe("utils/layout", () => {
       };
       delete customPositions["recursion"];
 
-      const { nodes } = buildGraphElements(customPositions);
+      const { nodes } = buildLegacyGraphElements(customPositions);
       const recursionNode = nodes.find((n) => n.id === "recursion");
       expect(recursionNode?.position).toEqual({ x: 0, y: 0 });
     });
 
     test("creates one edge per prerequisite relationship", () => {
-      const { edges } = buildGraphElements(positions);
+      const { edges } = buildLegacyGraphElements(positions);
       expect(edges).toHaveLength(prereqEdgeData.length);
     });
 
     test("each edge connects the correct source and target with the expected shape", () => {
-      const { edges } = buildGraphElements(positions);
+      const { edges } = buildLegacyGraphElements(positions);
       const { source, target } = prereqEdgeData[0];
       const edge = edges.find(
         (e) => e.source === source && e.target === target,
@@ -70,7 +73,7 @@ describe("utils/layout", () => {
     });
   });
 
-  describe("buildGraphElementsV2", () => {
+  describe("buildScaffoldGraphElements", () => {
     const sampleConcepts = [
       {
         id: 1,
@@ -87,7 +90,7 @@ describe("utils/layout", () => {
     };
 
     test("creates one node per supplied major concept, using the supplied data (not the hardcoded import)", () => {
-      const { nodes } = buildGraphElementsV2(
+      const { nodes } = buildScaffoldGraphElements(
         samplePositions,
         sampleConcepts,
         sampleEdges,
@@ -102,7 +105,7 @@ describe("utils/layout", () => {
     });
 
     test("places each node at its position from the supplied positions map", () => {
-      const { nodes } = buildGraphElementsV2(
+      const { nodes } = buildScaffoldGraphElements(
         samplePositions,
         sampleConcepts,
         sampleEdges,
@@ -114,7 +117,11 @@ describe("utils/layout", () => {
     });
 
     test("defaults a node's position to the origin when missing from the positions map", () => {
-      const { nodes } = buildGraphElementsV2({}, sampleConcepts, sampleEdges);
+      const { nodes } = buildScaffoldGraphElements(
+        {},
+        sampleConcepts,
+        sampleEdges,
+      );
       expect(nodes.find((n) => n.id === "1")?.position).toEqual({
         x: 0,
         y: 0,
@@ -122,7 +129,7 @@ describe("utils/layout", () => {
     });
 
     test("creates one edge per supplied prerequisite relationship, colored from the supplied concepts", () => {
-      const { edges } = buildGraphElementsV2(
+      const { edges } = buildScaffoldGraphElements(
         samplePositions,
         sampleConcepts,
         sampleEdges,
@@ -141,9 +148,11 @@ describe("utils/layout", () => {
     });
 
     test("uses the edge's own color (e.g. cycle red) when it has one", () => {
-      const { edges } = buildGraphElementsV2(samplePositions, sampleConcepts, [
-        { id: 10, sourceId: 1, targetId: 2, color: "#FF0000" },
-      ]);
+      const { edges } = buildScaffoldGraphElements(
+        samplePositions,
+        sampleConcepts,
+        [{ id: 10, sourceId: 1, targetId: 2, color: "#FF0000" }],
+      );
       expect(edges[0].style).toEqual({ stroke: "#FF0000", strokeWidth: 4 });
       expect(edges[0].markerEnd).toEqual({
         type: MarkerType.ArrowClosed,
@@ -152,7 +161,7 @@ describe("utils/layout", () => {
     });
 
     test("is independent of the hardcoded conceptGraph.ts data", () => {
-      const { nodes, edges } = buildGraphElementsV2(
+      const { nodes, edges } = buildScaffoldGraphElements(
         samplePositions,
         sampleConcepts,
         sampleEdges,

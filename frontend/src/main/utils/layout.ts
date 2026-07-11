@@ -1,7 +1,7 @@
 import { type Node, type Edge, MarkerType, Position } from "@xyflow/react";
 import { majorConcepts, prereqEdgeData } from "../data/conceptGraph";
 
-export function buildGraphElements(
+export function buildLegacyGraphElements(
   positions: Record<string, { x: number; y: number }>,
 ): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = majorConcepts.map((concept) => ({
@@ -59,13 +59,13 @@ export interface EdgeLike {
   color?: string | null;
 }
 
-// Same shape as buildGraphElements, but fully parameterized so it can build a
+// Same shape as buildLegacyGraphElements, but fully parameterized so it can build a
 // graph from database-fetched data instead of the hardcoded conceptGraph.ts
 // imports, using numeric concept ids (as strings) for React Flow node ids. Kept
-// separate (rather than changing buildGraphElements itself) so the original,
+// separate (rather than changing buildLegacyGraphElements itself) so the original,
 // hardcoded-data code path used by LegacyHomePage.tsx / ConceptGraph.tsx is
 // completely untouched.
-export function buildGraphElementsV2(
+export function buildScaffoldGraphElements(
   positions: Record<string, { x: number; y: number }>,
   majorConceptsData: MajorConceptLike[],
   prereqEdgeDataArg: EdgeLike[],

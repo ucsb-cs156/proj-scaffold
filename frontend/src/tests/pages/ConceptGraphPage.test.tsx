@@ -13,7 +13,7 @@ import type {
   MajorConceptDTO,
   ConceptContentDTO,
   EdgeDTO,
-  UserStateV2Response,
+  ScaffoldUserStateResponse,
 } from "main/api/client";
 import * as client from "main/api/client";
 
@@ -24,19 +24,20 @@ const axiosMock = new axiosMockAdapter(axios);
 
 vi.mock("main/api/client", () => ({
   fetchAssessments: vi.fn(),
+  fetchCourse: vi.fn(),
   fetchQuestions: vi.fn(),
   fetchQuestionConcepts: vi.fn(),
   fetchConceptGraph: vi.fn(),
   fetchConceptContent: vi.fn(),
   fetchConceptPositions: vi.fn(),
   fetchConceptEdges: vi.fn(),
-  fetchUserStateV2: vi.fn(),
-  saveUserStateV2: vi.fn(),
-  logUserActivityV2: vi.fn(),
+  fetchScaffoldUserState: vi.fn(),
+  saveScaffoldUserState: vi.fn(),
+  logScaffoldUserActivity: vi.fn(),
   reorderSubconcepts: vi.fn(),
 }));
 
-vi.mock("main/components/Scaffold/ConceptGraphV2", () => ({
+vi.mock("main/components/Scaffold/ScaffoldConceptGraph", () => ({
   default: (props: {
     highlightedIds: Set<string>;
     starredIds: Set<string>;
@@ -185,7 +186,7 @@ const prereqEdgeData: EdgeDTO[] = [
   { id: 20, sourceId: 4, targetId: 1, color: null },
 ];
 
-const userState: UserStateV2Response = {
+const userState: ScaffoldUserStateResponse = {
   starred_ids: ["4"],
   detail_cards: [
     {
@@ -196,7 +197,7 @@ const userState: UserStateV2Response = {
       posX: 10,
       posY: 20,
     },
-  ] as unknown as UserStateV2Response["detail_cards"],
+  ] as unknown as ScaffoldUserStateResponse["detail_cards"],
   mastered_subconcepts: ["For loops"],
   top_level_positions: {},
 };
@@ -230,15 +231,19 @@ describe("ConceptGraphPage", () => {
     // real backend in this test environment; silence its logged error.
     restoreConsole = mockConsole();
     mockedClient.fetchAssessments.mockResolvedValue(assessments);
+    mockedClient.fetchCourse.mockResolvedValue({
+      id: 1,
+      courseName: "CMPSC 8",
+    });
     mockedClient.fetchQuestions.mockResolvedValue(questions);
     mockedClient.fetchQuestionConcepts.mockResolvedValue(questionConcepts);
     mockedClient.fetchConceptGraph.mockResolvedValue(majorConcepts);
     mockedClient.fetchConceptContent.mockResolvedValue(conceptContent);
     mockedClient.fetchConceptPositions.mockResolvedValue(positions);
     mockedClient.fetchConceptEdges.mockResolvedValue(prereqEdgeData);
-    mockedClient.fetchUserStateV2.mockResolvedValue(userState);
-    mockedClient.saveUserStateV2.mockResolvedValue(undefined);
-    mockedClient.logUserActivityV2.mockResolvedValue(undefined);
+    mockedClient.fetchScaffoldUserState.mockResolvedValue(userState);
+    mockedClient.saveScaffoldUserState.mockResolvedValue(undefined);
+    mockedClient.logScaffoldUserActivity.mockResolvedValue(undefined);
     mockedClient.reorderSubconcepts.mockResolvedValue([]);
 
     axiosMock.reset();
@@ -288,6 +293,15 @@ describe("ConceptGraphPage", () => {
     expect(await screen.findByTestId("concept-graph-stub")).toBeInTheDocument();
   });
 
+  test("shows the settings link in the top bar once the course loads", async () => {
+    renderConceptGraphPage(currentUserFixtures.userOnly);
+
+    const link = await screen.findByTestId("ScaffoldTopBar-linkToSettings");
+    expect(link).toHaveAttribute("href", "/course/1/settings");
+    expect(screen.getByTestId("ScaffoldTopBar")).toBeInTheDocument();
+    expect(mockedClient.fetchCourse).toHaveBeenCalledWith(1);
+  });
+
   test("fetches the concept graph data for the course id in the url", async () => {
     renderConceptGraphPage(currentUserFixtures.userOnly, "7");
 
@@ -321,17 +335,17 @@ describe("ConceptGraphPage", () => {
     renderConceptGraphPage(currentUserFixtures.userOnly);
 
     await screen.findByTestId("concept-graph-stub");
-    expect(mockedClient.fetchUserStateV2).not.toHaveBeenCalled();
-    expect(mockedClient.logUserActivityV2).not.toHaveBeenCalled();
+    expect(mockedClient.fetchScaffoldUserState).not.toHaveBeenCalled();
+    expect(mockedClient.logScaffoldUserActivity).not.toHaveBeenCalled();
   });
 
   test("logs in and restores saved user state when the user has a numeric id", async () => {
     renderConceptGraphPage(loggedInWithId);
 
     await waitFor(() =>
-      expect(mockedClient.fetchUserStateV2).toHaveBeenCalledWith(42, 1),
+      expect(mockedClient.fetchScaffoldUserState).toHaveBeenCalledWith(42, 1),
     );
-    expect(mockedClient.logUserActivityV2).toHaveBeenCalledWith({
+    expect(mockedClient.logScaffoldUserActivity).toHaveBeenCalledWith({
       userid: 42,
       courseId: 1,
       event_type: "login",
@@ -450,7 +464,7 @@ describe("ConceptGraphPage", () => {
 
     expect(await screen.findByText("2 / 2")).toBeInTheDocument();
     await waitFor(() =>
-      expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
+      expect(mockedClient.saveScaffoldUserState).toHaveBeenCalledWith(
         expect.objectContaining({
           userid: 42,
           courseId: 1,
@@ -468,7 +482,7 @@ describe("ConceptGraphPage", () => {
 
     expect(await screen.findByText("0 / 2")).toBeInTheDocument();
     await waitFor(() =>
-      expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
+      expect(mockedClient.saveScaffoldUserState).toHaveBeenCalledWith(
         expect.objectContaining({ userid: 42, courseId: 1, starred_ids: [] }),
       ),
     );
@@ -482,7 +496,7 @@ describe("ConceptGraphPage", () => {
 
     expect(await screen.findByText("0 / 2")).toBeInTheDocument();
     await waitFor(() =>
-      expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith({
+      expect(mockedClient.saveScaffoldUserState).toHaveBeenCalledWith({
         userid: 42,
         courseId: 1,
         starred_ids: [],
@@ -500,7 +514,7 @@ describe("ConceptGraphPage", () => {
     fireEvent.click(screen.getByText("trigger-detail-added"));
 
     await waitFor(() =>
-      expect(mockedClient.logUserActivityV2).toHaveBeenCalledWith({
+      expect(mockedClient.logScaffoldUserActivity).toHaveBeenCalledWith({
         userid: 42,
         courseId: 1,
         event_type: "detail_added_to_graph",
@@ -512,7 +526,7 @@ describe("ConceptGraphPage", () => {
       }),
     );
     await waitFor(() =>
-      expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
+      expect(mockedClient.saveScaffoldUserState).toHaveBeenCalledWith(
         expect.objectContaining({
           detail_cards: expect.arrayContaining([
             expect.objectContaining({ itemLabel: "Recursion" }),
@@ -529,7 +543,7 @@ describe("ConceptGraphPage", () => {
     fireEvent.click(screen.getByText("trigger-detail-deleted"));
 
     await waitFor(() =>
-      expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
+      expect(mockedClient.saveScaffoldUserState).toHaveBeenCalledWith(
         expect.objectContaining({ detail_cards: [] }),
       ),
     );
@@ -542,7 +556,7 @@ describe("ConceptGraphPage", () => {
     fireEvent.click(screen.getByText("trigger-detail-moved"));
 
     await waitFor(() =>
-      expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
+      expect(mockedClient.saveScaffoldUserState).toHaveBeenCalledWith(
         expect.objectContaining({
           detail_cards: [expect.objectContaining({ posX: 5, posY: 6 })],
         }),
@@ -557,7 +571,7 @@ describe("ConceptGraphPage", () => {
     fireEvent.click(screen.getByText("trigger-major-moved"));
 
     await waitFor(() =>
-      expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
+      expect(mockedClient.saveScaffoldUserState).toHaveBeenCalledWith(
         expect.objectContaining({
           top_level_positions: { "1": { x: 30, y: 40 } },
         }),
@@ -574,7 +588,7 @@ describe("ConceptGraphPage", () => {
 
     expect(await screen.findByTestId("mastered-count")).toHaveTextContent("2");
     await waitFor(() =>
-      expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
+      expect(mockedClient.saveScaffoldUserState).toHaveBeenCalledWith(
         expect.objectContaining({
           mastered_subconcepts: expect.arrayContaining([
             "For loops",
@@ -594,7 +608,7 @@ describe("ConceptGraphPage", () => {
 
     expect(await screen.findByTestId("mastered-count")).toHaveTextContent("0");
     await waitFor(() =>
-      expect(mockedClient.saveUserStateV2).toHaveBeenCalledWith(
+      expect(mockedClient.saveScaffoldUserState).toHaveBeenCalledWith(
         expect.objectContaining({ mastered_subconcepts: [] }),
       ),
     );
@@ -620,15 +634,15 @@ describe("ConceptGraphPage", () => {
     fireEvent.click(screen.getByText("trigger-star-click"));
 
     expect(await screen.findByText("1 / 2")).toBeInTheDocument();
-    expect(mockedClient.saveUserStateV2).not.toHaveBeenCalled();
+    expect(mockedClient.saveScaffoldUserState).not.toHaveBeenCalled();
   });
 
   test("handles a missing saved user state (e.g. a new user) without crashing", async () => {
-    mockedClient.fetchUserStateV2.mockResolvedValue(null);
+    mockedClient.fetchScaffoldUserState.mockResolvedValue(null);
     renderConceptGraphPage(loggedInWithId);
 
     await waitFor(() =>
-      expect(mockedClient.fetchUserStateV2).toHaveBeenCalledWith(42, 1),
+      expect(mockedClient.fetchScaffoldUserState).toHaveBeenCalledWith(42, 1),
     );
     expect(await screen.findByText("0 / 2")).toBeInTheDocument();
     expect(screen.getByTestId("restored-count")).toHaveTextContent("0");

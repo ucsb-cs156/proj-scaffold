@@ -20,6 +20,20 @@ export interface QuestionConcept {
   subconcept_label: string | null;
 }
 
+export interface Course {
+  id: number;
+  courseName: string;
+}
+
+// Returns null when the caller may not view the course (the endpoint is
+// staff-only), so the UI can simply omit staff affordances like the
+// settings link rather than render from an error body.
+export async function fetchCourse(courseId: number): Promise<Course | null> {
+  const res = await fetch(`${API_BASE}/courses/${courseId}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
 export async function fetchAssessments(): Promise<Assessment[]> {
   const res = await fetch(`${API_BASE}/assessments`);
   return res.json();
@@ -39,15 +53,15 @@ export async function fetchQuestionConcepts(
   return res.json();
 }
 
-export interface UserStateResponse {
+export interface LegacyUserStateResponse {
   starred_ids: string[];
   detail_cards: unknown[];
   mastered_subconcepts: string[];
 }
 
-export async function fetchUserState(
+export async function fetchLegacyUserState(
   userid: number,
-): Promise<UserStateResponse | null> {
+): Promise<LegacyUserStateResponse | null> {
   const res = await fetch(`${API_BASE}/user-state/${userid}`);
   if (res.status === 404) return null;
   if (!res.ok)
@@ -55,7 +69,7 @@ export async function fetchUserState(
   return res.json();
 }
 
-export async function saveUserState(body: {
+export async function saveLegacyUserState(body: {
   userid: number;
   starred_ids: string[];
   detail_cards: unknown[];
@@ -70,7 +84,7 @@ export async function saveUserState(body: {
     throw new Error(`Failed to save user state for userid ${body.userid}`);
 }
 
-export async function logUserActivity(body: {
+export async function logLegacyUserActivity(body: {
   userid: number;
   event_type: string;
   payload: object;
@@ -187,19 +201,20 @@ export async function fetchConceptEdges(courseId: number): Promise<EdgeDTO[]> {
   return res.json();
 }
 
-// ── Course-scoped user state / activity (V2) ────────────────────────────────
+// ── Course-scoped user state / activity (Scaffold) ──────────────────────────
+// The wire paths still say "v2"; renaming them requires backend + DB changes.
 
-export interface UserStateV2Response {
+export interface ScaffoldUserStateResponse {
   starred_ids: string[];
   detail_cards: unknown[];
   mastered_subconcepts: string[];
   top_level_positions: Record<string, { x: number; y: number }>;
 }
 
-export async function fetchUserStateV2(
+export async function fetchScaffoldUserState(
   userid: number,
   courseId: number,
-): Promise<UserStateV2Response | null> {
+): Promise<ScaffoldUserStateResponse | null> {
   const res = await fetch(
     `${API_BASE}/user-state-v2?userid=${userid}&courseId=${courseId}`,
   );
@@ -211,7 +226,7 @@ export async function fetchUserStateV2(
   return res.json();
 }
 
-export async function saveUserStateV2(body: {
+export async function saveScaffoldUserState(body: {
   userid: number;
   courseId: number;
   starred_ids: string[];
@@ -230,7 +245,7 @@ export async function saveUserStateV2(body: {
     );
 }
 
-export async function logUserActivityV2(body: {
+export async function logScaffoldUserActivity(body: {
   userid: number;
   courseId: number;
   event_type: string;

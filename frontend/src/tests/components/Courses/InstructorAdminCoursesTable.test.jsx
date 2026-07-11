@@ -227,7 +227,10 @@ describe("InstructorAdminCoursesTable tests", () => {
       fireEvent.mouseOver(screen.getByText("CMPSC 5A"));
 
       const tooltip = await screen.findByRole("tooltip");
-      expect(tooltip).toHaveAttribute("id", "tooltip-coursename-1");
+      expect(tooltip).toHaveAttribute(
+        "id",
+        "InstructorAdminCoursesTable-cell-row-1-col-courseName-link-tooltip-coursename",
+      );
     });
 
     test("the correct tooltip renders for courseName", async () => {

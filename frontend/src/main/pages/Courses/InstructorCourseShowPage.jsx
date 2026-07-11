@@ -13,11 +13,12 @@ import SettingsTabComponent from "main/components/Courses/TabComponent/SettingsT
 import JobTabComponent from "main/components/Courses/TabComponent/JobTabComponent";
 import { hasRole } from "main/utils/currentUser";
 import DownloadsTabComponent from "main/components/Courses/TabComponent/DownloadsTabComponent";
-import LinkToScaffold from "main/components/Courses/LinkToScaffold";
+import LinkToScaffold from "main/components/Scaffold/LinkToScaffold";
 import ScaffoldTabComponent from "main/components/Courses/TabComponent/ScaffoldTabComponent";
 import ConceptTabComponent from "main/components/Courses/TabComponent/ConceptTabComponent";
 import SubConceptTabComponent from "main/components/Courses/TabComponent/SubConceptTabComponent";
 import EdgeConceptTabComponent from "main/components/Courses/TabComponent/EdgeConceptTabComponent";
+import PLTabComponent from "main/components/Courses/TabComponent/PLTabComponent";
 
 export default function InstructorCourseShowPage({
   testId = "InstructorCourseShowPage",
@@ -102,8 +103,7 @@ export default function InstructorCourseShowPage({
                     className="h3 mb-0 fw-semibold"
                   >
                     <LinkToScaffold
-                      courseName={course.courseName}
-                      courseId={course.id}
+                      course={course}
                       testId={`${testId}-title-linkToScaffold`}
                     />
                   </h1>
@@ -153,6 +153,13 @@ export default function InstructorCourseShowPage({
                 courseId={courseId}
                 testIdPrefix={testId}
               />
+            </Tab>
+            <Tab
+              eventKey={"prairielearn"}
+              title={"PrairieLearn"}
+              className="pt-2"
+            >
+              <PLTabComponent testIdPrefix={testId} />
             </Tab>
           </Tabs>
         </div>

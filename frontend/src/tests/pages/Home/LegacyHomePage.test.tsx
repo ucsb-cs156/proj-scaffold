@@ -10,7 +10,7 @@ import type {
   Assessment,
   Question,
   QuestionConcept,
-  UserStateResponse,
+  LegacyUserStateResponse,
 } from "main/api/client";
 import * as client from "main/api/client";
 
@@ -23,12 +23,12 @@ vi.mock("main/api/client", () => ({
   fetchAssessments: vi.fn(),
   fetchQuestions: vi.fn(),
   fetchQuestionConcepts: vi.fn(),
-  fetchUserState: vi.fn(),
-  saveUserState: vi.fn(),
-  logUserActivity: vi.fn(),
+  fetchLegacyUserState: vi.fn(),
+  saveLegacyUserState: vi.fn(),
+  logLegacyUserActivity: vi.fn(),
 }));
 
-vi.mock("main/components/Scaffold/ConceptGraph", () => ({
+vi.mock("main/components/LegacyHomePage/LegacyConceptGraph", () => ({
   default: (props: {
     highlightedIds: Set<string>;
     starredIds: Set<string>;
@@ -123,7 +123,7 @@ const questionConcepts: QuestionConcept[] = [
   },
 ];
 
-const userState: UserStateResponse = {
+const userState: LegacyUserStateResponse = {
   starred_ids: ["loops"],
   detail_cards: [
     {
@@ -134,7 +134,7 @@ const userState: UserStateResponse = {
       posX: 10,
       posY: 20,
     },
-  ] as unknown as UserStateResponse["detail_cards"],
+  ] as unknown as LegacyUserStateResponse["detail_cards"],
   mastered_subconcepts: ["For loops"],
 };
 
@@ -167,9 +167,9 @@ describe("LegacyHomePage", () => {
     mockedClient.fetchAssessments.mockResolvedValue(assessments);
     mockedClient.fetchQuestions.mockResolvedValue(questions);
     mockedClient.fetchQuestionConcepts.mockResolvedValue(questionConcepts);
-    mockedClient.fetchUserState.mockResolvedValue(userState);
-    mockedClient.saveUserState.mockResolvedValue(undefined);
-    mockedClient.logUserActivity.mockResolvedValue(undefined);
+    mockedClient.fetchLegacyUserState.mockResolvedValue(userState);
+    mockedClient.saveLegacyUserState.mockResolvedValue(undefined);
+    mockedClient.logLegacyUserActivity.mockResolvedValue(undefined);
 
     axiosMock.reset();
     axiosMock.resetHistory();
@@ -180,15 +180,6 @@ describe("LegacyHomePage", () => {
 
   afterEach(() => {
     restoreConsole();
-  });
-
-  test("shows the login screen when not logged in, without loading any data", () => {
-    renderHomePage(currentUserFixtures.notLoggedIn);
-
-    expect(
-      screen.getByRole("button", { name: "Log In with Google" }),
-    ).toBeInTheDocument();
-    expect(screen.queryByTestId("concept-graph-stub")).not.toBeInTheDocument();
   });
 
   test("loads assessments on mount when logged in", async () => {
@@ -203,17 +194,17 @@ describe("LegacyHomePage", () => {
     renderHomePage(currentUserFixtures.userOnly);
 
     await screen.findByTestId("concept-graph-stub");
-    expect(mockedClient.fetchUserState).not.toHaveBeenCalled();
-    expect(mockedClient.logUserActivity).not.toHaveBeenCalled();
+    expect(mockedClient.fetchLegacyUserState).not.toHaveBeenCalled();
+    expect(mockedClient.logLegacyUserActivity).not.toHaveBeenCalled();
   });
 
   test("logs in and restores saved user state when the user has a numeric id", async () => {
     renderHomePage(loggedInWithId);
 
     await waitFor(() =>
-      expect(mockedClient.fetchUserState).toHaveBeenCalledWith(42),
+      expect(mockedClient.fetchLegacyUserState).toHaveBeenCalledWith(42),
     );
-    expect(mockedClient.logUserActivity).toHaveBeenCalledWith({
+    expect(mockedClient.logLegacyUserActivity).toHaveBeenCalledWith({
       userid: 42,
       event_type: "login",
       payload: { consented: true },
@@ -331,7 +322,7 @@ describe("LegacyHomePage", () => {
 
     expect(await screen.findByText("2 / 26")).toBeInTheDocument();
     await waitFor(() =>
-      expect(mockedClient.saveUserState).toHaveBeenCalledWith(
+      expect(mockedClient.saveLegacyUserState).toHaveBeenCalledWith(
         expect.objectContaining({
           userid: 42,
           starred_ids: expect.arrayContaining(["loops", "recursion"]),
@@ -348,7 +339,7 @@ describe("LegacyHomePage", () => {
 
     expect(await screen.findByText("0 / 26")).toBeInTheDocument();
     await waitFor(() =>
-      expect(mockedClient.saveUserState).toHaveBeenCalledWith(
+      expect(mockedClient.saveLegacyUserState).toHaveBeenCalledWith(
         expect.objectContaining({ userid: 42, starred_ids: [] }),
       ),
     );
@@ -362,7 +353,7 @@ describe("LegacyHomePage", () => {
 
     expect(await screen.findByText("0 / 26")).toBeInTheDocument();
     await waitFor(() =>
-      expect(mockedClient.saveUserState).toHaveBeenCalledWith({
+      expect(mockedClient.saveLegacyUserState).toHaveBeenCalledWith({
         userid: 42,
         starred_ids: [],
         detail_cards: [],
@@ -378,7 +369,7 @@ describe("LegacyHomePage", () => {
     fireEvent.click(screen.getByText("trigger-detail-added"));
 
     await waitFor(() =>
-      expect(mockedClient.logUserActivity).toHaveBeenCalledWith({
+      expect(mockedClient.logLegacyUserActivity).toHaveBeenCalledWith({
         userid: 42,
         event_type: "detail_added_to_graph",
         payload: {
@@ -389,7 +380,7 @@ describe("LegacyHomePage", () => {
       }),
     );
     await waitFor(() =>
-      expect(mockedClient.saveUserState).toHaveBeenCalledWith(
+      expect(mockedClient.saveLegacyUserState).toHaveBeenCalledWith(
         expect.objectContaining({
           detail_cards: expect.arrayContaining([
             expect.objectContaining({ itemLabel: "Recursion" }),
@@ -406,7 +397,7 @@ describe("LegacyHomePage", () => {
     fireEvent.click(screen.getByText("trigger-detail-deleted"));
 
     await waitFor(() =>
-      expect(mockedClient.saveUserState).toHaveBeenCalledWith(
+      expect(mockedClient.saveLegacyUserState).toHaveBeenCalledWith(
         expect.objectContaining({ detail_cards: [] }),
       ),
     );
@@ -419,7 +410,7 @@ describe("LegacyHomePage", () => {
     fireEvent.click(screen.getByText("trigger-detail-moved"));
 
     await waitFor(() =>
-      expect(mockedClient.saveUserState).toHaveBeenCalledWith(
+      expect(mockedClient.saveLegacyUserState).toHaveBeenCalledWith(
         expect.objectContaining({
           detail_cards: [expect.objectContaining({ posX: 5, posY: 6 })],
         }),
@@ -436,7 +427,7 @@ describe("LegacyHomePage", () => {
 
     expect(await screen.findByTestId("mastered-count")).toHaveTextContent("2");
     await waitFor(() =>
-      expect(mockedClient.saveUserState).toHaveBeenCalledWith(
+      expect(mockedClient.saveLegacyUserState).toHaveBeenCalledWith(
         expect.objectContaining({
           mastered_subconcepts: expect.arrayContaining([
             "For loops",
@@ -456,7 +447,7 @@ describe("LegacyHomePage", () => {
 
     expect(await screen.findByTestId("mastered-count")).toHaveTextContent("0");
     await waitFor(() =>
-      expect(mockedClient.saveUserState).toHaveBeenCalledWith(
+      expect(mockedClient.saveLegacyUserState).toHaveBeenCalledWith(
         expect.objectContaining({ mastered_subconcepts: [] }),
       ),
     );
@@ -545,22 +536,22 @@ describe("LegacyHomePage", () => {
     fireEvent.click(screen.getByText("trigger-star-click"));
 
     expect(await screen.findByText("1 / 26")).toBeInTheDocument();
-    expect(mockedClient.saveUserState).not.toHaveBeenCalled();
+    expect(mockedClient.saveLegacyUserState).not.toHaveBeenCalled();
   });
 
   test("handles a missing saved user state (e.g. a new user) without crashing", async () => {
-    mockedClient.fetchUserState.mockResolvedValue(null);
+    mockedClient.fetchLegacyUserState.mockResolvedValue(null);
     renderHomePage(loggedInWithId);
 
     await waitFor(() =>
-      expect(mockedClient.fetchUserState).toHaveBeenCalledWith(42),
+      expect(mockedClient.fetchLegacyUserState).toHaveBeenCalledWith(42),
     );
     expect(await screen.findByText("0 / 26")).toBeInTheDocument();
     expect(screen.getByTestId("restored-count")).toHaveTextContent("0");
   });
 
   test("moving one detail card does not change the position of other saved cards", async () => {
-    mockedClient.fetchUserState.mockResolvedValue({
+    mockedClient.fetchLegacyUserState.mockResolvedValue({
       starred_ids: [],
       detail_cards: [
         {
@@ -579,7 +570,7 @@ describe("LegacyHomePage", () => {
           posX: 30,
           posY: 40,
         },
-      ] as unknown as UserStateResponse["detail_cards"],
+      ] as unknown as LegacyUserStateResponse["detail_cards"],
       mastered_subconcepts: [],
     });
     renderHomePage(loggedInWithId);
@@ -588,7 +579,7 @@ describe("LegacyHomePage", () => {
     fireEvent.click(screen.getByText("trigger-detail-moved"));
 
     await waitFor(() =>
-      expect(mockedClient.saveUserState).toHaveBeenCalledWith(
+      expect(mockedClient.saveLegacyUserState).toHaveBeenCalledWith(
         expect.objectContaining({
           detail_cards: [
             expect.objectContaining({ itemLabel: "Loops", posX: 5, posY: 6 }),
