@@ -20,4 +20,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/create-course-selector","number":52,"title":"[WIP] Add CourseMenu component for course selection","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/52"}]
+pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/create-course-selector","number":52,"title":"Add CourseMenu component to navbar","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/52"}]
