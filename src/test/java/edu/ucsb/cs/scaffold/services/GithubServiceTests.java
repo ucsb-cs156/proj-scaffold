@@ -7,6 +7,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -95,5 +97,87 @@ public class GithubServiceTests {
         githubService.listSubdirectories("ucsb-cs156/pl-demo", "courseInstances", "github_pat_x");
 
     assertEquals(List.of(), names);
+  }
+
+  @Test
+  public void listDirectory_returns_all_entries_with_their_types() {
+    mockResponse(
+        List.of(
+            Map.of("name", "info.json", "type", "file"), Map.of("name", "tests", "type", "dir")));
+
+    List<GithubService.DirectoryEntry> entries =
+        githubService.listDirectory("ucsb-cs156/pl-demo", "questions/foo", "github_pat_x");
+
+    assertEquals(
+        List.of(
+            new GithubService.DirectoryEntry("info.json", "file"),
+            new GithubService.DirectoryEntry("tests", "dir")),
+        entries);
+  }
+
+  @Test
+  public void listDirectory_returns_an_empty_list_when_github_returns_no_body() {
+    mockResponse(null);
+
+    assertEquals(
+        List.of(), githubService.listDirectory("ucsb-cs156/pl-demo", "questions", "github_pat_x"));
+  }
+
+  @SuppressWarnings("unchecked")
+  private void mockFileResponse(Map<String, Object> body) {
+    when(restTemplate.exchange(
+            any(String.class),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            any(ParameterizedTypeReference.class)))
+        .thenReturn(new ResponseEntity<>(body, HttpStatus.OK));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  public void getFileContent_decodes_the_base64_body_github_returns() {
+    // GitHub returns base64 with embedded newlines; the MIME decoder must accept them
+    String base64WithNewlines =
+        Base64.getEncoder()
+            .encodeToString("{ \"uuid\": \"abc\" }".getBytes(StandardCharsets.UTF_8))
+            .replaceAll("(.{8})", "$1\n");
+    mockFileResponse(Map.of("content", base64WithNewlines, "encoding", "base64"));
+
+    String content =
+        githubService.getFileContent(
+            "ucsb-cs156/pl-demo", "questions/foo/info.json", "github_pat_x");
+
+    assertEquals("{ \"uuid\": \"abc\" }", content);
+
+    ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
+    verify(restTemplate)
+        .exchange(
+            urlCaptor.capture(),
+            eq(HttpMethod.GET),
+            any(HttpEntity.class),
+            any(ParameterizedTypeReference.class));
+    assertEquals(
+        "https://api.github.example/repos/ucsb-cs156/pl-demo/contents/questions/foo/info.json",
+        urlCaptor.getValue());
+  }
+
+  @Test
+  public void getFileContent_returns_empty_string_when_github_returns_no_body() {
+    mockFileResponse(null);
+
+    assertEquals(
+        "",
+        githubService.getFileContent(
+            "ucsb-cs156/pl-demo", "questions/foo/info.json", "github_pat_x"));
+  }
+
+  @Test
+  public void getFileContent_returns_empty_string_when_the_body_has_no_content_field() {
+    mockFileResponse(Map.of("encoding", "base64"));
+
+    assertEquals(
+        "",
+        githubService.getFileContent(
+            "ucsb-cs156/pl-demo", "questions/foo/info.json", "github_pat_x"));
   }
 }

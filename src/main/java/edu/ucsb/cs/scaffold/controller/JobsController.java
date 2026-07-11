@@ -13,8 +13,11 @@ import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
+import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
+import edu.ucsb.cs.scaffold.repository.PlScaffoldAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
@@ -55,6 +58,9 @@ public class JobsController extends ApiController {
   @Autowired private PatCredentialRepository patCredentialRepository;
   @Autowired private PlRepoRepository plRepoRepository;
   @Autowired private PlInstanceRepository plInstanceRepository;
+  @Autowired private PlQuestionRepository plQuestionRepository;
+  @Autowired private PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
+  @Autowired private PlAssessmentRepository plAssessmentRepository;
   @Autowired private GithubService githubService;
 
   @Operation(summary = "List all jobs")
@@ -145,6 +151,9 @@ public class JobsController extends ApiController {
             .patEncryptionService(patEncryptionService)
             .plRepoRepository(plRepoRepository)
             .plInstanceRepository(plInstanceRepository)
+            .plQuestionRepository(plQuestionRepository)
+            .plScaffoldAssessmentRepository(plScaffoldAssessmentRepository)
+            .plAssessmentRepository(plAssessmentRepository)
             .githubService(githubService)
             .build();
     return jobService.runAsJob(job);
