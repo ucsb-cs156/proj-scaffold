@@ -1,0 +1,66 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "031-create-pl-assessment-question-table",
+        "author": "claude",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "pl_assessment_question" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "pl_assessment_question",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGINT",
+                    "autoIncrement": true,
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "pl_repo_id",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "pl_assessment_id",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "pl_question_id",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ordinal",
+                    "type": "INT",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "pl_assessment_question",
+              "columnNames": "pl_assessment_id, pl_question_id",
+              "constraintName": "uq_pl_assessment_question"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
