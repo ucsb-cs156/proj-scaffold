@@ -2,18 +2,26 @@ package edu.ucsb.cs.scaffold.controller;
 
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.CourseStaff;
+import edu.ucsb.cs.scaffold.entity.PatCredential;
+import edu.ucsb.cs.scaffold.entity.PlRepo;
 import edu.ucsb.cs.scaffold.entity.RosterStudent;
 import edu.ucsb.cs.scaffold.entity.User;
+import edu.ucsb.cs.scaffold.enums.PatPlatform;
 import edu.ucsb.cs.scaffold.enums.School;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.errors.ForbiddenException;
 import edu.ucsb.cs.scaffold.model.CurrentUser;
 import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.InstructorRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
+import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
+import edu.ucsb.cs.scaffold.services.GithubService;
+import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,6 +47,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Tag(name = "Course")
 @RequestMapping("/api/courses")
@@ -59,6 +68,14 @@ public class CoursesController extends ApiController {
   @Autowired private AdminRepository adminRepository;
 
   @Autowired private JobsRepository jobsRepository;
+
+  @Autowired private PatCredentialRepository patCredentialRepository;
+
+  @Autowired private PatEncryptionService patEncryptionService;
+
+  @Autowired private PlRepoRepository plRepoRepository;
+
+  @Autowired private GithubService githubService;
 
   /**
    * This method creates a new Course.
@@ -102,7 +119,8 @@ public class CoursesController extends ApiController {
       School school,
       String instructorEmail,
       int numStudents,
-      int numStaff) {
+      int numStaff,
+      Long plRepoId) {
 
     // Creates view from Course entity
     public InstructorCourseView(Course c) {
@@ -113,7 +131,8 @@ public class CoursesController extends ApiController {
           c.getSchool(),
           c.getInstructorEmail(),
           c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,
-          c.getCourseStaff() != null ? c.getCourseStaff().size() : 0);
+          c.getCourseStaff() != null ? c.getCourseStaff().size() : 0,
+          c.getPlRepoId());
     }
   }
 
@@ -551,5 +570,55 @@ public class CoursesController extends ApiController {
     Course savedCourse = courseRepository.save(course);
 
     return new InstructorCourseView(savedCourse);
+  }
+
+  /**
+   * Associates a GitHub repo (PlRepo) with a course, after verifying that the current user's stored
+   * GitHub PAT has read/write access to the repo. The check is a single GET /repos/{owner}/{repo}
+   * call: a successful response proves read access and its permissions block reports push (write)
+   * access, so nothing is written to the repo.
+   *
+   * @param courseId the id of the course
+   * @param repoName the repo in owner/repo form (i.e. the part after https://github.com/)
+   * @return the updated course
+   */
+  @Operation(summary = "Associate a GitHub repo (PlRepo) with a course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PutMapping("/updateGithubRepo")
+  public InstructorCourseView updateGithubRepo(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "repoName", description = "GitHub repo in owner/repo form") @RequestParam
+          String repoName) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    long userId = getCurrentUser().getUser().getId();
+    PatCredential credential =
+        patCredentialRepository
+            .findByUserIdAndPlatform(userId, PatPlatform.GITHUB)
+            .orElseThrow(() -> new ForbiddenException("must set up Github PAT first"));
+    String token =
+        patEncryptionService.decrypt(credential.getCiphertext(), credential.getKeyVersion());
+
+    String trimmedRepoName = repoName.strip();
+    boolean canWrite;
+    try {
+      canWrite = githubService.hasWriteAccess(trimmedRepoName, token);
+    } catch (HttpClientErrorException e) {
+      throw new ForbiddenException("No access to repo via Github PAT token");
+    }
+    if (!canWrite) {
+      throw new ForbiddenException("Read/write access to repo via Github PAT is required");
+    }
+
+    PlRepo plRepo =
+        plRepoRepository
+            .findByRepoName(trimmedRepoName)
+            .orElseGet(
+                () -> plRepoRepository.save(PlRepo.builder().repoName(trimmedRepoName).build()));
+    course.setPlRepoId(plRepo.getId());
+    return new InstructorCourseView(courseRepository.save(course));
   }
 }

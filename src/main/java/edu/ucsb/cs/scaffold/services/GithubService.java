@@ -97,6 +97,39 @@ public class GithubService {
     return new String(decoded, StandardCharsets.UTF_8);
   }
 
+  /**
+   * Reports whether the token has push (read/write) access to the repository, from the {@code
+   * permissions} block of <a href="https://docs.github.com/en/rest/repos/repos">GET
+   * /repos/{owner}/{repo}</a>. A successful call already proves read access; {@code push=true}
+   * additionally proves write access — nothing is written to check this.
+   *
+   * @param repoName the repository in {@code owner/repo} form
+   * @param token the user's PAT (plaintext)
+   * @throws org.springframework.web.client.HttpClientErrorException when the token cannot read the
+   *     repo at all (GitHub answers 404 for repos a token cannot see, or 401 for a bad token)
+   */
+  public boolean hasWriteAccess(String repoName, String token) {
+    ResponseEntity<Map<String, Object>> response =
+        restTemplate.exchange(
+            repoUrl(repoName),
+            HttpMethod.GET,
+            authenticatedEntity(token),
+            new ParameterizedTypeReference<>() {});
+
+    Map<String, Object> body = response.getBody();
+    if (body == null || !(body.get("permissions") instanceof Map<?, ?> permissions)) {
+      return false;
+    }
+    return Boolean.TRUE.equals(permissions.get("push"));
+  }
+
+  private String repoUrl(String repoName) {
+    return UriComponentsBuilder.fromUriString(githubApiBase)
+        .pathSegment("repos")
+        .path("/" + repoName)
+        .toUriString();
+  }
+
   private String contentsUrl(String repoName, String path) {
     return UriComponentsBuilder.fromUriString(githubApiBase)
         .pathSegment("repos")
