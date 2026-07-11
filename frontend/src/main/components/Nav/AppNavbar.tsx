@@ -5,6 +5,7 @@ import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import GoogleLogin from "main/components/Nav/GoogleLogin";
 import AppNavbarLocalhost from "main/components/Nav/AppNavbarLocalhost";
 import ScaffoldBrand from "main/components/Scaffold/ScaffoldBrand";
+import CourseMenu from "main/components/Courses/CourseMenu";
 
 export default function AppNavbar({
   currentUser,
@@ -42,6 +43,7 @@ export default function AppNavbar({
 
           <Navbar.Collapse className="justify-content-between">
             <Nav className="mr-auto">
+              <CourseMenu currentUser={currentUser} />
               {systemInfo?.showSwaggerUILink && (
                 <>
                   <Nav.Link href="/swagger-ui/index.html">Swagger</Nav.Link>
