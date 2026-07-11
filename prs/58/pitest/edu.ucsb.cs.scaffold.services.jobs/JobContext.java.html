@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="../style.css">
+</head>
+<body>
+
+
+<h1>JobContext.java</h1>
+
+<table class="src">
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_1'/>
+1
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_1'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>package edu.ucsb.cs.scaffold.services.jobs;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_2'/>
+2
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_2'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_3'/>
+3
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_3'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs.scaffold.entity.Job;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_4'/>
+4
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_4'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import edu.ucsb.cs.scaffold.repository.JobsRepository;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_5'/>
+5
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_5'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import lombok.AllArgsConstructor;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_6'/>
+6
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_6'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import lombok.extern.slf4j.Slf4j;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_7'/>
+7
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_7'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_8'/>
+8
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_8'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>@AllArgsConstructor</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_9'/>
+9
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_9'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>@Slf4j</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_10'/>
+10
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_10'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>public class JobContext {</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_11'/>
+11
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_11'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private JobsRepository jobsRepository;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_12'/>
+12
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_12'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  private Job job;</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_13'/>
+13
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_13'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_14'/>
+14
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_14'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  public void log(String message) {</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_15'/>
+15
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_15'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    log.info(&#34;Job %s: %s&#34;.formatted(job.getId(), message));</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_16'/>
+16
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_16'>1</a>
+<span>
+1. log : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    String previousLog = job.getLog() == null ? &#34;&#34; : (job.getLog() + &#34;\n&#34;);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_17'/>
+17
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_17'>1</a>
+<span>
+1. log : removed call to edu/ucsb/cs/scaffold/entity/Job::setLog &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    job.setLog(previousLog + message);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_18'/>
+18
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_18'>1</a>
+<span>
+1. log : negated conditional &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    if (jobsRepository != null) jobsRepository.save(job);</span></pre></td></tr>
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_19'/>
+19
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_19'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>  }</span></pre></td></tr>
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@793df843_20'/>
+20
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@793df843_20'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>}</span></pre></td></tr>
+
+
+
+<tr><td></td><td></td><td><h2>Mutations</h2></td></tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@793df843_16'>16</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@793df843_16'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>log<br/><b>Killed by : </b>edu.ucsb.cs.scaffold.services.jobs.JobContextTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.services.jobs.JobContextTests]/[method:when_jobs_repository_is_null_does_not_save()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@793df843_17'>17</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@793df843_17'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>log<br/><b>Killed by : </b>edu.ucsb.cs.scaffold.services.jobs.JobContextTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.services.jobs.JobContextTests]/[method:when_jobs_repository_is_null_does_not_save()]</span></span> removed call to edu/ucsb/cs/scaffold/entity/Job::setLog &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@793df843_18'>18</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@793df843_18'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>log<br/><b>Killed by : </b>edu.ucsb.cs.scaffold.services.jobs.JobContextTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.services.jobs.JobContextTests]/[method:when_jobs_repository_is_null_does_not_save()]</span></span> negated conditional &rarr; KILLED</span>
+</div> 
+</td>
+</tr>
+
+</table>
+
+
+<h2>Active mutators</h2>
+<ul>
+<li class='mutator'>CONDITIONALS_BOUNDARY</li>
+<li class='mutator'>EMPTY_RETURNS</li>
+<li class='mutator'>FALSE_RETURNS</li>
+<li class='mutator'>INCREMENTS</li>
+<li class='mutator'>INVERT_NEGS</li>
+<li class='mutator'>MATH</li>
+<li class='mutator'>NEGATE_CONDITIONALS</li>
+<li class='mutator'>NULL_RETURNS</li>
+<li class='mutator'>PRIMITIVE_RETURNS</li>
+<li class='mutator'>TRUE_RETURNS</li>
+<li class='mutator'>VOID_METHOD_CALLS</li>
+
+</ul>
+
+<h2>Tests examined</h2>
+<ul>
+<li>edu.ucsb.cs.scaffold.services.jobs.JobContextTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.services.jobs.JobContextTests]/[method:when_jobs_repository_is_null_does_not_save()] (0 ms)</li><li>edu.ucsb.cs.scaffold.jobs.TestJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.TestJobTests]/[method:test_TestJob_fails()] (0 ms)</li><li>edu.ucsb.cs.scaffold.services.jobs.JobContextTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.services.jobs.JobContextTests]/[method:jobsContext_can_save_log_messages()] (3 ms)</li><li>edu.ucsb.cs.scaffold.jobs.RotatePatKeysJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.RotatePatKeysJobTests]/[method:logs_and_skips_credentials_whose_key_version_is_no_longer_available()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.RotatePatKeysJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.RotatePatKeysJobTests]/[method:rotates_old_rows_and_skips_rows_already_on_the_current_version()] (4 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:fails_with_a_helpful_message_when_the_user_has_no_stored_pat()] (1 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:other_github_errors_propagate_and_fail_the_job()] (1 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:fails_with_a_helpful_message_when_github_returns_401()] (1 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:missing_courseInstances_directory_skips_the_step_including_deletions()] (1 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:fails_with_a_helpful_message_when_github_returns_403_during_question_sync()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:an_instance_without_an_assessments_directory_is_skipped()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:a_subdirectory_named_info_json_does_not_make_its_parent_a_question()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:deletes_stale_questions_cascading_to_their_scaffold_assessments()] (1 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:directories_without_infoAssessment_json_are_not_assessments()] (1 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:stale_assessments_are_deleted_with_their_join_rows()] (1 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:a_question_whose_info_json_lacks_uuid_or_title_is_skipped()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:a_question_with_an_invalid_uuid_is_skipped()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:a_question_whose_info_json_has_uuid_but_no_title_is_skipped()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:an_assessment_with_unparseable_infoAssessment_json_is_skipped()] (1 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:adds_new_instances_and_counts_unchanged_ones()] (1 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:an_unchanged_question_is_not_saved_again()] (1 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:a_question_with_unparseable_info_json_is_skipped()] (7 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:updates_a_question_when_only_the_title_changed()] (1 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:an_assessment_without_a_zones_key_gets_no_question_links()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:updates_a_question_whose_uuid_or_title_changed()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:info_json_at_the_questions_root_is_not_a_question()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:nested_questions_get_slash_separated_questionIds()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:adds_top_level_questions_skipping_drafts_files_and_question_subdirectories()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:deletes_stale_instances_cascading_to_their_assessments()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:an_assessment_whose_links_already_match_is_left_untouched()] (3 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:unknown_question_ids_in_zones_are_logged_and_skipped()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:changed_links_are_rewritten_with_a_flush_between_delete_and_insert()] (2 ms)</li><li>edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.SyncPlRepoJobTests]/[method:adds_assessments_and_links_questions_in_zone_order()] (3 ms)</li><li>edu.ucsb.cs.scaffold.jobs.UpdateAllJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.UpdateAllJobTests]/[method:test_UpdateAllJob()] (76 ms)</li><li>edu.ucsb.cs.scaffold.jobs.TestJobTests.[engine:junit-jupiter]/[class:edu.ucsb.cs.scaffold.jobs.TestJobTests]/[method:test_TestJob_succeeds()] (81 ms)</li>
+</ul>
+
+<br/>
+
+Report generated by <a href='https://pitest.org'>PIT</a> 1.17.0
+
+</body>
+</html>
