@@ -3,10 +3,8 @@
 import edu.ucsb.cs.scaffold.entity.PlInstance;
 import edu.ucsb.cs.scaffold.entity.PlRepo;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
-import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
-import edu.ucsb.cs.scaffold.repository.PlScaffoldAssessmentRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,13 +12,15 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Read-only: PlInstances are created, updated, and deleted by the SyncPlRepo job (issues #45/#47),
+ * which mirrors the repo's courseInstances directory on GitHub — not by POST/DELETE endpoints.
+ */
 @Tag(name = &quot;PlInstance&quot;)
 @RequestMapping(&quot;/api/plinstance&quot;)
 @RestController
@@ -31,43 +31,26 @@ import org.springframework.web.bind.annotation.RestController;
 
   @Autowired private PlRepoRepository plRepoRepository;
 
-  @Autowired private PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
-
-  @Autowired private PlAssessmentRepository plAssessmentRepository;
+  @Operation(summary = &quot;List all PlInstances&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+  @GetMapping(&quot;/all&quot;)
+  public Iterable&lt;PlInstance&gt; allPlInstances() {
+<span class="fc" id="L38">    return plInstanceRepository.findAll();</span>
+  }
 
   @Operation(summary = &quot;List all PlInstances for a PlRepo&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
   @GetMapping(&quot;&quot;)
-  public List&lt;PlInstance&gt; allPlInstances(
+  public List&lt;PlInstance&gt; allPlInstancesForRepo(
       @Parameter(name = &quot;plrepoId&quot;) @RequestParam Long plrepoId) {
-<span class="fc" id="L43">    ensurePlRepoExists(plrepoId);</span>
-<span class="fc" id="L44">    return plInstanceRepository.findByPlRepoId(plrepoId);</span>
-  }
-
-  @Operation(
-      summary =
-          &quot;Delete a PlInstance, cascading the delete to its PlScaffoldAssessments and&quot;
-              + &quot; PlAssessments&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
-  @DeleteMapping(&quot;&quot;)
-  @Transactional
-  public Object deletePlInstance(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="fc" id="L55">    PlInstance plInstance =</span>
-        plInstanceRepository
-<span class="fc" id="L57">            .findById(id)</span>
-<span class="fc" id="L58">            .orElseThrow(() -&gt; new EntityNotFoundException(PlInstance.class, id));</span>
-
-<span class="fc" id="L60">    plScaffoldAssessmentRepository.deleteByPlInstanceId(id);</span>
-<span class="fc" id="L61">    plAssessmentRepository.deleteByPlInstanceId(id);</span>
-<span class="fc" id="L62">    plInstanceRepository.delete(plInstance);</span>
-
-<span class="fc" id="L64">    return genericMessage(&quot;PlInstance with id %s deleted&quot;.formatted(id));</span>
+<span class="fc" id="L46">    ensurePlRepoExists(plrepoId);</span>
+<span class="fc" id="L47">    return plInstanceRepository.findByPlRepoId(plrepoId);</span>
   }
 
   private void ensurePlRepoExists(Long plRepoId) {
-<span class="fc" id="L68">    plRepoRepository</span>
-<span class="fc" id="L69">        .findById(plRepoId)</span>
-<span class="fc" id="L70">        .orElseThrow(() -&gt; new EntityNotFoundException(PlRepo.class, plRepoId));</span>
-<span class="fc" id="L71">  }</span>
+<span class="fc" id="L51">    plRepoRepository</span>
+<span class="fc" id="L52">        .findById(plRepoId)</span>
+<span class="fc" id="L53">        .orElseThrow(() -&gt; new EntityNotFoundException(PlRepo.class, plRepoId));</span>
+<span class="fc" id="L54">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
