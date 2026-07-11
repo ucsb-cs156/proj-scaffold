@@ -23,8 +23,10 @@ import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
+import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
+import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
 import edu.ucsb.cs.scaffold.services.jobs.JobService;
 import java.util.ArrayList;
@@ -69,6 +71,10 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
       updateUserService; // This will be used in the UpdateAllJob to call the GithubSignInService
 
   @MockitoBean JobService jobService;
+
+  @MockitoBean PatEncryptionService patEncryptionService;
+
+  @MockitoBean PatCredentialRepository patCredentialRepository;
 
   @Autowired ObjectMapper objectMapper;
 
