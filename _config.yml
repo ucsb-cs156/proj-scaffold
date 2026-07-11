@@ -20,4 +20,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-Claude-sync-plrepo-job","number":48,"title":"Add SyncPlRepo job: populate PlInstances from GitHub courseInstances directory","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/48"}]
+pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-Claude-sync-plrepo-questions","number":49,"title":"Extend SyncPlRepoJob: delete stale rows and sync questions from GitHub","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/49"}]
