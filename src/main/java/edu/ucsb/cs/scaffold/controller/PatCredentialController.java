@@ -1,6 +1,7 @@
 package edu.ucsb.cs.scaffold.controller;
 
 import edu.ucsb.cs.scaffold.entity.PatCredential;
+import edu.ucsb.cs.scaffold.enums.PatPlatform;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
@@ -24,10 +25,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Lets each admin or instructor store one GitHub personal access token (PAT). The token is
- * encrypted before it is saved and is write-only: no endpoint ever returns it, only metadata (last
- * four characters, expiration date). To replace a lost or expired token, the user simply POSTs a
- * new one. See docs/PAT.md for how to create a suitable token.
+ * Lets each admin or instructor store one personal access token (PAT) per platform: a GitHub PAT at
+ * /api/pat/github and a PrairieLearn PAT at /api/pat/pl. Tokens are encrypted before they are saved
+ * and are write-only: no endpoint ever returns one, only metadata (last four characters, expiration
+ * date). To replace a lost or expired token, the user simply POSTs a new one. See
+ * docs/Github_PAT.md and docs/PrairieLearn_PAT.md for how to create suitable tokens.
  */
 @Tag(name = "PatCredential")
 @RequestMapping("/api/pat")
@@ -45,20 +47,27 @@ public class PatCredentialController extends ApiController {
 
   @Autowired private PatEncryptionService patEncryptionService;
 
-  @Operation(summary = "Get metadata about the current user's stored PAT (never the token itself)")
+  @Operation(
+      summary = "Get metadata about the current user's stored GitHub PAT (never the token itself)")
   @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
-  @GetMapping("")
-  public PatCredential getPatCredential() {
-    long userId = getCurrentUser().getUser().getId();
-    return patCredentialRepository
-        .findByUserId(userId)
-        .orElseThrow(() -> new EntityNotFoundException(PatCredential.class, userId));
+  @GetMapping("/github")
+  public PatCredential getGithubPatCredential() {
+    return getPatCredential(PatPlatform.GITHUB);
+  }
+
+  @Operation(
+      summary =
+          "Get metadata about the current user's stored PrairieLearn PAT (never the token itself)")
+  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @GetMapping("/pl")
+  public PatCredential getPlPatCredential() {
+    return getPatCredential(PatPlatform.PRAIRIELEARN);
   }
 
   @Operation(summary = "Set (create or replace) the current user's GitHub PAT")
   @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
-  @PostMapping("")
-  public PatCredential postPatCredential(
+  @PostMapping("/github")
+  public PatCredential postGithubPatCredential(
       @Parameter(name = "token", description = "GitHub classic PAT (starts with ghp_)")
           @RequestParam
           String token,
@@ -69,14 +78,45 @@ public class PatCredentialController extends ApiController {
           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
           LocalDate expiresAt) {
     String trimmedToken = token.strip();
-    validateToken(trimmedToken);
+    validateGithubToken(trimmedToken);
+    return savePatCredential(PatPlatform.GITHUB, trimmedToken, expiresAt);
+  }
+
+  @Operation(summary = "Set (create or replace) the current user's PrairieLearn PAT")
+  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
+  @PostMapping("/pl")
+  public PatCredential postPlPatCredential(
+      @Parameter(name = "token", description = "PrairieLearn personal access token") @RequestParam
+          String token,
+      @Parameter(
+              name = "expiresAt",
+              description = "Expiration date of the token in ISO format, e.g. 2026-12-31")
+          @RequestParam(required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate expiresAt) {
+    String trimmedToken = token.strip();
+    if (trimmedToken.isBlank()) {
+      throw new IllegalArgumentException("token is required");
+    }
+    return savePatCredential(PatPlatform.PRAIRIELEARN, trimmedToken, expiresAt);
+  }
+
+  private PatCredential getPatCredential(PatPlatform platform) {
+    long userId = getCurrentUser().getUser().getId();
+    return patCredentialRepository
+        .findByUserIdAndPlatform(userId, platform)
+        .orElseThrow(() -> new EntityNotFoundException(PatCredential.class, userId));
+  }
+
+  private PatCredential savePatCredential(
+      PatPlatform platform, String trimmedToken, LocalDate expiresAt) {
     PatEncryptionService.EncryptedPat encrypted = patEncryptionService.encrypt(trimmedToken);
 
     long userId = getCurrentUser().getUser().getId();
     PatCredential credential =
         patCredentialRepository
-            .findByUserId(userId)
-            .orElseGet(() -> PatCredential.builder().userId(userId).build());
+            .findByUserIdAndPlatform(userId, platform)
+            .orElseGet(() -> PatCredential.builder().userId(userId).platform(platform).build());
     credential.setCiphertext(encrypted.ciphertext());
     credential.setKeyVersion(encrypted.keyVersion());
     credential.setLastFour(trimmedToken.substring(trimmedToken.length() - 4));
@@ -84,17 +124,17 @@ public class PatCredentialController extends ApiController {
     return patCredentialRepository.save(credential);
   }
 
-  private void validateToken(String token) {
+  private void validateGithubToken(String token) {
     if (token.isBlank()) {
       throw new IllegalArgumentException("token is required");
     }
     if (token.startsWith("github_pat_")) {
       throw new IllegalArgumentException(
-          "fine-grained tokens (github_pat_...) cannot reach this app's repositories; create a classic token (ghp_...) instead — see docs/PAT.md");
+          "fine-grained tokens (github_pat_...) cannot reach this app's repositories; create a classic token (ghp_...) instead — see docs/Github_PAT.md");
     }
     if (!CLASSIC_PAT_PATTERN.matcher(token).matches()) {
       throw new IllegalArgumentException(
-          "token must be a GitHub classic personal access token (starting with ghp_); see docs/PAT.md");
+          "token must be a GitHub classic personal access token (starting with ghp_); see docs/Github_PAT.md");
     }
   }
 

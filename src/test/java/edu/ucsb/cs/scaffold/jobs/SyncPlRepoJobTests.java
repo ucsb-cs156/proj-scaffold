@@ -17,6 +17,7 @@ import edu.ucsb.cs.scaffold.entity.PlAssessmentQuestion;
 import edu.ucsb.cs.scaffold.entity.PlInstance;
 import edu.ucsb.cs.scaffold.entity.PlQuestion;
 import edu.ucsb.cs.scaffold.entity.PlRepo;
+import edu.ucsb.cs.scaffold.enums.PatPlatform;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
@@ -103,7 +104,8 @@ public class SyncPlRepoJobTests {
   @BeforeEach
   public void setUp() {
     when(plRepoRepository.findById(eq(3L))).thenReturn(Optional.of(plRepo));
-    when(patCredentialRepository.findByUserId(eq(7L))).thenReturn(Optional.of(credential));
+    when(patCredentialRepository.findByUserIdAndPlatform(eq(7L), eq(PatPlatform.GITHUB)))
+        .thenReturn(Optional.of(credential));
     when(patEncryptionService.decrypt(eq("CIPHER"), eq(2))).thenReturn(TOKEN);
     // Individual tests override these as needed; by default both directories are missing.
     when(githubService.listSubdirectories(eq(REPO), eq("courseInstances"), eq(TOKEN)))
@@ -940,11 +942,13 @@ public class SyncPlRepoJobTests {
 
   @Test
   public void fails_with_a_helpful_message_when_the_user_has_no_stored_pat() {
-    when(patCredentialRepository.findByUserId(eq(7L))).thenReturn(Optional.empty());
+    when(patCredentialRepository.findByUserIdAndPlatform(eq(7L), eq(PatPlatform.GITHUB)))
+        .thenReturn(Optional.empty());
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "No PAT is stored for user id 7; enter one first (see docs/PAT.md)", thrown.getMessage());
+        "No GitHub PAT is stored for user id 7; enter one first (see docs/Github_PAT.md)",
+        thrown.getMessage());
   }
 
   @Test
@@ -954,7 +958,7 @@ public class SyncPlRepoJobTests {
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "GitHub rejected the stored PAT (HTTP 401). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/PAT.md)",
+        "GitHub rejected the stored PAT (HTTP 401). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/Github_PAT.md)",
         thrown.getMessage());
   }
 
@@ -968,7 +972,7 @@ public class SyncPlRepoJobTests {
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "GitHub rejected the stored PAT (HTTP 403). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/PAT.md)",
+        "GitHub rejected the stored PAT (HTTP 403). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/Github_PAT.md)",
         thrown.getMessage());
   }
 

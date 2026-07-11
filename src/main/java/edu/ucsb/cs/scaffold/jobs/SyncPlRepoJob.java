@@ -8,6 +8,7 @@ import edu.ucsb.cs.scaffold.entity.PlAssessmentQuestion;
 import edu.ucsb.cs.scaffold.entity.PlInstance;
 import edu.ucsb.cs.scaffold.entity.PlQuestion;
 import edu.ucsb.cs.scaffold.entity.PlRepo;
+import edu.ucsb.cs.scaffold.enums.PatPlatform;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
@@ -97,11 +98,11 @@ public class SyncPlRepoJob implements JobContextConsumer {
 
     PatCredential credential =
         patCredentialRepository
-            .findByUserId(userId)
+            .findByUserIdAndPlatform(userId, PatPlatform.GITHUB)
             .orElseThrow(
                 () ->
                     new Exception(
-                        "No PAT is stored for user id %d; enter one first (see docs/PAT.md)"
+                        "No GitHub PAT is stored for user id %d; enter one first (see docs/Github_PAT.md)"
                             .formatted(userId)));
     String token =
         patEncryptionService.decrypt(credential.getCiphertext(), credential.getKeyVersion());
@@ -112,7 +113,7 @@ public class SyncPlRepoJob implements JobContextConsumer {
       syncAssessments(ctx, plRepo, token);
     } catch (HttpClientErrorException.Unauthorized | HttpClientErrorException.Forbidden e) {
       throw new Exception(
-          "GitHub rejected the stored PAT (HTTP %d). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/PAT.md)"
+          "GitHub rejected the stored PAT (HTTP %d). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/Github_PAT.md)"
               .formatted(e.getStatusCode().value()));
     }
   }

@@ -1,8 +1,11 @@
 package edu.ucsb.cs.scaffold.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import edu.ucsb.cs.scaffold.enums.PatPlatform;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,9 +19,10 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * A user's encrypted GitHub personal access token (PAT). One credential per user. The token itself
- * is write-only: only the AES-256-GCM ciphertext is stored, and it is never serialized to JSON —
- * clients see only metadata (last four characters, expiration date).
+ * A user's encrypted personal access token (PAT) for one platform (GitHub or PrairieLearn). One
+ * credential per user per platform. The token itself is write-only: only the AES-256-GCM ciphertext
+ * is stored, and it is never serialized to JSON — clients see only metadata (last four characters,
+ * expiration date).
  */
 @Data
 @AllArgsConstructor
@@ -27,7 +31,7 @@ import lombok.ToString;
 @Entity
 @Table(
     name = "pat_credential",
-    uniqueConstraints = {@UniqueConstraint(columnNames = "user_id")})
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "platform"})})
 public class PatCredential {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +39,10 @@ public class PatCredential {
 
   @Column(name = "user_id", nullable = false)
   private long userId;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "platform", nullable = false, length = 20)
+  private PatPlatform platform;
 
   // Base64 of the AES-256-GCM ciphertext; excluded from JSON and toString so it can never leak
   // into API responses or logs.
