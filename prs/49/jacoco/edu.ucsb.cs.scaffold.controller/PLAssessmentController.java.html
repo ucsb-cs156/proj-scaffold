@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PLAssessmentController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.controller</a> &gt; <span class="el_source">PLAssessmentController.java</span></div><h1>PLAssessmentController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.controller;
+
+import edu.ucsb.cs.scaffold.entity.PlAssessment;
+import edu.ucsb.cs.scaffold.entity.PlInstance;
+import edu.ucsb.cs.scaffold.entity.PlRepo;
+import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
+import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
+import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@Tag(name = &quot;PlAssessment&quot;)
+@RequestMapping(&quot;/api/plAssessment&quot;)
+@RestController
+<span class="fc" id="L27">@Slf4j</span>
+<span class="fc" id="L28">public class PLAssessmentController extends ApiController {</span>
+
+  @Autowired private PlAssessmentRepository plAssessmentRepository;
+
+  @Autowired private PlRepoRepository plRepoRepository;
+
+  @Autowired private PlInstanceRepository plInstanceRepository;
+
+  @Operation(summary = &quot;List all PlAssessments for a PlRepo and PlInstance&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
+  @GetMapping(&quot;&quot;)
+  public List&lt;PlAssessment&gt; allPlAssessments(
+      @Parameter(name = &quot;plRepoId&quot;) @RequestParam Long plRepoId,
+      @Parameter(name = &quot;plInstance&quot;) @RequestParam Long plInstance) {
+<span class="fc" id="L42">    return plAssessmentRepository.findByPlRepoIdAndPlInstanceId(plRepoId, plInstance);</span>
+  }
+
+  @Operation(summary = &quot;Create a new PlAssessment&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @PostMapping(&quot;&quot;)
+  public PlAssessment postPlAssessment(
+      @Parameter(name = &quot;plRepoId&quot;) @RequestParam Long plRepoId,
+      @Parameter(name = &quot;plInstanceId&quot;) @RequestParam Long plInstanceId,
+      @Parameter(name = &quot;name&quot;) @RequestParam String name,
+      @Parameter(name = &quot;url&quot;) @RequestParam String url) {
+<span class="fc" id="L53">    plRepoRepository</span>
+<span class="fc" id="L54">        .findById(plRepoId)</span>
+<span class="fc" id="L55">        .orElseThrow(() -&gt; new EntityNotFoundException(PlRepo.class, plRepoId));</span>
+<span class="fc" id="L56">    plInstanceRepository</span>
+<span class="fc" id="L57">        .findById(plInstanceId)</span>
+<span class="fc" id="L58">        .orElseThrow(() -&gt; new EntityNotFoundException(PlInstance.class, plInstanceId));</span>
+
+<span class="fc" id="L60">    String trimmedName = name.strip();</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">    if (trimmedName.isBlank()) {</span>
+<span class="fc" id="L62">      throw new IllegalArgumentException(&quot;name is required&quot;);</span>
+    }
+
+<span class="fc bfc" id="L65" title="All 2 branches covered.">    if (plAssessmentRepository.existsByPlRepoIdAndPlInstanceIdAndName(</span>
+        plRepoId, plInstanceId, trimmedName)) {
+<span class="fc" id="L67">      throw new IllegalArgumentException(</span>
+          &quot;PlAssessment with name %s already exists for plRepoId %s, plInstanceId %s&quot;
+<span class="fc" id="L69">              .formatted(trimmedName, plRepoId, plInstanceId));</span>
+    }
+
+    PlAssessment plAssessment =
+<span class="fc" id="L73">        PlAssessment.builder()</span>
+<span class="fc" id="L74">            .plRepoId(plRepoId)</span>
+<span class="fc" id="L75">            .plInstanceId(plInstanceId)</span>
+<span class="fc" id="L76">            .name(trimmedName)</span>
+<span class="fc" id="L77">            .url(url)</span>
+<span class="fc" id="L78">            .build();</span>
+<span class="fc" id="L79">    return plAssessmentRepository.save(plAssessment);</span>
+  }
+
+  @Operation(summary = &quot;Delete a PlAssessment&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @DeleteMapping(&quot;&quot;)
+  public Object deletePlAssessment(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
+<span class="fc" id="L86">    PlAssessment plAssessment =</span>
+        plAssessmentRepository
+<span class="fc" id="L88">            .findById(id)</span>
+<span class="fc" id="L89">            .orElseThrow(() -&gt; new EntityNotFoundException(PlAssessment.class, id));</span>
+<span class="fc" id="L90">    plAssessmentRepository.delete(plAssessment);</span>
+<span class="fc" id="L91">    return genericMessage(&quot;PlAssessment with id %s deleted&quot;.formatted(id));</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
