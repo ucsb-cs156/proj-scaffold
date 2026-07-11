@@ -15,7 +15,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.RosterStudentCoursesD
 scaffold,edu.ucsb.cs.scaffold.controller,AdminsController.AdminDTO,0,18,0,0,0,3,0,2,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateV2Controller,0,170,0,12,0,43,0,14,0,8
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.StoredPosition,0,9,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.controller,PatCredentialController,0,114,0,4,0,28,0,10,0,8
+scaffold,edu.ucsb.cs.scaffold.controller,PatCredentialController,0,123,0,6,0,29,0,11,0,8
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController,0,712,0,44,0,185,0,52,0,30
 scaffold,edu.ucsb.cs.scaffold.controller,ApiController,0,41,0,0,0,11,0,7,0,7
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.SubConceptTableRowDTO,0,24,0,0,0,1,0,1,0,1
