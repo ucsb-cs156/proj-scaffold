@@ -82,7 +82,7 @@ describe("UserProfilePage tests", () => {
     );
   });
 
-  test("shows the Github PAT section with 'No PAT set' for admin/instructor users without a PAT", async () => {
+  test("shows the GitHub PAT section with 'No PAT set' for admin/instructor users without a PAT", async () => {
     axiosMock.onGet("/api/currentUser").reply(200, {
       user: { email: "admin@ucsb.edu", fullName: "Admin User" },
       roles: [

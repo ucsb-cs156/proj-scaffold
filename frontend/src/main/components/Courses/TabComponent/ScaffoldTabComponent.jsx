@@ -115,7 +115,7 @@ export default function ScaffoldTabComponent({ courseId, testIdPrefix }) {
             {...register("upload", { required: true })}
           />
           <Form.Control.Feedback type="invalid">
-            {errors.upload && "Concepts YAML file is required. "}
+            {errors.upload && "Concepts YAML file is required."}
           </Form.Control.Feedback>
           <Form.Text muted>
             Warning: uploading replaces ALL concepts, subconcepts, edges, and
