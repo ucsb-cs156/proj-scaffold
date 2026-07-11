@@ -13,8 +13,11 @@ import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
+import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
+import edu.ucsb.cs.scaffold.repository.PlScaffoldAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
@@ -39,8 +42,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = &quot;Jobs&quot;)
 @RequestMapping(&quot;/api/jobs&quot;)
 @RestController
-<span class="fc" id="L42">@Slf4j</span>
-<span class="fc" id="L43">public class JobsController extends ApiController {</span>
+<span class="fc" id="L45">@Slf4j</span>
+<span class="fc" id="L46">public class JobsController extends ApiController {</span>
   @Autowired private JobsRepository jobsRepository;
 
   @Autowired private JobService jobService;
@@ -55,22 +58,25 @@ import org.springframework.web.bind.annotation.RestController;
   @Autowired private PatCredentialRepository patCredentialRepository;
   @Autowired private PlRepoRepository plRepoRepository;
   @Autowired private PlInstanceRepository plInstanceRepository;
+  @Autowired private PlQuestionRepository plQuestionRepository;
+  @Autowired private PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
+  @Autowired private PlAssessmentRepository plAssessmentRepository;
   @Autowired private GithubService githubService;
 
   @Operation(summary = &quot;List all jobs&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @GetMapping(&quot;/all&quot;)
   public Iterable&lt;Job&gt; allJobs() {
-<span class="fc" id="L64">    Iterable&lt;Job&gt; jobs = jobsRepository.findAll(by(Sort.Direction.DESC, &quot;createdAt&quot;));</span>
-<span class="fc" id="L65">    return jobs;</span>
+<span class="fc" id="L70">    Iterable&lt;Job&gt; jobs = jobsRepository.findAll(by(Sort.Direction.DESC, &quot;createdAt&quot;));</span>
+<span class="fc" id="L71">    return jobs;</span>
   }
 
   @Operation(summary = &quot;Delete all job records&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @DeleteMapping(&quot;/all&quot;)
   public Map&lt;String, String&gt; deleteAllJobs() {
-<span class="fc" id="L72">    jobsRepository.deleteAll();</span>
-<span class="fc" id="L73">    return Map.of(&quot;message&quot;, &quot;All jobs deleted&quot;);</span>
+<span class="fc" id="L78">    jobsRepository.deleteAll();</span>
+<span class="fc" id="L79">    return Map.of(&quot;message&quot;, &quot;All jobs deleted&quot;);</span>
   }
 
   @Operation(summary = &quot;Get a specific Job Log by ID if it is in the database&quot;)
@@ -80,21 +86,21 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;id&quot;, description = &quot;ID of the job&quot;) @RequestParam Long id)
       throws JsonProcessingException {
 
-<span class="fc" id="L83">    Job job =</span>
-<span class="fc" id="L84">        jobsRepository.findById(id).orElseThrow(() -&gt; new EntityNotFoundException(Job.class, id));</span>
+<span class="fc" id="L89">    Job job =</span>
+<span class="fc" id="L90">        jobsRepository.findById(id).orElseThrow(() -&gt; new EntityNotFoundException(Job.class, id));</span>
 
-<span class="fc" id="L86">    return job;</span>
+<span class="fc" id="L92">    return job;</span>
   }
 
   @Operation(summary = &quot;Delete specific job record&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @DeleteMapping(&quot;&quot;)
   public Map&lt;String, String&gt; deleteAllJobs(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="fc bfc" id="L93" title="All 2 branches covered.">    if (!jobsRepository.existsById(id)) {</span>
-<span class="fc" id="L94">      return Map.of(&quot;message&quot;, String.format(&quot;Job with id %d not found&quot;, id));</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">    if (!jobsRepository.existsById(id)) {</span>
+<span class="fc" id="L100">      return Map.of(&quot;message&quot;, String.format(&quot;Job with id %d not found&quot;, id));</span>
     }
-<span class="fc" id="L96">    jobsRepository.deleteById(id);</span>
-<span class="fc" id="L97">    return Map.of(&quot;message&quot;, String.format(&quot;Job with id %d deleted&quot;, id));</span>
+<span class="fc" id="L102">    jobsRepository.deleteById(id);</span>
+<span class="fc" id="L103">    return Map.of(&quot;message&quot;, String.format(&quot;Job with id %d deleted&quot;, id));</span>
   }
 
   @Operation(summary = &quot;Get long job logs&quot;)
@@ -102,7 +108,7 @@ import org.springframework.web.bind.annotation.RestController;
   @GetMapping(&quot;/logs/{id}&quot;)
   public String getJobLogs(@Parameter(name = &quot;id&quot;, description = &quot;Job ID&quot;) @PathVariable Long id) {
 
-<span class="fc" id="L105">    return jobService.getJobLogs(id);</span>
+<span class="fc" id="L111">    return jobService.getJobLogs(id);</span>
   }
 
   @Operation(summary = &quot;Launch UpdateAll job&quot;)
@@ -110,8 +116,8 @@ import org.springframework.web.bind.annotation.RestController;
   @PostMapping(&quot;/launch/updateAll&quot;)
   public Job launchUpdateAllJob() {
 
-<span class="fc" id="L113">    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();</span>
-<span class="fc" id="L114">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L119">    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();</span>
+<span class="fc" id="L120">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(
@@ -122,11 +128,11 @@ import org.springframework.web.bind.annotation.RestController;
   public Job launchRotatePatKeysJob() {
 
     RotatePatKeysJob job =
-<span class="fc" id="L125">        RotatePatKeysJob.builder()</span>
-<span class="fc" id="L126">            .patEncryptionService(patEncryptionService)</span>
-<span class="fc" id="L127">            .patCredentialRepository(patCredentialRepository)</span>
-<span class="fc" id="L128">            .build();</span>
-<span class="fc" id="L129">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L131">        RotatePatKeysJob.builder()</span>
+<span class="fc" id="L132">            .patEncryptionService(patEncryptionService)</span>
+<span class="fc" id="L133">            .patCredentialRepository(patCredentialRepository)</span>
+<span class="fc" id="L134">            .build();</span>
+<span class="fc" id="L135">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(
@@ -138,16 +144,19 @@ import org.springframework.web.bind.annotation.RestController;
   public Job launchSyncPlRepoJob(@Parameter(name = &quot;plRepoId&quot;) @RequestParam Long plRepoId) {
 
     SyncPlRepoJob job =
-<span class="fc" id="L141">        SyncPlRepoJob.builder()</span>
-<span class="fc" id="L142">            .userId(getCurrentUser().getUser().getId())</span>
-<span class="fc" id="L143">            .plRepoId(plRepoId)</span>
-<span class="fc" id="L144">            .patCredentialRepository(patCredentialRepository)</span>
-<span class="fc" id="L145">            .patEncryptionService(patEncryptionService)</span>
-<span class="fc" id="L146">            .plRepoRepository(plRepoRepository)</span>
-<span class="fc" id="L147">            .plInstanceRepository(plInstanceRepository)</span>
-<span class="fc" id="L148">            .githubService(githubService)</span>
-<span class="fc" id="L149">            .build();</span>
-<span class="fc" id="L150">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L147">        SyncPlRepoJob.builder()</span>
+<span class="fc" id="L148">            .userId(getCurrentUser().getUser().getId())</span>
+<span class="fc" id="L149">            .plRepoId(plRepoId)</span>
+<span class="fc" id="L150">            .patCredentialRepository(patCredentialRepository)</span>
+<span class="fc" id="L151">            .patEncryptionService(patEncryptionService)</span>
+<span class="fc" id="L152">            .plRepoRepository(plRepoRepository)</span>
+<span class="fc" id="L153">            .plInstanceRepository(plInstanceRepository)</span>
+<span class="fc" id="L154">            .plQuestionRepository(plQuestionRepository)</span>
+<span class="fc" id="L155">            .plScaffoldAssessmentRepository(plScaffoldAssessmentRepository)</span>
+<span class="fc" id="L156">            .plAssessmentRepository(plAssessmentRepository)</span>
+<span class="fc" id="L157">            .githubService(githubService)</span>
+<span class="fc" id="L158">            .build();</span>
+<span class="fc" id="L159">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;List jobs by courseId&quot;)
@@ -155,10 +164,10 @@ import org.springframework.web.bind.annotation.RestController;
   @GetMapping(&quot;/course&quot;)
   public Iterable&lt;Job&gt; jobsByCourse(@Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
-<span class="fc" id="L158">    Iterable&lt;Job&gt; jobs =</span>
-<span class="fc" id="L159">        jobsRepository.findByCourse_Id(courseId, by(Sort.Direction.DESC, &quot;createdAt&quot;));</span>
+<span class="fc" id="L167">    Iterable&lt;Job&gt; jobs =</span>
+<span class="fc" id="L168">        jobsRepository.findByCourse_Id(courseId, by(Sort.Direction.DESC, &quot;createdAt&quot;));</span>
 
-<span class="fc" id="L161">    return jobs;</span>
+<span class="fc" id="L170">    return jobs;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
