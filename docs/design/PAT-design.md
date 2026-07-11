@@ -70,7 +70,7 @@ several private GitHub repos:
   - The app accepts **only** classic PATs (`ghp_...`) and rejects fine-grained
     tokens (`github_pat_...`) with an error explaining they can't reach the
     repos — accepting one would just produce confusing 404s at sync time.
-  - User-facing docs (docs/PAT.md) mention fine-grained only as a
+  - User-facing docs (docs/Github_PAT.md) mention fine-grained only as a
     "this will NOT work" warning, since GitHub's UI steers users toward it.
   - Revisit if the "bring your own repo" option lands (users would then own
     their repos and fine-grained would work as originally designed).
