@@ -62,7 +62,7 @@ import org.springframework.transaction.support.TransactionTemplate;
    * @param job metadata entity about the job
    * @param jobFunction runnable job function
    */
-  @Async
+  @Async(&quot;jobExecutor&quot;)
   public void runJobAsync(Job job, JobContextConsumer jobFunction) {
 <span class="fc" id="L67">    JobContext context = contextFactory.createContext(job);</span>
 
