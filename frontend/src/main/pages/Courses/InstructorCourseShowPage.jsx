@@ -18,6 +18,7 @@ import ScaffoldTabComponent from "main/components/Courses/TabComponent/ScaffoldT
 import ConceptTabComponent from "main/components/Courses/TabComponent/ConceptTabComponent";
 import SubConceptTabComponent from "main/components/Courses/TabComponent/SubConceptTabComponent";
 import EdgeConceptTabComponent from "main/components/Courses/TabComponent/EdgeConceptTabComponent";
+import PLTabComponent from "main/components/Courses/TabComponent/PLTabComponent";
 
 export default function InstructorCourseShowPage({
   testId = "InstructorCourseShowPage",
@@ -153,6 +154,13 @@ export default function InstructorCourseShowPage({
                 courseId={courseId}
                 testIdPrefix={testId}
               />
+            </Tab>
+            <Tab
+              eventKey={"prairielearn"}
+              title={"PrairieLearn"}
+              className="pt-2"
+            >
+              <PLTabComponent testIdPrefix={testId} />
             </Tab>
           </Tabs>
         </div>
