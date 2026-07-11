@@ -20,8 +20,11 @@ import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
+import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
+import edu.ucsb.cs.scaffold.repository.PlScaffoldAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
 import edu.ucsb.cs.scaffold.services.GithubService;
@@ -71,6 +74,12 @@ public class JobsControllerJobsTests extends ControllerTestCase {
   @MockitoBean PlRepoRepository plRepoRepository;
 
   @MockitoBean PlInstanceRepository plInstanceRepository;
+
+  @MockitoBean PlQuestionRepository plQuestionRepository;
+
+  @MockitoBean PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
+
+  @MockitoBean PlAssessmentRepository plAssessmentRepository;
 
   @MockitoBean GithubService githubService;
 
