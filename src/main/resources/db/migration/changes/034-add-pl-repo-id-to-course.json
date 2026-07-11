@@ -1,0 +1,36 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "034-add-pl-repo-id-to-course",
+        "author": "claude",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          {
+            "not": {
+              "columnExists": {
+                "tableName": "course",
+                "columnName": "pl_repo_id"
+              }
+            }
+          }
+        ],
+        "changes": [
+          {
+            "addColumn": {
+              "tableName": "course",
+              "columns": [
+                {
+                  "column": {
+                    "name": "pl_repo_id",
+                    "type": "BIGINT"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -31,6 +31,11 @@ public class Course {
 
   private String canvasCourseId;
 
+  // Id of the PlRepo (GitHub repo) associated with this course; null until an
+  // instructor associates one via PUT /api/courses/updateGithubRepo.
+  @Column(name = "pl_repo_id")
+  private Long plRepoId;
+
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
   @Fetch(FetchMode.JOIN)
   @JsonIgnore
