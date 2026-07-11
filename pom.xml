@@ -334,6 +334,7 @@
             <param>edu.ucsb.cs.*</param>
           </targetTests>
           <excludedClasses>
+            <param>${app.package}.config.AsyncConfig</param>
             <param>${app.package}.config.SecurityConfig</param>
             <param>${app.package}.config.OpenAPIConfig</param>
             <param>${app.package}.config.CorsConfig</param>

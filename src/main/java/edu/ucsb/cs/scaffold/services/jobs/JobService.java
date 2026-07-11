@@ -62,7 +62,7 @@ public class JobService {
    * @param job metadata entity about the job
    * @param jobFunction runnable job function
    */
-  @Async
+  @Async("jobExecutor")
   public void runJobAsync(Job job, JobContextConsumer jobFunction) {
     JobContext context = contextFactory.createContext(job);
 
