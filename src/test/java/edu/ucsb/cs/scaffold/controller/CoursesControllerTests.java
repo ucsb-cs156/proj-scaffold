@@ -2645,6 +2645,9 @@ public class CoursesControllerTests extends ControllerTestCase {
     Course course = courseForRepoTests();
     course.setPlRepoId(9L);
     course.setPlInstanceId(55L);
+    course.setRosterStudents(
+        List.of(RosterStudent.builder().build(), RosterStudent.builder().build()));
+    course.setCourseStaff(List.of(CourseStaff.builder().build()));
     when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
     when(plRepoRepository.findById(eq(9L)))
         .thenReturn(Optional.of(PlRepo.builder().id(9L).repoName("ucsb-cs156/pl-demo").build()));
@@ -2665,6 +2668,8 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals("ucsb-cs156/pl-demo", json.get("plRepoName"));
     assertEquals("S26", json.get("plInstanceShortName"));
     assertEquals(213133, json.get("plInstanceNumericId"));
+    assertEquals(2, json.get("numStudents"));
+    assertEquals(1, json.get("numStaff"));
   }
 
   @Test
@@ -2686,5 +2691,8 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertNull(json.get("plRepoName"));
     assertNull(json.get("plInstanceShortName"));
     assertNull(json.get("plInstanceNumericId"));
+    // courseForRepoTests() has null staff/student lists: the counts fall back to 0
+    assertEquals(0, json.get("numStudents"));
+    assertEquals(0, json.get("numStaff"));
   }
 }
