@@ -294,7 +294,7 @@ public class ConceptYamlService {
 <span class="fc bfc" id="L294" title="All 2 branches covered.">      } else if (!externalIds.add(node.getId())) {</span>
 <span class="fc" id="L295">        errors.add(where + &quot;: duplicate id &quot; + node.getId());</span>
       }
-<span class="fc" id="L297">      validateLabel(where, node.getLabel(), errors);</span>
+<span class="fc" id="L297">      validateLabel(where, node.getLabel(), errors, Concept.MAX_RENDERED_LABEL_LENGTH);</span>
 <span class="fc" id="L298">      validateUrls(where, node.getPracticeProblems(), errors);</span>
 
 <span class="fc" id="L300">      Set&lt;String&gt; subconceptLabels = new HashSet&lt;&gt;();</span>
@@ -307,113 +307,116 @@ public class ConceptYamlService {
 <span class="fc" id="L307">          errors.add(subWhere + &quot; is empty&quot;);</span>
 <span class="fc" id="L308">          continue;</span>
         }
-<span class="fc" id="L310">        String cleanLabel = validateLabel(subWhere, subNode.getLabel(), errors);</span>
-<span class="fc bfc" id="L311" title="All 4 branches covered.">        if (cleanLabel != null &amp;&amp; !subconceptLabels.add(cleanLabel)) {</span>
-<span class="fc" id="L312">          errors.add(subWhere + &quot;: duplicate subconcept label &quot; + cleanLabel);</span>
+<span class="fc" id="L310">        String cleanLabel =</span>
+<span class="fc" id="L311">            validateLabel(</span>
+<span class="fc" id="L312">                subWhere, subNode.getLabel(), errors, Concept.MAX_RENDERED_SUBCONCEPT_LABEL_LENGTH);</span>
+<span class="fc bfc" id="L313" title="All 4 branches covered.">        if (cleanLabel != null &amp;&amp; !subconceptLabels.add(cleanLabel)) {</span>
+<span class="fc" id="L314">          errors.add(subWhere + &quot;: duplicate subconcept label &quot; + cleanLabel);</span>
         }
-<span class="fc" id="L314">        validateUrls(subWhere, subNode.getPracticeProblems(), errors);</span>
+<span class="fc" id="L316">        validateUrls(subWhere, subNode.getPracticeProblems(), errors);</span>
       }
     }
 
     // Edges are checked in order against the edges accepted so far, so the cycle message points
     // at the edge that closes the cycle.
-<span class="fc" id="L320">    List&lt;ConceptEdge&gt; acceptedEdges = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L321">    Set&lt;List&lt;Long&gt;&gt; seenEndpoints = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L322">    List&lt;ConceptEdge&gt; acceptedEdges = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L323">    Set&lt;List&lt;Long&gt;&gt; seenEndpoints = new HashSet&lt;&gt;();</span>
     List&lt;ConceptGraphYamlDTO.EdgeNodeDTO&gt; edges =
-<span class="fc bfc" id="L323" title="All 2 branches covered.">        dto.getEdges() != null ? dto.getEdges() : List.of();</span>
-<span class="fc bfc" id="L324" title="All 2 branches covered.">    for (int i = 0; i &lt; edges.size(); i++) {</span>
-<span class="fc" id="L325">      ConceptGraphYamlDTO.EdgeNodeDTO edge = edges.get(i);</span>
-<span class="fc" id="L326">      String where = &quot;edges[%d]&quot;.formatted(i);</span>
-<span class="fc bfc" id="L327" title="All 2 branches covered.">      if (edge == null) {</span>
-<span class="fc" id="L328">        errors.add(where + &quot; is empty&quot;);</span>
-<span class="fc" id="L329">        continue;</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        dto.getEdges() != null ? dto.getEdges() : List.of();</span>
+<span class="fc bfc" id="L326" title="All 2 branches covered.">    for (int i = 0; i &lt; edges.size(); i++) {</span>
+<span class="fc" id="L327">      ConceptGraphYamlDTO.EdgeNodeDTO edge = edges.get(i);</span>
+<span class="fc" id="L328">      String where = &quot;edges[%d]&quot;.formatted(i);</span>
+<span class="fc bfc" id="L329" title="All 2 branches covered.">      if (edge == null) {</span>
+<span class="fc" id="L330">        errors.add(where + &quot; is empty&quot;);</span>
+<span class="fc" id="L331">        continue;</span>
       }
-<span class="fc bfc" id="L331" title="All 4 branches covered.">      if (edge.getFrom() == null || edge.getTo() == null) {</span>
-<span class="fc" id="L332">        errors.add(where + &quot;: from and to are required&quot;);</span>
-<span class="fc" id="L333">        continue;</span>
+<span class="fc bfc" id="L333" title="All 4 branches covered.">      if (edge.getFrom() == null || edge.getTo() == null) {</span>
+<span class="fc" id="L334">        errors.add(where + &quot;: from and to are required&quot;);</span>
+<span class="fc" id="L335">        continue;</span>
       }
-<span class="fc" id="L335">      boolean endpointsExist = true;</span>
-<span class="fc bfc" id="L336" title="All 2 branches covered.">      if (!externalIds.contains(edge.getFrom())) {</span>
-<span class="fc" id="L337">        errors.add(where + &quot;: no concept with id &quot; + edge.getFrom());</span>
-<span class="fc" id="L338">        endpointsExist = false;</span>
+<span class="fc" id="L337">      boolean endpointsExist = true;</span>
+<span class="fc bfc" id="L338" title="All 2 branches covered.">      if (!externalIds.contains(edge.getFrom())) {</span>
+<span class="fc" id="L339">        errors.add(where + &quot;: no concept with id &quot; + edge.getFrom());</span>
+<span class="fc" id="L340">        endpointsExist = false;</span>
       }
-<span class="fc bfc" id="L340" title="All 2 branches covered.">      if (!externalIds.contains(edge.getTo())) {</span>
-<span class="fc" id="L341">        errors.add(where + &quot;: no concept with id &quot; + edge.getTo());</span>
-<span class="fc" id="L342">        endpointsExist = false;</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">      if (!externalIds.contains(edge.getTo())) {</span>
+<span class="fc" id="L343">        errors.add(where + &quot;: no concept with id &quot; + edge.getTo());</span>
+<span class="fc" id="L344">        endpointsExist = false;</span>
       }
-<span class="fc bfc" id="L344" title="All 2 branches covered.">      if (!endpointsExist) {</span>
-<span class="fc" id="L345">        continue;</span>
+<span class="fc bfc" id="L346" title="All 2 branches covered.">      if (!endpointsExist) {</span>
+<span class="fc" id="L347">        continue;</span>
       }
-<span class="fc bfc" id="L347" title="All 2 branches covered.">      if (edge.getFrom().equals(edge.getTo())) {</span>
-<span class="fc" id="L348">        errors.add(where + &quot;: an edge cannot connect a concept to itself&quot;);</span>
-<span class="fc" id="L349">        continue;</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">      if (edge.getFrom().equals(edge.getTo())) {</span>
+<span class="fc" id="L350">        errors.add(where + &quot;: an edge cannot connect a concept to itself&quot;);</span>
+<span class="fc" id="L351">        continue;</span>
       }
-<span class="fc bfc" id="L351" title="All 2 branches covered.">      if (!seenEndpoints.add(List.of(edge.getFrom(), edge.getTo()))) {</span>
-<span class="fc" id="L352">        errors.add(</span>
-<span class="fc" id="L353">            where + &quot;: duplicate edge from %d to %d&quot;.formatted(edge.getFrom(), edge.getTo()));</span>
-<span class="fc" id="L354">        continue;</span>
+<span class="fc bfc" id="L353" title="All 2 branches covered.">      if (!seenEndpoints.add(List.of(edge.getFrom(), edge.getTo()))) {</span>
+<span class="fc" id="L354">        errors.add(</span>
+<span class="fc" id="L355">            where + &quot;: duplicate edge from %d to %d&quot;.formatted(edge.getFrom(), edge.getTo()));</span>
+<span class="fc" id="L356">        continue;</span>
       }
-<span class="fc bfc" id="L356" title="All 2 branches covered.">      if (conceptGraphService.wouldCreateCycle(acceptedEdges, edge.getFrom(), edge.getTo())) {</span>
-<span class="fc" id="L357">        errors.add(</span>
+<span class="fc bfc" id="L358" title="All 2 branches covered.">      if (conceptGraphService.wouldCreateCycle(acceptedEdges, edge.getFrom(), edge.getTo())) {</span>
+<span class="fc" id="L359">        errors.add(</span>
             where
                 + &quot;: edge from %d to %d would create a cycle&quot;
-<span class="fc" id="L360">                    .formatted(edge.getFrom(), edge.getTo()));</span>
-<span class="fc" id="L361">        continue;</span>
+<span class="fc" id="L362">                    .formatted(edge.getFrom(), edge.getTo()));</span>
+<span class="fc" id="L363">        continue;</span>
       }
-<span class="fc" id="L363">      acceptedEdges.add(</span>
-<span class="fc" id="L364">          ConceptEdge.builder()</span>
-<span class="fc" id="L365">              .source(Concept.builder().id(edge.getFrom()).build())</span>
-<span class="fc" id="L366">              .target(Concept.builder().id(edge.getTo()).build())</span>
-<span class="fc" id="L367">              .build());</span>
+<span class="fc" id="L365">      acceptedEdges.add(</span>
+<span class="fc" id="L366">          ConceptEdge.builder()</span>
+<span class="fc" id="L367">              .source(Concept.builder().id(edge.getFrom()).build())</span>
+<span class="fc" id="L368">              .target(Concept.builder().id(edge.getTo()).build())</span>
+<span class="fc" id="L369">              .build());</span>
     }
-<span class="fc" id="L369">  }</span>
+<span class="fc" id="L371">  }</span>
 
   /**
    * Validates a concept or subconcept label the same way the single-concept endpoints do, and
    * returns the cleaned label (used for duplicate detection), or null if it was invalid.
    */
-  private String validateLabel(String where, String label, List&lt;String&gt; errors) {
-<span class="fc" id="L376">    String cleanLabel = markdownService.clean(label);</span>
-<span class="fc bfc" id="L377" title="All 4 branches covered.">    if (cleanLabel == null || cleanLabel.isEmpty()) {</span>
-<span class="fc" id="L378">      errors.add(where + &quot;: label may not be empty&quot;);</span>
-<span class="fc" id="L379">      return null;</span>
+  private String validateLabel(
+      String where, String label, List&lt;String&gt; errors, int maxRenderedLength) {
+<span class="fc" id="L379">    String cleanLabel = markdownService.clean(label);</span>
+<span class="fc bfc" id="L380" title="All 4 branches covered.">    if (cleanLabel == null || cleanLabel.isEmpty()) {</span>
+<span class="fc" id="L381">      errors.add(where + &quot;: label may not be empty&quot;);</span>
+<span class="fc" id="L382">      return null;</span>
     }
-<span class="fc" id="L381">    int renderedLength = markdownService.renderedLength(cleanLabel);</span>
-<span class="fc bfc" id="L382" title="All 2 branches covered.">    if (renderedLength &gt; Concept.MAX_RENDERED_LABEL_LENGTH) {</span>
-<span class="fc" id="L383">      errors.add(</span>
+<span class="fc" id="L384">    int renderedLength = markdownService.renderedLength(cleanLabel);</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">    if (renderedLength &gt; maxRenderedLength) {</span>
+<span class="fc" id="L386">      errors.add(</span>
           where
               + &quot;: label renders to %d characters; the maximum is %d&quot;
-<span class="fc" id="L386">                  .formatted(renderedLength, Concept.MAX_RENDERED_LABEL_LENGTH));</span>
-<span class="fc" id="L387">      return null;</span>
+<span class="fc" id="L389">                  .formatted(renderedLength, maxRenderedLength));</span>
+<span class="fc" id="L390">      return null;</span>
     }
-<span class="fc" id="L389">    return cleanLabel;</span>
+<span class="fc" id="L392">    return cleanLabel;</span>
   }
 
   private void validateUrls(String where, List&lt;String&gt; urls, List&lt;String&gt; errors) {
-<span class="fc bfc" id="L393" title="All 2 branches covered.">    if (urls == null) {</span>
-<span class="fc" id="L394">      return;</span>
+<span class="fc bfc" id="L396" title="All 2 branches covered.">    if (urls == null) {</span>
+<span class="fc" id="L397">      return;</span>
     }
-<span class="fc" id="L396">    Set&lt;String&gt; seen = new HashSet&lt;&gt;();</span>
-<span class="fc bfc" id="L397" title="All 2 branches covered.">    for (int i = 0; i &lt; urls.size(); i++) {</span>
-<span class="fc" id="L398">      String url = urls.get(i);</span>
-<span class="fc" id="L399">      String urlWhere = where + &quot;.practiceProblems[%d]&quot;.formatted(i);</span>
-<span class="fc bfc" id="L400" title="All 4 branches covered.">      if (url == null || url.isBlank()) {</span>
-<span class="fc" id="L401">        errors.add(urlWhere + &quot;: url may not be empty&quot;);</span>
-<span class="fc" id="L402">        continue;</span>
+<span class="fc" id="L399">    Set&lt;String&gt; seen = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L400" title="All 2 branches covered.">    for (int i = 0; i &lt; urls.size(); i++) {</span>
+<span class="fc" id="L401">      String url = urls.get(i);</span>
+<span class="fc" id="L402">      String urlWhere = where + &quot;.practiceProblems[%d]&quot;.formatted(i);</span>
+<span class="fc bfc" id="L403" title="All 4 branches covered.">      if (url == null || url.isBlank()) {</span>
+<span class="fc" id="L404">        errors.add(urlWhere + &quot;: url may not be empty&quot;);</span>
+<span class="fc" id="L405">        continue;</span>
       }
-<span class="fc" id="L404">      String cleanUrl = url.strip();</span>
-<span class="fc bfc" id="L405" title="All 2 branches covered.">      if (cleanUrl.length() &gt; MAX_URL_LENGTH) {</span>
-<span class="fc" id="L406">        errors.add(</span>
+<span class="fc" id="L407">      String cleanUrl = url.strip();</span>
+<span class="fc bfc" id="L408" title="All 2 branches covered.">      if (cleanUrl.length() &gt; MAX_URL_LENGTH) {</span>
+<span class="fc" id="L409">        errors.add(</span>
             urlWhere
                 + &quot;: url is %d characters long; the maximum is %d&quot;
-<span class="fc" id="L409">                    .formatted(cleanUrl.length(), MAX_URL_LENGTH));</span>
-<span class="fc" id="L410">        continue;</span>
+<span class="fc" id="L412">                    .formatted(cleanUrl.length(), MAX_URL_LENGTH));</span>
+<span class="fc" id="L413">        continue;</span>
       }
-<span class="fc bfc" id="L412" title="All 2 branches covered.">      if (!seen.add(cleanUrl)) {</span>
-<span class="fc" id="L413">        errors.add(urlWhere + &quot;: duplicate practice problem url &quot; + cleanUrl);</span>
+<span class="fc bfc" id="L415" title="All 2 branches covered.">      if (!seen.add(cleanUrl)) {</span>
+<span class="fc" id="L416">        errors.add(urlWhere + &quot;: duplicate practice problem url &quot; + cleanUrl);</span>
       }
     }
-<span class="fc" id="L416">  }</span>
+<span class="fc" id="L419">  }</span>
 
   /**
    * Deletes the course's practice problems, edges, and concepts (children before parents, in an
@@ -421,28 +424,28 @@ public class ConceptYamlService {
    * how many user-state rows were cleared.
    */
   private int deleteCourseContentAndUserState(long courseId) {
-<span class="fc" id="L424">    practiceProblemRepository.deleteAll(practiceProblemRepository.findByCourseId(courseId));</span>
-<span class="fc" id="L425">    conceptEdgeRepository.deleteAll(conceptEdgeRepository.findByCourseId(courseId));</span>
+<span class="fc" id="L427">    practiceProblemRepository.deleteAll(practiceProblemRepository.findByCourseId(courseId));</span>
+<span class="fc" id="L428">    conceptEdgeRepository.deleteAll(conceptEdgeRepository.findByCourseId(courseId));</span>
 
-<span class="fc" id="L427">    List&lt;Concept&gt; existingConcepts = conceptRepository.findByCourseId(courseId);</span>
-<span class="fc" id="L428">    conceptRepository.deleteAll(existingConcepts.stream().filter(Concept::isSubconcept).toList());</span>
-<span class="fc" id="L429">    conceptRepository.deleteAll(</span>
-<span class="fc bfc" id="L430" title="All 2 branches covered.">        existingConcepts.stream().filter(concept -&gt; !concept.isSubconcept()).toList());</span>
+<span class="fc" id="L430">    List&lt;Concept&gt; existingConcepts = conceptRepository.findByCourseId(courseId);</span>
+<span class="fc" id="L431">    conceptRepository.deleteAll(existingConcepts.stream().filter(Concept::isSubconcept).toList());</span>
+<span class="fc" id="L432">    conceptRepository.deleteAll(</span>
+<span class="fc bfc" id="L433" title="All 2 branches covered.">        existingConcepts.stream().filter(concept -&gt; !concept.isSubconcept()).toList());</span>
 
-<span class="fc" id="L432">    List&lt;UserStateV2&gt; userStates = userStateV2Repository.findByCourseId(courseId);</span>
-<span class="fc" id="L433">    userStateV2Repository.deleteAll(userStates);</span>
-<span class="fc" id="L434">    return userStates.size();</span>
+<span class="fc" id="L435">    List&lt;UserStateV2&gt; userStates = userStateV2Repository.findByCourseId(courseId);</span>
+<span class="fc" id="L436">    userStateV2Repository.deleteAll(userStates);</span>
+<span class="fc" id="L437">    return userStates.size();</span>
   }
 
   private int savePracticeProblems(Course course, Concept concept, List&lt;String&gt; urls) {
-<span class="fc bfc" id="L438" title="All 2 branches covered.">    if (urls == null) {</span>
-<span class="fc" id="L439">      return 0;</span>
+<span class="fc bfc" id="L441" title="All 2 branches covered.">    if (urls == null) {</span>
+<span class="fc" id="L442">      return 0;</span>
     }
-<span class="fc bfc" id="L441" title="All 2 branches covered.">    for (String url : urls) {</span>
-<span class="fc" id="L442">      practiceProblemRepository.save(</span>
-<span class="fc" id="L443">          PracticeProblem.builder().course(course).concept(concept).url(url.strip()).build());</span>
-<span class="fc" id="L444">    }</span>
-<span class="fc" id="L445">    return urls.size();</span>
+<span class="fc bfc" id="L444" title="All 2 branches covered.">    for (String url : urls) {</span>
+<span class="fc" id="L445">      practiceProblemRepository.save(</span>
+<span class="fc" id="L446">          PracticeProblem.builder().course(course).concept(concept).url(url.strip()).build());</span>
+<span class="fc" id="L447">    }</span>
+<span class="fc" id="L448">    return urls.size();</span>
   }
 
   private Map&lt;String, Object&gt; report(
@@ -453,15 +456,15 @@ public class ConceptYamlService {
       int edgesCreated,
       int practiceProblemsCreated,
       int userStatesCleared) {
-<span class="fc" id="L456">    Map&lt;String, Object&gt; report = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L457">    report.put(&quot;success&quot;, success);</span>
-<span class="fc" id="L458">    report.put(&quot;errors&quot;, errors);</span>
-<span class="fc" id="L459">    report.put(&quot;conceptsCreated&quot;, conceptsCreated);</span>
-<span class="fc" id="L460">    report.put(&quot;subconceptsCreated&quot;, subconceptsCreated);</span>
-<span class="fc" id="L461">    report.put(&quot;edgesCreated&quot;, edgesCreated);</span>
-<span class="fc" id="L462">    report.put(&quot;practiceProblemsCreated&quot;, practiceProblemsCreated);</span>
-<span class="fc" id="L463">    report.put(&quot;userStatesCleared&quot;, userStatesCleared);</span>
-<span class="fc" id="L464">    return report;</span>
+<span class="fc" id="L459">    Map&lt;String, Object&gt; report = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L460">    report.put(&quot;success&quot;, success);</span>
+<span class="fc" id="L461">    report.put(&quot;errors&quot;, errors);</span>
+<span class="fc" id="L462">    report.put(&quot;conceptsCreated&quot;, conceptsCreated);</span>
+<span class="fc" id="L463">    report.put(&quot;subconceptsCreated&quot;, subconceptsCreated);</span>
+<span class="fc" id="L464">    report.put(&quot;edgesCreated&quot;, edgesCreated);</span>
+<span class="fc" id="L465">    report.put(&quot;practiceProblemsCreated&quot;, practiceProblemsCreated);</span>
+<span class="fc" id="L466">    report.put(&quot;userStatesCleared&quot;, userStatesCleared);</span>
+<span class="fc" id="L467">    return report;</span>
   }
 
   /**
@@ -470,15 +473,15 @@ public class ConceptYamlService {
    * so lookups feed straight into the NON_EMPTY-serialized DTO fields.
    */
   private Map&lt;Long, List&lt;String&gt;&gt; urlsByConceptId(long courseId) {
-<span class="fc" id="L473">    Map&lt;Long, List&lt;String&gt;&gt; result = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L474">    practiceProblemRepository.findByCourseId(courseId).stream()</span>
-<span class="fc" id="L475">        .sorted(Comparator.comparing(PracticeProblem::getId))</span>
-<span class="fc" id="L476">        .forEach(</span>
+<span class="fc" id="L476">    Map&lt;Long, List&lt;String&gt;&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L477">    practiceProblemRepository.findByCourseId(courseId).stream()</span>
+<span class="fc" id="L478">        .sorted(Comparator.comparing(PracticeProblem::getId))</span>
+<span class="fc" id="L479">        .forEach(</span>
             problem -&gt;
                 result
-<span class="fc" id="L479">                    .computeIfAbsent(problem.getConcept().getId(), k -&gt; new ArrayList&lt;&gt;())</span>
-<span class="fc" id="L480">                    .add(problem.getUrl()));</span>
-<span class="fc" id="L481">    return result;</span>
+<span class="fc" id="L482">                    .computeIfAbsent(problem.getConcept().getId(), k -&gt; new ArrayList&lt;&gt;())</span>
+<span class="fc" id="L483">                    .add(problem.getUrl()));</span>
+<span class="fc" id="L484">    return result;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

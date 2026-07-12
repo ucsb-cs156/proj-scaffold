@@ -4,10 +4,12 @@ import static org.springframework.data.domain.Sort.by;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.Job;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.jobs.RotatePatKeysJob;
-import edu.ucsb.cs.scaffold.jobs.SyncPlRepoJob;
+import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJob;
+import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJobFactory;
 import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
@@ -43,8 +45,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = &quot;Jobs&quot;)
 @RequestMapping(&quot;/api/jobs&quot;)
 @RestController
-<span class="fc" id="L46">@Slf4j</span>
-<span class="fc" id="L47">public class JobsController extends ApiController {</span>
+<span class="fc" id="L48">@Slf4j</span>
+<span class="fc" id="L49">public class JobsController extends ApiController {</span>
   @Autowired private JobsRepository jobsRepository;
 
   @Autowired private JobService jobService;
@@ -64,21 +66,22 @@ import org.springframework.web.bind.annotation.RestController;
   @Autowired private PlAssessmentRepository plAssessmentRepository;
   @Autowired private PlAssessmentQuestionRepository plAssessmentQuestionRepository;
   @Autowired private GithubService githubService;
+  @Autowired private SyncCourseWithPlRepoJobFactory syncCourseWithPlRepoJobFactory;
 
   @Operation(summary = &quot;List all jobs&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @GetMapping(&quot;/all&quot;)
   public Iterable&lt;Job&gt; allJobs() {
-<span class="fc" id="L72">    Iterable&lt;Job&gt; jobs = jobsRepository.findAll(by(Sort.Direction.DESC, &quot;createdAt&quot;));</span>
-<span class="fc" id="L73">    return jobs;</span>
+<span class="fc" id="L75">    Iterable&lt;Job&gt; jobs = jobsRepository.findAll(by(Sort.Direction.DESC, &quot;createdAt&quot;));</span>
+<span class="fc" id="L76">    return jobs;</span>
   }
 
   @Operation(summary = &quot;Delete all job records&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @DeleteMapping(&quot;/all&quot;)
   public Map&lt;String, String&gt; deleteAllJobs() {
-<span class="fc" id="L80">    jobsRepository.deleteAll();</span>
-<span class="fc" id="L81">    return Map.of(&quot;message&quot;, &quot;All jobs deleted&quot;);</span>
+<span class="fc" id="L83">    jobsRepository.deleteAll();</span>
+<span class="fc" id="L84">    return Map.of(&quot;message&quot;, &quot;All jobs deleted&quot;);</span>
   }
 
   @Operation(summary = &quot;Get a specific Job Log by ID if it is in the database&quot;)
@@ -88,21 +91,21 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;id&quot;, description = &quot;ID of the job&quot;) @RequestParam Long id)
       throws JsonProcessingException {
 
-<span class="fc" id="L91">    Job job =</span>
-<span class="fc" id="L92">        jobsRepository.findById(id).orElseThrow(() -&gt; new EntityNotFoundException(Job.class, id));</span>
+<span class="fc" id="L94">    Job job =</span>
+<span class="fc" id="L95">        jobsRepository.findById(id).orElseThrow(() -&gt; new EntityNotFoundException(Job.class, id));</span>
 
-<span class="fc" id="L94">    return job;</span>
+<span class="fc" id="L97">    return job;</span>
   }
 
   @Operation(summary = &quot;Delete specific job record&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @DeleteMapping(&quot;&quot;)
   public Map&lt;String, String&gt; deleteAllJobs(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="fc bfc" id="L101" title="All 2 branches covered.">    if (!jobsRepository.existsById(id)) {</span>
-<span class="fc" id="L102">      return Map.of(&quot;message&quot;, String.format(&quot;Job with id %d not found&quot;, id));</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">    if (!jobsRepository.existsById(id)) {</span>
+<span class="fc" id="L105">      return Map.of(&quot;message&quot;, String.format(&quot;Job with id %d not found&quot;, id));</span>
     }
-<span class="fc" id="L104">    jobsRepository.deleteById(id);</span>
-<span class="fc" id="L105">    return Map.of(&quot;message&quot;, String.format(&quot;Job with id %d deleted&quot;, id));</span>
+<span class="fc" id="L107">    jobsRepository.deleteById(id);</span>
+<span class="fc" id="L108">    return Map.of(&quot;message&quot;, String.format(&quot;Job with id %d deleted&quot;, id));</span>
   }
 
   @Operation(summary = &quot;Get long job logs&quot;)
@@ -110,7 +113,7 @@ import org.springframework.web.bind.annotation.RestController;
   @GetMapping(&quot;/logs/{id}&quot;)
   public String getJobLogs(@Parameter(name = &quot;id&quot;, description = &quot;Job ID&quot;) @PathVariable Long id) {
 
-<span class="fc" id="L113">    return jobService.getJobLogs(id);</span>
+<span class="fc" id="L116">    return jobService.getJobLogs(id);</span>
   }
 
   @Operation(summary = &quot;Launch UpdateAll job&quot;)
@@ -118,8 +121,8 @@ import org.springframework.web.bind.annotation.RestController;
   @PostMapping(&quot;/launch/updateAll&quot;)
   public Job launchUpdateAllJob() {
 
-<span class="fc" id="L121">    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();</span>
-<span class="fc" id="L122">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L124">    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();</span>
+<span class="fc" id="L125">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(
@@ -130,36 +133,29 @@ import org.springframework.web.bind.annotation.RestController;
   public Job launchRotatePatKeysJob() {
 
     RotatePatKeysJob job =
-<span class="fc" id="L133">        RotatePatKeysJob.builder()</span>
-<span class="fc" id="L134">            .patEncryptionService(patEncryptionService)</span>
-<span class="fc" id="L135">            .patCredentialRepository(patCredentialRepository)</span>
-<span class="fc" id="L136">            .build();</span>
-<span class="fc" id="L137">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L136">        RotatePatKeysJob.builder()</span>
+<span class="fc" id="L137">            .patEncryptionService(patEncryptionService)</span>
+<span class="fc" id="L138">            .patCredentialRepository(patCredentialRepository)</span>
+<span class="fc" id="L139">            .build();</span>
+<span class="fc" id="L140">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(
       summary =
-          &quot;Launch SyncPlRepo job (populate PlInstances from the repo's courseInstances directory&quot;
-              + &quot; on GitHub, using the launching user's PAT)&quot;)
-  @PreAuthorize(&quot;hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')&quot;)
-  @PostMapping(&quot;/launch/syncPlRepo&quot;)
-  public Job launchSyncPlRepoJob(@Parameter(name = &quot;plRepoId&quot;) @RequestParam Long plRepoId) {
+          &quot;Launch SyncCourseWithPlRepo job (sync the course's questions and assessments from&quot;
+              + &quot; GitHub and PrairieLearn, using the launching user's PATs)&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/launch/syncCourseWithPlRepo&quot;)
+  public Job launchSyncCourseWithPlRepoJob(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
-    SyncPlRepoJob job =
-<span class="fc" id="L149">        SyncPlRepoJob.builder()</span>
-<span class="fc" id="L150">            .userId(getCurrentUser().getUser().getId())</span>
-<span class="fc" id="L151">            .plRepoId(plRepoId)</span>
-<span class="fc" id="L152">            .patCredentialRepository(patCredentialRepository)</span>
-<span class="fc" id="L153">            .patEncryptionService(patEncryptionService)</span>
-<span class="fc" id="L154">            .plRepoRepository(plRepoRepository)</span>
-<span class="fc" id="L155">            .plInstanceRepository(plInstanceRepository)</span>
-<span class="fc" id="L156">            .plQuestionRepository(plQuestionRepository)</span>
-<span class="fc" id="L157">            .plScaffoldAssessmentRepository(plScaffoldAssessmentRepository)</span>
-<span class="fc" id="L158">            .plAssessmentRepository(plAssessmentRepository)</span>
-<span class="fc" id="L159">            .plAssessmentQuestionRepository(plAssessmentQuestionRepository)</span>
-<span class="fc" id="L160">            .githubService(githubService)</span>
-<span class="fc" id="L161">            .build();</span>
-<span class="fc" id="L162">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L152">    Course course =</span>
+        courseRepository
+<span class="fc" id="L154">            .findById(courseId)</span>
+<span class="fc" id="L155">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L156">    SyncCourseWithPlRepoJob job =</span>
+<span class="fc" id="L157">        syncCourseWithPlRepoJobFactory.create(getCurrentUser().getUser().getId(), course);</span>
+<span class="fc" id="L158">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;List jobs by courseId&quot;)
@@ -167,10 +163,10 @@ import org.springframework.web.bind.annotation.RestController;
   @GetMapping(&quot;/course&quot;)
   public Iterable&lt;Job&gt; jobsByCourse(@Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
-<span class="fc" id="L170">    Iterable&lt;Job&gt; jobs =</span>
-<span class="fc" id="L171">        jobsRepository.findByCourse_Id(courseId, by(Sort.Direction.DESC, &quot;createdAt&quot;));</span>
+<span class="fc" id="L166">    Iterable&lt;Job&gt; jobs =</span>
+<span class="fc" id="L167">        jobsRepository.findByCourse_Id(courseId, by(Sort.Direction.DESC, &quot;createdAt&quot;));</span>
 
-<span class="fc" id="L173">    return jobs;</span>
+<span class="fc" id="L169">    return jobs;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
