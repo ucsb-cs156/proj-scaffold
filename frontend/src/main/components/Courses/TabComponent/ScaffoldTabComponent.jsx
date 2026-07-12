@@ -54,7 +54,7 @@ export default function ScaffoldTabComponent({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      const schoolKey = (school && school.key) || school;
+      const schoolKey = school?.key ?? school;
       const filename = [
         "Scaffold",
         sanitizeForFilename(courseName),
