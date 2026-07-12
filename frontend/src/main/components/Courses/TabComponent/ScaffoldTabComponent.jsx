@@ -5,7 +5,21 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { useBackendMutation } from "main/utils/useBackend";
 
-export default function ScaffoldTabComponent({ courseId, testIdPrefix }) {
+// Sanitizes a value for use in a downloaded filename by trimming whitespace
+// and replacing any run of non-alphanumeric characters with a single dash.
+const sanitizeForFilename = (value) =>
+  String(value ?? "")
+    .trim()
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+export default function ScaffoldTabComponent({
+  courseId,
+  courseName,
+  term,
+  school,
+  testIdPrefix,
+}) {
   const {
     register,
     formState: { errors },
@@ -40,7 +54,15 @@ export default function ScaffoldTabComponent({ courseId, testIdPrefix }) {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `concepts-course-${courseId}.yaml`);
+      const schoolKey = (school && school.key) || school;
+      const filename = [
+        "Scaffold",
+        sanitizeForFilename(courseName),
+        sanitizeForFilename(term),
+        sanitizeForFilename(schoolKey),
+        courseId,
+      ].join("-");
+      link.setAttribute("download", `${filename}.yml`);
       document.body.appendChild(link);
       link.click();
       link.remove();
