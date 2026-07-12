@@ -130,7 +130,13 @@ public class CoursesController extends ApiController {
       int numStudents,
       int numStaff,
       Long plRepoId,
-      Long plInstanceId) {
+      Long plInstanceId,
+      // Human-readable details of the PL associations; resolved only by the
+      // single-course endpoints (getCourseById and the two update endpoints),
+      // null in course lists.
+      String plRepoName,
+      String plInstanceShortName,
+      Long plInstanceNumericId) {
 
     // Creates view from Course entity
     public InstructorCourseView(Course c) {
@@ -143,8 +149,41 @@ public class CoursesController extends ApiController {
           c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,
           c.getCourseStaff() != null ? c.getCourseStaff().size() : 0,
           c.getPlRepoId(),
-          c.getPlInstanceId());
+          c.getPlInstanceId(),
+          null,
+          null,
+          null);
     }
+  }
+
+  /**
+   * Builds an InstructorCourseView with the PL association details (repo name, instance short name,
+   * instance numeric id) resolved from their tables — used by the single-course endpoints so the
+   * frontend can show what is currently associated. List endpoints use the plain constructor and
+   * leave these null.
+   */
+  private InstructorCourseView viewWithPlDetails(Course c) {
+    String plRepoName =
+        c.getPlRepoId() == null
+            ? null
+            : plRepoRepository.findById(c.getPlRepoId()).map(PlRepo::getRepoName).orElse(null);
+    PlInstance plInstance =
+        c.getPlInstanceId() == null
+            ? null
+            : plInstanceRepository.findById(c.getPlInstanceId()).orElse(null);
+    return new InstructorCourseView(
+        c.getId(),
+        c.getCourseName(),
+        c.getTerm(),
+        c.getSchool(),
+        c.getInstructorEmail(),
+        c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,
+        c.getCourseStaff() != null ? c.getCourseStaff().size() : 0,
+        c.getPlRepoId(),
+        c.getPlInstanceId(),
+        plRepoName,
+        plInstance == null ? null : plInstance.getShortName(),
+        plInstance == null ? null : plInstance.getNumericId());
   }
 
   /**
@@ -194,9 +233,7 @@ public class CoursesController extends ApiController {
         courseRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, id));
-    // Convert to InstructorCourseView
-    InstructorCourseView courseView = new InstructorCourseView(course);
-    return courseView;
+    return viewWithPlDetails(course);
   }
 
   /**
@@ -630,7 +667,7 @@ public class CoursesController extends ApiController {
             .orElseGet(
                 () -> plRepoRepository.save(PlRepo.builder().repoName(trimmedRepoName).build()));
     course.setPlRepoId(plRepo.getId());
-    return new InstructorCourseView(courseRepository.save(course));
+    return viewWithPlDetails(courseRepository.save(course));
   }
 
   /**
@@ -708,7 +745,7 @@ public class CoursesController extends ApiController {
     PlInstance savedInstance = plInstanceRepository.save(plInstance);
 
     course.setPlInstanceId(savedInstance.getId());
-    return new InstructorCourseView(courseRepository.save(course));
+    return viewWithPlDetails(courseRepository.save(course));
   }
 
   /**

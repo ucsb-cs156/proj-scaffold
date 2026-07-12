@@ -1,6 +1,7 @@
 package edu.ucsb.cs.scaffold.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -2274,6 +2275,8 @@ public class CoursesControllerTests extends ControllerTestCase {
     when(githubService.hasWriteAccess(eq("ucsb-cs156/pl-demo"), eq("ghp_token"))).thenReturn(true);
     when(plRepoRepository.findByRepoName(eq("ucsb-cs156/pl-demo")))
         .thenReturn(Optional.of(PlRepo.builder().id(9L).repoName("ucsb-cs156/pl-demo").build()));
+    when(plRepoRepository.findById(eq(9L)))
+        .thenReturn(Optional.of(PlRepo.builder().id(9L).repoName("ucsb-cs156/pl-demo").build()));
     when(courseRepository.save(any(Course.class))).thenAnswer(inv -> inv.getArgument(0));
 
     MvcResult response =
@@ -2292,6 +2295,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals(Long.valueOf(9L), captor.getValue().getPlRepoId());
     Map<String, Object> json = responseToJson(response);
     assertEquals(9, json.get("plRepoId"));
+    assertEquals("ucsb-cs156/pl-demo", json.get("plRepoName"));
   }
 
   @Test
@@ -2616,6 +2620,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     when(plInstanceRepository.findByPlRepoIdAndShortName(eq(9L), eq("S26")))
         .thenReturn(Optional.of(existing));
     when(plInstanceRepository.save(any(PlInstance.class))).thenAnswer(inv -> inv.getArgument(0));
+    when(plInstanceRepository.findById(eq(55L))).thenReturn(Optional.of(existing));
     when(courseRepository.save(any(Course.class))).thenAnswer(inv -> inv.getArgument(0));
 
     MvcResult response = performUpdatePLInstance(200);
@@ -2626,6 +2631,60 @@ public class CoursesControllerTests extends ControllerTestCase {
     assertEquals(Long.valueOf(55L), saved.getId()); // same row, updated in place
     assertEquals(Long.valueOf(213133L), saved.getNumericId());
     assertEquals("Spring 2026", saved.getLongName());
-    assertEquals(55, responseToJson(response).get("plInstanceId"));
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(55, json.get("plInstanceId"));
+    assertEquals("S26", json.get("plInstanceShortName"));
+    assertEquals(213133, json.get("plInstanceNumericId"));
+  }
+
+  // ────────────── PL association details on single-course endpoints ──────────────
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseById_resolves_pl_association_details() throws Exception {
+    Course course = courseForRepoTests();
+    course.setPlRepoId(9L);
+    course.setPlInstanceId(55L);
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(plRepoRepository.findById(eq(9L)))
+        .thenReturn(Optional.of(PlRepo.builder().id(9L).repoName("ucsb-cs156/pl-demo").build()));
+    when(plInstanceRepository.findById(eq(55L)))
+        .thenReturn(
+            Optional.of(
+                PlInstance.builder()
+                    .id(55L)
+                    .plRepoId(9L)
+                    .shortName("S26")
+                    .numericId(213133L)
+                    .build()));
+
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/1")).andExpect(status().isOk()).andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("ucsb-cs156/pl-demo", json.get("plRepoName"));
+    assertEquals("S26", json.get("plInstanceShortName"));
+    assertEquals(213133, json.get("plInstanceNumericId"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getCourseById_leaves_details_null_when_the_associated_rows_are_missing()
+      throws Exception {
+    Course course = courseForRepoTests();
+    course.setPlRepoId(9L);
+    course.setPlInstanceId(55L);
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    when(plRepoRepository.findById(eq(9L))).thenReturn(Optional.empty());
+    when(plInstanceRepository.findById(eq(55L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc.perform(get("/api/courses/1")).andExpect(status().isOk()).andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(9, json.get("plRepoId"));
+    assertNull(json.get("plRepoName"));
+    assertNull(json.get("plInstanceShortName"));
+    assertNull(json.get("plInstanceNumericId"));
   }
 }

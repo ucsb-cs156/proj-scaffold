@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Alert, Button, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { useBackendMutation } from "main/utils/useBackend";
+import { useBackend, useBackendMutation } from "main/utils/useBackend";
 
 // 403 messages the backend sends for problems the user can fix themselves;
 // these are shown on the page rather than in a toast.
@@ -35,6 +35,17 @@ function makeOnError(expectedMessages, setError, genericMessage) {
 
 export default function PLTabComponent({ courseId, testIdPrefix }) {
   const [repoError, setRepoError] = useState(null);
+
+  // Current course, including the PL association details (plRepoName,
+  // plInstanceShortName, plInstanceNumericId). Both mutations below invalidate
+  // this key, so the green checks refresh right after a successful update.
+  const { data: course } = useBackend(
+    [`/api/courses/${courseId}`],
+    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
+    { method: "GET", url: `/api/courses/${courseId}` },
+    null,
+    true,
+  );
   const [instanceError, setInstanceError] = useState(null);
 
   const {
@@ -118,6 +129,14 @@ export default function PLTabComponent({ courseId, testIdPrefix }) {
               <Form.Label htmlFor={`${testIdPrefix}-plTab-repoName`}>
                 Repo name
               </Form.Label>
+              {course?.plRepoId && (
+                <span
+                  className="text-success ms-2"
+                  data-testid={`${testIdPrefix}-plTab-repo-check`}
+                >
+                  ✓ {course.plRepoName ?? `repo id ${course.plRepoId}`}
+                </span>
+              )}
               <Form.Control
                 data-testid={`${testIdPrefix}-plTab-repoName`}
                 id={`${testIdPrefix}-plTab-repoName`}
@@ -160,10 +179,23 @@ export default function PLTabComponent({ courseId, testIdPrefix }) {
               <Form.Label htmlFor={`${testIdPrefix}-plTab-instanceId`}>
                 Course instance id
               </Form.Label>
+              {course?.plInstanceId && (
+                <span
+                  className="text-success ms-2"
+                  data-testid={`${testIdPrefix}-plTab-instance-check`}
+                >
+                  ✓{" "}
+                  {course.plInstanceShortName
+                    ? `${course.plInstanceShortName} (PrairieLearn id ${course.plInstanceNumericId})`
+                    : `instance id ${course.plInstanceId}`}
+                </span>
+              )}
+              {/* text + numeric inputMode: an id field, so no spinner widget */}
               <Form.Control
                 data-testid={`${testIdPrefix}-plTab-instanceId`}
                 id={`${testIdPrefix}-plTab-instanceId`}
-                type="number"
+                type="text"
+                inputMode="numeric"
                 placeholder="e.g. 213133"
                 isInvalid={Boolean(instanceFormErrors.instanceId)}
                 {...registerInstance("instanceId", { required: true })}

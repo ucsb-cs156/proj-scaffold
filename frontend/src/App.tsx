@@ -1,4 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import AdminsIndexPage from "main/pages/Admin/AdminsIndexPage";
 import AdminsCreatePage from "main/pages/Admin/AdminsCreatePage";
 import InstructorsIndexPage from "main/pages/Admin/InstructorsIndexPage";
@@ -33,6 +35,8 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      {/* Renders every react-toastify toast() call; without it they are silent no-ops. */}
+      <ToastContainer />
       <Routes>
         <Route path="/" element={homePage} />
         <Route path="/LegacyHomePage" element={<LegacyHomePage />} />

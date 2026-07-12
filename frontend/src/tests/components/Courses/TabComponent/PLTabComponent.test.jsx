@@ -51,6 +51,15 @@ describe("PLTabComponent tests", () => {
     axiosMock.reset();
     axiosMock.resetHistory();
     mockToast.mockClear();
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      id: 7,
+      courseName: "CS156",
+      plRepoId: null,
+      plInstanceId: null,
+      plRepoName: null,
+      plInstanceShortName: null,
+      plInstanceNumericId: null,
+    });
   });
 
   test("renders the instructions and both forms with correct testids", () => {
@@ -315,5 +324,96 @@ describe("PLTabComponent tests", () => {
       ).toBeInTheDocument(),
     );
     expect(axiosMock.history.put.length).toBe(0);
+  });
+
+  // ────────────────────────── current-association checks ──────────────────────────
+
+  test("shows no green checks when nothing is associated yet", async () => {
+    renderTab();
+    await waitFor(() => expect(axiosMock.history.get.length).toBe(1));
+    expect(
+      screen.queryByTestId("test-plTab-repo-check"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("test-plTab-instance-check"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("shows green checks with names when the course has associations", async () => {
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      id: 7,
+      plRepoId: 9,
+      plRepoName: "ucsb-cs156/pl-demo",
+      plInstanceId: 55,
+      plInstanceShortName: "S26",
+      plInstanceNumericId: 213133,
+    });
+
+    renderTab();
+
+    expect(
+      await screen.findByTestId("test-plTab-repo-check"),
+    ).toHaveTextContent("✓ ucsb-cs156/pl-demo");
+    expect(screen.getByTestId("test-plTab-instance-check")).toHaveTextContent(
+      "✓ S26 (PrairieLearn id 213133)",
+    );
+  });
+
+  test("falls back to ids in the checks when the names are unavailable", async () => {
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      id: 7,
+      plRepoId: 9,
+      plRepoName: null,
+      plInstanceId: 55,
+      plInstanceShortName: null,
+      plInstanceNumericId: null,
+    });
+
+    renderTab();
+
+    expect(
+      await screen.findByTestId("test-plTab-repo-check"),
+    ).toHaveTextContent("✓ repo id 9");
+    expect(screen.getByTestId("test-plTab-instance-check")).toHaveTextContent(
+      "✓ instance id 55",
+    );
+  });
+
+  test("the repo check appears after a successful repo submit", async () => {
+    axiosMock.onGet("/api/courses/7").replyOnce(200, {
+      id: 7,
+      plRepoId: null,
+      plInstanceId: null,
+    });
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      id: 7,
+      plRepoId: 9,
+      plRepoName: "ucsb-cs156/pl-demo",
+      plInstanceId: null,
+    });
+    axiosMock.onPut("/api/courses/updateGithubRepo").reply(200, {
+      id: 7,
+      plRepoId: 9,
+      plRepoName: "ucsb-cs156/pl-demo",
+    });
+
+    renderTab();
+    await waitFor(() => expect(axiosMock.history.get.length).toBe(1));
+    expect(
+      screen.queryByTestId("test-plTab-repo-check"),
+    ).not.toBeInTheDocument();
+
+    await submitRepoName("ucsb-cs156/pl-demo");
+
+    expect(
+      await screen.findByTestId("test-plTab-repo-check"),
+    ).toHaveTextContent("✓ ucsb-cs156/pl-demo");
+  });
+
+  test("the course instance id field is a text input with numeric input mode (no spinner)", () => {
+    renderTab();
+    const input = screen.getByTestId("test-plTab-instanceId");
+    expect(input).toHaveAttribute("type", "text");
+    expect(input).toHaveAttribute("inputmode", "numeric");
   });
 });
