@@ -296,4 +296,35 @@ public class MarkdownServiceTests {
   public void cleanLabel_keeps_https_link_destinations() {
     assertEquals("[site](https://example.com)", service.cleanLabel("[site](https://example.com)"));
   }
+
+  @Test
+  public void cleanLabel_drops_javascript_image_destinations() {
+    assertEquals("![alt]()", service.cleanLabel("![alt](javascript:alert(1))"));
+  }
+
+  @Test
+  public void cleanLabel_keeps_https_image_destinations() {
+    assertEquals(
+        "![alt](https://example.com/img.png)",
+        service.cleanLabel("![alt](https://example.com/img.png)"));
+  }
+
+  @Test
+  public void cleanLabel_sanitizes_a_link_nested_inside_an_images_alt_text() {
+    // Exercises visitChildren(image): a Link inside the image's description is only
+    // reached, and its javascript: destination only dropped, if the image's children
+    // are visited.
+    assertEquals(
+        "![a [bad]() desc](https://ok.com/img.png)",
+        service.cleanLabel("![a [bad](javascript:alert(1)) desc](https://ok.com/img.png)"));
+  }
+
+  @Test
+  public void cleanLabel_sanitizes_an_image_nested_inside_a_links_text() {
+    // Exercises visitChildren(link): an Image inside the link's text is only reached,
+    // and its javascript: destination only dropped, if the link's children are visited.
+    assertEquals(
+        "[a ![img]() text](https://ok.com/page)",
+        service.cleanLabel("[a ![img](javascript:alert(1)) text](https://ok.com/page)"));
+  }
 }
