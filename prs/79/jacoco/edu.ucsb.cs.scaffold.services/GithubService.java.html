@@ -27,13 +27,24 @@ public class GithubService {
 
   private final RestTemplate restTemplate;
   private final String githubApiBase;
+  private final ApiRetryHelper retryHelper;
 
   public GithubService(
       RestTemplate restTemplate,
-<span class="fc" id="L33">      @Value(&quot;${github.api.base:https://api.github.com}&quot;) String githubApiBase) {</span>
-<span class="fc" id="L34">    this.restTemplate = restTemplate;</span>
-<span class="fc" id="L35">    this.githubApiBase = githubApiBase;</span>
-<span class="fc" id="L36">  }</span>
+      @Value(&quot;${github.api.base:https://api.github.com}&quot;) String githubApiBase,
+      @Value(&quot;${GITHUB_SERVICE_RETRY_INITIAL_SLEEP_SECONDS:8}&quot;) long retryInitialSleepSeconds,
+      @Value(&quot;${GITHUB_SERVICE_RETRY_MAX:3}&quot;) int retryMax,
+<span class="fc" id="L37">      @Value(&quot;${GITHUB_SERVICE_RATE_LIMIT_SLEEP_INITIAL_MS:1000}&quot;) long rateLimitSleepInitialMs) {</span>
+<span class="fc" id="L38">    this.restTemplate = restTemplate;</span>
+<span class="fc" id="L39">    this.githubApiBase = githubApiBase;</span>
+<span class="fc" id="L40">    this.retryHelper =</span>
+        new ApiRetryHelper(
+            &quot;GitHub&quot;,
+            &quot;GITHUB_SERVICE_RATE_LIMIT_SLEEP_INITIAL_MS&quot;,
+            retryInitialSleepSeconds,
+            retryMax,
+            rateLimitSleepInitialMs);
+<span class="fc" id="L47">  }</span>
 
   /**
    * Lists the contents of a directory in the given repository, using the &lt;a
@@ -45,20 +56,24 @@ public class GithubService {
    * @return the entries, in the order GitHub returns them (alphabetical)
    */
   public List&lt;DirectoryEntry&gt; listDirectory(String repoName, String path, String token) {
-<span class="fc" id="L48">    ResponseEntity&lt;List&lt;Map&lt;String, Object&gt;&gt;&gt; response =</span>
-<span class="fc" id="L49">        restTemplate.exchange(</span>
-<span class="fc" id="L50">            contentsUrl(repoName, path),</span>
-            HttpMethod.GET,
-<span class="fc" id="L52">            authenticatedEntity(token),</span>
-<span class="fc" id="L53">            new ParameterizedTypeReference&lt;&gt;() {});</span>
+<span class="fc" id="L59">    String url = contentsUrl(repoName, path);</span>
+<span class="fc" id="L60">    ResponseEntity&lt;List&lt;Map&lt;String, Object&gt;&gt;&gt; response =</span>
+<span class="fc" id="L61">        retryHelper.execute(</span>
+            &quot;GET &quot; + url,
+            () -&gt;
+<span class="fc" id="L64">                restTemplate.exchange(</span>
+                    url,
+                    HttpMethod.GET,
+<span class="fc" id="L67">                    authenticatedEntity(token),</span>
+<span class="fc" id="L68">                    new ParameterizedTypeReference&lt;&gt;() {}));</span>
 
-<span class="fc" id="L55">    List&lt;Map&lt;String, Object&gt;&gt; items = response.getBody();</span>
-<span class="fc bfc" id="L56" title="All 2 branches covered.">    if (items == null) {</span>
-<span class="fc" id="L57">      return List.of();</span>
+<span class="fc" id="L70">    List&lt;Map&lt;String, Object&gt;&gt; items = response.getBody();</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">    if (items == null) {</span>
+<span class="fc" id="L72">      return List.of();</span>
     }
-<span class="fc" id="L59">    return items.stream()</span>
-<span class="fc" id="L60">        .map(item -&gt; new DirectoryEntry((String) item.get(&quot;name&quot;), (String) item.get(&quot;type&quot;)))</span>
-<span class="fc" id="L61">        .toList();</span>
+<span class="fc" id="L74">    return items.stream()</span>
+<span class="fc" id="L75">        .map(item -&gt; new DirectoryEntry((String) item.get(&quot;name&quot;), (String) item.get(&quot;type&quot;)))</span>
+<span class="fc" id="L76">        .toList();</span>
   }
 
   /**
@@ -66,10 +81,10 @@ public class GithubService {
    * path are ignored.
    */
   public List&lt;String&gt; listSubdirectories(String repoName, String path, String token) {
-<span class="fc" id="L69">    return listDirectory(repoName, path, token).stream()</span>
-<span class="fc" id="L70">        .filter(entry -&gt; &quot;dir&quot;.equals(entry.type()))</span>
-<span class="fc" id="L71">        .map(DirectoryEntry::name)</span>
-<span class="fc" id="L72">        .toList();</span>
+<span class="fc" id="L84">    return listDirectory(repoName, path, token).stream()</span>
+<span class="fc" id="L85">        .filter(entry -&gt; &quot;dir&quot;.equals(entry.type()))</span>
+<span class="fc" id="L86">        .map(DirectoryEntry::name)</span>
+<span class="fc" id="L87">        .toList();</span>
   }
 
   /**
@@ -81,20 +96,24 @@ public class GithubService {
    * @param token the user's PAT (plaintext)
    */
   public String getFileContent(String repoName, String path, String token) {
-<span class="fc" id="L84">    ResponseEntity&lt;Map&lt;String, Object&gt;&gt; response =</span>
-<span class="fc" id="L85">        restTemplate.exchange(</span>
-<span class="fc" id="L86">            contentsUrl(repoName, path),</span>
-            HttpMethod.GET,
-<span class="fc" id="L88">            authenticatedEntity(token),</span>
-<span class="fc" id="L89">            new ParameterizedTypeReference&lt;&gt;() {});</span>
+<span class="fc" id="L99">    String url = contentsUrl(repoName, path);</span>
+<span class="fc" id="L100">    ResponseEntity&lt;Map&lt;String, Object&gt;&gt; response =</span>
+<span class="fc" id="L101">        retryHelper.execute(</span>
+            &quot;GET &quot; + url,
+            () -&gt;
+<span class="fc" id="L104">                restTemplate.exchange(</span>
+                    url,
+                    HttpMethod.GET,
+<span class="fc" id="L107">                    authenticatedEntity(token),</span>
+<span class="fc" id="L108">                    new ParameterizedTypeReference&lt;&gt;() {}));</span>
 
-<span class="fc" id="L91">    Map&lt;String, Object&gt; body = response.getBody();</span>
-<span class="fc bfc" id="L92" title="All 4 branches covered.">    if (body == null || body.get(&quot;content&quot;) == null) {</span>
-<span class="fc" id="L93">      return &quot;&quot;;</span>
+<span class="fc" id="L110">    Map&lt;String, Object&gt; body = response.getBody();</span>
+<span class="fc bfc" id="L111" title="All 4 branches covered.">    if (body == null || body.get(&quot;content&quot;) == null) {</span>
+<span class="fc" id="L112">      return &quot;&quot;;</span>
     }
     // GitHub base64-encodes file content with embedded newlines; the MIME decoder accepts them.
-<span class="fc" id="L96">    byte[] decoded = Base64.getMimeDecoder().decode((String) body.get(&quot;content&quot;));</span>
-<span class="fc" id="L97">    return new String(decoded, StandardCharsets.UTF_8);</span>
+<span class="fc" id="L115">    byte[] decoded = Base64.getMimeDecoder().decode((String) body.get(&quot;content&quot;));</span>
+<span class="fc" id="L116">    return new String(decoded, StandardCharsets.UTF_8);</span>
   }
 
   /**
@@ -109,42 +128,46 @@ public class GithubService {
    *     repo at all (GitHub answers 404 for repos a token cannot see, or 401 for a bad token)
    */
   public boolean hasWriteAccess(String repoName, String token) {
-<span class="fc" id="L112">    ResponseEntity&lt;Map&lt;String, Object&gt;&gt; response =</span>
-<span class="fc" id="L113">        restTemplate.exchange(</span>
-<span class="fc" id="L114">            repoUrl(repoName),</span>
-            HttpMethod.GET,
-<span class="fc" id="L116">            authenticatedEntity(token),</span>
-<span class="fc" id="L117">            new ParameterizedTypeReference&lt;&gt;() {});</span>
+<span class="fc" id="L131">    String url = repoUrl(repoName);</span>
+<span class="fc" id="L132">    ResponseEntity&lt;Map&lt;String, Object&gt;&gt; response =</span>
+<span class="fc" id="L133">        retryHelper.execute(</span>
+            &quot;GET &quot; + url,
+            () -&gt;
+<span class="fc" id="L136">                restTemplate.exchange(</span>
+                    url,
+                    HttpMethod.GET,
+<span class="fc" id="L139">                    authenticatedEntity(token),</span>
+<span class="fc" id="L140">                    new ParameterizedTypeReference&lt;&gt;() {}));</span>
 
-<span class="fc" id="L119">    Map&lt;String, Object&gt; body = response.getBody();</span>
-<span class="fc bfc" id="L120" title="All 4 branches covered.">    if (body == null || !(body.get(&quot;permissions&quot;) instanceof Map&lt;?, ?&gt; permissions)) {</span>
-<span class="fc" id="L121">      return false;</span>
+<span class="fc" id="L142">    Map&lt;String, Object&gt; body = response.getBody();</span>
+<span class="fc bfc" id="L143" title="All 4 branches covered.">    if (body == null || !(body.get(&quot;permissions&quot;) instanceof Map&lt;?, ?&gt; permissions)) {</span>
+<span class="fc" id="L144">      return false;</span>
     }
-<span class="fc" id="L123">    return Boolean.TRUE.equals(permissions.get(&quot;push&quot;));</span>
+<span class="fc" id="L146">    return Boolean.TRUE.equals(permissions.get(&quot;push&quot;));</span>
   }
 
   private String repoUrl(String repoName) {
-<span class="fc" id="L127">    return UriComponentsBuilder.fromUriString(githubApiBase)</span>
-<span class="fc" id="L128">        .pathSegment(&quot;repos&quot;)</span>
-<span class="fc" id="L129">        .path(&quot;/&quot; + repoName)</span>
-<span class="fc" id="L130">        .toUriString();</span>
+<span class="fc" id="L150">    return UriComponentsBuilder.fromUriString(githubApiBase)</span>
+<span class="fc" id="L151">        .pathSegment(&quot;repos&quot;)</span>
+<span class="fc" id="L152">        .path(&quot;/&quot; + repoName)</span>
+<span class="fc" id="L153">        .toUriString();</span>
   }
 
   private String contentsUrl(String repoName, String path) {
-<span class="fc" id="L134">    return UriComponentsBuilder.fromUriString(githubApiBase)</span>
-<span class="fc" id="L135">        .pathSegment(&quot;repos&quot;)</span>
-<span class="fc" id="L136">        .path(&quot;/&quot; + repoName)</span>
-<span class="fc" id="L137">        .pathSegment(&quot;contents&quot;)</span>
-<span class="fc" id="L138">        .path(&quot;/&quot; + path)</span>
-<span class="fc" id="L139">        .toUriString();</span>
+<span class="fc" id="L157">    return UriComponentsBuilder.fromUriString(githubApiBase)</span>
+<span class="fc" id="L158">        .pathSegment(&quot;repos&quot;)</span>
+<span class="fc" id="L159">        .path(&quot;/&quot; + repoName)</span>
+<span class="fc" id="L160">        .pathSegment(&quot;contents&quot;)</span>
+<span class="fc" id="L161">        .path(&quot;/&quot; + path)</span>
+<span class="fc" id="L162">        .toUriString();</span>
   }
 
   private HttpEntity&lt;Void&gt; authenticatedEntity(String token) {
-<span class="fc" id="L143">    HttpHeaders headers = new HttpHeaders();</span>
-<span class="fc" id="L144">    headers.set(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L145">    headers.set(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L146">    headers.set(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-<span class="fc" id="L147">    return new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L166">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L167">    headers.set(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L168">    headers.set(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L169">    headers.set(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L170">    return new HttpEntity&lt;&gt;(headers);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
