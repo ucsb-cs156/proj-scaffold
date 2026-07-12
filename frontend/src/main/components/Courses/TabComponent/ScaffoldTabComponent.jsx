@@ -5,8 +5,17 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { useBackendMutation } from "main/utils/useBackend";
 
-// Sanitizes a value for use in a downloaded filename by trimming whitespace
-// and replacing any run of non-alphanumeric characters with a single dash.
+/**
+ * Sanitizes a value for use in a downloaded filename: trims surrounding
+ * whitespace, replaces any run of characters that are not letters or digits
+ * with a single dash, and strips any leading/trailing dashes left behind.
+ * Returns "" for null/undefined input.
+ *
+ * Examples: "CMPSC 8" -> "CMPSC-8"; " Fall 2026! " -> "Fall-2026"; null -> "".
+ *
+ * @param {*} value the value to sanitize (coerced to a string)
+ * @returns {string} the sanitized, filename-safe string
+ */
 const sanitizeForFilename = (value) =>
   String(value ?? "")
     .trim()
@@ -61,7 +70,9 @@ export default function ScaffoldTabComponent({
         sanitizeForFilename(term),
         sanitizeForFilename(schoolKey),
         courseId,
-      ].join("-");
+      ]
+        .filter((part) => part !== "" && part !== undefined && part !== null)
+        .join("-");
       link.setAttribute("download", `${filename}.yml`);
       document.body.appendChild(link);
       link.click();

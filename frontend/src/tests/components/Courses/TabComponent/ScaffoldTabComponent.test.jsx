@@ -204,6 +204,32 @@ describe("ScaffoldTabComponent tests", () => {
     click.mockRestore();
   });
 
+  test("download omits missing course details instead of leaving blank segments", async () => {
+    axiosMock.onGet("/api/concepts/yaml/download").reply(200, SAMPLE_YAML);
+
+    window.URL.createObjectURL = vi.fn(() => "blob:fake-url");
+    window.URL.revokeObjectURL = vi.fn();
+    let downloadAttribute = null;
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(function () {
+        downloadAttribute = this.getAttribute("download");
+      });
+
+    renderScaffoldTabComponent({
+      courseId: 9,
+      courseName: undefined,
+      term: undefined,
+      school: undefined,
+    });
+    fireEvent.click(screen.getByTestId("test-download-yaml-button"));
+
+    await waitFor(() => expect(click).toHaveBeenCalledTimes(1));
+    expect(downloadAttribute).toBe("Scaffold-9.yml");
+
+    click.mockRestore();
+  });
+
   test("download shows an error toast when the request fails", async () => {
     axiosMock.onGet("/api/concepts/yaml/download").reply(403);
 
