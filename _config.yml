@@ -20,4 +20,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-convert-backend-interface-to-ReactQuery","number":81,"title":"Convert ConceptGraphPage to React Query; isolate LegacyHomePage behind /api/legacy; retire V2 naming","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/81"}]
+pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/enable-editing-on-main-concept-graph","number":83,"title":"[WIP] Update 'Unlock Subconcepts' to 'Enable Editing' and enhance functionality","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/83"},{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-convert-backend-interface-to-ReactQuery","number":81,"title":"Convert ConceptGraphPage to React Query; isolate LegacyHomePage behind /api/legacy; retire V2 naming","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/81"}]
