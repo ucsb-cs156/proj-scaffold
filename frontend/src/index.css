@@ -298,6 +298,13 @@ body.scaffold-canvas-active input::placeholder {
   flex-direction: column;
 }
 
+/* Give the sticky Navbar an opaque background matching the app's general
+   background so page content doesn't show through behind the Navbar text
+   when scrolling. */
+.AppNavbar {
+  background-color: #f7ede1;
+}
+
 .scaffold-top-bar {
   height: 60px;
   flex-shrink: 0;
