@@ -21,6 +21,9 @@ edges: []
 export const Default = Template.bind({});
 Default.args = {
   courseId: 1,
+  courseName: "Storybook 101",
+  term: "F26",
+  school: { key: "UCSB", displayName: "UCSB" },
   testIdPrefix: "storybook",
 };
 

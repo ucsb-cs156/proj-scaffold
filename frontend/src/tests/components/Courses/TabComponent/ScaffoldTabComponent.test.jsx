@@ -38,7 +38,14 @@ const renderScaffoldTabComponent = (props = {}) => {
 
   render(
     <QueryClientProvider client={queryClient}>
-      <ScaffoldTabComponent courseId={1} testIdPrefix="test" {...props} />
+      <ScaffoldTabComponent
+        courseId={1}
+        courseName="CMPSC 8"
+        term="S26"
+        school={{ key: "UCSB", displayName: "UCSB" }}
+        testIdPrefix="test"
+        {...props}
+      />
     </QueryClientProvider>,
   );
 };
@@ -155,11 +162,70 @@ describe("ScaffoldTabComponent tests", () => {
         downloadAttribute = this.getAttribute("download");
       });
 
-    renderScaffoldTabComponent({ courseId: 7 });
+    renderScaffoldTabComponent({
+      courseId: 7,
+      courseName: "CMPSC 8",
+      term: "S26",
+      school: { key: "UCSB", displayName: "UCSB" },
+    });
     fireEvent.click(screen.getByTestId("test-download-yaml-button"));
 
     await waitFor(() => expect(click).toHaveBeenCalledTimes(1));
-    expect(downloadAttribute).toBe("concepts-course-7.yaml");
+    expect(downloadAttribute).toBe("Scaffold-CMPSC-8-S26-UCSB-7.yml");
+
+    click.mockRestore();
+  });
+
+  test("download sanitizes course name and term when building the filename", async () => {
+    axiosMock.onGet("/api/concepts/yaml/download").reply(200, SAMPLE_YAML);
+
+    window.URL.createObjectURL = vi.fn(() => "blob:fake-url");
+    window.URL.revokeObjectURL = vi.fn();
+    let downloadAttribute = null;
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(function () {
+        downloadAttribute = this.getAttribute("download");
+      });
+
+    renderScaffoldTabComponent({
+      courseId: 42,
+      courseName: "CMPSC 156: Intro to S/W Eng.",
+      term: "Fall 2026",
+      school: { key: "OTHER", displayName: "Other" },
+    });
+    fireEvent.click(screen.getByTestId("test-download-yaml-button"));
+
+    await waitFor(() => expect(click).toHaveBeenCalledTimes(1));
+    expect(downloadAttribute).toBe(
+      "Scaffold-CMPSC-156-Intro-to-S-W-Eng-Fall-2026-OTHER-42.yml",
+    );
+
+    click.mockRestore();
+  });
+
+  test("download omits missing course details instead of leaving blank segments", async () => {
+    axiosMock.onGet("/api/concepts/yaml/download").reply(200, SAMPLE_YAML);
+
+    window.URL.createObjectURL = vi.fn(() => "blob:fake-url");
+    window.URL.revokeObjectURL = vi.fn();
+    let downloadAttribute = null;
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(function () {
+        downloadAttribute = this.getAttribute("download");
+      });
+
+    renderScaffoldTabComponent({
+      courseId: 9,
+      courseName: undefined,
+      term: undefined,
+      school: undefined,
+    });
+    fireEvent.click(screen.getByTestId("test-download-yaml-button"));
+
+    await waitFor(() => expect(click).toHaveBeenCalledTimes(1));
+    expect(downloadAttribute).toBe("Scaffold-9.yml");
 
     click.mockRestore();
   });

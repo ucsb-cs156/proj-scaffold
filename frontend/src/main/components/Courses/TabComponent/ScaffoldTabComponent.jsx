@@ -5,7 +5,30 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { useBackendMutation } from "main/utils/useBackend";
 
-export default function ScaffoldTabComponent({ courseId, testIdPrefix }) {
+/**
+ * Sanitizes a value for use in a downloaded filename: trims surrounding
+ * whitespace, replaces any run of characters that are not letters or digits
+ * with a single dash, and strips any leading/trailing dashes left behind.
+ * Returns "" for null/undefined input.
+ *
+ * Examples: "CMPSC 8" -> "CMPSC-8"; " Fall 2026! " -> "Fall-2026"; null -> "".
+ *
+ * @param {*} value the value to sanitize (coerced to a string)
+ * @returns {string} the sanitized, filename-safe string
+ */
+const sanitizeForFilename = (value) =>
+  String(value ?? "")
+    .trim()
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+export default function ScaffoldTabComponent({
+  courseId,
+  courseName,
+  term,
+  school,
+  testIdPrefix,
+}) {
   const {
     register,
     formState: { errors },
@@ -40,7 +63,17 @@ export default function ScaffoldTabComponent({ courseId, testIdPrefix }) {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `concepts-course-${courseId}.yaml`);
+      const schoolKey = school?.key ?? school;
+      const filename = [
+        "Scaffold",
+        sanitizeForFilename(courseName),
+        sanitizeForFilename(term),
+        sanitizeForFilename(schoolKey),
+        courseId,
+      ]
+        .filter((part) => part !== "" && part !== undefined && part !== null)
+        .join("-");
+      link.setAttribute("download", `${filename}.yml`);
       document.body.appendChild(link);
       link.click();
       link.remove();
