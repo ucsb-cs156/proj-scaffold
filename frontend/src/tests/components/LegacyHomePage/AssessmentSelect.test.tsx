@@ -1,6 +1,6 @@
 import { describe, test, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import AssessmentSelect from "main/components/LegacyHomePage/AssessmentSelect";
+import LegacyAssessmentSelect from "main/components/LegacyHomePage/LegacyAssessmentSelect";
 import type { Assessment } from "main/api/client";
 
 const assessments: Assessment[] = [
@@ -11,7 +11,7 @@ const assessments: Assessment[] = [
 describe("AssessmentSelect", () => {
   test("shows placeholder text when nothing is selected", () => {
     render(
-      <AssessmentSelect
+      <LegacyAssessmentSelect
         assessments={assessments}
         selectedAssessmentId=""
         onSelect={vi.fn()}
@@ -22,7 +22,7 @@ describe("AssessmentSelect", () => {
 
   test("shows the name of the selected assessment", () => {
     render(
-      <AssessmentSelect
+      <LegacyAssessmentSelect
         assessments={assessments}
         selectedAssessmentId="2"
         onSelect={vi.fn()}
@@ -34,7 +34,7 @@ describe("AssessmentSelect", () => {
 
   test("applies the is-selected class only to the currently selected option", () => {
     const { container } = render(
-      <AssessmentSelect
+      <LegacyAssessmentSelect
         assessments={assessments}
         selectedAssessmentId="2"
         onSelect={vi.fn()}
@@ -52,7 +52,7 @@ describe("AssessmentSelect", () => {
 
   test("dropdown is closed until the control is clicked", () => {
     render(
-      <AssessmentSelect
+      <LegacyAssessmentSelect
         assessments={assessments}
         selectedAssessmentId=""
         onSelect={vi.fn()}
@@ -69,7 +69,7 @@ describe("AssessmentSelect", () => {
   test("selecting an option calls onSelect and closes the dropdown", () => {
     const onSelect = vi.fn();
     render(
-      <AssessmentSelect
+      <LegacyAssessmentSelect
         assessments={assessments}
         selectedAssessmentId=""
         onSelect={onSelect}
@@ -85,7 +85,7 @@ describe("AssessmentSelect", () => {
 
   test("does not open a dropdown when there are no assessments", () => {
     render(
-      <AssessmentSelect
+      <LegacyAssessmentSelect
         assessments={[]}
         selectedAssessmentId=""
         onSelect={vi.fn()}
@@ -101,7 +101,7 @@ describe("AssessmentSelect", () => {
     render(
       <div>
         <div data-testid="outside">outside</div>
-        <AssessmentSelect
+        <LegacyAssessmentSelect
           assessments={assessments}
           selectedAssessmentId=""
           onSelect={vi.fn()}
