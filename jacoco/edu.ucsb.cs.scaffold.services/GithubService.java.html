@@ -97,21 +97,54 @@ public class GithubService {
 <span class="fc" id="L97">    return new String(decoded, StandardCharsets.UTF_8);</span>
   }
 
+  /**
+   * Reports whether the token has push (read/write) access to the repository, from the {@code
+   * permissions} block of &lt;a href=&quot;https://docs.github.com/en/rest/repos/repos&quot;&gt;GET
+   * /repos/{owner}/{repo}&lt;/a&gt;. A successful call already proves read access; {@code push=true}
+   * additionally proves write access — nothing is written to check this.
+   *
+   * @param repoName the repository in {@code owner/repo} form
+   * @param token the user's PAT (plaintext)
+   * @throws org.springframework.web.client.HttpClientErrorException when the token cannot read the
+   *     repo at all (GitHub answers 404 for repos a token cannot see, or 401 for a bad token)
+   */
+  public boolean hasWriteAccess(String repoName, String token) {
+<span class="fc" id="L112">    ResponseEntity&lt;Map&lt;String, Object&gt;&gt; response =</span>
+<span class="fc" id="L113">        restTemplate.exchange(</span>
+<span class="fc" id="L114">            repoUrl(repoName),</span>
+            HttpMethod.GET,
+<span class="fc" id="L116">            authenticatedEntity(token),</span>
+<span class="fc" id="L117">            new ParameterizedTypeReference&lt;&gt;() {});</span>
+
+<span class="fc" id="L119">    Map&lt;String, Object&gt; body = response.getBody();</span>
+<span class="fc bfc" id="L120" title="All 4 branches covered.">    if (body == null || !(body.get(&quot;permissions&quot;) instanceof Map&lt;?, ?&gt; permissions)) {</span>
+<span class="fc" id="L121">      return false;</span>
+    }
+<span class="fc" id="L123">    return Boolean.TRUE.equals(permissions.get(&quot;push&quot;));</span>
+  }
+
+  private String repoUrl(String repoName) {
+<span class="fc" id="L127">    return UriComponentsBuilder.fromUriString(githubApiBase)</span>
+<span class="fc" id="L128">        .pathSegment(&quot;repos&quot;)</span>
+<span class="fc" id="L129">        .path(&quot;/&quot; + repoName)</span>
+<span class="fc" id="L130">        .toUriString();</span>
+  }
+
   private String contentsUrl(String repoName, String path) {
-<span class="fc" id="L101">    return UriComponentsBuilder.fromUriString(githubApiBase)</span>
-<span class="fc" id="L102">        .pathSegment(&quot;repos&quot;)</span>
-<span class="fc" id="L103">        .path(&quot;/&quot; + repoName)</span>
-<span class="fc" id="L104">        .pathSegment(&quot;contents&quot;)</span>
-<span class="fc" id="L105">        .path(&quot;/&quot; + path)</span>
-<span class="fc" id="L106">        .toUriString();</span>
+<span class="fc" id="L134">    return UriComponentsBuilder.fromUriString(githubApiBase)</span>
+<span class="fc" id="L135">        .pathSegment(&quot;repos&quot;)</span>
+<span class="fc" id="L136">        .path(&quot;/&quot; + repoName)</span>
+<span class="fc" id="L137">        .pathSegment(&quot;contents&quot;)</span>
+<span class="fc" id="L138">        .path(&quot;/&quot; + path)</span>
+<span class="fc" id="L139">        .toUriString();</span>
   }
 
   private HttpEntity&lt;Void&gt; authenticatedEntity(String token) {
-<span class="fc" id="L110">    HttpHeaders headers = new HttpHeaders();</span>
-<span class="fc" id="L111">    headers.set(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L112">    headers.set(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L113">    headers.set(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-<span class="fc" id="L114">    return new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L143">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L144">    headers.set(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L145">    headers.set(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L146">    headers.set(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L147">    return new HttpEntity&lt;&gt;(headers);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
