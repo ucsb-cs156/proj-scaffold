@@ -1,0 +1,67 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "037-add-pl-api-fields-to-pl-assessment",
+        "author": "claude",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          {
+            "not": {
+              "columnExists": {
+                "tableName": "pl_assessment",
+                "columnName": "pl_assessment_id"
+              }
+            }
+          }
+        ],
+        "changes": [
+          {
+            "addColumn": {
+              "tableName": "pl_assessment",
+              "columns": [
+                { "column": { "name": "pl_assessment_id", "type": "BIGINT" } },
+                {
+                  "column": { "name": "pl_assessment_number", "type": "BIGINT" }
+                },
+                {
+                  "column": { "name": "pl_assessment_order", "type": "BIGINT" }
+                },
+                {
+                  "column": {
+                    "name": "pl_assessment_title",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "pl_assessment_set_abbreviation",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "pl_assessment_set_number",
+                    "type": "INT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "pl_assessment_set_heading",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "pl_assessment_set_color",
+                    "type": "VARCHAR(255)"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
