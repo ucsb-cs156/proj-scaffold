@@ -372,6 +372,35 @@ describe("InstructorCourseShowPage tests", () => {
     ).toBeInTheDocument();
   });
 
+  test("renders the Jobs tab with the JobTabComponent", async () => {
+    setupInstructorUser();
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("tab", { name: "Jobs" }));
+
+    expect(
+      await screen.findByTestId("InstructorCourseShowPage-jobs-tab"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-refresh-jobs"),
+    ).toBeInTheDocument();
+  });
+
   test("staff tab defaults to instructor controls", async () => {
     setupInstructorUser();
     axiosMock

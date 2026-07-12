@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs.scaffold.ControllerTestCase;
 import edu.ucsb.cs.scaffold.entity.Job;
 import edu.ucsb.cs.scaffold.entity.User;
+import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJobFactory;
 import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
@@ -96,6 +97,8 @@ public class JobsControllerDetailedTests extends ControllerTestCase {
   @MockitoBean PlAssessmentQuestionRepository plAssessmentQuestionRepository;
 
   @MockitoBean GithubService githubService;
+
+  @MockitoBean SyncCourseWithPlRepoJobFactory syncCourseWithPlRepoJobFactory;
 
   @Autowired ObjectMapper objectMapper;
 

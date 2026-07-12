@@ -13,6 +13,7 @@ import edu.ucsb.cs.scaffold.enums.PatPlatform;
 import edu.ucsb.cs.scaffold.enums.School;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.errors.ForbiddenException;
+import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJobFactory;
 import edu.ucsb.cs.scaffold.model.CurrentUser;
 import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
@@ -27,6 +28,7 @@ import edu.ucsb.cs.scaffold.repository.UserRepository;
 import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.PrairieLearnService;
+import edu.ucsb.cs.scaffold.services.jobs.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -85,6 +87,10 @@ public class CoursesController extends ApiController {
   @Autowired private PlInstanceRepository plInstanceRepository;
 
   @Autowired private PrairieLearnService prairieLearnService;
+
+  @Autowired private SyncCourseWithPlRepoJobFactory syncCourseWithPlRepoJobFactory;
+
+  @Autowired private JobService jobService;
 
   /**
    * This method creates a new Course.
@@ -745,7 +751,13 @@ public class CoursesController extends ApiController {
     PlInstance savedInstance = plInstanceRepository.save(plInstance);
 
     course.setPlInstanceId(savedInstance.getId());
-    return viewWithPlDetails(courseRepository.save(course));
+    Course savedCourse = courseRepository.save(course);
+
+    // A successful association immediately kicks off a sync of the course's questions and
+    // assessments (issue #69), so the instructor doesn't have to launch it by hand.
+    jobService.runAsJob(syncCourseWithPlRepoJobFactory.create(userId, savedCourse));
+
+    return viewWithPlDetails(savedCourse);
   }
 
   /**

@@ -3,6 +3,7 @@ package edu.ucsb.cs.scaffold.jobs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.Job;
 import edu.ucsb.cs.scaffold.entity.PatCredential;
 import edu.ucsb.cs.scaffold.entity.PlAssessment;
@@ -29,6 +31,9 @@ import edu.ucsb.cs.scaffold.repository.PlScaffoldAssessmentRepository;
 import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.GithubService.DirectoryEntry;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
+import edu.ucsb.cs.scaffold.services.PrairieLearnService;
+import edu.ucsb.cs.scaffold.services.PrairieLearnService.AssessmentInfo;
+import edu.ucsb.cs.scaffold.services.PrairieLearnService.CourseInstanceInfo;
 import edu.ucsb.cs.scaffold.services.jobs.JobContext;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -40,7 +45,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 
-public class SyncPlRepoJobTests {
+public class SyncCourseWithPlRepoJobTests {
 
   PatCredentialRepository patCredentialRepository = mock(PatCredentialRepository.class);
   PatEncryptionService patEncryptionService = mock(PatEncryptionService.class);
@@ -53,23 +58,49 @@ public class SyncPlRepoJobTests {
   PlAssessmentQuestionRepository plAssessmentQuestionRepository =
       mock(PlAssessmentQuestionRepository.class);
   GithubService githubService = mock(GithubService.class);
+  PrairieLearnService prairieLearnService = mock(PrairieLearnService.class);
 
   Job jobStarted = Job.builder().build();
   JobContext ctx = new JobContext(null, jobStarted);
 
+  Course course =
+      Course.builder().id(20L).courseName("CS156").plRepoId(3L).plInstanceId(10L).build();
   PlRepo plRepo = PlRepo.builder().id(3L).repoName("ucsb-cs156/pl-demo").build();
-  PatCredential credential =
-      PatCredential.builder().id(9L).userId(7L).ciphertext("CIPHER").keyVersion(2).build();
+  PlInstance plInstance =
+      PlInstance.builder()
+          .id(10L)
+          .plRepoId(3L)
+          .shortName("Fall2025")
+          .longName("Fall 2025")
+          .numericId(213133L)
+          .build();
+  PatCredential githubCredential =
+      PatCredential.builder()
+          .id(9L)
+          .userId(7L)
+          .platform(PatPlatform.GITHUB)
+          .ciphertext("CIPHER")
+          .keyVersion(2)
+          .build();
+  PatCredential plCredential =
+      PatCredential.builder()
+          .id(8L)
+          .userId(7L)
+          .platform(PatPlatform.PRAIRIELEARN)
+          .ciphertext("PL_CIPHER")
+          .keyVersion(2)
+          .build();
 
   static final String REPO = "ucsb-cs156/pl-demo";
   static final String TOKEN = "ghp_secret";
+  static final String PL_TOKEN = "pl_secret";
   static final UUID UUID_1 = UUID.fromString("fafd1202-4acc-4bbf-a867-7be5223dc2be");
   static final UUID UUID_2 = UUID.fromString("11111111-2222-3333-4444-555555555555");
 
-  private SyncPlRepoJob job() {
-    return SyncPlRepoJob.builder()
+  private SyncCourseWithPlRepoJob job() {
+    return SyncCourseWithPlRepoJob.builder()
         .userId(7L)
-        .plRepoId(3L)
+        .course(course)
         .patCredentialRepository(patCredentialRepository)
         .patEncryptionService(patEncryptionService)
         .plRepoRepository(plRepoRepository)
@@ -79,6 +110,7 @@ public class SyncPlRepoJobTests {
         .plAssessmentRepository(plAssessmentRepository)
         .plAssessmentQuestionRepository(plAssessmentQuestionRepository)
         .githubService(githubService)
+        .prairieLearnService(prairieLearnService)
         .build();
   }
 
@@ -103,111 +135,261 @@ public class SyncPlRepoJobTests {
 
   @BeforeEach
   public void setUp() {
-    when(plRepoRepository.findById(eq(3L))).thenReturn(Optional.of(plRepo));
     when(patCredentialRepository.findByUserIdAndPlatform(eq(7L), eq(PatPlatform.GITHUB)))
-        .thenReturn(Optional.of(credential));
+        .thenReturn(Optional.of(githubCredential));
+    when(patCredentialRepository.findByUserIdAndPlatform(eq(7L), eq(PatPlatform.PRAIRIELEARN)))
+        .thenReturn(Optional.of(plCredential));
     when(patEncryptionService.decrypt(eq("CIPHER"), eq(2))).thenReturn(TOKEN);
+    when(patEncryptionService.decrypt(eq("PL_CIPHER"), eq(2))).thenReturn(PL_TOKEN);
+    when(plRepoRepository.findById(eq(3L))).thenReturn(Optional.of(plRepo));
+    when(plInstanceRepository.findById(eq(10L))).thenReturn(Optional.of(plInstance));
+    when(githubService.hasWriteAccess(eq(REPO), eq(TOKEN))).thenReturn(true);
+    when(prairieLearnService.getCourseInstance(eq(213133L), eq(PL_TOKEN)))
+        .thenReturn(new CourseInstanceInfo(213133L, "Fall 2025", "Fall2025"));
     // Individual tests override these as needed; by default both directories are missing.
-    when(githubService.listSubdirectories(eq(REPO), eq("courseInstances"), eq(TOKEN)))
-        .thenThrow(httpError(HttpStatus.NOT_FOUND));
     when(githubService.listDirectory(eq(REPO), eq("questions"), eq(TOKEN)))
         .thenThrow(httpError(HttpStatus.NOT_FOUND));
+    when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
+        .thenThrow(httpError(HttpStatus.NOT_FOUND));
   }
 
-  private static final String SKIP_INSTANCES_LINE =
-      "Repo ucsb-cs156/pl-demo has no courseInstances directory (or the token cannot see the repo); skipping course instance sync";
-  private static final String NO_ASSESSMENTS_SUMMARY =
-      "Assessments: 0 added, 0 deleted, 0 unchanged";
+  static final String ASSESSMENTS_PATH = "courseInstances/Fall2025/assessments";
+
+  private static final String HEADER = "Syncing course 20 (CS156) with PrairieLearn";
+  private static final String ACCESS_LINE =
+      "Access verified: repo ucsb-cs156/pl-demo (read/write) and PrairieLearn instance 213133";
+  private static final String VERIFIED_LINE = "Instance Fall2025 metadata verified";
   private static final String SKIP_QUESTIONS_LINE =
       "Repo ucsb-cs156/pl-demo has no questions directory (or the token cannot see the repo); skipping question sync";
+  private static final String SKIP_ASSESSMENTS_LINE =
+      "Instance Fall2025 has no assessments directory; skipping assessment sync";
+  private static final String NO_ASSESSMENTS_SUMMARY =
+      "Assessments: 0 added, 0 deleted, 0 unchanged";
+  private static final String ENRICH_ZERO_SUMMARY =
+      "PrairieLearn assessment fields: 0 updated, 0 without a matching repo assessment";
 
-  // Course instance sync
+  private static final String PREAMBLE = HEADER + "\n" + ACCESS_LINE + "\n" + VERIFIED_LINE;
+
+  // ────────────────────────── precondition failures ──────────────────────────
 
   @Test
-  public void adds_new_instances_and_counts_unchanged_ones() throws Exception {
-    when(githubService.listSubdirectories(eq(REPO), eq("courseInstances"), eq(TOKEN)))
-        .thenReturn(List.of("Fall2025", "Winter2026"));
-    when(plInstanceRepository.findByPlRepoId(eq(3L)))
-        .thenReturn(
-            List.of(PlInstance.builder().id(1L).plRepoId(3L).shortName("Fall2025").build()));
+  public void fails_when_the_github_pat_is_missing() {
+    when(patCredentialRepository.findByUserIdAndPlatform(eq(7L), eq(PatPlatform.GITHUB)))
+        .thenReturn(Optional.empty());
 
-    job().accept(ctx);
-
-    verify(plInstanceRepository)
-        .save(eq(PlInstance.builder().plRepoId(3L).shortName("Winter2026").build()));
-    verify(plInstanceRepository, never()).delete(any());
-
-    String expected =
-        """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
-        Added course instance Winter2026
-        Course instances: 1 added, 0 deleted, 1 unchanged
-        %s
-        %s"""
-            .formatted(SKIP_QUESTIONS_LINE, NO_ASSESSMENTS_SUMMARY);
-    assertEquals(expected, jobStarted.getLog());
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals(
+        "Missing GitHub PAT: set it up on the /profile page before running this job",
+        thrown.getMessage());
   }
 
   @Test
-  public void deletes_stale_instances_cascading_to_their_assessments() throws Exception {
-    when(githubService.listSubdirectories(eq(REPO), eq("courseInstances"), eq(TOKEN)))
-        .thenReturn(List.of("Fall2025"));
-    PlInstance keep = PlInstance.builder().id(1L).plRepoId(3L).shortName("Fall2025").build();
-    PlInstance stale1 = PlInstance.builder().id(2L).plRepoId(3L).shortName("Spring2024").build();
-    PlInstance stale2 = PlInstance.builder().id(5L).plRepoId(3L).shortName("Winter2024").build();
-    when(plInstanceRepository.findByPlRepoId(eq(3L))).thenReturn(List.of(keep, stale1, stale2));
-    // the stale Spring2024 instance has an assessment whose join rows must also be cleaned up
-    PlAssessment exam1 =
-        PlAssessment.builder().id(77L).plRepoId(3L).plInstanceId(2L).name("exam1").build();
-    when(plAssessmentRepository.findByPlRepoIdAndPlInstanceId(eq(3L), eq(2L)))
-        .thenReturn(List.of(exam1));
+  public void fails_when_the_prairielearn_pat_is_missing() {
+    when(patCredentialRepository.findByUserIdAndPlatform(eq(7L), eq(PatPlatform.PRAIRIELEARN)))
+        .thenReturn(Optional.empty());
 
-    job().accept(ctx);
-
-    verify(plScaffoldAssessmentRepository).deleteByPlInstanceId(eq(2L));
-    verify(plAssessmentRepository).deleteByPlInstanceId(eq(2L));
-    verify(plInstanceRepository).delete(eq(stale1));
-    verify(plScaffoldAssessmentRepository).deleteByPlInstanceId(eq(5L));
-    verify(plAssessmentRepository).deleteByPlInstanceId(eq(5L));
-    verify(plInstanceRepository).delete(eq(stale2));
-    verify(plInstanceRepository, never()).delete(eq(keep));
-    verify(plInstanceRepository, never()).save(any());
-    // once during the instance cascade, once when the assessments pass sees it as stale
-    // (the mock still returns the instance/assessment after "deletion")
-    verify(plAssessmentQuestionRepository, times(2)).deleteByPlAssessmentId(eq(77L));
-
-    String expected =
-        """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
-        Deleted course instance Spring2024 (no longer on GitHub)
-        Deleted course instance Winter2024 (no longer on GitHub)
-        Course instances: 0 added, 2 deleted, 1 unchanged
-        %s
-        Deleted assessment exam1 (instance Spring2024) (no longer on GitHub)
-        Assessments: 0 added, 1 deleted, 0 unchanged"""
-            .formatted(SKIP_QUESTIONS_LINE);
-    assertEquals(expected, jobStarted.getLog());
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals(
+        "Missing PrairieLearn PAT: set it up on the /profile page before running this job",
+        thrown.getMessage());
   }
 
   @Test
-  public void missing_courseInstances_directory_skips_the_step_including_deletions()
+  public void fails_when_both_pats_are_missing() {
+    when(patCredentialRepository.findByUserIdAndPlatform(anyLong(), any()))
+        .thenReturn(Optional.empty());
+
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals(
+        "Missing GitHub PAT and PrairieLearn PAT: set it up on the /profile page before running this job",
+        thrown.getMessage());
+  }
+
+  @Test
+  public void fails_when_the_course_has_no_repo_association() {
+    course.setPlRepoId(null);
+
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals(
+        "This course is not associated with a GitHub repo yet; set that up on the PrairieLearn tab of the course settings page",
+        thrown.getMessage());
+  }
+
+  @Test
+  public void fails_when_the_course_has_no_instance_association() {
+    course.setPlInstanceId(null);
+
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals(
+        "This course is not associated with a PrairieLearn course instance yet; set that up on the PrairieLearn tab of the course settings page",
+        thrown.getMessage());
+  }
+
+  @Test
+  public void fails_when_the_course_has_neither_association() {
+    course.setPlRepoId(null);
+    course.setPlInstanceId(null);
+
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals(
+        "This course is not associated with a GitHub repo or a PrairieLearn course instance yet; set that up on the PrairieLearn tab of the course settings page",
+        thrown.getMessage());
+  }
+
+  @Test
+  public void fails_when_the_plrepo_row_does_not_exist() {
+    when(plRepoRepository.findById(eq(3L))).thenReturn(Optional.empty());
+
+    EntityNotFoundException thrown =
+        assertThrows(EntityNotFoundException.class, () -> job().accept(ctx));
+    assertEquals("PlRepo with id 3 not found", thrown.getMessage());
+  }
+
+  @Test
+  public void fails_when_the_plinstance_row_does_not_exist() {
+    when(plInstanceRepository.findById(eq(10L))).thenReturn(Optional.empty());
+
+    EntityNotFoundException thrown =
+        assertThrows(EntityNotFoundException.class, () -> job().accept(ctx));
+    assertEquals("PlInstance with id 10 not found", thrown.getMessage());
+  }
+
+  @Test
+  public void fails_when_the_instance_has_no_numeric_id() {
+    plInstance.setNumericId(null);
+
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals(
+        "The course's PrairieLearn instance has no numeric id yet; re-associate it on the PrairieLearn tab of the course settings page",
+        thrown.getMessage());
+  }
+
+  @Test
+  public void fails_when_the_github_pat_cannot_read_the_repo() {
+    when(githubService.hasWriteAccess(eq(REPO), eq(TOKEN)))
+        .thenThrow(httpError(HttpStatus.NOT_FOUND));
+
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals(
+        "The stored GitHub PAT cannot read repo ucsb-cs156/pl-demo (HTTP 404); check the token on the /profile page and the repo on the PrairieLearn tab",
+        thrown.getMessage());
+  }
+
+  @Test
+  public void fails_when_the_github_pat_has_read_only_access() {
+    when(githubService.hasWriteAccess(eq(REPO), eq(TOKEN))).thenReturn(false);
+
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals(
+        "The stored GitHub PAT has read-only access to repo ucsb-cs156/pl-demo; read/write access is required",
+        thrown.getMessage());
+  }
+
+  @Test
+  public void fails_when_the_prairielearn_pat_cannot_access_the_instance() {
+    when(prairieLearnService.getCourseInstance(eq(213133L), eq(PL_TOKEN)))
+        .thenThrow(httpError(HttpStatus.FORBIDDEN));
+
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals(
+        "The stored PrairieLearn PAT cannot access course instance 213133 (HTTP 403); check the token on the /profile page",
+        thrown.getMessage());
+  }
+
+  @Test
+  public void fails_when_prairielearn_returns_no_data_for_the_instance() {
+    when(prairieLearnService.getCourseInstance(eq(213133L), eq(PL_TOKEN))).thenReturn(null);
+
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals("PrairieLearn returned no data for course instance 213133", thrown.getMessage());
+  }
+
+  @Test
+  public void fails_with_a_helpful_message_when_github_returns_401_during_question_sync() {
+    when(githubService.listDirectory(eq(REPO), eq("questions"), eq(TOKEN)))
+        .thenThrow(httpError(HttpStatus.UNAUTHORIZED));
+
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals(
+        "GitHub rejected the stored PAT (HTTP 401). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/Github_PAT.md)",
+        thrown.getMessage());
+  }
+
+  @Test
+  public void fails_with_a_helpful_message_when_github_returns_403_during_question_sync() {
+    when(githubService.listDirectory(eq(REPO), eq("questions"), eq(TOKEN)))
+        .thenThrow(httpError(HttpStatus.FORBIDDEN));
+
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+    assertEquals(
+        "GitHub rejected the stored PAT (HTTP 403). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/Github_PAT.md)",
+        thrown.getMessage());
+  }
+
+  @Test
+  public void other_github_errors_propagate_and_fail_the_job() {
+    HttpClientErrorException tooManyRequests = httpError(HttpStatus.TOO_MANY_REQUESTS);
+    when(githubService.listDirectory(eq(REPO), eq("questions"), eq(TOKEN)))
+        .thenThrow(tooManyRequests);
+
+    HttpClientErrorException thrown =
+        assertThrows(HttpClientErrorException.class, () -> job().accept(ctx));
+    assertEquals(tooManyRequests, thrown);
+  }
+
+  // ────────────────────────── instance metadata sanity check ──────────────────────────
+
+  @Test
+  public void happy_path_with_nothing_to_sync_verifies_metadata_and_logs_each_step()
       throws Exception {
     job().accept(ctx);
 
-    verify(plInstanceRepository, never()).delete(any());
     verify(plInstanceRepository, never()).save(any());
-
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
+        %s
         %s
         %s
         %s"""
-            .formatted(SKIP_INSTANCES_LINE, SKIP_QUESTIONS_LINE, NO_ASSESSMENTS_SUMMARY);
+            .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
-  // Question sync
+  @Test
+  public void updates_the_stored_names_when_the_instance_was_renamed_on_prairielearn()
+      throws Exception {
+    when(prairieLearnService.getCourseInstance(eq(213133L), eq(PL_TOKEN)))
+        .thenReturn(new CourseInstanceInfo(213133L, "Winter 2026", "Winter2026"));
+    // the renamed instance's assessments directory: empty rather than missing
+    when(githubService.listDirectory(
+            eq(REPO), eq("courseInstances/Winter2026/assessments"), eq(TOKEN)))
+        .thenReturn(List.of());
+
+    job().accept(ctx);
+
+    verify(plInstanceRepository).save(eq(plInstance));
+    assertEquals("Winter2026", plInstance.getShortName());
+    assertEquals("Winter 2026", plInstance.getLongName());
+
+    String expected =
+        """
+        %s
+        %s
+        Instance shortName changed on PrairieLearn: Fall2025 -> Winter2026
+        Instance longName changed on PrairieLearn: Fall 2025 -> Winter 2026
+        %s
+        %s
+        %s"""
+            .formatted(
+                HEADER,
+                ACCESS_LINE,
+                SKIP_QUESTIONS_LINE,
+                NO_ASSESSMENTS_SUMMARY,
+                ENRICH_ZERO_SUMMARY);
+    assertEquals(expected, jobStarted.getLog());
+  }
+
+  // ────────────────────────── question sync ──────────────────────────
 
   @Test
   public void adds_top_level_questions_skipping_drafts_files_and_question_subdirectories()
@@ -236,13 +418,13 @@ public class SyncPlRepoJobTests {
 
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         Skipping directory questions/__drafts__
         Added question foo (2D Array)
         Questions: 1 added, 0 updated, 0 deleted, 0 unchanged
+        %s
         %s"""
-            .formatted(SKIP_INSTANCES_LINE, NO_ASSESSMENTS_SUMMARY);
+            .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
@@ -311,11 +493,11 @@ public class SyncPlRepoJobTests {
     verify(plQuestionRepository, never()).save(any());
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         Questions: 0 added, 0 updated, 0 deleted, 0 unchanged
+        %s
         %s"""
-            .formatted(SKIP_INSTANCES_LINE, NO_ASSESSMENTS_SUMMARY);
+            .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
@@ -346,12 +528,12 @@ public class SyncPlRepoJobTests {
 
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         Updated question foo (New Title)
         Questions: 0 added, 1 updated, 0 deleted, 0 unchanged
+        %s
         %s"""
-            .formatted(SKIP_INSTANCES_LINE, NO_ASSESSMENTS_SUMMARY);
+            .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
@@ -381,31 +563,6 @@ public class SyncPlRepoJobTests {
   }
 
   @Test
-  public void a_question_whose_info_json_has_uuid_but_no_title_is_skipped() throws Exception {
-    when(githubService.listDirectory(eq(REPO), eq("questions"), eq(TOKEN)))
-        .thenReturn(List.of(dir("bad")));
-    when(githubService.listDirectory(eq(REPO), eq("questions/bad"), eq(TOKEN)))
-        .thenReturn(List.of(file("info.json")));
-    when(githubService.getFileContent(eq(REPO), eq("questions/bad/info.json"), eq(TOKEN)))
-        .thenReturn("""
-            { "uuid": "%s" }""".formatted(UUID_1));
-    when(plQuestionRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
-
-    job().accept(ctx);
-
-    verify(plQuestionRepository, never()).save(any());
-    String expected =
-        """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
-        %s
-        Skipping question bad: info.json is missing uuid or title
-        Questions: 0 added, 0 updated, 0 deleted, 0 unchanged
-        %s"""
-            .formatted(SKIP_INSTANCES_LINE, NO_ASSESSMENTS_SUMMARY);
-    assertEquals(expected, jobStarted.getLog());
-  }
-
-  @Test
   public void an_unchanged_question_is_not_saved_again() throws Exception {
     when(githubService.listDirectory(eq(REPO), eq("questions"), eq(TOKEN)))
         .thenReturn(List.of(dir("foo")));
@@ -429,11 +586,11 @@ public class SyncPlRepoJobTests {
     verify(plQuestionRepository, never()).save(any());
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         Questions: 0 added, 0 updated, 0 deleted, 1 unchanged
+        %s
         %s"""
-            .formatted(SKIP_INSTANCES_LINE, NO_ASSESSMENTS_SUMMARY);
+            .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
@@ -458,12 +615,12 @@ public class SyncPlRepoJobTests {
 
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         Deleted question old (no longer on GitHub)
         Questions: 0 added, 0 updated, 1 deleted, 0 unchanged
+        %s
         %s"""
-            .formatted(SKIP_INSTANCES_LINE, NO_ASSESSMENTS_SUMMARY);
+            .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
@@ -482,17 +639,17 @@ public class SyncPlRepoJobTests {
     verify(plQuestionRepository, never()).save(any());
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         Skipping question bad: could not parse info.json
         Questions: 0 added, 0 updated, 0 deleted, 0 unchanged
+        %s
         %s"""
-            .formatted(SKIP_INSTANCES_LINE, NO_ASSESSMENTS_SUMMARY);
+            .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
-  public void a_question_whose_info_json_lacks_uuid_or_title_is_skipped() throws Exception {
+  public void a_question_whose_info_json_lacks_uuid_is_skipped() throws Exception {
     when(githubService.listDirectory(eq(REPO), eq("questions"), eq(TOKEN)))
         .thenReturn(List.of(dir("bad")));
     when(githubService.listDirectory(eq(REPO), eq("questions/bad"), eq(TOKEN)))
@@ -507,13 +664,29 @@ public class SyncPlRepoJobTests {
     verify(plQuestionRepository, never()).save(any());
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         Skipping question bad: info.json is missing uuid or title
         Questions: 0 added, 0 updated, 0 deleted, 0 unchanged
+        %s
         %s"""
-            .formatted(SKIP_INSTANCES_LINE, NO_ASSESSMENTS_SUMMARY);
+            .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
+  }
+
+  @Test
+  public void a_question_whose_info_json_lacks_title_is_skipped() throws Exception {
+    when(githubService.listDirectory(eq(REPO), eq("questions"), eq(TOKEN)))
+        .thenReturn(List.of(dir("bad")));
+    when(githubService.listDirectory(eq(REPO), eq("questions/bad"), eq(TOKEN)))
+        .thenReturn(List.of(file("info.json")));
+    when(githubService.getFileContent(eq(REPO), eq("questions/bad/info.json"), eq(TOKEN)))
+        .thenReturn("""
+            { "uuid": "%s" }""".formatted(UUID_1));
+    when(plQuestionRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
+
+    job().accept(ctx);
+
+    verify(plQuestionRepository, never()).save(any());
   }
 
   @Test
@@ -532,24 +705,16 @@ public class SyncPlRepoJobTests {
     verify(plQuestionRepository, never()).save(any());
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         Skipping question bad: could not parse info.json
         Questions: 0 added, 0 updated, 0 deleted, 0 unchanged
+        %s
         %s"""
-            .formatted(SKIP_INSTANCES_LINE, NO_ASSESSMENTS_SUMMARY);
+            .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
-  // Assessment sync
-
-  static final String ASSESSMENTS_PATH = "courseInstances/Fall2025/assessments";
-
-  private void stubInstanceFall2025() {
-    when(plInstanceRepository.findByPlRepoId(eq(3L)))
-        .thenReturn(
-            List.of(PlInstance.builder().id(10L).plRepoId(3L).shortName("Fall2025").build()));
-  }
+  // ────────────────────────── assessment sync (course's own instance only) ─────────────────────
 
   private void stubQuestionsInDatabase() {
     when(plQuestionRepository.findByPlRepoId(eq(3L)))
@@ -588,10 +753,23 @@ public class SyncPlRepoJobTests {
       }
       """;
 
+  // The questions listed by stubQuestionsInDatabase appear as "deleted" in the questions phase,
+  // since the (stubbed) questions directory listing is empty. These lines keep the expected logs
+  // of the assessment tests exact without repeating them in every test.
+  private static final String QUESTIONS_DELETED_LINES =
+      """
+      Deleted question bar/baz (no longer on GitHub)
+      Deleted question foo (no longer on GitHub)
+      Questions: 0 added, 0 updated, 2 deleted, 0 unchanged""";
+
+  private void stubEmptyQuestionsDirectory() {
+    when(githubService.listDirectory(eq(REPO), eq("questions"), eq(TOKEN))).thenReturn(List.of());
+  }
+
   @Test
   public void adds_assessments_and_links_questions_in_zone_order() throws Exception {
-    stubInstanceFall2025();
     stubQuestionsInDatabase();
+    stubEmptyQuestionsDirectory();
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
         .thenReturn(List.of(dir("exam1"), file("README.md")));
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH + "/exam1"), eq(TOKEN)))
@@ -639,20 +817,20 @@ public class SyncPlRepoJobTests {
 
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         %s
         Added assessment exam1 (instance Fall2025)
         Linked 2 question(s) to assessment exam1 (instance Fall2025)
-        Assessments: 1 added, 0 deleted, 0 unchanged"""
-            .formatted(SKIP_INSTANCES_LINE, SKIP_QUESTIONS_LINE);
+        Assessments: 1 added, 0 deleted, 0 unchanged
+        %s"""
+            .formatted(PREAMBLE, QUESTIONS_DELETED_LINES, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
   public void unknown_question_ids_in_zones_are_logged_and_skipped() throws Exception {
-    stubInstanceFall2025();
     stubQuestionsInDatabase();
+    stubEmptyQuestionsDirectory();
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
         .thenReturn(List.of(dir("exam1")));
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH + "/exam1"), eq(TOKEN)))
@@ -685,21 +863,21 @@ public class SyncPlRepoJobTests {
 
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         %s
         Added assessment exam1 (instance Fall2025)
         Assessment exam1 (instance Fall2025) references unknown question id nope; skipping that link
         Linked 1 question(s) to assessment exam1 (instance Fall2025)
-        Assessments: 1 added, 0 deleted, 0 unchanged"""
-            .formatted(SKIP_INSTANCES_LINE, SKIP_QUESTIONS_LINE);
+        Assessments: 1 added, 0 deleted, 0 unchanged
+        %s"""
+            .formatted(PREAMBLE, QUESTIONS_DELETED_LINES, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
   public void an_assessment_whose_links_already_match_is_left_untouched() throws Exception {
-    stubInstanceFall2025();
     stubQuestionsInDatabase();
+    stubEmptyQuestionsDirectory();
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
         .thenReturn(List.of(dir("exam1")));
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH + "/exam1"), eq(TOKEN)))
@@ -737,19 +915,19 @@ public class SyncPlRepoJobTests {
 
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         %s
-        Assessments: 0 added, 0 deleted, 1 unchanged"""
-            .formatted(SKIP_INSTANCES_LINE, SKIP_QUESTIONS_LINE);
+        Assessments: 0 added, 0 deleted, 1 unchanged
+        %s"""
+            .formatted(PREAMBLE, QUESTIONS_DELETED_LINES, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
   public void changed_links_are_rewritten_with_a_flush_between_delete_and_insert()
       throws Exception {
-    stubInstanceFall2025();
     stubQuestionsInDatabase();
+    stubEmptyQuestionsDirectory();
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
         .thenReturn(List.of(dir("exam1")));
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH + "/exam1"), eq(TOKEN)))
@@ -789,24 +967,24 @@ public class SyncPlRepoJobTests {
 
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         %s
         Linked 1 question(s) to assessment exam1 (instance Fall2025)
-        Assessments: 0 added, 0 deleted, 1 unchanged"""
-            .formatted(SKIP_INSTANCES_LINE, SKIP_QUESTIONS_LINE);
+        Assessments: 0 added, 0 deleted, 1 unchanged
+        %s"""
+            .formatted(PREAMBLE, QUESTIONS_DELETED_LINES, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
   public void stale_assessments_are_deleted_with_their_join_rows() throws Exception {
-    stubInstanceFall2025();
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
         .thenReturn(List.of());
     PlAssessment stale =
         PlAssessment.builder().id(88L).plRepoId(3L).plInstanceId(10L).name("oldExam").build();
     when(plAssessmentRepository.findByPlRepoIdAndPlInstanceId(eq(3L), eq(10L)))
         .thenReturn(List.of(stale));
+    when(prairieLearnService.getAssessments(eq(213133L), eq(PL_TOKEN))).thenReturn(List.of());
 
     job().accept(ctx);
 
@@ -815,18 +993,17 @@ public class SyncPlRepoJobTests {
 
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         %s
         Deleted assessment oldExam (instance Fall2025) (no longer on GitHub)
-        Assessments: 0 added, 1 deleted, 0 unchanged"""
-            .formatted(SKIP_INSTANCES_LINE, SKIP_QUESTIONS_LINE);
+        Assessments: 0 added, 1 deleted, 0 unchanged
+        %s"""
+            .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
   public void an_assessment_without_a_zones_key_gets_no_question_links() throws Exception {
-    stubInstanceFall2025();
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
         .thenReturn(List.of(dir("exam1")));
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH + "/exam1"), eq(TOKEN)))
@@ -850,18 +1027,17 @@ public class SyncPlRepoJobTests {
 
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         %s
         Added assessment exam1 (instance Fall2025)
-        Assessments: 1 added, 0 deleted, 0 unchanged"""
-            .formatted(SKIP_INSTANCES_LINE, SKIP_QUESTIONS_LINE);
+        Assessments: 1 added, 0 deleted, 0 unchanged
+        %s"""
+            .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
   public void directories_without_infoAssessment_json_are_not_assessments() throws Exception {
-    stubInstanceFall2025();
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
         .thenReturn(List.of(dir("notes"), file("README.md")));
     // a subdirectory *named* infoAssessment.json is not a file, so "notes" is not an assessment
@@ -875,17 +1051,16 @@ public class SyncPlRepoJobTests {
 
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
+        %s
         %s
         %s
         %s"""
-            .formatted(SKIP_INSTANCES_LINE, SKIP_QUESTIONS_LINE, NO_ASSESSMENTS_SUMMARY);
+            .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, NO_ASSESSMENTS_SUMMARY, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
   public void an_assessment_with_unparseable_infoAssessment_json_is_skipped() throws Exception {
-    stubInstanceFall2025();
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
         .thenReturn(List.of(dir("bad")));
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH + "/bad"), eq(TOKEN)))
@@ -900,92 +1075,97 @@ public class SyncPlRepoJobTests {
 
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         %s
         Skipping assessment bad (instance Fall2025): could not parse infoAssessment.json
+        %s
         %s"""
-            .formatted(SKIP_INSTANCES_LINE, SKIP_QUESTIONS_LINE, NO_ASSESSMENTS_SUMMARY);
+            .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, NO_ASSESSMENTS_SUMMARY, ENRICH_ZERO_SUMMARY);
+    assertEquals(expected, jobStarted.getLog());
+  }
+
+  // ────────────────────────── PrairieLearn assessment field enrichment ──────────────────────────
+
+  private static final AssessmentInfo EXAM1_PL_INFO =
+      new AssessmentInfo(
+          2690012L, "exam1", 2L, 6L, "Final (in Testing Center)", "E", 8, "Exams", "pink2");
+
+  @Test
+  public void copies_the_prairielearn_fields_onto_the_matching_assessment() throws Exception {
+    PlAssessment existing =
+        PlAssessment.builder().id(77L).plRepoId(3L).plInstanceId(10L).name("exam1").build();
+    when(plAssessmentRepository.findByPlRepoIdAndPlInstanceId(eq(3L), eq(10L)))
+        .thenReturn(List.of(existing));
+    when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
+        .thenReturn(List.of());
+    when(prairieLearnService.getAssessments(eq(213133L), eq(PL_TOKEN)))
+        .thenReturn(List.of(EXAM1_PL_INFO));
+
+    job().accept(ctx);
+
+    verify(plAssessmentRepository).save(eq(existing));
+    assertEquals(Long.valueOf(2690012L), existing.getPlAssessmentId());
+    assertEquals(Long.valueOf(2L), existing.getPlAssessmentNumber());
+    assertEquals(Long.valueOf(6L), existing.getPlAssessmentOrder());
+    assertEquals("Final (in Testing Center)", existing.getPlAssessmentTitle());
+    assertEquals("E", existing.getPlAssessmentSetAbbreviation());
+    assertEquals(Integer.valueOf(8), existing.getPlAssessmentSetNumber());
+    assertEquals("Exams", existing.getPlAssessmentSetHeading());
+    assertEquals("pink2", existing.getPlAssessmentSetColor());
+
+    String expected =
+        """
+        %s
+        %s
+        Deleted assessment exam1 (instance Fall2025) (no longer on GitHub)
+        Assessments: 0 added, 1 deleted, 0 unchanged
+        Updated PrairieLearn fields for assessment exam1
+        PrairieLearn assessment fields: 1 updated, 0 without a matching repo assessment"""
+            .formatted(PREAMBLE, SKIP_QUESTIONS_LINE);
     assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
-  public void an_instance_without_an_assessments_directory_is_skipped() throws Exception {
-    stubInstanceFall2025();
-    when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
-        .thenThrow(httpError(HttpStatus.NOT_FOUND));
+  public void prairielearn_assessments_with_no_matching_repo_row_are_logged_and_skipped()
+      throws Exception {
+    when(prairieLearnService.getAssessments(eq(213133L), eq(PL_TOKEN)))
+        .thenReturn(List.of(EXAM1_PL_INFO));
 
     job().accept(ctx);
 
     verify(plAssessmentRepository, never()).save(any());
-    verify(plAssessmentRepository, never()).delete(any());
 
     String expected =
         """
-        Syncing repo ucsb-cs156/pl-demo (PlRepo id 3)
         %s
         %s
-        Instance Fall2025 has no assessments directory; skipping assessment sync for it
-        %s"""
-            .formatted(SKIP_INSTANCES_LINE, SKIP_QUESTIONS_LINE, NO_ASSESSMENTS_SUMMARY);
+        %s
+        PrairieLearn assessment exam1 has no matching assessment directory in the repo; skipping
+        PrairieLearn assessment fields: 0 updated, 1 without a matching repo assessment"""
+            .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, SKIP_ASSESSMENTS_LINE);
     assertEquals(expected, jobStarted.getLog());
   }
 
-  // Failure modes
-
   @Test
-  public void fails_when_the_plrepo_does_not_exist() {
-    when(plRepoRepository.findById(eq(3L))).thenReturn(Optional.empty());
+  public void a_prairielearn_error_on_the_assessments_listing_skips_enrichment_only()
+      throws Exception {
+    when(prairieLearnService.getAssessments(eq(213133L), eq(PL_TOKEN)))
+        .thenThrow(httpError(HttpStatus.TOO_MANY_REQUESTS));
 
-    EntityNotFoundException thrown =
-        assertThrows(EntityNotFoundException.class, () -> job().accept(ctx));
-    assertEquals("PlRepo with id 3 not found", thrown.getMessage());
+    job().accept(ctx);
+
+    String expected =
+        """
+        %s
+        %s
+        %s
+        Could not list assessments from PrairieLearn (HTTP 429); skipping assessment field updates"""
+            .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, SKIP_ASSESSMENTS_LINE);
+    assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
-  public void fails_with_a_helpful_message_when_the_user_has_no_stored_pat() {
-    when(patCredentialRepository.findByUserIdAndPlatform(eq(7L), eq(PatPlatform.GITHUB)))
-        .thenReturn(Optional.empty());
-
-    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
-    assertEquals(
-        "No GitHub PAT is stored for user id 7; enter one first (see docs/Github_PAT.md)",
-        thrown.getMessage());
-  }
-
-  @Test
-  public void fails_with_a_helpful_message_when_github_returns_401() {
-    when(githubService.listSubdirectories(eq(REPO), eq("courseInstances"), eq(TOKEN)))
-        .thenThrow(httpError(HttpStatus.UNAUTHORIZED));
-
-    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
-    assertEquals(
-        "GitHub rejected the stored PAT (HTTP 401). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/Github_PAT.md)",
-        thrown.getMessage());
-  }
-
-  @Test
-  public void fails_with_a_helpful_message_when_github_returns_403_during_question_sync() {
-    when(githubService.listSubdirectories(eq(REPO), eq("courseInstances"), eq(TOKEN)))
-        .thenReturn(List.of());
-    when(plInstanceRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
-    when(githubService.listDirectory(eq(REPO), eq("questions"), eq(TOKEN)))
-        .thenThrow(httpError(HttpStatus.FORBIDDEN));
-
-    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
-    assertEquals(
-        "GitHub rejected the stored PAT (HTTP 403). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/Github_PAT.md)",
-        thrown.getMessage());
-  }
-
-  @Test
-  public void other_github_errors_propagate_and_fail_the_job() {
-    HttpClientErrorException tooManyRequests = httpError(HttpStatus.TOO_MANY_REQUESTS);
-    when(githubService.listSubdirectories(eq(REPO), eq("courseInstances"), eq(TOKEN)))
-        .thenThrow(tooManyRequests);
-
-    HttpClientErrorException thrown =
-        assertThrows(HttpClientErrorException.class, () -> job().accept(ctx));
-    assertEquals(tooManyRequests, thrown);
+  public void the_job_reports_its_course_for_the_jobs_table() {
+    assertEquals(course, job().getCourse());
   }
 }

@@ -2,6 +2,8 @@ package edu.ucsb.cs.scaffold.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -11,10 +13,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs.scaffold.ControllerTestCase;
+import edu.ucsb.cs.scaffold.annotations.WithInstructorCoursePermissions;
+import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.Job;
 import edu.ucsb.cs.scaffold.entity.User;
 import edu.ucsb.cs.scaffold.jobs.RotatePatKeysJob;
-import edu.ucsb.cs.scaffold.jobs.SyncPlRepoJob;
+import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJob;
+import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJobFactory;
 import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
@@ -32,14 +37,14 @@ import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
 import edu.ucsb.cs.scaffold.services.jobs.JobService;
+import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
@@ -85,6 +90,8 @@ public class JobsControllerJobsTests extends ControllerTestCase {
   @MockitoBean PlAssessmentQuestionRepository plAssessmentQuestionRepository;
 
   @MockitoBean GithubService githubService;
+
+  @MockitoBean SyncCourseWithPlRepoJobFactory syncCourseWithPlRepoJobFactory;
 
   @Autowired ObjectMapper objectMapper;
 
@@ -164,13 +171,16 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     mockMvc.perform(post("/api/jobs/launch/rotatePatKeys")).andExpect(status().is(403));
   }
 
-  @WithMockUser(roles = {"INSTRUCTOR"})
+  @WithInstructorCoursePermissions
   @Test
-  public void instructor_can_launch_syncPlRepo_job_with_their_own_userId() throws Exception {
+  public void instructor_with_course_permissions_can_launch_syncCourseWithPlRepo_job()
+      throws Exception {
 
     // arrange
 
     User user = currentUserService.getUser();
+    Course course = Course.builder().id(3L).courseName("CS156").build();
+    when(courseRepository.findById(eq(3L))).thenReturn(Optional.of(course));
 
     Job jobStarted =
         Job.builder()
@@ -181,22 +191,21 @@ public class JobsControllerJobsTests extends ControllerTestCase {
             .status("started")
             .build();
 
-    when(jobService.runAsJob(any(SyncPlRepoJob.class))).thenReturn(jobStarted);
+    SyncCourseWithPlRepoJob job = SyncCourseWithPlRepoJob.builder().course(course).build();
+    // the job runs with the launching user's id (MockCurrentUserServiceImpl returns id 1)
+    when(syncCourseWithPlRepoJobFactory.create(eq(1L), eq(course))).thenReturn(job);
+    when(jobService.runAsJob(eq(job))).thenReturn(jobStarted);
 
     // act
     MvcResult response =
         mockMvc
-            .perform(post("/api/jobs/launch/syncPlRepo?plRepoId=3").with(csrf()))
+            .perform(post("/api/jobs/launch/syncCourseWithPlRepo?courseId=3").with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
 
     // assert
-
-    ArgumentCaptor<SyncPlRepoJob> jobCaptor = ArgumentCaptor.forClass(SyncPlRepoJob.class);
-    verify(jobService, times(1)).runAsJob(jobCaptor.capture());
-    // the job runs with the launching user's id (MockCurrentUserServiceImpl returns id 1)
-    assertEquals(1L, ReflectionTestUtils.getField(jobCaptor.getValue(), "userId"));
-    assertEquals(3L, ReflectionTestUtils.getField(jobCaptor.getValue(), "plRepoId"));
+    verify(syncCourseWithPlRepoJobFactory, times(1)).create(eq(1L), eq(course));
+    verify(jobService, times(1)).runAsJob(eq(job));
 
     String expectedJson = objectMapper.writeValueAsString(jobStarted);
     assertEquals(expectedJson, response.getResponse().getContentAsString());
@@ -204,27 +213,49 @@ public class JobsControllerJobsTests extends ControllerTestCase {
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
-  public void admin_can_launch_syncPlRepo_job() throws Exception {
+  public void admin_can_launch_syncCourseWithPlRepo_job() throws Exception {
+    Course course = Course.builder().id(3L).courseName("CS156").build();
+    when(courseRepository.findById(eq(3L))).thenReturn(Optional.of(course));
+    SyncCourseWithPlRepoJob job = SyncCourseWithPlRepoJob.builder().course(course).build();
+    when(syncCourseWithPlRepoJobFactory.create(eq(1L), eq(course))).thenReturn(job);
     Job jobStarted = Job.builder().id(0L).status("started").build();
-    when(jobService.runAsJob(any(SyncPlRepoJob.class))).thenReturn(jobStarted);
+    when(jobService.runAsJob(eq(job))).thenReturn(jobStarted);
 
     mockMvc
-        .perform(post("/api/jobs/launch/syncPlRepo?plRepoId=3").with(csrf()))
+        .perform(post("/api/jobs/launch/syncCourseWithPlRepo?courseId=3").with(csrf()))
         .andExpect(status().isOk());
 
-    verify(jobService, times(1)).runAsJob(any(SyncPlRepoJob.class));
+    verify(jobService, times(1)).runAsJob(eq(job));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void launching_syncCourseWithPlRepo_for_a_missing_course_returns_404() throws Exception {
+    when(courseRepository.findById(eq(3L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/jobs/launch/syncCourseWithPlRepo?courseId=3").with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Course with id 3 not found", json.get("message"));
+    verify(jobService, never()).runAsJob(any());
   }
 
   @WithMockUser(roles = {"USER"})
   @Test
-  public void regular_users_cannot_launch_syncPlRepo_job() throws Exception {
+  public void regular_users_cannot_launch_syncCourseWithPlRepo_job() throws Exception {
     mockMvc
-        .perform(post("/api/jobs/launch/syncPlRepo?plRepoId=3").with(csrf()))
+        .perform(post("/api/jobs/launch/syncCourseWithPlRepo?courseId=3").with(csrf()))
         .andExpect(status().is(403));
   }
 
   @Test
-  public void logged_out_users_cannot_launch_syncPlRepo_job() throws Exception {
-    mockMvc.perform(post("/api/jobs/launch/syncPlRepo?plRepoId=3")).andExpect(status().is(403));
+  public void logged_out_users_cannot_launch_syncCourseWithPlRepo_job() throws Exception {
+    mockMvc
+        .perform(post("/api/jobs/launch/syncCourseWithPlRepo?courseId=3"))
+        .andExpect(status().is(403));
   }
 }

@@ -4,10 +4,12 @@ import static org.springframework.data.domain.Sort.by;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.Job;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.jobs.RotatePatKeysJob;
-import edu.ucsb.cs.scaffold.jobs.SyncPlRepoJob;
+import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJob;
+import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJobFactory;
 import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
@@ -64,6 +66,7 @@ public class JobsController extends ApiController {
   @Autowired private PlAssessmentRepository plAssessmentRepository;
   @Autowired private PlAssessmentQuestionRepository plAssessmentQuestionRepository;
   @Autowired private GithubService githubService;
+  @Autowired private SyncCourseWithPlRepoJobFactory syncCourseWithPlRepoJobFactory;
 
   @Operation(summary = "List all jobs")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -139,26 +142,19 @@ public class JobsController extends ApiController {
 
   @Operation(
       summary =
-          "Launch SyncPlRepo job (populate PlInstances from the repo's courseInstances directory"
-              + " on GitHub, using the launching user's PAT)")
-  @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_INSTRUCTOR')")
-  @PostMapping("/launch/syncPlRepo")
-  public Job launchSyncPlRepoJob(@Parameter(name = "plRepoId") @RequestParam Long plRepoId) {
+          "Launch SyncCourseWithPlRepo job (sync the course's questions and assessments from"
+              + " GitHub and PrairieLearn, using the launching user's PATs)")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PostMapping("/launch/syncCourseWithPlRepo")
+  public Job launchSyncCourseWithPlRepoJob(
+      @Parameter(name = "courseId") @RequestParam Long courseId) {
 
-    SyncPlRepoJob job =
-        SyncPlRepoJob.builder()
-            .userId(getCurrentUser().getUser().getId())
-            .plRepoId(plRepoId)
-            .patCredentialRepository(patCredentialRepository)
-            .patEncryptionService(patEncryptionService)
-            .plRepoRepository(plRepoRepository)
-            .plInstanceRepository(plInstanceRepository)
-            .plQuestionRepository(plQuestionRepository)
-            .plScaffoldAssessmentRepository(plScaffoldAssessmentRepository)
-            .plAssessmentRepository(plAssessmentRepository)
-            .plAssessmentQuestionRepository(plAssessmentQuestionRepository)
-            .githubService(githubService)
-            .build();
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    SyncCourseWithPlRepoJob job =
+        syncCourseWithPlRepoJobFactory.create(getCurrentUser().getUser().getId(), course);
     return jobService.runAsJob(job);
   }
 
