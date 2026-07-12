@@ -2,6 +2,7 @@ package edu.ucsb.cs.scaffold.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -23,17 +24,24 @@ import edu.ucsb.cs.scaffold.controller.CoursesController.InstructorCourseView;
 import edu.ucsb.cs.scaffold.controller.CoursesController.StaffCoursesDTO;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.CourseStaff;
+import edu.ucsb.cs.scaffold.entity.PatCredential;
+import edu.ucsb.cs.scaffold.entity.PlRepo;
 import edu.ucsb.cs.scaffold.entity.RosterStudent;
 import edu.ucsb.cs.scaffold.entity.User;
+import edu.ucsb.cs.scaffold.enums.PatPlatform;
 import edu.ucsb.cs.scaffold.enums.School;
 import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.InstructorRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
+import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
 import edu.ucsb.cs.scaffold.services.CurrentUserService;
+import edu.ucsb.cs.scaffold.services.GithubService;
+import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -45,6 +53,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -52,6 +61,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Slf4j
 @WebMvcTest(controllers = CoursesController.class)
@@ -72,6 +82,14 @@ public class CoursesControllerTests extends ControllerTestCase {
   @MockitoBean private AdminRepository adminRepository;
 
   @MockitoBean private JobsRepository jobsRepository;
+
+  @MockitoBean private PatCredentialRepository patCredentialRepository;
+
+  @MockitoBean private PatEncryptionService patEncryptionService;
+
+  @MockitoBean private PlRepoRepository plRepoRepository;
+
+  @MockitoBean private GithubService githubService;
 
   /** Test that ROLE_ADMIN can create a course */
   @Test
@@ -2111,5 +2129,221 @@ public class CoursesControllerTests extends ControllerTestCase {
     mockMvc
         .perform(get("/api/courses/emails").param("courseId", "1"))
         .andExpect(status().isForbidden());
+  }
+
+  // ────────────────────────── updateGithubRepo ──────────────────────────
+
+  private Course courseForRepoTests() {
+    return Course.builder()
+        .id(1L)
+        .courseName("CS156")
+        .term("S26")
+        .school(School.UCSB)
+        .instructorEmail("instructor@ucsb.edu")
+        .build();
+  }
+
+  private void setupGithubPat() {
+    PatCredential credential =
+        PatCredential.builder()
+            .id(5L)
+            .userId(currentUserService.getCurrentUser().getUser().getId())
+            .platform(PatPlatform.GITHUB)
+            .ciphertext("CIPHER")
+            .keyVersion(2)
+            .lastFour("3f2a")
+            .build();
+    when(patCredentialRepository.findByUserIdAndPlatform(anyLong(), eq(PatPlatform.GITHUB)))
+        .thenReturn(Optional.of(credential));
+    when(patEncryptionService.decrypt(eq("CIPHER"), eq(2))).thenReturn("ghp_token");
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void updateGithubRepo_forbidden_without_course_manage_permissions() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/courses/updateGithubRepo")
+                .param("courseId", "1")
+                .param("repoName", "ucsb-cs156/pl-demo")
+                .with(csrf()))
+        .andExpect(status().isForbidden());
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithMockUser(roles = {"ADMIN"})
+  public void updateGithubRepo_returns_404_when_course_not_found() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/courses/updateGithubRepo")
+                    .param("courseId", "1")
+                    .param("repoName", "ucsb-cs156/pl-demo")
+                    .with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Course with id 1 not found", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updateGithubRepo_returns_403_when_user_has_no_github_pat() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseForRepoTests()));
+    when(patCredentialRepository.findByUserIdAndPlatform(anyLong(), eq(PatPlatform.GITHUB)))
+        .thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/courses/updateGithubRepo")
+                    .param("courseId", "1")
+                    .param("repoName", "ucsb-cs156/pl-demo")
+                    .with(csrf()))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("must set up Github PAT first", json.get("message"));
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updateGithubRepo_returns_403_when_the_pat_cannot_read_the_repo() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseForRepoTests()));
+    setupGithubPat();
+    when(githubService.hasWriteAccess(eq("ucsb-cs156/pl-demo"), eq("ghp_token")))
+        .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/courses/updateGithubRepo")
+                    .param("courseId", "1")
+                    .param("repoName", "ucsb-cs156/pl-demo")
+                    .with(csrf()))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("No access to repo via Github PAT token", json.get("message"));
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updateGithubRepo_returns_403_when_the_pat_has_read_only_access() throws Exception {
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(courseForRepoTests()));
+    setupGithubPat();
+    when(githubService.hasWriteAccess(eq("ucsb-cs156/pl-demo"), eq("ghp_token"))).thenReturn(false);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/courses/updateGithubRepo")
+                    .param("courseId", "1")
+                    .param("repoName", "ucsb-cs156/pl-demo")
+                    .with(csrf()))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Read/write access to repo via Github PAT is required", json.get("message"));
+    verify(courseRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updateGithubRepo_records_an_existing_pl_repo_id_on_the_course() throws Exception {
+    Course course = courseForRepoTests();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    setupGithubPat();
+    when(githubService.hasWriteAccess(eq("ucsb-cs156/pl-demo"), eq("ghp_token"))).thenReturn(true);
+    when(plRepoRepository.findByRepoName(eq("ucsb-cs156/pl-demo")))
+        .thenReturn(Optional.of(PlRepo.builder().id(9L).repoName("ucsb-cs156/pl-demo").build()));
+    when(courseRepository.save(any(Course.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/courses/updateGithubRepo")
+                    .param("courseId", "1")
+                    .param("repoName", "ucsb-cs156/pl-demo")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(plRepoRepository, never()).save(any());
+    ArgumentCaptor<Course> captor = ArgumentCaptor.forClass(Course.class);
+    verify(courseRepository, times(1)).save(captor.capture());
+    assertEquals(Long.valueOf(9L), captor.getValue().getPlRepoId());
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(9, json.get("plRepoId"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updateGithubRepo_creates_the_pl_repo_when_it_is_not_yet_in_the_table()
+      throws Exception {
+    Course course = courseForRepoTests();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    setupGithubPat();
+    when(githubService.hasWriteAccess(eq("ucsb-cs156/pl-demo"), eq("ghp_token"))).thenReturn(true);
+    when(plRepoRepository.findByRepoName(eq("ucsb-cs156/pl-demo"))).thenReturn(Optional.empty());
+    when(plRepoRepository.save(any(PlRepo.class)))
+        .thenAnswer(
+            inv -> {
+              PlRepo saved = inv.getArgument(0);
+              saved.setId(42L);
+              return saved;
+            });
+    when(courseRepository.save(any(Course.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/courses/updateGithubRepo")
+                    .param("courseId", "1")
+                    .param("repoName", "ucsb-cs156/pl-demo")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    ArgumentCaptor<PlRepo> repoCaptor = ArgumentCaptor.forClass(PlRepo.class);
+    verify(plRepoRepository, times(1)).save(repoCaptor.capture());
+    assertEquals("ucsb-cs156/pl-demo", repoCaptor.getValue().getRepoName());
+    ArgumentCaptor<Course> captor = ArgumentCaptor.forClass(Course.class);
+    verify(courseRepository, times(1)).save(captor.capture());
+    assertEquals(Long.valueOf(42L), captor.getValue().getPlRepoId());
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(42, json.get("plRepoId"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void updateGithubRepo_strips_surrounding_whitespace_from_the_repo_name() throws Exception {
+    Course course = courseForRepoTests();
+    when(courseRepository.findById(eq(1L))).thenReturn(Optional.of(course));
+    setupGithubPat();
+    when(githubService.hasWriteAccess(eq("ucsb-cs156/pl-demo"), eq("ghp_token"))).thenReturn(true);
+    when(plRepoRepository.findByRepoName(eq("ucsb-cs156/pl-demo")))
+        .thenReturn(Optional.of(PlRepo.builder().id(9L).repoName("ucsb-cs156/pl-demo").build()));
+    when(courseRepository.save(any(Course.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    mockMvc
+        .perform(
+            put("/api/courses/updateGithubRepo")
+                .param("courseId", "1")
+                .param("repoName", "  ucsb-cs156/pl-demo\n")
+                .with(csrf()))
+        .andExpect(status().isOk());
+
+    verify(githubService, times(1)).hasWriteAccess(eq("ucsb-cs156/pl-demo"), eq("ghp_token"));
+    verify(plRepoRepository, times(1)).findByRepoName(eq("ucsb-cs156/pl-demo"));
   }
 }

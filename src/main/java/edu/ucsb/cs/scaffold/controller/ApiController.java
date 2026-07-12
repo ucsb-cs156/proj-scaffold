@@ -1,6 +1,7 @@
 package edu.ucsb.cs.scaffold.controller;
 
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.errors.ForbiddenException;
 import edu.ucsb.cs.scaffold.model.CurrentUser;
 import edu.ucsb.cs.scaffold.services.CurrentUserService;
 import java.util.Map;
@@ -27,6 +28,14 @@ public abstract class ApiController {
   @ExceptionHandler({EntityNotFoundException.class})
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public Object handleEntityNotFoundException(Throwable e) {
+    return Map.of(
+        "type", e.getClass().getSimpleName(),
+        "message", e.getMessage());
+  }
+
+  @ExceptionHandler({ForbiddenException.class})
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public Object handleForbiddenException(Throwable e) {
     return Map.of(
         "type", e.getClass().getSimpleName(),
         "message", e.getMessage());

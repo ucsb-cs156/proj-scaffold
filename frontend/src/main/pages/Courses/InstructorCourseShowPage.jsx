@@ -159,7 +159,7 @@ export default function InstructorCourseShowPage({
               title={"PrairieLearn"}
               className="pt-2"
             >
-              <PLTabComponent testIdPrefix={testId} />
+              <PLTabComponent courseId={courseId} testIdPrefix={testId} />
             </Tab>
           </Tabs>
         </div>
