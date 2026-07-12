@@ -912,6 +912,42 @@ public class ConceptsControllerTests extends ControllerTestCase {
     assertNull(captor.getValue().getY());
   }
 
+  @Test
+  @WithInstructorCoursePermissions
+  public void post_subconcept_accepts_a_label_containing_markdown() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(1L).course(course).build();
+    String label = "Using `if __name__ == \"__main__\"`";
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(parent));
+    when(conceptRepository.findByParentIdAndLabel(1L, label)).thenReturn(Optional.empty());
+    when(conceptRepository.save(any(Concept.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    Map<String, Object> body =
+        Map.of(
+            "courseId", 42,
+            "parentConceptId", 1,
+            "label", label);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/concept/subconcept")
+                    .with(csrf())
+                    .contentType("application/json")
+                    .content(mapper.writeValueAsString(body)))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(label, json.get("label"));
+
+    ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
+    verify(conceptRepository).save(captor.capture());
+    assertEquals(label, captor.getValue().getLabel());
+  }
+
   // ---------- PUT /api/concept/put ----------
 
   @Test

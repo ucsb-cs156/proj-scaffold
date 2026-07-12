@@ -615,7 +615,7 @@ public class ConceptYamlServiceTests {
     // Two label-less subconcepts and two same-over-long-label subconcepts each get their
     // own error, but never a bogus "duplicate" error: invalid labels are excluded from
     // duplicate detection.
-    String longLabel = "c".repeat(40);
+    String longLabel = "c".repeat(70);
     Map<String, Object> report =
         replaceExpectingFailure(
             """
@@ -640,8 +640,8 @@ public class ConceptYamlServiceTests {
                 "concepts[0].subconcepts[2]: duplicate subconcept label Twin",
                 "concepts[0].subconcepts[3]: label may not be empty",
                 "concepts[0].subconcepts[4]: label may not be empty",
-                "concepts[0].subconcepts[5]: label renders to 40 characters; the maximum is 32",
-                "concepts[0].subconcepts[6]: label renders to 40 characters; the maximum is 32")),
+                "concepts[0].subconcepts[5]: label renders to 70 characters; the maximum is 60",
+                "concepts[0].subconcepts[6]: label renders to 70 characters; the maximum is 60")),
         report);
   }
 

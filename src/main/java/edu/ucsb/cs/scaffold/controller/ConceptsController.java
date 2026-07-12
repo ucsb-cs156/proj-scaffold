@@ -48,6 +48,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class ConceptsController extends ApiController {
 
   public static final int MAX_RENDERED_CONCEPT_LABEL_LENGTH = Concept.MAX_RENDERED_LABEL_LENGTH;
+  public static final int MAX_RENDERED_SUBCONCEPT_LABEL_LENGTH =
+      Concept.MAX_RENDERED_SUBCONCEPT_LABEL_LENGTH;
 
   // Applied to every new top-level concept; users cannot assign a color at creation time for
   // now. Top-level concepts are assumed throughout the frontend (node styling, drag-out
@@ -353,7 +355,7 @@ public class ConceptsController extends ApiController {
             .findById(dto.getCourseId())
             .orElseThrow(() -> new EntityNotFoundException(Course.class, dto.getCourseId()));
 
-    String cleanLabel = cleanAndValidateLabel(dto.getLabel());
+    String cleanLabel = cleanAndValidateSubconceptLabel(dto.getLabel());
 
     Concept parent =
         conceptRepository
@@ -427,7 +429,7 @@ public class ConceptsController extends ApiController {
               .formatted(conceptId));
     }
 
-    String cleanLabel = cleanAndValidateLabel(dto.getLabel());
+    String cleanLabel = cleanAndValidateSubconceptLabel(dto.getLabel());
     rejectDuplicateLabelUnderParent(concept.getParent(), cleanLabel, concept.getId());
 
     concept.setLabel(cleanLabel);
@@ -797,15 +799,23 @@ public class ConceptsController extends ApiController {
   }
 
   private String cleanAndValidateLabel(String label) {
+    return cleanAndValidateLabel(label, MAX_RENDERED_CONCEPT_LABEL_LENGTH);
+  }
+
+  private String cleanAndValidateSubconceptLabel(String label) {
+    return cleanAndValidateLabel(label, MAX_RENDERED_SUBCONCEPT_LABEL_LENGTH);
+  }
+
+  private String cleanAndValidateLabel(String label, int maxRenderedLength) {
     String cleanLabel = markdownService.cleanLabel(label);
     if (cleanLabel == null || cleanLabel.isEmpty()) {
       throw new IllegalArgumentException("label may not be empty");
     }
     int renderedLength = markdownService.renderedLength(cleanLabel);
-    if (renderedLength > MAX_RENDERED_CONCEPT_LABEL_LENGTH) {
+    if (renderedLength > maxRenderedLength) {
       throw new IllegalArgumentException(
           "label renders to %d characters; the maximum is %d"
-              .formatted(renderedLength, MAX_RENDERED_CONCEPT_LABEL_LENGTH));
+              .formatted(renderedLength, maxRenderedLength));
     }
     return cleanLabel;
   }
