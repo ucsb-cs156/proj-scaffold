@@ -5,7 +5,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.SubconceptDTO,0,12,0
 scaffold,edu.ucsb.cs.scaffold.controller,PLQuestionController,0,30,0,0,0,8,0,5,0,5
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.StoredPosition,0,9,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,PatCredentialController,0,159,0,8,0,36,0,16,0,12
-scaffold,edu.ucsb.cs.scaffold.controller,CoursesController,0,809,0,46,0,207,0,57,0,34
+scaffold,edu.ucsb.cs.scaffold.controller,CoursesController,0,1089,0,68,0,275,0,76,0,42
 scaffold,edu.ucsb.cs.scaffold.controller,ApiController,0,50,0,0,0,14,0,8,0,8
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController,0,1594,0,98,0,367,0,105,0,56
 scaffold,edu.ucsb.cs.scaffold.controller,CourseStaffController,0,129,0,0,0,33,0,10,0,10
@@ -14,7 +14,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,PLRepoController,0,117,0,6,0,27,0,10,0,
 scaffold,edu.ucsb.cs.scaffold.controller,PrairieLearnController,0,48,0,0,0,10,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,JobsController,0,164,0,2,0,38,0,13,0,12
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateController.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.InstructorCourseView,0,58,0,4,0,11,0,4,0,2
+scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.InstructorCourseView,0,75,0,4,0,12,0,4,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.MajorConceptDTO,0,15,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.LevelAssignmentDTO,0,21,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,PLAssessmentController,0,13,0,0,0,3,0,3,0,3
@@ -72,6 +72,7 @@ scaffold,edu.ucsb.cs.scaffold.enums,CourseOptions,0,15,0,0,0,3,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,ConceptGraphService.ResetResult,0,15,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,ConceptGraphService,0,638,0,56,0,125,0,45,0,17
 scaffold,edu.ucsb.cs.scaffold.services,PatEncryptionService,0,229,0,20,0,50,0,18,0,8
+scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService.new ParameterizedTypeReference() {...},0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,UpdateUserService,0,139,0,12,0,36,0,13,0,7
 scaffold,edu.ucsb.cs.scaffold.services,PatEncryptionService.EncryptedPat,0,9,0,0,0,1,0,1,0,1
@@ -81,8 +82,10 @@ scaffold,edu.ucsb.cs.scaffold.services,GithubService.DirectoryEntry,0,9,0,0,0,1,
 scaffold,edu.ucsb.cs.scaffold.services,MarkdownService.new AbstractVisitor() {...},0,51,0,4,0,17,0,7,0,5
 scaffold,edu.ucsb.cs.scaffold.services,GithubService,0,217,0,10,0,50,0,15,0,10
 scaffold,edu.ucsb.cs.scaffold.services,PatEncryptionService.VersionedKey,0,9,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService.CourseInstanceInfo,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,ConceptGraphService.Position,0,9,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,ConceptYamlService,0,1237,0,102,0,269,0,71,0,20
+scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService,0,79,0,4,0,19,0,4,0,2
 scaffold,edu.ucsb.cs.scaffold.services,GithubService.new ParameterizedTypeReference() {...},0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,GithubService.new ParameterizedTypeReference() {...},0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,GithubService.new ParameterizedTypeReference() {...},0,3,0,0,0,1,0,1,0,1
@@ -91,7 +94,7 @@ scaffold,edu.ucsb.cs.scaffold.services,ConceptGraphService.TarjanState,0,165,0,1
 scaffold,edu.ucsb.cs.scaffold.jobs,RotatePatKeysJob,0,130,0,4,0,26,0,3,0,1
 scaffold,edu.ucsb.cs.scaffold.jobs,UpdateAllJob,0,12,0,0,0,5,0,2,0,2
 scaffold,edu.ucsb.cs.scaffold.jobs,TestJob,0,19,0,2,0,6,0,2,0,1
-scaffold,edu.ucsb.cs.scaffold.jobs,SyncPlRepoJob,0,1237,0,86,0,256,0,59,0,16
+scaffold,edu.ucsb.cs.scaffold.jobs,SyncPlRepoJob,0,1237,0,86,0,258,0,59,0,16
 scaffold,edu.ucsb.cs.scaffold.jobs,SyncPlRepoJob.QuestionInfo,0,9,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.interceptors,RoleUpdateInterceptor,0,101,0,12,0,24,0,9,0,3
 scaffold,edu.ucsb.cs.scaffold.model,UpsertResponse,0,12,0,0,0,2,0,2,0,2
