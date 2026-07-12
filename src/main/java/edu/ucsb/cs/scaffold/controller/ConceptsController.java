@@ -10,6 +10,8 @@ import edu.ucsb.cs.scaffold.entity.PracticeProblem;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.model.CreateConceptDTO;
 import edu.ucsb.cs.scaffold.model.CreateSubconceptDTO;
+import edu.ucsb.cs.scaffold.model.UpdateConceptDTO;
+import edu.ucsb.cs.scaffold.model.UpdateSubconceptDTO;
 import edu.ucsb.cs.scaffold.model.UserStateV2;
 import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
 import edu.ucsb.cs.scaffold.repository.ConceptRepository;
@@ -46,6 +48,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class ConceptsController extends ApiController {
 
   public static final int MAX_RENDERED_CONCEPT_LABEL_LENGTH = Concept.MAX_RENDERED_LABEL_LENGTH;
+  public static final int MAX_RENDERED_SUBCONCEPT_LABEL_LENGTH =
+      Concept.MAX_RENDERED_SUBCONCEPT_LABEL_LENGTH;
 
   // Applied to every new top-level concept; users cannot assign a color at creation time for
   // now. Top-level concepts are assumed throughout the frontend (node styling, drag-out
@@ -110,6 +114,8 @@ public class ConceptsController extends ApiController {
                 new CourseConceptDTO(
                     concept.getId(),
                     concept.getLabel(),
+                    concept.getDescription(),
+                    concept.getExample(),
                     concept.getLevel(),
                     concept.getX(),
                     concept.getY()))
@@ -212,6 +218,8 @@ public class ConceptsController extends ApiController {
                 new SubConceptTableRowDTO(
                     concept.getId(),
                     concept.getLabel(),
+                    concept.getDescription(),
+                    concept.getExample(),
                     concept.getParent().getId(),
                     concept.getParent().getLabel(),
                     concept.getParent().getLevel(),
@@ -347,7 +355,7 @@ public class ConceptsController extends ApiController {
             .findById(dto.getCourseId())
             .orElseThrow(() -> new EntityNotFoundException(Course.class, dto.getCourseId()));
 
-    String cleanLabel = cleanAndValidateLabel(dto.getLabel());
+    String cleanLabel = cleanAndValidateSubconceptLabel(dto.getLabel());
 
     Concept parent =
         conceptRepository
@@ -374,6 +382,59 @@ public class ConceptsController extends ApiController {
             .parent(parent)
             .sortOrder(nextSortOrder(parent.getId()))
             .build();
+    return conceptRepository.save(concept);
+  }
+
+  @Operation(summary = "Update the label, description, and example of a top-level concept")
+  @PreAuthorize("@CourseSecurity.hasConceptManagementPermissions(#root, #conceptId)")
+  @PutMapping("/api/concept/put")
+  public Concept putConcept(
+      @Parameter(name = "conceptId") @RequestParam Long conceptId,
+      @RequestBody UpdateConceptDTO dto)
+      throws EntityNotFoundException {
+
+    Concept concept =
+        conceptRepository
+            .findById(conceptId)
+            .orElseThrow(() -> new EntityNotFoundException(Concept.class, conceptId));
+
+    if (concept.isSubconcept()) {
+      throw new IllegalArgumentException(
+          "concept %d is a subconcept; use PUT /api/concept/subconcept/put to update it"
+              .formatted(conceptId));
+    }
+
+    concept.setLabel(cleanAndValidateLabel(dto.getLabel()));
+    concept.setDescription(markdownService.clean(dto.getDescription()));
+    concept.setExample(markdownService.clean(dto.getExample()));
+    return conceptRepository.save(concept);
+  }
+
+  @Operation(summary = "Update the label, description, and example of a subconcept")
+  @PreAuthorize("@CourseSecurity.hasConceptManagementPermissions(#root, #conceptId)")
+  @PutMapping("/api/concept/subconcept/put")
+  public Concept putSubconcept(
+      @Parameter(name = "conceptId") @RequestParam Long conceptId,
+      @RequestBody UpdateSubconceptDTO dto)
+      throws EntityNotFoundException {
+
+    Concept concept =
+        conceptRepository
+            .findById(conceptId)
+            .orElseThrow(() -> new EntityNotFoundException(Concept.class, conceptId));
+
+    if (!concept.isSubconcept()) {
+      throw new IllegalArgumentException(
+          "concept %d is not a subconcept; use PUT /api/concept/put to update it"
+              .formatted(conceptId));
+    }
+
+    String cleanLabel = cleanAndValidateSubconceptLabel(dto.getLabel());
+    rejectDuplicateLabelUnderParent(concept.getParent(), cleanLabel, concept.getId());
+
+    concept.setLabel(cleanLabel);
+    concept.setDescription(markdownService.clean(dto.getDescription()));
+    concept.setExample(markdownService.clean(dto.getExample()));
     return conceptRepository.save(concept);
   }
 
@@ -621,6 +682,34 @@ public class ConceptsController extends ApiController {
   }
 
   @Operation(
+      summary = "Delete a concept; deleting a top-level concept also deletes its subconcepts")
+  @PreAuthorize("@CourseSecurity.hasConceptManagementPermissions(#root, #conceptId)")
+  @DeleteMapping("/api/concept/delete")
+  public Object deleteConcept(@Parameter(name = "conceptId") @RequestParam Long conceptId)
+      throws EntityNotFoundException {
+    Concept concept =
+        conceptRepository
+            .findById(conceptId)
+            .orElseThrow(() -> new EntityNotFoundException(Concept.class, conceptId));
+
+    Course course = concept.getCourse();
+    if (concept.isSubconcept()) {
+      deleteConceptArtifacts(course.getId(), List.of(conceptId));
+      conceptRepository.delete(concept);
+      return genericMessage("Concept with id %s deleted".formatted(conceptId));
+    }
+
+    List<Concept> subconcepts = conceptRepository.findByParentId(conceptId);
+    List<Long> conceptIdsToDelete = new ArrayList<>();
+    conceptIdsToDelete.add(conceptId);
+    conceptIdsToDelete.addAll(subconcepts.stream().map(Concept::getId).toList());
+    deleteConceptArtifacts(course.getId(), conceptIdsToDelete);
+    conceptRepository.deleteAll(subconcepts);
+    conceptRepository.delete(concept);
+    return genericMessage("Concept with id %s deleted".formatted(conceptId));
+  }
+
+  @Operation(
       summary = "Recompute a course's concept-graph structure",
       description =
           """
@@ -710,15 +799,23 @@ public class ConceptsController extends ApiController {
   }
 
   private String cleanAndValidateLabel(String label) {
-    String cleanLabel = markdownService.clean(label);
+    return cleanAndValidateLabel(label, MAX_RENDERED_CONCEPT_LABEL_LENGTH);
+  }
+
+  private String cleanAndValidateSubconceptLabel(String label) {
+    return cleanAndValidateLabel(label, MAX_RENDERED_SUBCONCEPT_LABEL_LENGTH);
+  }
+
+  private String cleanAndValidateLabel(String label, int maxRenderedLength) {
+    String cleanLabel = markdownService.cleanLabel(label);
     if (cleanLabel == null || cleanLabel.isEmpty()) {
       throw new IllegalArgumentException("label may not be empty");
     }
     int renderedLength = markdownService.renderedLength(cleanLabel);
-    if (renderedLength > MAX_RENDERED_CONCEPT_LABEL_LENGTH) {
+    if (renderedLength > maxRenderedLength) {
       throw new IllegalArgumentException(
           "label renders to %d characters; the maximum is %d"
-              .formatted(renderedLength, MAX_RENDERED_CONCEPT_LABEL_LENGTH));
+              .formatted(renderedLength, maxRenderedLength));
     }
     return cleanLabel;
   }
@@ -740,10 +837,29 @@ public class ConceptsController extends ApiController {
   }
 
   private void rejectDuplicateLabelUnderParent(Concept parent, String label) {
-    if (conceptRepository.findByParentIdAndLabel(parent.getId(), label).isPresent()) {
+    rejectDuplicateLabelUnderParent(parent, label, null);
+  }
+
+  private void rejectDuplicateLabelUnderParent(
+      Concept parent, String label, Long excludeConceptId) {
+    Concept duplicate =
+        conceptRepository.findByParentIdAndLabel(parent.getId(), label).orElse(null);
+    if (duplicate != null && !Objects.equals(duplicate.getId(), excludeConceptId)) {
       throw new IllegalArgumentException(
           "concept %d already has a subconcept with label %s".formatted(parent.getId(), label));
     }
+  }
+
+  private void deleteConceptArtifacts(Long courseId, List<Long> conceptIds) {
+    Map<Long, ConceptEdge> distinctEdges = new LinkedHashMap<>();
+    for (Long id : conceptIds) {
+      practiceProblemRepository.deleteAll(
+          practiceProblemRepository.findByCourseIdAndConceptId(courseId, id));
+      for (ConceptEdge edge : conceptEdgeRepository.findBySourceIdOrTargetId(id, id)) {
+        distinctEdges.put(edge.getId(), edge);
+      }
+    }
+    conceptEdgeRepository.deleteAll(distinctEdges.values());
   }
 
   /**
@@ -812,7 +928,14 @@ public class ConceptsController extends ApiController {
   public record ConceptContentDTO(
       Long id, Long parentId, String descriptionHtml, String exampleHtml, String practiceUrl) {}
 
-  public record CourseConceptDTO(Long id, String label, Integer level, Integer x, Integer y) {}
+  public record CourseConceptDTO(
+      Long id,
+      String label,
+      String description,
+      String example,
+      Integer level,
+      Integer x,
+      Integer y) {}
 
   public record MajorConceptDTO(
       Long id, String labelHtml, String color, List<SubconceptDTO> subconcepts) {}
@@ -824,6 +947,8 @@ public class ConceptsController extends ApiController {
   public record SubConceptTableRowDTO(
       Long id,
       String label,
+      String description,
+      String example,
       Long parentId,
       String parentLabel,
       Integer parentLevel,

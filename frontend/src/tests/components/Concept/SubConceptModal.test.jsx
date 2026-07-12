@@ -4,9 +4,17 @@ import { vi } from "vitest";
 import SubConceptModal from "main/components/Concept/SubConceptModal";
 import subConceptsFixtures from "fixtures/subConceptsFixtures";
 
+vi.mock("react-simplemde-editor", () => ({
+  default: ({ value = "", onChange }) => (
+    <textarea value={value} onChange={(e) => onChange(e.target.value)} />
+  ),
+}));
+
 const mockSubmit = vi.fn();
 const showModal = vi.fn();
 const toggleShowModal = vi.fn();
+const editorTextarea = (testId) =>
+  screen.getByTestId(testId).querySelector("textarea");
 
 describe("SubConceptModal tests", () => {
   beforeEach(() => {
@@ -57,12 +65,12 @@ describe("SubConceptModal tests", () => {
     expect(screen.getByDisplayValue("1")).toHaveAttribute("readonly");
     expect(screen.getByDisplayValue("Variables")).toHaveAttribute("readonly");
     expect(screen.getByDisplayValue("Declaring variables")).toBeInTheDocument();
-    expect(
-      screen.getByDisplayValue("Create a variable with a name and type."),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByDisplayValue('String name = "Ada";'),
-    ).toBeInTheDocument();
+    expect(editorTextarea("SubConceptModal-description").value).toBe(
+      "Create a variable with a name and type.",
+    );
+    expect(editorTextarea("SubConceptModal-example").value).toBe(
+      'String name = "Ada";',
+    );
     expect(screen.getByText("Update")).toBeInTheDocument();
   });
 
@@ -81,13 +89,13 @@ describe("SubConceptModal tests", () => {
       </div>,
     );
 
-    fireEvent.change(screen.getByLabelText("Label"), {
+    fireEvent.change(editorTextarea("SubConceptModal-label"), {
       target: { value: "While loops" },
     });
-    fireEvent.change(screen.getByLabelText("Description"), {
+    fireEvent.change(editorTextarea("SubConceptModal-description"), {
       target: { value: "Repeat while a condition remains true." },
     });
-    fireEvent.change(screen.getByLabelText("Example"), {
+    fireEvent.change(editorTextarea("SubConceptModal-example"), {
       target: { value: "while (ready) { run(); }" },
     });
     fireEvent.click(screen.getByText("Create"));
@@ -152,7 +160,7 @@ describe("SubConceptModal tests", () => {
       expect(screen.getByTestId("SubConceptModal-parentLabel").value).toBe(
         "Variables",
       );
-      expect(screen.getByTestId("SubConceptModal-label").value).toBe(
+      expect(editorTextarea("SubConceptModal-label").value).toBe(
         "Updating variables",
       );
     });

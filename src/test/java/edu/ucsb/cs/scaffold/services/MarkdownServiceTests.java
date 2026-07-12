@@ -255,4 +255,76 @@ public class MarkdownServiceTests {
     // The empty scheme before the colon is not an allowed scheme.
     assertEquals("", MarkdownService.safeDestination(":foo"));
   }
+
+  // cleanLabel
+
+  @Test
+  public void cleanLabel_returns_null_for_null_input() {
+    assertNull(service.cleanLabel(null));
+  }
+
+  @Test
+  public void cleanLabel_reformats_markdown_to_canonical_commonmark() {
+    assertEquals("**Recursion**", service.cleanLabel("**Recursion**"));
+  }
+
+  @Test
+  public void cleanLabel_preserves_html_like_generics_syntax_as_literal_text() {
+    // "<Integer>" looks like an HTML tag to the Markdown parser; unlike clean(), cleanLabel()
+    // keeps it as literal (escaped) text instead of sanitizing it away, so labels using CS
+    // generics/pointer notation round-trip intact.
+    assertEquals("List\\<Integer\\>", service.cleanLabel("List<Integer>"));
+  }
+
+  @Test
+  public void cleanLabel_preserves_a_label_that_is_only_html_like_text() {
+    assertEquals("\\<Recursion\\>", service.cleanLabel("<Recursion>"));
+  }
+
+  @Test
+  public void cleanLabel_neutralizes_a_script_tag_as_literal_text() {
+    assertEquals(
+        "\\<script\\>alert('x')\\</script\\>", service.cleanLabel("<script>alert('x')</script>"));
+  }
+
+  @Test
+  public void cleanLabel_drops_javascript_link_destinations() {
+    assertEquals("[click]()", service.cleanLabel("[click](javascript:alert(1))"));
+  }
+
+  @Test
+  public void cleanLabel_keeps_https_link_destinations() {
+    assertEquals("[site](https://example.com)", service.cleanLabel("[site](https://example.com)"));
+  }
+
+  @Test
+  public void cleanLabel_drops_javascript_image_destinations() {
+    assertEquals("![alt]()", service.cleanLabel("![alt](javascript:alert(1))"));
+  }
+
+  @Test
+  public void cleanLabel_keeps_https_image_destinations() {
+    assertEquals(
+        "![alt](https://example.com/img.png)",
+        service.cleanLabel("![alt](https://example.com/img.png)"));
+  }
+
+  @Test
+  public void cleanLabel_sanitizes_a_link_nested_inside_an_images_alt_text() {
+    // Exercises visitChildren(image): a Link inside the image's description is only
+    // reached, and its javascript: destination only dropped, if the image's children
+    // are visited.
+    assertEquals(
+        "![a [bad]() desc](https://ok.com/img.png)",
+        service.cleanLabel("![a [bad](javascript:alert(1)) desc](https://ok.com/img.png)"));
+  }
+
+  @Test
+  public void cleanLabel_sanitizes_an_image_nested_inside_a_links_text() {
+    // Exercises visitChildren(link): an Image inside the link's text is only reached,
+    // and its javascript: destination only dropped, if the link's children are visited.
+    assertEquals(
+        "[a ![img]() text](https://ok.com/page)",
+        service.cleanLabel("[a ![img](javascript:alert(1)) text](https://ok.com/page)"));
+  }
 }

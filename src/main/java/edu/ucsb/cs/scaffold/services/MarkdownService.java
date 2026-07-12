@@ -7,6 +7,8 @@ import org.commonmark.node.HtmlInline;
 import org.commonmark.node.Image;
 import org.commonmark.node.Link;
 import org.commonmark.node.Node;
+import org.commonmark.node.Paragraph;
+import org.commonmark.node.Text;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.commonmark.renderer.markdown.MarkdownRenderer;
@@ -107,6 +109,54 @@ public class MarkdownService {
             } else {
               htmlInline.setLiteral(safe);
             }
+          }
+
+          @Override
+          public void visit(Link link) {
+            link.setDestination(safeDestination(link.getDestination()));
+            visitChildren(link);
+          }
+
+          @Override
+          public void visit(Image image) {
+            image.setDestination(safeDestination(image.getDestination()));
+            visitChildren(image);
+          }
+        });
+    return markdownRenderer.render(document).strip();
+  }
+
+  /**
+   * Like {@link #clean}, but for short single-line-ish fields such as concept/subconcept labels,
+   * which have no legitimate use for embedded raw HTML. Rather than sanitizing (and possibly
+   * dropping) HTML-looking fragments, any raw HTML is turned into literal text, so that CS notation
+   * such as {@code List<Integer>} or {@code Node<T>} round-trips intact instead of being silently
+   * stripped by the HTML sanitizer (which can otherwise reduce a label to nothing and make it fail
+   * the "label may not be empty" check). The result is still safe to render with {@link
+   * #toInlineHtml}, since that runs its own HTML sanitization pass at display time.
+   *
+   * @param markdown the raw Markdown, may be null
+   * @return the cleaned Markdown, or null if the input was null
+   */
+  public String cleanLabel(String markdown) {
+    if (markdown == null) {
+      return null;
+    }
+    Node document = parser.parse(markdown);
+    document.accept(
+        new AbstractVisitor() {
+          @Override
+          public void visit(HtmlBlock htmlBlock) {
+            Paragraph replacement = new Paragraph();
+            replacement.appendChild(new Text(htmlBlock.getLiteral()));
+            htmlBlock.insertAfter(replacement);
+            htmlBlock.unlink();
+          }
+
+          @Override
+          public void visit(HtmlInline htmlInline) {
+            htmlInline.insertAfter(new Text(htmlInline.getLiteral()));
+            htmlInline.unlink();
           }
 
           @Override

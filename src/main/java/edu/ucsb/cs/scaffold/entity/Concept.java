@@ -11,9 +11,16 @@ import lombok.*;
 @Table(name = "concepts")
 public class Concept {
 
-  // Longest a label may be once its Markdown is rendered to plain text; enforced everywhere
-  // labels enter the system (single-concept endpoints and YAML upload).
+  // Longest a top-level concept's label may be once its Markdown is rendered to plain text;
+  // enforced everywhere labels enter the system (single-concept endpoints and YAML upload).
+  // Top-level concepts are drawn as circular nodes on the concept graph, so their labels need
+  // to stay short.
   public static final int MAX_RENDERED_LABEL_LENGTH = 32;
+
+  // Longest a subconcept's label may be once its Markdown is rendered to plain text. Subconcepts
+  // are listed as rows inside their parent's node (which wrap rather than needing to fit a
+  // circle), so they can afford to be longer than top-level concept labels.
+  public static final int MAX_RENDERED_SUBCONCEPT_LABEL_LENGTH = 60;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

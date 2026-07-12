@@ -294,7 +294,7 @@ public class ConceptYamlService {
       } else if (!externalIds.add(node.getId())) {
         errors.add(where + ": duplicate id " + node.getId());
       }
-      validateLabel(where, node.getLabel(), errors);
+      validateLabel(where, node.getLabel(), errors, Concept.MAX_RENDERED_LABEL_LENGTH);
       validateUrls(where, node.getPracticeProblems(), errors);
 
       Set<String> subconceptLabels = new HashSet<>();
@@ -307,7 +307,9 @@ public class ConceptYamlService {
           errors.add(subWhere + " is empty");
           continue;
         }
-        String cleanLabel = validateLabel(subWhere, subNode.getLabel(), errors);
+        String cleanLabel =
+            validateLabel(
+                subWhere, subNode.getLabel(), errors, Concept.MAX_RENDERED_SUBCONCEPT_LABEL_LENGTH);
         if (cleanLabel != null && !subconceptLabels.add(cleanLabel)) {
           errors.add(subWhere + ": duplicate subconcept label " + cleanLabel);
         }
@@ -372,18 +374,19 @@ public class ConceptYamlService {
    * Validates a concept or subconcept label the same way the single-concept endpoints do, and
    * returns the cleaned label (used for duplicate detection), or null if it was invalid.
    */
-  private String validateLabel(String where, String label, List<String> errors) {
+  private String validateLabel(
+      String where, String label, List<String> errors, int maxRenderedLength) {
     String cleanLabel = markdownService.clean(label);
     if (cleanLabel == null || cleanLabel.isEmpty()) {
       errors.add(where + ": label may not be empty");
       return null;
     }
     int renderedLength = markdownService.renderedLength(cleanLabel);
-    if (renderedLength > Concept.MAX_RENDERED_LABEL_LENGTH) {
+    if (renderedLength > maxRenderedLength) {
       errors.add(
           where
               + ": label renders to %d characters; the maximum is %d"
-                  .formatted(renderedLength, Concept.MAX_RENDERED_LABEL_LENGTH));
+                  .formatted(renderedLength, maxRenderedLength));
       return null;
     }
     return cleanLabel;
