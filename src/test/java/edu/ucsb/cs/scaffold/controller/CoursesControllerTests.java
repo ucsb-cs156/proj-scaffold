@@ -32,6 +32,7 @@ import edu.ucsb.cs.scaffold.entity.RosterStudent;
 import edu.ucsb.cs.scaffold.entity.User;
 import edu.ucsb.cs.scaffold.enums.PatPlatform;
 import edu.ucsb.cs.scaffold.enums.School;
+import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJobFactory;
 import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
@@ -47,6 +48,7 @@ import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.PrairieLearnService;
 import edu.ucsb.cs.scaffold.services.PrairieLearnService.CourseInstanceInfo;
+import edu.ucsb.cs.scaffold.services.jobs.JobService;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -99,6 +101,10 @@ public class CoursesControllerTests extends ControllerTestCase {
   @MockitoBean private PlInstanceRepository plInstanceRepository;
 
   @MockitoBean private PrairieLearnService prairieLearnService;
+
+  @MockitoBean private SyncCourseWithPlRepoJobFactory syncCourseWithPlRepoJobFactory;
+
+  @MockitoBean private JobService jobService;
 
   /** Test that ROLE_ADMIN can create a course */
   @Test
@@ -2437,6 +2443,7 @@ public class CoursesControllerTests extends ControllerTestCase {
     MvcResult response = performUpdatePLInstance(403);
     assertEquals("must set up Github PAT first", responseToJson(response).get("message"));
     verify(courseRepository, never()).save(any());
+    verify(jobService, never()).runAsJob(any());
   }
 
   @Test
@@ -2606,6 +2613,10 @@ public class CoursesControllerTests extends ControllerTestCase {
     verify(courseRepository, times(1)).save(courseCaptor.capture());
     assertEquals(Long.valueOf(77L), courseCaptor.getValue().getPlInstanceId());
     assertEquals(77, responseToJson(response).get("plInstanceId"));
+
+    // a successful association immediately launches the sync job for the course
+    verify(syncCourseWithPlRepoJobFactory, times(1)).create(eq(1L), eq(courseCaptor.getValue()));
+    verify(jobService, times(1)).runAsJob(any());
   }
 
   @Test

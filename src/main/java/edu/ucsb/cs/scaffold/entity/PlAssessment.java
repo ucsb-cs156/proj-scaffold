@@ -47,9 +47,9 @@ public class PlAssessment {
   @Column(name = "pl_assessment_id")
   private Long plAssessmentId;
 
-  // "assessment_number"
+  // "assessment_number" — alphanumeric, e.g. "2" or "1a"
   @Column(name = "pl_assessment_number")
-  private Long plAssessmentNumber;
+  private String plAssessmentNumber;
 
   // "assessment_order_by"
   @Column(name = "pl_assessment_order")

@@ -1,0 +1,41 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "038-pl-assessment-number-to-varchar",
+        "author": "claude",
+        "comment": "assessment_number can be alphanumeric (e.g. 1a), so BIGINT was wrong. Postgres cannot ALTER a bigint column to varchar without a USING cast, so the column is dropped and re-added; losing the values is acceptable because SyncCourseWithPlRepoJob restores them from the PrairieLearn API.",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          {
+            "columnExists": {
+              "tableName": "pl_assessment",
+              "columnName": "pl_assessment_number"
+            }
+          }
+        ],
+        "changes": [
+          {
+            "dropColumn": {
+              "tableName": "pl_assessment",
+              "columnName": "pl_assessment_number"
+            }
+          },
+          {
+            "addColumn": {
+              "tableName": "pl_assessment",
+              "columns": [
+                {
+                  "column": {
+                    "name": "pl_assessment_number",
+                    "type": "VARCHAR(255)"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

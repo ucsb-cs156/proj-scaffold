@@ -167,6 +167,9 @@ export default function InstructorCourseShowPage({
             >
               <PLTabComponent courseId={courseId} testIdPrefix={testId} />
             </Tab>
+            <Tab eventKey={"jobs"} title={"Jobs"} className="pt-2">
+              <JobTabComponent courseId={courseId} testIdPrefix={testId} />
+            </Tab>
           </Tabs>
         </div>
       )}

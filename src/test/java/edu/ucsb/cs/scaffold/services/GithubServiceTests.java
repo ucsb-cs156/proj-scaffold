@@ -26,7 +26,8 @@ public class GithubServiceTests {
 
   RestTemplate restTemplate = mock(RestTemplate.class);
 
-  GithubService githubService = new GithubService(restTemplate, "https://api.github.example");
+  GithubService githubService =
+      new GithubService(restTemplate, "https://api.github.example", 8, 3, 0);
 
   @SuppressWarnings("unchecked")
   private void mockResponse(List<Map<String, Object>> body) {
