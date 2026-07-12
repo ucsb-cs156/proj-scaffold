@@ -12,7 +12,7 @@ interface QuestionSearchProps {
   disabled: boolean;
 }
 
-export default function QuestionSearch({
+export default function LegacyQuestionSearch({
   questions,
   selectedQuestionId,
   onSelect,

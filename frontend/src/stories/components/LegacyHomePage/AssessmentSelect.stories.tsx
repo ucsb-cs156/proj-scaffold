@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import AssessmentSelect from "main/components/LegacyHomePage/AssessmentSelect";
+import LegacyAssessmentSelect from "main/components/LegacyHomePage/LegacyAssessmentSelect";
 import type { Assessment } from "main/api/client";
 
 const sampleAssessments: Assessment[] = [
@@ -8,9 +8,9 @@ const sampleAssessments: Assessment[] = [
   { id: "3", pl_assessment_id: "pl3", name: "Scaffold Final" },
 ];
 
-const meta: Meta<typeof AssessmentSelect> = {
+const meta: Meta<typeof LegacyAssessmentSelect> = {
   title: "components/LegacyHomePage/AssessmentSelect",
-  component: AssessmentSelect,
+  component: LegacyAssessmentSelect,
   tags: ["autodocs"],
   args: {
     assessments: sampleAssessments,
@@ -20,7 +20,7 @@ const meta: Meta<typeof AssessmentSelect> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof AssessmentSelect>;
+type Story = StoryObj<typeof LegacyAssessmentSelect>;
 
 export const Default: Story = {};
 

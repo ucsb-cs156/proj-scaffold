@@ -11,7 +11,7 @@ interface AssessmentSelectProps {
   onSelect: (id: string) => void;
 }
 
-export default function AssessmentSelect({
+export default function LegacyAssessmentSelect({
   assessments,
   selectedAssessmentId,
   onSelect,

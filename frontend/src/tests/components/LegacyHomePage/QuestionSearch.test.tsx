@@ -1,6 +1,6 @@
 import { describe, test, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import QuestionSearch from "main/components/LegacyHomePage/QuestionSearch";
+import LegacyQuestionSearch from "main/components/LegacyHomePage/LegacyQuestionSearch";
 import type { Question } from "main/api/client";
 
 const questions: Question[] = [
@@ -16,7 +16,7 @@ const questions: Question[] = [
 describe("QuestionSearch", () => {
   test("shows the disabled placeholder and disables the input when disabled", () => {
     render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId=""
         onSelect={vi.fn()}
@@ -31,7 +31,7 @@ describe("QuestionSearch", () => {
 
   test("shows the search placeholder when enabled", () => {
     render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId=""
         onSelect={vi.fn()}
@@ -43,7 +43,7 @@ describe("QuestionSearch", () => {
 
   test("typing filters the dropdown to matching questions", () => {
     render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId=""
         onSelect={vi.fn()}
@@ -59,7 +59,7 @@ describe("QuestionSearch", () => {
 
   test("shows a no-matches message when nothing matches", () => {
     render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId=""
         onSelect={vi.fn()}
@@ -75,7 +75,7 @@ describe("QuestionSearch", () => {
   test("clicking a filtered option selects it and fills the input", () => {
     const onSelect = vi.fn();
     render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId=""
         onSelect={onSelect}
@@ -95,7 +95,7 @@ describe("QuestionSearch", () => {
   test("pressing Enter selects the first filtered question", () => {
     const onSelect = vi.fn();
     render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId=""
         onSelect={onSelect}
@@ -112,7 +112,7 @@ describe("QuestionSearch", () => {
   test("clearing the input via the clear button calls onSelect with an empty string", () => {
     const onSelect = vi.fn();
     render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId="2"
         onSelect={onSelect}
@@ -133,7 +133,7 @@ describe("QuestionSearch", () => {
   test("clearing the text field directly also calls onSelect with an empty string", () => {
     const onSelect = vi.fn();
     render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId="1"
         onSelect={onSelect}
@@ -150,7 +150,7 @@ describe("QuestionSearch", () => {
   test("resets the input when the selected question is cleared externally", () => {
     const onSelect = vi.fn();
     const { rerender } = render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId="1"
         onSelect={onSelect}
@@ -164,7 +164,7 @@ describe("QuestionSearch", () => {
     expect(input.value).toBe("Loops 101");
 
     rerender(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId=""
         onSelect={onSelect}
@@ -177,7 +177,7 @@ describe("QuestionSearch", () => {
 
   test("pressing Escape closes the dropdown", () => {
     render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId=""
         onSelect={vi.fn()}
@@ -195,7 +195,7 @@ describe("QuestionSearch", () => {
 
   test("focusing the input opens the dropdown", () => {
     render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId=""
         onSelect={vi.fn()}
@@ -213,7 +213,7 @@ describe("QuestionSearch", () => {
 
   test("focusing the input while disabled does not open the dropdown", () => {
     render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId=""
         onSelect={vi.fn()}
@@ -233,7 +233,7 @@ describe("QuestionSearch", () => {
     render(
       <div>
         <div data-testid="outside">outside</div>
-        <QuestionSearch
+        <LegacyQuestionSearch
           questions={questions}
           selectedQuestionId=""
           onSelect={vi.fn()}
@@ -252,7 +252,7 @@ describe("QuestionSearch", () => {
 
   test("applies the is-selected class only to the currently selected option", () => {
     render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId="1"
         onSelect={vi.fn()}
@@ -269,7 +269,7 @@ describe("QuestionSearch", () => {
   test("resets the input when the questions list is cleared", () => {
     const onSelect = vi.fn();
     const { rerender } = render(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={questions}
         selectedQuestionId="1"
         onSelect={onSelect}
@@ -294,7 +294,7 @@ describe("QuestionSearch", () => {
     // performs: clear questions first (triggering the reset), then populate
     // with the new list.
     rerender(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={[]}
         selectedQuestionId="1"
         onSelect={onSelect}
@@ -302,7 +302,7 @@ describe("QuestionSearch", () => {
       />,
     );
     rerender(
-      <QuestionSearch
+      <LegacyQuestionSearch
         questions={newQuestions}
         selectedQuestionId="1"
         onSelect={onSelect}

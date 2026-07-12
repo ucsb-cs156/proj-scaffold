@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import QuestionSearch from "main/components/LegacyHomePage/QuestionSearch";
+import LegacyQuestionSearch from "main/components/LegacyHomePage/LegacyQuestionSearch";
 import type { Question } from "main/api/client";
 
 const sampleQuestions: Question[] = [
@@ -23,9 +23,9 @@ const sampleQuestions: Question[] = [
   },
 ];
 
-const meta: Meta<typeof QuestionSearch> = {
+const meta: Meta<typeof LegacyQuestionSearch> = {
   title: "components/LegacyHomePage/QuestionSearch",
-  component: QuestionSearch,
+  component: LegacyQuestionSearch,
   tags: ["autodocs"],
   args: {
     questions: sampleQuestions,
@@ -36,7 +36,7 @@ const meta: Meta<typeof QuestionSearch> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof QuestionSearch>;
+type Story = StoryObj<typeof LegacyQuestionSearch>;
 
 export const Default: Story = {};
 

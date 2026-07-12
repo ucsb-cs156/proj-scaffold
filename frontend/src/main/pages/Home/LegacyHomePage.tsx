@@ -13,8 +13,8 @@ import {
 } from "main/api/client";
 import type { Assessment, Question } from "main/api/client";
 import { majorConcepts } from "main/data/conceptGraph";
-import QuestionSearch from "main/components/LegacyHomePage/QuestionSearch";
-import AssessmentSelect from "main/components/LegacyHomePage/AssessmentSelect";
+import LegacyQuestionSearch from "main/components/LegacyHomePage/LegacyQuestionSearch";
+import LegacyAssessmentSelect from "main/components/LegacyHomePage/LegacyAssessmentSelect";
 import { conceptContent, type ConceptContent } from "main/data/conceptContent";
 import { useCurrentUser } from "main/utils/currentUser";
 import { StaffToolsProvider } from "main/utils/staffTools";
@@ -352,7 +352,7 @@ function LegacyHomePageContent() {
           >
             Scaffold
           </div>
-          <AssessmentSelect
+          <LegacyAssessmentSelect
             assessments={assessments}
             selectedAssessmentId={selectedAssessmentId}
             onSelect={(id) => {
@@ -361,7 +361,7 @@ function LegacyHomePageContent() {
             }}
           />
           <div style={{ flex: 1, maxWidth: 300 }}>
-            <QuestionSearch
+            <LegacyQuestionSearch
               questions={questions}
               selectedQuestionId={selectedQuestionId}
               onSelect={setSelectedQuestionId}
