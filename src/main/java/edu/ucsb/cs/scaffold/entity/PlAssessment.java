@@ -37,4 +37,41 @@ public class PlAssessment {
   // Nullable: assessments synced from infoAssessment.json have no URL (column kept for future use)
   @Column(name = "url")
   private String url;
+
+  // The fields below come from the PrairieLearn API's assessments response and
+  // are all nullable: rows are created by the GitHub sync job, which cannot
+  // know them; a future job will fill them in from the PL API (issue #71).
+
+  // PrairieLearn's numeric assessment id ("assessment_id"), from which the
+  // student-facing URL is built.
+  @Column(name = "pl_assessment_id")
+  private Long plAssessmentId;
+
+  // "assessment_number"
+  @Column(name = "pl_assessment_number")
+  private Long plAssessmentNumber;
+
+  // "assessment_order_by"
+  @Column(name = "pl_assessment_order")
+  private Long plAssessmentOrder;
+
+  // "title"
+  @Column(name = "pl_assessment_title")
+  private String plAssessmentTitle;
+
+  // "assessment_set_abbreviation"
+  @Column(name = "pl_assessment_set_abbreviation")
+  private String plAssessmentSetAbbreviation;
+
+  // "assessment_set_number"
+  @Column(name = "pl_assessment_set_number")
+  private Integer plAssessmentSetNumber;
+
+  // "assessment_set_heading"
+  @Column(name = "pl_assessment_set_heading")
+  private String plAssessmentSetHeading;
+
+  // "assessment_set_color"
+  @Column(name = "pl_assessment_set_color")
+  private String plAssessmentSetColor;
 }
