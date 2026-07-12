@@ -4,9 +4,17 @@ import { vi } from "vitest";
 import ConceptModal from "main/components/Concept/ConceptModal";
 import conceptsFixtures from "fixtures/conceptsFixtures";
 
+vi.mock("react-simplemde-editor", () => ({
+  default: ({ value = "", onChange }) => (
+    <textarea value={value} onChange={(e) => onChange(e.target.value)} />
+  ),
+}));
+
 const mockSubmit = vi.fn();
 const showModal = vi.fn();
 const toggleShowModal = vi.fn();
+const editorTextarea = (testId) =>
+  screen.getByTestId(testId).querySelector("textarea");
 
 describe("ConceptModal tests", () => {
   beforeEach(() => {
@@ -54,10 +62,10 @@ describe("ConceptModal tests", () => {
 
     expect(screen.getByText("Update Concept")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Variables")).toBeInTheDocument();
-    expect(
-      screen.getByDisplayValue("Named storage locations for values."),
-    ).toBeInTheDocument();
-    expect(screen.getByDisplayValue("int x = 3;")).toBeInTheDocument();
+    expect(editorTextarea("ConceptModal-description").value).toBe(
+      "Named storage locations for values.",
+    );
+    expect(editorTextarea("ConceptModal-example").value).toBe("int x = 3;");
     expect(screen.getByText("Update")).toBeInTheDocument();
   });
 
@@ -78,10 +86,10 @@ describe("ConceptModal tests", () => {
     fireEvent.change(screen.getByLabelText("Label"), {
       target: { value: "Recursion" },
     });
-    fireEvent.change(screen.getByLabelText("Description"), {
+    fireEvent.change(editorTextarea("ConceptModal-description"), {
       target: { value: "Functions that call themselves." },
     });
-    fireEvent.change(screen.getByLabelText("Example"), {
+    fireEvent.change(editorTextarea("ConceptModal-example"), {
       target: { value: "factorial(n - 1)" },
     });
     fireEvent.click(screen.getByText("Create"));
@@ -134,10 +142,10 @@ describe("ConceptModal tests", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("ConceptModal-label").value).toBe("Loops");
-      expect(screen.getByTestId("ConceptModal-description").value).toBe(
+      expect(editorTextarea("ConceptModal-description").value).toBe(
         "Repeated execution of a block of code.",
       );
-      expect(screen.getByTestId("ConceptModal-example").value).toBe(
+      expect(editorTextarea("ConceptModal-example").value).toBe(
         "for (let i = 0; i < 10; i++) {}",
       );
     });

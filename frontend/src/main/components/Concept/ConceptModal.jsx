@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import Modal from "react-bootstrap/Modal";
 import { Form } from "react-bootstrap";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import SimpleMdeReact from "react-simplemde-editor";
+import "easymde/dist/easymde.min.css";
 
 export default function ConceptModal({
   onSubmitAction,
@@ -12,6 +14,7 @@ export default function ConceptModal({
   modalTitle = "Create Concept",
 }) {
   const {
+    control,
     register,
     formState: { errors },
     handleSubmit,
@@ -23,6 +26,8 @@ export default function ConceptModal({
   useEffect(() => {
     reset(initialContents ?? {});
   }, [initialContents, reset]);
+
+  const editorOptions = useMemo(() => ({ spellChecker: false }), []);
 
   const closeModal = () => {
     toggleShowModal(false);
@@ -65,27 +70,35 @@ export default function ConceptModal({
           </Form.Group>
           <Form.Group className="mt-3">
             <Form.Label htmlFor="description">Description</Form.Label>
-            <Form.Control
-              as="textarea"
-              data-testid={"ConceptModal-description"}
-              id="description"
-              rows={8}
-              cols={40}
-              style={{ width: "40ch" }}
-              {...register("description")}
-            />
+            <div data-testid={"ConceptModal-description"}>
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
+                  <SimpleMdeReact
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    options={editorOptions}
+                  />
+                )}
+              />
+            </div>
           </Form.Group>
           <Form.Group className="mt-3">
             <Form.Label htmlFor="example">Example</Form.Label>
-            <Form.Control
-              as="textarea"
-              data-testid={"ConceptModal-example"}
-              id="example"
-              rows={8}
-              cols={40}
-              style={{ width: "40ch" }}
-              {...register("example")}
-            />
+            <div data-testid={"ConceptModal-example"}>
+              <Controller
+                name="example"
+                control={control}
+                render={({ field }) => (
+                  <SimpleMdeReact
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    options={editorOptions}
+                  />
+                )}
+              />
+            </div>
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>

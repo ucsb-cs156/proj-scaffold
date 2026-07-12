@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import Modal from "react-bootstrap/Modal";
 import { Form } from "react-bootstrap";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import SimpleMdeReact from "react-simplemde-editor";
+import "easymde/dist/easymde.min.css";
 
 const normalizeInitialContents = (initialContents) => ({
   ...initialContents,
@@ -19,6 +21,7 @@ export default function SubConceptModal({
   modalTitle = "Create SubConcept",
 }) {
   const {
+    control,
     register,
     formState: { errors },
     handleSubmit,
@@ -30,6 +33,8 @@ export default function SubConceptModal({
   useEffect(() => {
     reset(normalizeInitialContents(initialContents));
   }, [initialContents, reset]);
+
+  const editorOptions = useMemo(() => ({ spellChecker: false }), []);
 
   const closeModal = () => {
     toggleShowModal(false);
@@ -93,27 +98,35 @@ export default function SubConceptModal({
           </Form.Group>
           <Form.Group className="mt-3">
             <Form.Label htmlFor="description">Description</Form.Label>
-            <Form.Control
-              as="textarea"
-              data-testid={"SubConceptModal-description"}
-              id="description"
-              rows={8}
-              cols={40}
-              style={{ width: "40ch" }}
-              {...register("description")}
-            />
+            <div data-testid={"SubConceptModal-description"}>
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
+                  <SimpleMdeReact
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    options={editorOptions}
+                  />
+                )}
+              />
+            </div>
           </Form.Group>
           <Form.Group className="mt-3">
             <Form.Label htmlFor="example">Example</Form.Label>
-            <Form.Control
-              as="textarea"
-              data-testid={"SubConceptModal-example"}
-              id="example"
-              rows={8}
-              cols={40}
-              style={{ width: "40ch" }}
-              {...register("example")}
-            />
+            <div data-testid={"SubConceptModal-example"}>
+              <Controller
+                name="example"
+                control={control}
+                render={({ field }) => (
+                  <SimpleMdeReact
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    options={editorOptions}
+                  />
+                )}
+              />
+            </div>
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>

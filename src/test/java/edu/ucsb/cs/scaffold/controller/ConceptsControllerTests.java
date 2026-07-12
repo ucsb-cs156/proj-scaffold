@@ -31,6 +31,7 @@ import edu.ucsb.cs.scaffold.repository.PracticeProblemRepository;
 import edu.ucsb.cs.scaffold.repository.UserStateV2Repository;
 import edu.ucsb.cs.scaffold.services.ConceptGraphService;
 import edu.ucsb.cs.scaffold.services.MarkdownService;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -210,22 +211,49 @@ public class ConceptsControllerTests extends ControllerTestCase {
   public void logged_in_user_can_get_course_concepts_sorted_by_level_then_x() throws Exception {
     Course course = Course.builder().id(42L).courseName("CMPSC 8").build();
     Concept levelTwo =
-        Concept.builder().id(1L).course(course).label("Recursion").level(2).x(800).y(300).build();
+        Concept.builder()
+            .id(1L)
+            .course(course)
+            .label("Recursion")
+            .description("Calls itself")
+            .example("factorial")
+            .level(2)
+            .x(800)
+            .y(300)
+            .build();
     Concept subconcept =
         Concept.builder().id(2L).course(course).label("Base case").parent(levelTwo).build();
     Concept earlyLevelOne =
-        Concept.builder().id(3L).course(course).label("Variables").level(1).x(125).y(250).build();
+        Concept.builder()
+            .id(3L)
+            .course(course)
+            .label("Variables")
+            .description("Stores values")
+            .example("int x = 3;")
+            .level(1)
+            .x(125)
+            .y(250)
+            .build();
     Concept laterLevelOne =
-        Concept.builder().id(4L).course(course).label("Loops").level(1).x(490).y(300).build();
+        Concept.builder()
+            .id(4L)
+            .course(course)
+            .label("Loops")
+            .description("Repeats work")
+            .example("for (...)")
+            .level(1)
+            .x(490)
+            .y(300)
+            .build();
     when(conceptRepository.findByCourseId(42L))
         .thenReturn(List.of(levelTwo, subconcept, laterLevelOne, earlyLevelOne));
 
     String expectedJson =
         """
         [
-          { "id": 3, "label": "Variables", "level": 1, "x": 125, "y": 250 },
-          { "id": 4, "label": "Loops", "level": 1, "x": 490, "y": 300 },
-          { "id": 1, "label": "Recursion", "level": 2, "x": 800, "y": 300 }
+          { "id": 3, "label": "Variables", "description": "Stores values", "example": "int x = 3;", "level": 1, "x": 125, "y": 250 },
+          { "id": 4, "label": "Loops", "description": "Repeats work", "example": "for (...)", "level": 1, "x": 490, "y": 300 },
+          { "id": 1, "label": "Recursion", "description": "Calls itself", "example": "factorial", "level": 2, "x": 800, "y": 300 }
         ]
         """;
 
@@ -880,6 +908,325 @@ public class ConceptsControllerTests extends ControllerTestCase {
     verify(conceptRepository).save(captor.capture());
     assertNull(captor.getValue().getX());
     assertNull(captor.getValue().getY());
+  }
+
+  // ---------- PUT /api/concept/put ----------
+
+  @Test
+  public void anonymous_user_cannot_put_concept() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/concept/put")
+                .with(csrf())
+                .contentType("application/json")
+                .param("conceptId", "1")
+                .content("{}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void user_without_course_permissions_cannot_put_concept() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/concept/put")
+                .with(csrf())
+                .contentType("application/json")
+                .param("conceptId", "1")
+                .content("{}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void instructor_can_update_a_top_level_concept() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept concept =
+        Concept.builder()
+            .id(1L)
+            .course(course)
+            .label("Old label")
+            .description("Old description")
+            .example("Old example")
+            .build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
+    when(conceptRepository.save(any(Concept.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    mockMvc
+        .perform(
+            put("/api/concept/put")
+                .with(csrf())
+                .contentType("application/json")
+                .param("conceptId", "1")
+                .content(
+                    """
+                    {"label":"Recursion","description":"Functions that call themselves.","example":"factorial(n - 1)"}
+                    """))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.label").value("Recursion"))
+        .andExpect(jsonPath("$.description").value("Functions that call themselves."))
+        .andExpect(jsonPath("$.example").value("factorial(n - 1)"));
+
+    ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
+    verify(conceptRepository).save(captor.capture());
+    Concept saved = captor.getValue();
+    assertEquals("Recursion", saved.getLabel());
+    assertEquals("Functions that call themselves.", saved.getDescription());
+    assertEquals("factorial(n - 1)", saved.getExample());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_concept_returns_404_when_concept_does_not_exist() throws Exception {
+    when(conceptRepository.findById(1L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/concept/put")
+                    .with(csrf())
+                    .contentType("application/json")
+                    .param("conceptId", "1")
+                    .content("{\"label\":\"Recursion\"}"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Concept with id 1 not found", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_concept_rejects_a_subconcept() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(2L).course(course).build();
+    Concept subconcept = Concept.builder().id(1L).course(course).parent(parent).build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(subconcept));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/concept/put")
+                    .with(csrf())
+                    .contentType("application/json")
+                    .param("conceptId", "1")
+                    .content("{\"label\":\"Base case\"}"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(
+        "concept 1 is a subconcept; use PUT /api/concept/subconcept/put to update it",
+        json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_concept_rejects_an_empty_label() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept concept = Concept.builder().id(1L).course(course).build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/concept/put")
+                    .with(csrf())
+                    .contentType("application/json")
+                    .param("conceptId", "1")
+                    .content("{\"label\":\"   \"}"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("label may not be empty", json.get("message"));
+    verify(conceptRepository, never()).save(any(Concept.class));
+  }
+
+  // ---------- PUT /api/concept/subconcept/put ----------
+
+  @Test
+  public void anonymous_user_cannot_put_subconcept() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/concept/subconcept/put")
+                .with(csrf())
+                .contentType("application/json")
+                .param("conceptId", "1")
+                .content("{}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void user_without_course_permissions_cannot_put_subconcept() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/concept/subconcept/put")
+                .with(csrf())
+                .contentType("application/json")
+                .param("conceptId", "1")
+                .content("{}"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void instructor_can_update_a_subconcept() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(2L).course(course).build();
+    Concept concept =
+        Concept.builder()
+            .id(1L)
+            .course(course)
+            .parent(parent)
+            .label("Old label")
+            .description("Old description")
+            .example("Old example")
+            .build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
+    when(conceptRepository.findByParentIdAndLabel(2L, "Base case")).thenReturn(Optional.empty());
+    when(conceptRepository.save(any(Concept.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    mockMvc
+        .perform(
+            put("/api/concept/subconcept/put")
+                .with(csrf())
+                .contentType("application/json")
+                .param("conceptId", "1")
+                .content(
+                    """
+                    {"label":"Base case","description":"The condition that stops recursion.","example":"n == 0"}
+                    """))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.label").value("Base case"))
+        .andExpect(jsonPath("$.description").value("The condition that stops recursion."))
+        .andExpect(jsonPath("$.example").value("n == 0"));
+
+    ArgumentCaptor<Concept> captor = ArgumentCaptor.forClass(Concept.class);
+    verify(conceptRepository).save(captor.capture());
+    Concept saved = captor.getValue();
+    assertEquals("Base case", saved.getLabel());
+    assertEquals("The condition that stops recursion.", saved.getDescription());
+    assertEquals("n == 0", saved.getExample());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_subconcept_returns_404_when_concept_does_not_exist() throws Exception {
+    when(conceptRepository.findById(1L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/concept/subconcept/put")
+                    .with(csrf())
+                    .contentType("application/json")
+                    .param("conceptId", "1")
+                    .content("{\"label\":\"Base case\"}"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Concept with id 1 not found", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_subconcept_rejects_a_top_level_concept() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept concept = Concept.builder().id(1L).course(course).build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/concept/subconcept/put")
+                    .with(csrf())
+                    .contentType("application/json")
+                    .param("conceptId", "1")
+                    .content("{\"label\":\"Recursion\"}"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals(
+        "concept 1 is not a subconcept; use PUT /api/concept/put to update it",
+        json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_subconcept_rejects_an_empty_label() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(2L).course(course).build();
+    Concept concept = Concept.builder().id(1L).course(course).parent(parent).build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/concept/subconcept/put")
+                    .with(csrf())
+                    .contentType("application/json")
+                    .param("conceptId", "1")
+                    .content("{\"label\":\"   \"}"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("label may not be empty", json.get("message"));
+    verify(conceptRepository, never()).save(any(Concept.class));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_subconcept_rejects_a_duplicate_label_under_the_same_parent() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(2L).course(course).build();
+    Concept concept = Concept.builder().id(1L).course(course).parent(parent).build();
+    Concept sibling = Concept.builder().id(3L).course(course).parent(parent).build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
+    when(conceptRepository.findByParentIdAndLabel(2L, "Base case"))
+        .thenReturn(Optional.of(sibling));
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/concept/subconcept/put")
+                    .with(csrf())
+                    .contentType("application/json")
+                    .param("conceptId", "1")
+                    .content("{\"label\":\"Base case\"}"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("concept 2 already has a subconcept with label Base case", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void put_subconcept_allows_reusing_its_own_existing_label() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    Concept parent = Concept.builder().id(2L).course(course).build();
+    Concept concept =
+        Concept.builder().id(1L).course(course).parent(parent).label("Base case").build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
+    when(conceptRepository.findByParentIdAndLabel(2L, "Base case"))
+        .thenReturn(Optional.of(concept));
+    when(conceptRepository.save(any(Concept.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    mockMvc
+        .perform(
+            put("/api/concept/subconcept/put")
+                .with(csrf())
+                .contentType("application/json")
+                .param("conceptId", "1")
+                .content(
+                    """
+                    {"label":"Base case","description":"Updated description","example":"return 1;"}
+                    """))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.label").value("Base case"))
+        .andExpect(jsonPath("$.description").value("Updated description"))
+        .andExpect(jsonPath("$.example").value("return 1;"));
   }
 
   // ---------- POST /api/concepts/practiceproblems/post ----------
@@ -1623,6 +1970,126 @@ public class ConceptsControllerTests extends ControllerTestCase {
     Map<String, Object> json = responseToJson(response);
     assertEquals("edge from concept 1 to concept 2 already exists", json.get("message"));
     verify(conceptEdgeRepository, never()).save(any(ConceptEdge.class));
+  }
+
+  // ---------- DELETE /api/concept/delete ----------
+
+  @Test
+  public void anonymous_user_cannot_delete_concept() throws Exception {
+    mockMvc
+        .perform(delete("/api/concept/delete").with(csrf()).param("conceptId", "1"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void user_without_course_permissions_cannot_delete_concept() throws Exception {
+    mockMvc
+        .perform(delete("/api/concept/delete").with(csrf()).param("conceptId", "1"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void instructor_can_delete_a_top_level_concept_and_its_subconcepts() throws Exception {
+    List<Concept> concepts = buildSampleConcepts();
+    List<PracticeProblem> practiceProblems = buildSamplePracticeProblems(concepts);
+    Course course = concepts.get(0).getCourse();
+    Concept concept = concepts.get(0);
+    Concept baseCase = concepts.get(1);
+    Concept stateChange = concepts.get(2);
+    Concept loops = concepts.get(3);
+    ConceptEdge edge1 =
+        ConceptEdge.builder().id(20L).course(course).source(loops).target(concept).build();
+    ConceptEdge edge2 =
+        ConceptEdge.builder().id(21L).course(course).source(baseCase).target(loops).build();
+    ConceptEdge edge3 =
+        ConceptEdge.builder().id(22L).course(course).source(loops).target(stateChange).build();
+    List<PracticeProblem> recursionProblems = practiceProblems.subList(0, 2);
+    List<PracticeProblem> baseCaseProblems = practiceProblems.subList(2, 3);
+    List<PracticeProblem> stateChangeProblems = List.of();
+
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
+    when(conceptRepository.findByParentId(1L)).thenReturn(List.of(baseCase, stateChange));
+    when(practiceProblemRepository.findByCourseIdAndConceptId(42L, 1L))
+        .thenReturn(recursionProblems);
+    when(practiceProblemRepository.findByCourseIdAndConceptId(42L, 2L))
+        .thenReturn(baseCaseProblems);
+    when(practiceProblemRepository.findByCourseIdAndConceptId(42L, 3L))
+        .thenReturn(stateChangeProblems);
+    when(conceptEdgeRepository.findBySourceIdOrTargetId(1L, 1L)).thenReturn(List.of(edge1));
+    when(conceptEdgeRepository.findBySourceIdOrTargetId(2L, 2L)).thenReturn(List.of(edge2));
+    when(conceptEdgeRepository.findBySourceIdOrTargetId(3L, 3L)).thenReturn(List.of(edge3, edge1));
+
+    mockMvc
+        .perform(delete("/api/concept/delete").with(csrf()).param("conceptId", "1"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.message").value("Concept with id 1 deleted"));
+
+    verify(practiceProblemRepository).deleteAll(recursionProblems);
+    verify(practiceProblemRepository).deleteAll(baseCaseProblems);
+    verify(practiceProblemRepository).deleteAll(stateChangeProblems);
+
+    ArgumentCaptor<Iterable<ConceptEdge>> deletedEdgesCaptor =
+        ArgumentCaptor.forClass(Iterable.class);
+    verify(conceptEdgeRepository).deleteAll(deletedEdgesCaptor.capture());
+    List<Long> deletedEdgeIds = new ArrayList<>();
+    for (ConceptEdge edge : deletedEdgesCaptor.getValue()) {
+      deletedEdgeIds.add(edge.getId());
+    }
+    assertEquals(List.of(20L, 21L, 22L), deletedEdgeIds);
+
+    verify(conceptRepository).deleteAll(List.of(baseCase, stateChange));
+    verify(conceptRepository).delete(concept);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void instructor_can_delete_a_subconcept_directly() throws Exception {
+    List<Concept> concepts = buildSampleConcepts();
+    Concept subconcept = concepts.get(1);
+    List<PracticeProblem> problems = buildSamplePracticeProblems(concepts).subList(2, 3);
+    ConceptEdge edge =
+        ConceptEdge.builder()
+            .id(20L)
+            .course(subconcept.getCourse())
+            .source(subconcept)
+            .target(concepts.get(3))
+            .build();
+
+    when(conceptRepository.findById(2L)).thenReturn(Optional.of(subconcept));
+    when(practiceProblemRepository.findByCourseIdAndConceptId(42L, 2L)).thenReturn(problems);
+    when(conceptEdgeRepository.findBySourceIdOrTargetId(2L, 2L)).thenReturn(List.of(edge));
+
+    mockMvc
+        .perform(delete("/api/concept/delete").with(csrf()).param("conceptId", "2"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.message").value("Concept with id 2 deleted"));
+
+    verify(practiceProblemRepository).deleteAll(problems);
+    ArgumentCaptor<Iterable<ConceptEdge>> deletedEdgesCaptor =
+        ArgumentCaptor.forClass(Iterable.class);
+    verify(conceptEdgeRepository).deleteAll(deletedEdgesCaptor.capture());
+    List<Long> deletedEdgeIds = new ArrayList<>();
+    for (ConceptEdge deletedEdge : deletedEdgesCaptor.getValue()) {
+      deletedEdgeIds.add(deletedEdge.getId());
+    }
+    assertEquals(List.of(20L), deletedEdgeIds);
+    verify(conceptRepository).delete(subconcept);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void delete_concept_returns_404_when_concept_does_not_exist() throws Exception {
+    when(conceptRepository.findById(1L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/concept/delete").with(csrf()).param("conceptId", "1"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Concept with id 1 not found", json.get("message"));
   }
 
   // ---------- DELETE /api/concepts/edges/delete ----------
@@ -2391,6 +2858,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
           {
             "id": 2,
             "label": "Base case",
+            "description": "d2",
+            "example": "e2",
             "parentId": 1,
             "parentLabel": "Recursion",
             "parentLevel": null,
@@ -2400,6 +2869,8 @@ public class ConceptsControllerTests extends ControllerTestCase {
           {
             "id": 3,
             "label": "State change",
+            "description": "d3",
+            "example": null,
             "parentId": 1,
             "parentLabel": "Recursion",
             "parentLevel": null,
