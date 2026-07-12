@@ -20,4 +20,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: []
+pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/implement-editing-of-concepts","number":78,"title":"[WIP] Add backend endpoints for editing Concepts and Subconcepts","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/78"}]
