@@ -1088,7 +1088,7 @@ public class SyncCourseWithPlRepoJobTests {
 
   private static final AssessmentInfo EXAM1_PL_INFO =
       new AssessmentInfo(
-          2690012L, "exam1", 2L, 6L, "Final (in Testing Center)", "E", 8, "Exams", "pink2");
+          2690012L, "exam1", "1a", 6L, "Final (in Testing Center)", "E", 8, "Exams", "pink2");
 
   @Test
   public void copies_the_prairielearn_fields_onto_the_matching_assessment() throws Exception {
@@ -1105,7 +1105,7 @@ public class SyncCourseWithPlRepoJobTests {
 
     verify(plAssessmentRepository).save(eq(existing));
     assertEquals(Long.valueOf(2690012L), existing.getPlAssessmentId());
-    assertEquals(Long.valueOf(2L), existing.getPlAssessmentNumber());
+    assertEquals("1a", existing.getPlAssessmentNumber());
     assertEquals(Long.valueOf(6L), existing.getPlAssessmentOrder());
     assertEquals("Final (in Testing Center)", existing.getPlAssessmentTitle());
     assertEquals("E", existing.getPlAssessmentSetAbbreviation());

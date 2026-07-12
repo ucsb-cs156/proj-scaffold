@@ -123,7 +123,7 @@ public class PrairieLearnServiceTests {
     item.put("assessment_id", "2690012");
     item.put("assessment_name", "exam-02");
     item.put("assessment_label", "E2");
-    item.put("assessment_number", "2");
+    item.put("assessment_number", "1a");
     item.put("assessment_order_by", 6);
     item.put("title", "Final (in Testing Center)");
     item.put("assessment_set_abbreviation", "E");
@@ -139,7 +139,7 @@ public class PrairieLearnServiceTests {
     PrairieLearnService.AssessmentInfo info = assessments.get(0);
     assertEquals(Long.valueOf(2690012L), info.assessmentId());
     assertEquals("exam-02", info.assessmentName());
-    assertEquals(Long.valueOf(2L), info.assessmentNumber());
+    assertEquals("1a", info.assessmentNumber());
     assertEquals(Long.valueOf(6L), info.assessmentOrderBy());
     assertEquals("Final (in Testing Center)", info.title());
     assertEquals("E", info.assessmentSetAbbreviation());

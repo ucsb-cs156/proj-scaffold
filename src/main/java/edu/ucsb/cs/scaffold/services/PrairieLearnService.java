@@ -76,7 +76,8 @@ public class PrairieLearnService {
   public record AssessmentInfo(
       Long assessmentId,
       String assessmentName,
-      Long assessmentNumber,
+      // alphanumeric, e.g. "2" or "1a"
+      String assessmentNumber,
       Long assessmentOrderBy,
       String title,
       String assessmentSetAbbreviation,
@@ -116,7 +117,7 @@ public class PrairieLearnService {
           new AssessmentInfo(
               asLong(item.get("assessment_id")),
               (String) item.get("assessment_name"),
-              asLong(item.get("assessment_number")),
+              asString(item.get("assessment_number")),
               asLong(item.get("assessment_order_by")),
               (String) item.get("title"),
               (String) item.get("assessment_set_abbreviation"),
@@ -135,5 +136,11 @@ public class PrairieLearnService {
 
   private static Integer asInteger(Object value) {
     return value == null ? null : Integer.valueOf(String.valueOf(value));
+  }
+
+  // assessment_number is alphanumeric ("1a") but other fields may arrive as JSON numbers,
+  // so normalize through String.valueOf rather than casting.
+  private static String asString(Object value) {
+    return value == null ? null : String.valueOf(value);
   }
 }
