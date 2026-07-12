@@ -16,8 +16,50 @@ Default.args = {
 };
 Default.parameters = {
   msw: [
+    http.get("/api/courses/1", () =>
+      HttpResponse.json({ id: 1, plRepoId: null, plInstanceId: null }),
+    ),
     http.put("/api/courses/updateGithubRepo", () =>
       HttpResponse.json({ id: 1, plRepoId: 9 }),
+    ),
+  ],
+};
+
+export const FullyConfigured = Template.bind({});
+FullyConfigured.args = {
+  courseId: 1,
+  testIdPrefix: "storybook",
+};
+FullyConfigured.parameters = {
+  msw: [
+    http.get("/api/courses/1", () =>
+      HttpResponse.json({
+        id: 1,
+        plRepoId: 9,
+        plRepoName: "ucsb-cs156/pl-demo",
+        plInstanceId: 55,
+        plInstanceShortName: "S26",
+        plInstanceNumericId: 213133,
+      }),
+    ),
+  ],
+};
+
+export const InstanceNotFound = Template.bind({});
+InstanceNotFound.args = {
+  courseId: 1,
+  testIdPrefix: "storybook",
+};
+InstanceNotFound.parameters = {
+  msw: [
+    http.put("/api/courses/updateGithubRepo", () =>
+      HttpResponse.json({ id: 1, plRepoId: 9 }),
+    ),
+    http.put("/api/courses/updatePLInstance", () =>
+      HttpResponse.json(
+        { type: "ForbiddenException", message: "course instance id not found" },
+        { status: 403 },
+      ),
     ),
   ],
 };
@@ -32,6 +74,15 @@ MissingPat.parameters = {
     http.put("/api/courses/updateGithubRepo", () =>
       HttpResponse.json(
         { type: "ForbiddenException", message: "must set up Github PAT first" },
+        { status: 403 },
+      ),
+    ),
+    http.put("/api/courses/updatePLInstance", () =>
+      HttpResponse.json(
+        {
+          type: "ForbiddenException",
+          message: "must set up PrairieLearn PAT first",
+        },
         { status: 403 },
       ),
     ),

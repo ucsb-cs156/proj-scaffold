@@ -128,12 +128,13 @@ public class SyncPlRepoJobTests {
     when(githubService.listSubdirectories(eq(REPO), eq("courseInstances"), eq(TOKEN)))
         .thenReturn(List.of("Fall2025", "Winter2026"));
     when(plInstanceRepository.findByPlRepoId(eq(3L)))
-        .thenReturn(List.of(PlInstance.builder().id(1L).plRepoId(3L).name("Fall2025").build()));
+        .thenReturn(
+            List.of(PlInstance.builder().id(1L).plRepoId(3L).shortName("Fall2025").build()));
 
     job().accept(ctx);
 
     verify(plInstanceRepository)
-        .save(eq(PlInstance.builder().plRepoId(3L).name("Winter2026").build()));
+        .save(eq(PlInstance.builder().plRepoId(3L).shortName("Winter2026").build()));
     verify(plInstanceRepository, never()).delete(any());
 
     String expected =
@@ -151,9 +152,9 @@ public class SyncPlRepoJobTests {
   public void deletes_stale_instances_cascading_to_their_assessments() throws Exception {
     when(githubService.listSubdirectories(eq(REPO), eq("courseInstances"), eq(TOKEN)))
         .thenReturn(List.of("Fall2025"));
-    PlInstance keep = PlInstance.builder().id(1L).plRepoId(3L).name("Fall2025").build();
-    PlInstance stale1 = PlInstance.builder().id(2L).plRepoId(3L).name("Spring2024").build();
-    PlInstance stale2 = PlInstance.builder().id(5L).plRepoId(3L).name("Winter2024").build();
+    PlInstance keep = PlInstance.builder().id(1L).plRepoId(3L).shortName("Fall2025").build();
+    PlInstance stale1 = PlInstance.builder().id(2L).plRepoId(3L).shortName("Spring2024").build();
+    PlInstance stale2 = PlInstance.builder().id(5L).plRepoId(3L).shortName("Winter2024").build();
     when(plInstanceRepository.findByPlRepoId(eq(3L))).thenReturn(List.of(keep, stale1, stale2));
     // the stale Spring2024 instance has an assessment whose join rows must also be cleaned up
     PlAssessment exam1 =
@@ -546,7 +547,8 @@ public class SyncPlRepoJobTests {
 
   private void stubInstanceFall2025() {
     when(plInstanceRepository.findByPlRepoId(eq(3L)))
-        .thenReturn(List.of(PlInstance.builder().id(10L).plRepoId(3L).name("Fall2025").build()));
+        .thenReturn(
+            List.of(PlInstance.builder().id(10L).plRepoId(3L).shortName("Fall2025").build()));
   }
 
   private void stubQuestionsInDatabase() {

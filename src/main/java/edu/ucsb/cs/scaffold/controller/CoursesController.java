@@ -1,8 +1,11 @@
 package edu.ucsb.cs.scaffold.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.CourseStaff;
 import edu.ucsb.cs.scaffold.entity.PatCredential;
+import edu.ucsb.cs.scaffold.entity.PlInstance;
 import edu.ucsb.cs.scaffold.entity.PlRepo;
 import edu.ucsb.cs.scaffold.entity.RosterStudent;
 import edu.ucsb.cs.scaffold.entity.User;
@@ -17,11 +20,13 @@ import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.InstructorRepository;
 import edu.ucsb.cs.scaffold.repository.JobsRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
 import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
+import edu.ucsb.cs.scaffold.services.PrairieLearnService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -77,6 +82,10 @@ public class CoursesController extends ApiController {
 
   @Autowired private GithubService githubService;
 
+  @Autowired private PlInstanceRepository plInstanceRepository;
+
+  @Autowired private PrairieLearnService prairieLearnService;
+
   /**
    * This method creates a new Course.
    *
@@ -120,7 +129,14 @@ public class CoursesController extends ApiController {
       String instructorEmail,
       int numStudents,
       int numStaff,
-      Long plRepoId) {
+      Long plRepoId,
+      Long plInstanceId,
+      // Human-readable details of the PL associations; resolved only by the
+      // single-course endpoints (getCourseById and the two update endpoints),
+      // null in course lists.
+      String plRepoName,
+      String plInstanceShortName,
+      Long plInstanceNumericId) {
 
     // Creates view from Course entity
     public InstructorCourseView(Course c) {
@@ -132,8 +148,42 @@ public class CoursesController extends ApiController {
           c.getInstructorEmail(),
           c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,
           c.getCourseStaff() != null ? c.getCourseStaff().size() : 0,
-          c.getPlRepoId());
+          c.getPlRepoId(),
+          c.getPlInstanceId(),
+          null,
+          null,
+          null);
     }
+  }
+
+  /**
+   * Builds an InstructorCourseView with the PL association details (repo name, instance short name,
+   * instance numeric id) resolved from their tables — used by the single-course endpoints so the
+   * frontend can show what is currently associated. List endpoints use the plain constructor and
+   * leave these null.
+   */
+  private InstructorCourseView viewWithPlDetails(Course c) {
+    String plRepoName =
+        c.getPlRepoId() == null
+            ? null
+            : plRepoRepository.findById(c.getPlRepoId()).map(PlRepo::getRepoName).orElse(null);
+    PlInstance plInstance =
+        c.getPlInstanceId() == null
+            ? null
+            : plInstanceRepository.findById(c.getPlInstanceId()).orElse(null);
+    return new InstructorCourseView(
+        c.getId(),
+        c.getCourseName(),
+        c.getTerm(),
+        c.getSchool(),
+        c.getInstructorEmail(),
+        c.getRosterStudents() != null ? c.getRosterStudents().size() : 0,
+        c.getCourseStaff() != null ? c.getCourseStaff().size() : 0,
+        c.getPlRepoId(),
+        c.getPlInstanceId(),
+        plRepoName,
+        plInstance == null ? null : plInstance.getShortName(),
+        plInstance == null ? null : plInstance.getNumericId());
   }
 
   /**
@@ -183,9 +233,7 @@ public class CoursesController extends ApiController {
         courseRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, id));
-    // Convert to InstructorCourseView
-    InstructorCourseView courseView = new InstructorCourseView(course);
-    return courseView;
+    return viewWithPlDetails(course);
   }
 
   /**
@@ -619,6 +667,108 @@ public class CoursesController extends ApiController {
             .orElseGet(
                 () -> plRepoRepository.save(PlRepo.builder().repoName(trimmedRepoName).build()));
     course.setPlRepoId(plRepo.getId());
-    return new InstructorCourseView(courseRepository.save(course));
+    return viewWithPlDetails(courseRepository.save(course));
+  }
+
+  /**
+   * Associates a PrairieLearn course instance (PlInstance) with a course. The numeric instance id
+   * is verified in two steps: it is fetched from the PrairieLearn API using the caller's
+   * PrairieLearn PAT, and the course's GitHub repo must contain a matching
+   * courseInstances/{shortName}/infoCourseInstance.json whose longName agrees. Only the
+   * PrairieLearn API can supply the numeric id, and only the repo check proves the instance belongs
+   * to this course's repo.
+   *
+   * @param courseId the id of the course
+   * @param instanceId PrairieLearn's numeric course instance id
+   * @return the updated course
+   */
+  @Operation(summary = "Associate a PrairieLearn course instance (PlInstance) with a course")
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PutMapping("/updatePLInstance")
+  public InstructorCourseView updatePLInstance(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "instanceId", description = "numeric PrairieLearn course instance id")
+          @RequestParam
+          Long instanceId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    long userId = getCurrentUser().getUser().getId();
+    PatCredential githubCredential =
+        patCredentialRepository
+            .findByUserIdAndPlatform(userId, PatPlatform.GITHUB)
+            .orElseThrow(() -> new ForbiddenException("must set up Github PAT first"));
+    PatCredential plCredential =
+        patCredentialRepository
+            .findByUserIdAndPlatform(userId, PatPlatform.PRAIRIELEARN)
+            .orElseThrow(() -> new ForbiddenException("must set up PrairieLearn PAT first"));
+    if (course.getPlRepoId() == null) {
+      throw new ForbiddenException("must associate course with PlRepo first");
+    }
+    PlRepo plRepo =
+        plRepoRepository
+            .findById(course.getPlRepoId())
+            .orElseThrow(() -> new EntityNotFoundException(PlRepo.class, course.getPlRepoId()));
+
+    String plToken =
+        patEncryptionService.decrypt(plCredential.getCiphertext(), plCredential.getKeyVersion());
+    PrairieLearnService.CourseInstanceInfo info;
+    try {
+      info = prairieLearnService.getCourseInstance(instanceId, plToken);
+    } catch (HttpClientErrorException e) {
+      throw new ForbiddenException("course instance id not found");
+    }
+    if (info == null) {
+      throw new ForbiddenException("course instance id not found");
+    }
+
+    String githubToken =
+        patEncryptionService.decrypt(
+            githubCredential.getCiphertext(), githubCredential.getKeyVersion());
+    if (!repoConfirmsInstance(plRepo, info, githubToken)) {
+      throw new ForbiddenException("course instance id not found");
+    }
+
+    PlInstance plInstance =
+        plInstanceRepository
+            .findByPlRepoIdAndShortName(plRepo.getId(), info.shortName())
+            .orElseGet(
+                () ->
+                    PlInstance.builder()
+                        .plRepoId(plRepo.getId())
+                        .shortName(info.shortName())
+                        .build());
+    plInstance.setLongName(info.longName());
+    plInstance.setNumericId(info.courseInstanceId());
+    PlInstance savedInstance = plInstanceRepository.save(plInstance);
+
+    course.setPlInstanceId(savedInstance.getId());
+    return viewWithPlDetails(courseRepository.save(course));
+  }
+
+  /**
+   * True when the course's repo has courseInstances/{shortName}/infoCourseInstance.json and its
+   * longName matches the one PrairieLearn reported for the instance.
+   */
+  private boolean repoConfirmsInstance(
+      PlRepo plRepo, PrairieLearnService.CourseInstanceInfo info, String githubToken) {
+    String infoJson;
+    try {
+      infoJson =
+          githubService.getFileContent(
+              plRepo.getRepoName(),
+              "courseInstances/" + info.shortName() + "/infoCourseInstance.json",
+              githubToken);
+    } catch (HttpClientErrorException e) {
+      return false;
+    }
+    try {
+      JsonNode longName = new ObjectMapper().readTree(infoJson).path("longName");
+      return !longName.isMissingNode() && longName.asText().equals(info.longName());
+    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+      return false;
+    }
   }
 }

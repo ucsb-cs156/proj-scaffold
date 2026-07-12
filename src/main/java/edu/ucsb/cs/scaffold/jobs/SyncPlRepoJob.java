@@ -132,7 +132,7 @@ public class SyncPlRepoJob implements JobContextConsumer {
 
     Map<String, PlInstance> existingByName = new LinkedHashMap<>();
     for (PlInstance instance : plInstanceRepository.findByPlRepoId(plRepoId)) {
-      existingByName.put(instance.getName(), instance);
+      existingByName.put(instance.getShortName(), instance);
     }
 
     int added = 0;
@@ -142,7 +142,7 @@ public class SyncPlRepoJob implements JobContextConsumer {
         unchanged++;
         continue;
       }
-      plInstanceRepository.save(PlInstance.builder().plRepoId(plRepoId).name(name).build());
+      plInstanceRepository.save(PlInstance.builder().plRepoId(plRepoId).shortName(name).build());
       added++;
       ctx.log("Added course instance %s".formatted(name));
     }
@@ -247,14 +247,15 @@ public class SyncPlRepoJob implements JobContextConsumer {
     int unchanged = 0;
     for (PlInstance instance : plInstanceRepository.findByPlRepoId(plRepoId)) {
       String assessmentsPath =
-          "%s/%s/%s".formatted(COURSE_INSTANCES_PATH, instance.getName(), ASSESSMENTS_DIRECTORY);
+          "%s/%s/%s"
+              .formatted(COURSE_INSTANCES_PATH, instance.getShortName(), ASSESSMENTS_DIRECTORY);
       List<DirectoryEntry> entries;
       try {
         entries = githubService.listDirectory(plRepo.getRepoName(), assessmentsPath, token);
       } catch (HttpClientErrorException.NotFound e) {
         ctx.log(
             "Instance %s has no %s directory; skipping assessment sync for it"
-                .formatted(instance.getName(), ASSESSMENTS_DIRECTORY));
+                .formatted(instance.getShortName(), ASSESSMENTS_DIRECTORY));
         continue;
       }
 
@@ -285,7 +286,7 @@ public class SyncPlRepoJob implements JobContextConsumer {
         } catch (Exception e) {
           ctx.log(
               "Skipping assessment %s (instance %s): could not parse %s"
-                  .formatted(entry.name(), instance.getName(), INFO_ASSESSMENT_JSON));
+                  .formatted(entry.name(), instance.getShortName(), INFO_ASSESSMENT_JSON));
           continue;
         }
         foundNames.add(entry.name());
@@ -300,7 +301,8 @@ public class SyncPlRepoJob implements JobContextConsumer {
                       .name(entry.name())
                       .build());
           added++;
-          ctx.log("Added assessment %s (instance %s)".formatted(entry.name(), instance.getName()));
+          ctx.log(
+              "Added assessment %s (instance %s)".formatted(entry.name(), instance.getShortName()));
         } else {
           unchanged++;
         }
@@ -322,7 +324,7 @@ public class SyncPlRepoJob implements JobContextConsumer {
         deleted++;
         ctx.log(
             "Deleted assessment %s (instance %s) (no longer on GitHub)"
-                .formatted(name, instance.getName()));
+                .formatted(name, instance.getShortName()));
       }
     }
 
@@ -349,7 +351,7 @@ public class SyncPlRepoJob implements JobContextConsumer {
       if (question == null) {
         ctx.log(
             "Assessment %s (instance %s) references unknown question id %s; skipping that link"
-                .formatted(assessment.getName(), instance.getName(), questionId));
+                .formatted(assessment.getName(), instance.getShortName(), questionId));
         continue;
       }
       desiredQuestionRowIds.add(question.getId());
@@ -380,7 +382,8 @@ public class SyncPlRepoJob implements JobContextConsumer {
     }
     ctx.log(
         "Linked %d question(s) to assessment %s (instance %s)"
-            .formatted(desiredQuestionRowIds.size(), assessment.getName(), instance.getName()));
+            .formatted(
+                desiredQuestionRowIds.size(), assessment.getName(), instance.getShortName()));
   }
 
   /**
