@@ -30,12 +30,23 @@ public class PrairieLearnService {
 
   private final RestTemplate restTemplate;
   private final String plApiBase;
+  private final ApiRetryHelper retryHelper;
 
   public PrairieLearnService(
       RestTemplate restTemplate,
-      @Value("${pl.api.base:https://us.prairielearn.com/pl/api/v1}") String plApiBase) {
+      @Value("${pl.api.base:https://us.prairielearn.com/pl/api/v1}") String plApiBase,
+      @Value("${PL_SERVICE_RETRY_INITIAL_SLEEP_SECONDS:8}") long retryInitialSleepSeconds,
+      @Value("${PL_SERVICE_RETRY_MAX:3}") int retryMax,
+      @Value("${PL_SERVICE_RATE_LIMIT_SLEEP_INITIAL_MS:1000}") long rateLimitSleepInitialMs) {
     this.restTemplate = restTemplate;
     this.plApiBase = plApiBase;
+    this.retryHelper =
+        new ApiRetryHelper(
+            "PrairieLearn",
+            "PL_SERVICE_RATE_LIMIT_SLEEP_INITIAL_MS",
+            retryInitialSleepSeconds,
+            retryMax,
+            rateLimitSleepInitialMs);
   }
 
   /**
@@ -54,8 +65,14 @@ public class PrairieLearnService {
     HttpHeaders headers = new HttpHeaders();
     headers.set("Private-Token", token);
     ResponseEntity<Map<String, Object>> response =
-        restTemplate.exchange(
-            url, HttpMethod.GET, new HttpEntity<>(headers), new ParameterizedTypeReference<>() {});
+        retryHelper.execute(
+            "GET " + url,
+            () ->
+                restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    new ParameterizedTypeReference<>() {}));
 
     Map<String, Object> body = response.getBody();
     if (body == null || body.get("course_instance_id") == null) {
@@ -101,8 +118,14 @@ public class PrairieLearnService {
     HttpHeaders headers = new HttpHeaders();
     headers.set("Private-Token", token);
     ResponseEntity<List<Map<String, Object>>> response =
-        restTemplate.exchange(
-            url, HttpMethod.GET, new HttpEntity<>(headers), new ParameterizedTypeReference<>() {});
+        retryHelper.execute(
+            "GET " + url,
+            () ->
+                restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    new ParameterizedTypeReference<>() {}));
 
     List<Map<String, Object>> body = response.getBody();
     if (body == null) {

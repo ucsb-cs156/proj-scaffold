@@ -27,12 +27,23 @@ public class GithubService {
 
   private final RestTemplate restTemplate;
   private final String githubApiBase;
+  private final ApiRetryHelper retryHelper;
 
   public GithubService(
       RestTemplate restTemplate,
-      @Value("${github.api.base:https://api.github.com}") String githubApiBase) {
+      @Value("${github.api.base:https://api.github.com}") String githubApiBase,
+      @Value("${GITHUB_SERVICE_RETRY_INITIAL_SLEEP_SECONDS:8}") long retryInitialSleepSeconds,
+      @Value("${GITHUB_SERVICE_RETRY_MAX:3}") int retryMax,
+      @Value("${GITHUB_SERVICE_RATE_LIMIT_SLEEP_INITIAL_MS:1000}") long rateLimitSleepInitialMs) {
     this.restTemplate = restTemplate;
     this.githubApiBase = githubApiBase;
+    this.retryHelper =
+        new ApiRetryHelper(
+            "GitHub",
+            "GITHUB_SERVICE_RATE_LIMIT_SLEEP_INITIAL_MS",
+            retryInitialSleepSeconds,
+            retryMax,
+            rateLimitSleepInitialMs);
   }
 
   /**
@@ -45,12 +56,16 @@ public class GithubService {
    * @return the entries, in the order GitHub returns them (alphabetical)
    */
   public List<DirectoryEntry> listDirectory(String repoName, String path, String token) {
+    String url = contentsUrl(repoName, path);
     ResponseEntity<List<Map<String, Object>>> response =
-        restTemplate.exchange(
-            contentsUrl(repoName, path),
-            HttpMethod.GET,
-            authenticatedEntity(token),
-            new ParameterizedTypeReference<>() {});
+        retryHelper.execute(
+            "GET " + url,
+            () ->
+                restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    authenticatedEntity(token),
+                    new ParameterizedTypeReference<>() {}));
 
     List<Map<String, Object>> items = response.getBody();
     if (items == null) {
@@ -81,12 +96,16 @@ public class GithubService {
    * @param token the user's PAT (plaintext)
    */
   public String getFileContent(String repoName, String path, String token) {
+    String url = contentsUrl(repoName, path);
     ResponseEntity<Map<String, Object>> response =
-        restTemplate.exchange(
-            contentsUrl(repoName, path),
-            HttpMethod.GET,
-            authenticatedEntity(token),
-            new ParameterizedTypeReference<>() {});
+        retryHelper.execute(
+            "GET " + url,
+            () ->
+                restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    authenticatedEntity(token),
+                    new ParameterizedTypeReference<>() {}));
 
     Map<String, Object> body = response.getBody();
     if (body == null || body.get("content") == null) {
@@ -109,12 +128,16 @@ public class GithubService {
    *     repo at all (GitHub answers 404 for repos a token cannot see, or 401 for a bad token)
    */
   public boolean hasWriteAccess(String repoName, String token) {
+    String url = repoUrl(repoName);
     ResponseEntity<Map<String, Object>> response =
-        restTemplate.exchange(
-            repoUrl(repoName),
-            HttpMethod.GET,
-            authenticatedEntity(token),
-            new ParameterizedTypeReference<>() {});
+        retryHelper.execute(
+            "GET " + url,
+            () ->
+                restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    authenticatedEntity(token),
+                    new ParameterizedTypeReference<>() {}));
 
     Map<String, Object> body = response.getBody();
     if (body == null || !(body.get("permissions") instanceof Map<?, ?> permissions)) {

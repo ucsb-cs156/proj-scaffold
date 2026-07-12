@@ -25,7 +25,7 @@ public class PrairieLearnServiceTests {
   RestTemplate restTemplate = mock(RestTemplate.class);
 
   PrairieLearnService prairieLearnService =
-      new PrairieLearnService(restTemplate, "https://pl.example/pl/api/v1");
+      new PrairieLearnService(restTemplate, "https://pl.example/pl/api/v1", 8, 3, 0);
 
   @SuppressWarnings("unchecked")
   private void mockResponse(Map<String, Object> body) {
