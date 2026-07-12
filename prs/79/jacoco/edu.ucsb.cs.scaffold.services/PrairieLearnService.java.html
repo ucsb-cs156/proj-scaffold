@@ -76,7 +76,8 @@ public class PrairieLearnService {
 <span class="fc" id="L76">  public record AssessmentInfo(</span>
       Long assessmentId,
       String assessmentName,
-      Long assessmentNumber,
+      // alphanumeric, e.g. &quot;2&quot; or &quot;1a&quot;
+      String assessmentNumber,
       Long assessmentOrderBy,
       String title,
       String assessmentSetAbbreviation,
@@ -92,49 +93,55 @@ public class PrairieLearnService {
    * @param token the user's PrairieLearn PAT (plaintext)
    */
   public List&lt;AssessmentInfo&gt; getAssessments(long instanceId, String token) {
-<span class="fc" id="L95">    String url =</span>
-<span class="fc" id="L96">        UriComponentsBuilder.fromUriString(plApiBase)</span>
-<span class="fc" id="L97">            .pathSegment(&quot;course_instances&quot;, String.valueOf(instanceId), &quot;assessments&quot;)</span>
-<span class="fc" id="L98">            .toUriString();</span>
+<span class="fc" id="L96">    String url =</span>
+<span class="fc" id="L97">        UriComponentsBuilder.fromUriString(plApiBase)</span>
+<span class="fc" id="L98">            .pathSegment(&quot;course_instances&quot;, String.valueOf(instanceId), &quot;assessments&quot;)</span>
+<span class="fc" id="L99">            .toUriString();</span>
 
-<span class="fc" id="L100">    HttpHeaders headers = new HttpHeaders();</span>
-<span class="fc" id="L101">    headers.set(&quot;Private-Token&quot;, token);</span>
-<span class="fc" id="L102">    ResponseEntity&lt;List&lt;Map&lt;String, Object&gt;&gt;&gt; response =</span>
-<span class="fc" id="L103">        restTemplate.exchange(</span>
-<span class="fc" id="L104">            url, HttpMethod.GET, new HttpEntity&lt;&gt;(headers), new ParameterizedTypeReference&lt;&gt;() {});</span>
+<span class="fc" id="L101">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L102">    headers.set(&quot;Private-Token&quot;, token);</span>
+<span class="fc" id="L103">    ResponseEntity&lt;List&lt;Map&lt;String, Object&gt;&gt;&gt; response =</span>
+<span class="fc" id="L104">        restTemplate.exchange(</span>
+<span class="fc" id="L105">            url, HttpMethod.GET, new HttpEntity&lt;&gt;(headers), new ParameterizedTypeReference&lt;&gt;() {});</span>
 
-<span class="fc" id="L106">    List&lt;Map&lt;String, Object&gt;&gt; body = response.getBody();</span>
-<span class="fc bfc" id="L107" title="All 2 branches covered.">    if (body == null) {</span>
-<span class="fc" id="L108">      return List.of();</span>
+<span class="fc" id="L107">    List&lt;Map&lt;String, Object&gt;&gt; body = response.getBody();</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">    if (body == null) {</span>
+<span class="fc" id="L109">      return List.of();</span>
     }
-<span class="fc" id="L110">    List&lt;AssessmentInfo&gt; assessments = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L111" title="All 2 branches covered.">    for (Map&lt;String, Object&gt; item : body) {</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">      if (item.get(&quot;assessment_id&quot;) == null) {</span>
-<span class="fc" id="L113">        continue;</span>
+<span class="fc" id="L111">    List&lt;AssessmentInfo&gt; assessments = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">    for (Map&lt;String, Object&gt; item : body) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">      if (item.get(&quot;assessment_id&quot;) == null) {</span>
+<span class="fc" id="L114">        continue;</span>
       }
-<span class="fc" id="L115">      assessments.add(</span>
+<span class="fc" id="L116">      assessments.add(</span>
           new AssessmentInfo(
-<span class="fc" id="L117">              asLong(item.get(&quot;assessment_id&quot;)),</span>
-<span class="fc" id="L118">              (String) item.get(&quot;assessment_name&quot;),</span>
-<span class="fc" id="L119">              asLong(item.get(&quot;assessment_number&quot;)),</span>
-<span class="fc" id="L120">              asLong(item.get(&quot;assessment_order_by&quot;)),</span>
-<span class="fc" id="L121">              (String) item.get(&quot;title&quot;),</span>
-<span class="fc" id="L122">              (String) item.get(&quot;assessment_set_abbreviation&quot;),</span>
-<span class="fc" id="L123">              asInteger(item.get(&quot;assessment_set_number&quot;)),</span>
-<span class="fc" id="L124">              (String) item.get(&quot;assessment_set_heading&quot;),</span>
-<span class="fc" id="L125">              (String) item.get(&quot;assessment_set_color&quot;)));</span>
-<span class="fc" id="L126">    }</span>
-<span class="fc" id="L127">    return assessments;</span>
+<span class="fc" id="L118">              asLong(item.get(&quot;assessment_id&quot;)),</span>
+<span class="fc" id="L119">              (String) item.get(&quot;assessment_name&quot;),</span>
+<span class="fc" id="L120">              asString(item.get(&quot;assessment_number&quot;)),</span>
+<span class="fc" id="L121">              asLong(item.get(&quot;assessment_order_by&quot;)),</span>
+<span class="fc" id="L122">              (String) item.get(&quot;title&quot;),</span>
+<span class="fc" id="L123">              (String) item.get(&quot;assessment_set_abbreviation&quot;),</span>
+<span class="fc" id="L124">              asInteger(item.get(&quot;assessment_set_number&quot;)),</span>
+<span class="fc" id="L125">              (String) item.get(&quot;assessment_set_heading&quot;),</span>
+<span class="fc" id="L126">              (String) item.get(&quot;assessment_set_color&quot;)));</span>
+<span class="fc" id="L127">    }</span>
+<span class="fc" id="L128">    return assessments;</span>
   }
 
   // PrairieLearn is inconsistent about numbers: some come as JSON strings (&quot;2690012&quot;), some as
   // JSON numbers (6). Both parse via their string form; null stays null.
   private static Long asLong(Object value) {
-<span class="fc bfc" id="L133" title="All 2 branches covered.">    return value == null ? null : Long.valueOf(String.valueOf(value));</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">    return value == null ? null : Long.valueOf(String.valueOf(value));</span>
   }
 
   private static Integer asInteger(Object value) {
-<span class="fc bfc" id="L137" title="All 2 branches covered.">    return value == null ? null : Integer.valueOf(String.valueOf(value));</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">    return value == null ? null : Integer.valueOf(String.valueOf(value));</span>
+  }
+
+  // assessment_number is alphanumeric (&quot;1a&quot;) but other fields may arrive as JSON numbers,
+  // so normalize through String.valueOf rather than casting.
+  private static String asString(Object value) {
+<span class="fc bfc" id="L144" title="All 2 branches covered.">    return value == null ? null : String.valueOf(value);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

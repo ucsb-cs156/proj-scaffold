@@ -87,7 +87,7 @@ scaffold,edu.ucsb.cs.scaffold.services,PatEncryptionService.VersionedKey,0,9,0,0
 scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService.CourseInstanceInfo,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,ConceptGraphService.Position,0,9,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,ConceptYamlService,0,1237,0,102,0,269,0,71,0,20
-scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService,0,212,0,14,0,48,0,12,0,5
+scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService,0,219,0,16,0,49,0,14,0,6
 scaffold,edu.ucsb.cs.scaffold.services,GithubService.new ParameterizedTypeReference() {...},0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,GithubService.new ParameterizedTypeReference() {...},0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,GithubService.new ParameterizedTypeReference() {...},0,3,0,0,0,1,0,1,0,1
