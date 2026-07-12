@@ -29,7 +29,12 @@ export default function AppNavbar({
         currentUrl.startsWith("http://127.0.0.1:3000")) && (
         <AppNavbarLocalhost url={currentUrl} />
       )}
-      <Navbar expand="md" sticky="top" data-testid="AppNavbar">
+      <Navbar
+        expand="md"
+        sticky="top"
+        data-testid="AppNavbar"
+        className="AppNavbar"
+      >
         <Container>
           <Navbar.Brand as={Link} to="/">
             <ScaffoldBrand />
