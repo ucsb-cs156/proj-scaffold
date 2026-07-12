@@ -69,7 +69,7 @@ describe("staffTools utility tests", () => {
         wrapper: makeWrapper(currentUserFixtures.adminUser),
       });
       expect(result.current.debugMode).toBe(false);
-      expect(result.current.unlockSubconcepts).toBe(false);
+      expect(result.current.enableEditing).toBe(false);
     });
 
     test("setting one tool does not affect the other", () => {
@@ -77,9 +77,9 @@ describe("staffTools utility tests", () => {
         wrapper: makeWrapper(currentUserFixtures.adminUser),
       });
       act(() => {
-        result.current.setStaffTool("unlockSubconcepts", true);
+        result.current.setStaffTool("enableEditing", true);
       });
-      expect(result.current.unlockSubconcepts).toBe(true);
+      expect(result.current.enableEditing).toBe(true);
       expect(result.current.debugMode).toBe(false);
     });
 
@@ -105,24 +105,24 @@ describe("staffTools utility tests", () => {
         result.current.setStaffTool("debugMode", true);
       });
       act(() => {
-        result.current.setStaffTool("unlockSubconcepts", true);
+        result.current.setStaffTool("enableEditing", true);
       });
       expect(JSON.parse(sessionStorage.getItem("staffTools")!)).toEqual({
         debugMode: true,
-        unlockSubconcepts: true,
+        enableEditing: true,
       });
     });
 
     test("reads initial values from sessionStorage", () => {
       sessionStorage.setItem(
         "staffTools",
-        JSON.stringify({ debugMode: true, unlockSubconcepts: true }),
+        JSON.stringify({ debugMode: true, enableEditing: true }),
       );
       const { result } = renderHook(() => useStaffTools(), {
         wrapper: makeWrapper(currentUserFixtures.adminUser),
       });
       expect(result.current.debugMode).toBe(true);
-      expect(result.current.unlockSubconcepts).toBe(true);
+      expect(result.current.enableEditing).toBe(true);
     });
 
     test("treats corrupt stored JSON as the defaults", () => {
@@ -131,31 +131,31 @@ describe("staffTools utility tests", () => {
         wrapper: makeWrapper(currentUserFixtures.adminUser),
       });
       expect(result.current.debugMode).toBe(false);
-      expect(result.current.unlockSubconcepts).toBe(false);
+      expect(result.current.enableEditing).toBe(false);
     });
 
     test("treats non-boolean stored values as false", () => {
       sessionStorage.setItem(
         "staffTools",
-        JSON.stringify({ debugMode: "yes", unlockSubconcepts: 1 }),
+        JSON.stringify({ debugMode: "yes", enableEditing: 1 }),
       );
       const { result } = renderHook(() => useStaffTools(), {
         wrapper: makeWrapper(currentUserFixtures.adminUser),
       });
       expect(result.current.debugMode).toBe(false);
-      expect(result.current.unlockSubconcepts).toBe(false);
+      expect(result.current.enableEditing).toBe(false);
     });
 
     test("flags stay false for a regular user even if sessionStorage says true", () => {
       sessionStorage.setItem(
         "staffTools",
-        JSON.stringify({ debugMode: true, unlockSubconcepts: true }),
+        JSON.stringify({ debugMode: true, enableEditing: true }),
       );
       const { result } = renderHook(() => useStaffTools(), {
         wrapper: makeWrapper(currentUserFixtures.userOnly),
       });
       expect(result.current.debugMode).toBe(false);
-      expect(result.current.unlockSubconcepts).toBe(false);
+      expect(result.current.enableEditing).toBe(false);
     });
   });
 
@@ -175,7 +175,7 @@ describe("staffTools utility tests", () => {
         wrapper: makeWrapper(currentUserFixtures.adminUser),
       });
       expect(result.current.debugMode).toBe(false);
-      expect(result.current.unlockSubconcepts).toBe(false);
+      expect(result.current.enableEditing).toBe(false);
     });
 
     test("still toggles in-memory when sessionStorage.setItem throws", () => {
@@ -196,7 +196,7 @@ describe("staffTools utility tests", () => {
     test("returns default values when used outside a provider", () => {
       const { result } = renderHook(() => useStaffTools());
       expect(result.current.debugMode).toBe(false);
-      expect(result.current.unlockSubconcepts).toBe(false);
+      expect(result.current.enableEditing).toBe(false);
       expect(result.current.canUseStaffTools).toBe(false);
       expect(typeof result.current.setStaffTool).toBe("function");
     });
@@ -232,7 +232,7 @@ describe("Footer staff tool toggles", () => {
     renderFooterWithUser(currentUserFixtures.userOnly);
     expect(screen.queryByTestId("debug-mode-toggle")).not.toBeInTheDocument();
     expect(
-      screen.queryByTestId("unlock-subconcepts-toggle"),
+      screen.queryByTestId("enable-editing-toggle"),
     ).not.toBeInTheDocument();
   });
 
@@ -240,7 +240,7 @@ describe("Footer staff tool toggles", () => {
     renderFooterWithUser(currentUserFixtures.notLoggedIn);
     expect(screen.queryByTestId("debug-mode-toggle")).not.toBeInTheDocument();
     expect(
-      screen.queryByTestId("unlock-subconcepts-toggle"),
+      screen.queryByTestId("enable-editing-toggle"),
     ).not.toBeInTheDocument();
   });
 
@@ -252,7 +252,7 @@ describe("Footer staff tool toggles", () => {
     );
     expect(screen.queryByTestId("debug-mode-toggle")).not.toBeInTheDocument();
     expect(
-      screen.queryByTestId("unlock-subconcepts-toggle"),
+      screen.queryByTestId("enable-editing-toggle"),
     ).not.toBeInTheDocument();
   });
 
@@ -260,14 +260,14 @@ describe("Footer staff tool toggles", () => {
     renderFooterWithUser(currentUserFixtures.adminUser);
     expect(screen.getByTestId("debug-mode-toggle")).toBeInTheDocument();
     expect(screen.getByText("Debug Mode")).toBeInTheDocument();
-    expect(screen.getByTestId("unlock-subconcepts-toggle")).toBeInTheDocument();
-    expect(screen.getByText("Unlock Subconcepts")).toBeInTheDocument();
+    expect(screen.getByTestId("enable-editing-toggle")).toBeInTheDocument();
+    expect(screen.getByText("Enable Editing")).toBeInTheDocument();
   });
 
   test("shows both toggles for an instructor user", () => {
     renderFooterWithUser(currentUserFixtures.instructorUser);
     expect(screen.getByTestId("debug-mode-toggle")).toBeInTheDocument();
-    expect(screen.getByTestId("unlock-subconcepts-toggle")).toBeInTheDocument();
+    expect(screen.getByTestId("enable-editing-toggle")).toBeInTheDocument();
   });
 
   test("both toggles start unchecked", () => {
@@ -276,8 +276,7 @@ describe("Footer staff tool toggles", () => {
       (screen.getByTestId("debug-mode-toggle") as HTMLInputElement).checked,
     ).toBe(false);
     expect(
-      (screen.getByTestId("unlock-subconcepts-toggle") as HTMLInputElement)
-        .checked,
+      (screen.getByTestId("enable-editing-toggle") as HTMLInputElement).checked,
     ).toBe(false);
   });
 
@@ -286,16 +285,16 @@ describe("Footer staff tool toggles", () => {
     const debugToggle = screen.getByTestId(
       "debug-mode-toggle",
     ) as HTMLInputElement;
-    const unlockToggle = screen.getByTestId(
-      "unlock-subconcepts-toggle",
+    const enableEditingToggle = screen.getByTestId(
+      "enable-editing-toggle",
     ) as HTMLInputElement;
 
-    fireEvent.click(unlockToggle);
-    expect(unlockToggle.checked).toBe(true);
+    fireEvent.click(enableEditingToggle);
+    expect(enableEditingToggle.checked).toBe(true);
     expect(debugToggle.checked).toBe(false);
 
     fireEvent.click(debugToggle);
     expect(debugToggle.checked).toBe(true);
-    expect(unlockToggle.checked).toBe(true);
+    expect(enableEditingToggle.checked).toBe(true);
   });
 });

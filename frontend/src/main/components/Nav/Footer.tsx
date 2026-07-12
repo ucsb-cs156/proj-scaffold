@@ -1,17 +1,21 @@
 import { Link } from "react-router";
+import { Button, Form } from "react-bootstrap";
 import { useStaffTools } from "main/utils/useStaffTools";
 
-const toggleLabelStyle = {
+const toggleContainerStyle = {
   display: "flex",
   alignItems: "center",
-  gap: "6px",
-  cursor: "pointer",
-  userSelect: "none",
+  gap: "16px",
 } as const;
 
 export default function Footer() {
-  const { debugMode, unlockSubconcepts, canUseStaffTools, setStaffTool } =
-    useStaffTools();
+  const {
+    debugMode,
+    enableEditing,
+    canUseStaffTools,
+    setStaffTool,
+    newConceptHandler,
+  } = useStaffTools();
 
   return (
     <footer
@@ -39,33 +43,49 @@ export default function Footer() {
           <Link to="/about">About Scaffold</Link>
         </span>
         {canUseStaffTools && (
-          <span style={{ display: "flex", gap: "16px" }}>
-            <label
-              data-testid="unlock-subconcepts-toggle-label"
-              style={toggleLabelStyle}
+          <span style={toggleContainerStyle}>
+            {enableEditing && newConceptHandler && (
+              <Button
+                variant="outline-dark"
+                size="sm"
+                data-testid="new-concept-button"
+                onClick={newConceptHandler}
+              >
+                New Concept
+              </Button>
+            )}
+            <Form.Check
+              type="switch"
+              id="enable-editing-toggle-control"
+              className="mb-0"
             >
-              <input
+              <Form.Check.Input
                 type="checkbox"
-                data-testid="unlock-subconcepts-toggle"
-                checked={unlockSubconcepts}
+                data-testid="enable-editing-toggle"
+                checked={enableEditing}
                 onChange={(e) =>
-                  setStaffTool("unlockSubconcepts", e.target.checked)
+                  setStaffTool("enableEditing", e.target.checked)
                 }
               />
-              Unlock Subconcepts
-            </label>
-            <label
-              data-testid="debug-mode-toggle-label"
-              style={toggleLabelStyle}
+              <Form.Check.Label data-testid="enable-editing-toggle-label">
+                Enable Editing
+              </Form.Check.Label>
+            </Form.Check>
+            <Form.Check
+              type="switch"
+              id="debug-mode-toggle-control"
+              className="mb-0"
             >
-              <input
+              <Form.Check.Input
                 type="checkbox"
                 data-testid="debug-mode-toggle"
                 checked={debugMode}
                 onChange={(e) => setStaffTool("debugMode", e.target.checked)}
               />
-              Debug Mode
-            </label>
+              <Form.Check.Label data-testid="debug-mode-toggle-label">
+                Debug Mode
+              </Form.Check.Label>
+            </Form.Check>
           </span>
         )}
       </div>

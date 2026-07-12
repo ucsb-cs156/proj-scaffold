@@ -7,19 +7,21 @@ import { createContext } from "react";
 export interface StaffToolSettings {
   // Show a JSON tooltip with each concept-graph node's full backing data.
   debugMode: boolean;
-  // Make the subconcept rows on concept-graph cards drag-and-droppable so the
-  // author can reorder them.
-  unlockSubconcepts: boolean;
+  // Enable in-graph authoring affordances such as concept CRUD actions and
+  // subconcept reordering.
+  enableEditing: boolean;
 }
 
 export const DEFAULT_STAFF_TOOL_SETTINGS: StaffToolSettings = {
   debugMode: false,
-  unlockSubconcepts: false,
+  enableEditing: false,
 };
 
 export interface StaffToolsContextType extends StaffToolSettings {
   canUseStaffTools: boolean;
   setStaffTool: (tool: keyof StaffToolSettings, value: boolean) => void;
+  newConceptHandler: (() => void) | null;
+  registerNewConceptHandler: (handler: (() => void) | null) => void;
 }
 
 // The default (no provider mounted, e.g. on non-graph pages) is "no tools":
@@ -28,4 +30,6 @@ export const StaffToolsContext = createContext<StaffToolsContextType>({
   ...DEFAULT_STAFF_TOOL_SETTINGS,
   canUseStaffTools: false,
   setStaffTool: () => {},
+  newConceptHandler: null,
+  registerNewConceptHandler: () => {},
 });

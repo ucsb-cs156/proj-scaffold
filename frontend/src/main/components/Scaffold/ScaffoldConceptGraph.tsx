@@ -89,13 +89,19 @@ interface ScaffoldConceptGraphProps {
   // private, per-user override (see ConceptGraphPage) until an instructor's course-wide
   // reset recomputes the shared, canonical position.
   onMajorMoved?: (name: string, posX: number, posY: number) => void;
-  // Called when an author (with subconcepts unlocked) drag-and-drops a card's
+  // Called when an author (with editing enabled) drag-and-drops a card's
   // subconcepts into a new order. orderedSubconceptIds is the complete new
   // ordering of the parent's subconcept ids; the page persists it.
   onSubconceptsReordered?: (
     parentConceptId: number,
     orderedSubconceptIds: number[],
   ) => void;
+  onConceptDoubleClick?: (conceptId: string) => void;
+  onSubconceptDoubleClick?: (
+    parentConceptId: string,
+    subconceptId: string,
+  ) => void;
+  onAddSubconcept?: (parentConceptId: string) => void;
   masteredSubconcepts: Set<string>;
   onSubconceptMastered: (sub: string) => void;
   onPaneClick?: () => void;
@@ -136,11 +142,17 @@ function MajorNode({ data, id }: NodeProps) {
     Set<string> | undefined;
   const onSubconceptMastered = data.onSubconceptMastered as
     ((sub: string) => void) | undefined;
+  const onConceptDoubleClick = data.onConceptDoubleClick as
+    ((conceptId: string) => void) | undefined;
+  const onSubconceptDoubleClick = data.onSubconceptDoubleClick as
+    ((parentConceptId: string, subconceptId: string) => void) | undefined;
+  const onAddSubconcept = data.onAddSubconcept as
+    ((parentConceptId: string) => void) | undefined;
 
-  const { debugMode, unlockSubconcepts } = useStaffTools();
+  const { debugMode, enableEditing } = useStaffTools();
   const onSubconceptsReordered = useContext(SubconceptReorderContext);
   // Index of the subconcept row being dragged / hovered over during an
-  // unlocked drag-and-drop reorder; null when no drag is in progress.
+  // editing-enabled drag-and-drop reorder; null when no drag is in progress.
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
   const allConceptContent = useContext(ConceptContentContext);
@@ -196,6 +208,11 @@ function MajorNode({ data, id }: NodeProps) {
       />
 
       <div
+        data-testid={`major-node-header-${id}`}
+        onDoubleClick={() => {
+          if (!enableEditing) return;
+          onConceptDoubleClick?.(id);
+        }}
         style={{
           background: showColor ? color : "#94A3B8",
           letterSpacing: "0.03em",
@@ -221,6 +238,7 @@ function MajorNode({ data, id }: NodeProps) {
             e.stopPropagation();
             onStarClick();
           }}
+          onDoubleClick={(e) => e.stopPropagation()}
           style={{
             position: "absolute",
             top: 12,
@@ -271,8 +289,8 @@ function MajorNode({ data, id }: NodeProps) {
               data-testid={`subconcept-row-${id}-${i}`}
               // "nodrag" tells React Flow not to treat a drag that starts on
               // this row as a node drag, so the HTML5 row drag can happen.
-              className={unlockSubconcepts ? "nodrag" : undefined}
-              draggable={unlockSubconcepts}
+              className={enableEditing ? "nodrag" : undefined}
+              draggable={enableEditing}
               onDragStart={(e) => {
                 e.stopPropagation();
                 e.dataTransfer.effectAllowed = "move";
@@ -301,6 +319,11 @@ function MajorNode({ data, id }: NodeProps) {
                 setDragIndex(null);
                 setDropIndex(null);
               }}
+              onDoubleClick={(e) => {
+                if (!enableEditing) return;
+                e.stopPropagation();
+                onSubconceptDoubleClick?.(id, String(sub.id));
+              }}
               style={{
                 position: "relative",
                 background: isDropTarget
@@ -316,7 +339,7 @@ function MajorNode({ data, id }: NodeProps) {
                 lineHeight: 1.3,
                 color: "#1E293B",
                 whiteSpace: "pre-line",
-                cursor: unlockSubconcepts ? "grab" : undefined,
+                cursor: enableEditing ? "grab" : undefined,
                 opacity: dragIndex === i ? 0.5 : 1,
               }}
             >
@@ -326,6 +349,7 @@ function MajorNode({ data, id }: NodeProps) {
                   e.stopPropagation();
                   onSubconceptMastered?.(sub.labelHtml);
                 }}
+                onDoubleClick={(e) => e.stopPropagation()}
                 style={{
                   position: "absolute",
                   left: 6,
@@ -362,7 +386,7 @@ function MajorNode({ data, id }: NodeProps) {
                 )}
               </div>
               <span dangerouslySetInnerHTML={{ __html: sub.labelHtml }} />
-              {unlockSubconcepts && (
+              {enableEditing && (
                 <span
                   data-testid={`subconcept-drag-handle-${id}-${i}`}
                   aria-hidden="true"
@@ -381,6 +405,34 @@ function MajorNode({ data, id }: NodeProps) {
             </div>
           );
         })}
+        {enableEditing && (
+          <button
+            type="button"
+            className="nodrag"
+            data-testid={`add-subconcept-button-${id}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddSubconcept?.(id);
+            }}
+            style={{
+              background: "#ffffff",
+              borderTop: "1px solid #1E293B",
+              borderLeft: "1px solid #1E293B",
+              borderRight: "2.5px solid #1E293B",
+              borderBottom: "2.5px solid #1E293B",
+              borderRadius: 6,
+              color: "#1E293B",
+              cursor: "pointer",
+              fontFamily: "Helvetica, Arial, sans-serif",
+              fontSize: 14,
+              fontWeight: 600,
+              margin: "6px 6px 4px",
+              padding: "6px 10px",
+            }}
+          >
+            Add subconcept
+          </button>
+        )}
       </div>
 
       <Handle
@@ -564,6 +616,9 @@ export default function ScaffoldConceptGraph({
   onSubconceptMastered,
   onPaneClick,
   onSubconceptsReordered,
+  onConceptDoubleClick,
+  onSubconceptDoubleClick,
+  onAddSubconcept,
 }: ScaffoldConceptGraphProps) {
   // majorConcepts/positions/prereqEdgeData are only expected to be stable for
   // the lifetime of a mounted instance (the page that renders this component
@@ -773,6 +828,9 @@ export default function ScaffoldConceptGraph({
               highlightedSubconcepts.get(node.id) ?? new Set(),
             starred: starredIds.has(node.id),
             onStarClick: () => onStarClick(node.id),
+            onConceptDoubleClick,
+            onSubconceptDoubleClick,
+            onAddSubconcept,
             masteredSubconcepts: masteredSubconcepts,
             onSubconceptMastered: (sub: string) => onSubconceptMastered(sub),
           },
@@ -787,6 +845,9 @@ export default function ScaffoldConceptGraph({
     masteredSubconcepts,
     onSubconceptMastered,
     onStarClick,
+    onConceptDoubleClick,
+    onSubconceptDoubleClick,
+    onAddSubconcept,
     setNodes,
   ]);
 

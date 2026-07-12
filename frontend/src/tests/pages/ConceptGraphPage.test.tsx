@@ -69,6 +69,12 @@ vi.mock("main/components/Scaffold/ScaffoldConceptGraph", () => ({
       parentConceptId: number,
       orderedSubconceptIds: number[],
     ) => void;
+    onConceptDoubleClick?: (conceptId: string) => void;
+    onSubconceptDoubleClick?: (
+      parentConceptId: string,
+      subconceptId: string,
+    ) => void;
+    onAddSubconcept?: (parentConceptId: string) => void;
   }) => (
     <div data-testid="concept-graph-stub">
       <div data-testid="highlighted-count">{props.highlightedIds.size}</div>
@@ -119,6 +125,15 @@ vi.mock("main/components/Scaffold/ScaffoldConceptGraph", () => ({
       <button onClick={() => props.onSubconceptsReordered?.(1, [3, 2])}>
         trigger-subconcepts-reordered
       </button>
+      <button onClick={() => props.onConceptDoubleClick?.("1")}>
+        trigger-concept-double-click
+      </button>
+      <button onClick={() => props.onSubconceptDoubleClick?.("1", "2")}>
+        trigger-subconcept-double-click
+      </button>
+      <button onClick={() => props.onAddSubconcept?.("1")}>
+        trigger-add-subconcept
+      </button>
       <div data-testid="node-1-subconcept-order">
         {props.majorConcepts
           .find((c) => c.id === 1)
@@ -127,6 +142,37 @@ vi.mock("main/components/Scaffold/ScaffoldConceptGraph", () => ({
       </div>
     </div>
   ),
+}));
+
+vi.mock("main/components/Concept/ConceptModal", () => ({
+  default: (props: {
+    showModal: boolean;
+    modalTitle?: string;
+    initialContents?: { label?: string };
+  }) =>
+    props.showModal ? (
+      <div data-testid="ConceptModal-base">
+        {props.modalTitle}
+        {props.initialContents?.label ? `:${props.initialContents.label}` : ""}
+      </div>
+    ) : null,
+}));
+
+vi.mock("main/components/Concept/SubConceptModal", () => ({
+  default: (props: {
+    showModal: boolean;
+    modalTitle?: string;
+    initialContents?: { parentId?: number; label?: string };
+  }) =>
+    props.showModal ? (
+      <div data-testid="SubConceptModal-base">
+        {props.modalTitle}
+        {props.initialContents?.parentId
+          ? `:${props.initialContents.parentId}`
+          : ""}
+        {props.initialContents?.label ? `:${props.initialContents.label}` : ""}
+      </div>
+    ) : null,
 }));
 
 const mockedClient = vi.mocked(client);
@@ -207,6 +253,40 @@ const loggedInWithId = {
   root: { user: { email: "cgaucho@ucsb.edu", id: 42 } },
 };
 
+const editableConcepts = [
+  {
+    id: 1,
+    label: "Recursion",
+    description: "Recursion description",
+    example: "def f(): ...",
+  },
+  {
+    id: 4,
+    label: "Loops",
+    description: "Loops description",
+    example: "for (...)",
+  },
+];
+
+const editableSubconcepts = [
+  {
+    id: 2,
+    parentId: 1,
+    parentLabel: "Recursion",
+    label: "Base case",
+    description: "Base case description",
+    example: "if n === 0",
+  },
+  {
+    id: 3,
+    parentId: 1,
+    parentLabel: "Recursion",
+    label: "State change",
+    description: "State change description",
+    example: "n - 1",
+  },
+];
+
 function renderConceptGraphPage(currentUser: unknown, courseId: string = "1") {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   qc.setQueryData(["current user"], currentUser);
@@ -227,6 +307,7 @@ describe("ConceptGraphPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
     // BasicLayout's AppNavbar always fetches /api/systemInfo, which has no
     // real backend in this test environment; silence its logged error.
     restoreConsole = mockConsole();
@@ -251,9 +332,19 @@ describe("ConceptGraphPage", () => {
     axiosMock
       .onGet("/api/systemInfo")
       .reply(200, systemInfoFixtures.showingNeither);
+    axiosMock
+      .onGet("/api/concepts/course?courseId=1")
+      .reply(200, editableConcepts);
+    axiosMock
+      .onGet("/api/concepts/course?courseId=7")
+      .reply(200, editableConcepts);
+    axiosMock
+      .onGet("/api/concepts/subconcepts")
+      .reply(200, editableSubconcepts);
   });
 
   afterEach(() => {
+    sessionStorage.clear();
     restoreConsole();
   });
 
@@ -686,6 +777,58 @@ describe("ConceptGraphPage", () => {
       expect(screen.getByTestId("node-1-subconcept-order")).toHaveTextContent(
         "2,3",
       ),
+    );
+  });
+
+  test("double-clicking a concept in editing mode opens the edit concept modal", async () => {
+    renderConceptGraphPage(currentUserFixtures.adminUser);
+    await screen.findByTestId("concept-graph-stub");
+
+    fireEvent.click(screen.getByTestId("enable-editing-toggle"));
+    fireEvent.click(screen.getByText("trigger-concept-double-click"));
+
+    expect(await screen.findByTestId("ConceptModal-base")).toHaveTextContent(
+      "Edit Concept:Recursion",
+    );
+  });
+
+  test("double-clicking a subconcept opens the edit subconcept modal", async () => {
+    renderConceptGraphPage(currentUserFixtures.adminUser);
+    await screen.findByTestId("concept-graph-stub");
+
+    fireEvent.click(screen.getByTestId("enable-editing-toggle"));
+    fireEvent.click(screen.getByText("trigger-subconcept-double-click"));
+
+    expect(await screen.findByTestId("SubConceptModal-base")).toHaveTextContent(
+      "Edit SubConcept:1:Base case",
+    );
+  });
+
+  test("adding a subconcept opens the create subconcept modal for the selected parent", async () => {
+    renderConceptGraphPage(currentUserFixtures.adminUser);
+    await screen.findByTestId("concept-graph-stub");
+
+    fireEvent.click(screen.getByTestId("enable-editing-toggle"));
+    fireEvent.click(screen.getByText("trigger-add-subconcept"));
+
+    expect(await screen.findByTestId("SubConceptModal-base")).toHaveTextContent(
+      "Create SubConcept:1",
+    );
+  });
+
+  test("the footer new concept button appears only when editing is enabled and opens the create modal", async () => {
+    renderConceptGraphPage(currentUserFixtures.adminUser);
+    await screen.findByTestId("concept-graph-stub");
+
+    expect(screen.queryByTestId("new-concept-button")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("enable-editing-toggle"));
+
+    const newConceptButton = await screen.findByTestId("new-concept-button");
+    fireEvent.click(newConceptButton);
+
+    expect(await screen.findByTestId("ConceptModal-base")).toHaveTextContent(
+      "Create Concept",
     );
   });
 });
