@@ -1,0 +1,579 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SyncCourseWithPlRepoJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.jobs</a> &gt; <span class="el_source">SyncCourseWithPlRepoJob.java</span></div><h1>SyncCourseWithPlRepoJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.jobs;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs.scaffold.entity.Course;
+import edu.ucsb.cs.scaffold.entity.PatCredential;
+import edu.ucsb.cs.scaffold.entity.PlAssessment;
+import edu.ucsb.cs.scaffold.entity.PlAssessmentQuestion;
+import edu.ucsb.cs.scaffold.entity.PlInstance;
+import edu.ucsb.cs.scaffold.entity.PlQuestion;
+import edu.ucsb.cs.scaffold.entity.PlRepo;
+import edu.ucsb.cs.scaffold.enums.PatPlatform;
+import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
+import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
+import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
+import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
+import edu.ucsb.cs.scaffold.repository.PlScaffoldAssessmentRepository;
+import edu.ucsb.cs.scaffold.services.GithubService;
+import edu.ucsb.cs.scaffold.services.GithubService.DirectoryEntry;
+import edu.ucsb.cs.scaffold.services.PatEncryptionService;
+import edu.ucsb.cs.scaffold.services.PrairieLearnService;
+import edu.ucsb.cs.scaffold.services.jobs.JobContext;
+import edu.ucsb.cs.scaffold.services.jobs.JobContextConsumer;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import lombok.Builder;
+import org.springframework.web.client.HttpClientErrorException;
+
+/**
+ * Syncs one course's PrairieLearn state (issue #69), replacing the repo-wide SyncPlRepoJob. Takes a
+ * course (rather than a PlRepo id) and uses the launching user's GitHub and PrairieLearn PATs.
+ *
+ * &lt;p&gt;Before doing any work, the job verifies that the user has both PATs, that the course is
+ * associated with a GitHub repo and a PrairieLearn course instance, and that the PATs can actually
+ * reach both — read/write access to the repo, and access to the course instance via the
+ * PrairieLearn API. Any failure terminates the job with a log message telling the user where to fix
+ * it (the /profile page for PATs, the PrairieLearn tab of the course settings for the
+ * associations).
+ *
+ * &lt;p&gt;Unlike the old job, the PlInstance table is not repopulated from the repo's courseInstances
+ * directory: the course's instance already exists, and its shortName/longName are just
+ * sanity-checked (and corrected) against what PrairieLearn reports. Assessments are synced only for
+ * the course's own instance. Questions are still traversed for the whole repo, exactly as before:
+ * the {@code questions} directory is walked recursively; a directory containing an {@code
+ * info.json} is a question whose questionId is its path relative to {@code questions}; {@code
+ * __drafts__} directories are skipped; question directories are not traversed further; stale
+ * PlQuestion rows are deleted (cascading to their PlScaffoldAssessments and join rows).
+ *
+ * &lt;p&gt;Assessments: each subdirectory of {@code courseInstances/&lt;instance&gt;/assessments} containing an
+ * {@code infoAssessment.json} becomes a PlAssessment; the {@code zones} key is walked recursively
+ * and every {@code &quot;id&quot;} entry links the assessment to a PlQuestion of the repo (the
+ * PlAssessmentQuestion join table, in zone order, rewritten on change). Stale rows are deleted.
+ *
+ * &lt;p&gt;Finally the job asks the PrairieLearn API for the instance's assessments and copies the fields
+ * from issue #71 (numeric id, number, order, title, and the assessment-set
+ * abbreviation/number/heading/color) onto the matching PlAssessment rows, matched by name.
+ *
+ * &lt;p&gt;If the {@code questions} or per-instance {@code assessments} directory is missing (HTTP 404),
+ * that step is skipped entirely — including deletions — because a 404 cannot distinguish &quot;directory
+ * removed&quot; from &quot;token cannot see the repo&quot;, and mass-deleting rows over a token problem would be
+ * wrong.
+ */
+@Builder
+public class SyncCourseWithPlRepoJob implements JobContextConsumer {
+
+  static final String COURSE_INSTANCES_PATH = &quot;courseInstances&quot;;
+  static final String QUESTIONS_PATH = &quot;questions&quot;;
+  static final String ASSESSMENTS_DIRECTORY = &quot;assessments&quot;;
+  static final String DRAFTS_DIRECTORY = &quot;__drafts__&quot;;
+  static final String INFO_JSON = &quot;info.json&quot;;
+  static final String INFO_ASSESSMENT_JSON = &quot;infoAssessment.json&quot;;
+
+<span class="fc" id="L83">  private static final ObjectMapper MAPPER = new ObjectMapper();</span>
+
+  private long userId;
+  private Course course;
+  private PatCredentialRepository patCredentialRepository;
+  private PatEncryptionService patEncryptionService;
+  private PlRepoRepository plRepoRepository;
+  private PlInstanceRepository plInstanceRepository;
+  private PlQuestionRepository plQuestionRepository;
+  private PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
+  private PlAssessmentRepository plAssessmentRepository;
+  private PlAssessmentQuestionRepository plAssessmentQuestionRepository;
+  private GithubService githubService;
+  private PrairieLearnService prairieLearnService;
+
+  /** The uuid and title of a question, as read from its info.json. */
+<span class="fc" id="L99">  record QuestionInfo(UUID uuid, String title) {}</span>
+
+  @Override
+  public Course getCourse() {
+<span class="fc" id="L103">    return course;</span>
+  }
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L108">    ctx.log(</span>
+        &quot;Syncing course %d (%s) with PrairieLearn&quot;
+<span class="fc" id="L110">            .formatted(course.getId(), course.getCourseName()));</span>
+
+    // (1) Both PATs must be configured before anything else.
+<span class="fc" id="L113">    Optional&lt;PatCredential&gt; githubCredential =</span>
+<span class="fc" id="L114">        patCredentialRepository.findByUserIdAndPlatform(userId, PatPlatform.GITHUB);</span>
+<span class="fc" id="L115">    Optional&lt;PatCredential&gt; plCredential =</span>
+<span class="fc" id="L116">        patCredentialRepository.findByUserIdAndPlatform(userId, PatPlatform.PRAIRIELEARN);</span>
+<span class="fc bfc" id="L117" title="All 4 branches covered.">    if (githubCredential.isEmpty() || plCredential.isEmpty()) {</span>
+<span class="fc" id="L118">      List&lt;String&gt; missing = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">      if (githubCredential.isEmpty()) {</span>
+<span class="fc" id="L120">        missing.add(&quot;GitHub PAT&quot;);</span>
+      }
+<span class="fc bfc" id="L122" title="All 2 branches covered.">      if (plCredential.isEmpty()) {</span>
+<span class="fc" id="L123">        missing.add(&quot;PrairieLearn PAT&quot;);</span>
+      }
+<span class="fc" id="L125">      throw new Exception(</span>
+          &quot;Missing %s: set it up on the /profile page before running this job&quot;
+<span class="fc" id="L127">              .formatted(String.join(&quot; and &quot;, missing)));</span>
+    }
+
+    // (2) The course must be associated with a repo and a course instance.
+<span class="fc bfc" id="L131" title="All 4 branches covered.">    if (course.getPlRepoId() == null || course.getPlInstanceId() == null) {</span>
+<span class="fc" id="L132">      List&lt;String&gt; missing = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">      if (course.getPlRepoId() == null) {</span>
+<span class="fc" id="L134">        missing.add(&quot;a GitHub repo&quot;);</span>
+      }
+<span class="fc bfc" id="L136" title="All 2 branches covered.">      if (course.getPlInstanceId() == null) {</span>
+<span class="fc" id="L137">        missing.add(&quot;a PrairieLearn course instance&quot;);</span>
+      }
+<span class="fc" id="L139">      throw new Exception(</span>
+          &quot;This course is not associated with %s yet; set that up on the PrairieLearn tab of the course settings page&quot;
+<span class="fc" id="L141">              .formatted(String.join(&quot; or &quot;, missing)));</span>
+    }
+<span class="fc" id="L143">    PlRepo plRepo =</span>
+        plRepoRepository
+<span class="fc" id="L145">            .findById(course.getPlRepoId())</span>
+<span class="fc" id="L146">            .orElseThrow(() -&gt; new EntityNotFoundException(PlRepo.class, course.getPlRepoId()));</span>
+<span class="fc" id="L147">    PlInstance plInstance =</span>
+        plInstanceRepository
+<span class="fc" id="L149">            .findById(course.getPlInstanceId())</span>
+<span class="fc" id="L150">            .orElseThrow(</span>
+<span class="fc" id="L151">                () -&gt; new EntityNotFoundException(PlInstance.class, course.getPlInstanceId()));</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">    if (plInstance.getNumericId() == null) {</span>
+<span class="fc" id="L153">      throw new Exception(</span>
+          &quot;The course's PrairieLearn instance has no numeric id yet; re-associate it on the PrairieLearn tab of the course settings page&quot;);
+    }
+
+<span class="fc" id="L157">    String githubToken =</span>
+<span class="fc" id="L158">        patEncryptionService.decrypt(</span>
+<span class="fc" id="L159">            githubCredential.get().getCiphertext(), githubCredential.get().getKeyVersion());</span>
+<span class="fc" id="L160">    String plToken =</span>
+<span class="fc" id="L161">        patEncryptionService.decrypt(</span>
+<span class="fc" id="L162">            plCredential.get().getCiphertext(), plCredential.get().getKeyVersion());</span>
+
+    // (3) Sanity-check access with both PATs before touching any data.
+    boolean canWrite;
+    try {
+<span class="fc" id="L167">      canWrite = githubService.hasWriteAccess(plRepo.getRepoName(), githubToken);</span>
+<span class="fc" id="L168">    } catch (HttpClientErrorException e) {</span>
+<span class="fc" id="L169">      throw new Exception(</span>
+          &quot;The stored GitHub PAT cannot read repo %s (HTTP %d); check the token on the /profile page and the repo on the PrairieLearn tab&quot;
+<span class="fc" id="L171">              .formatted(plRepo.getRepoName(), e.getStatusCode().value()));</span>
+<span class="fc" id="L172">    }</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">    if (!canWrite) {</span>
+<span class="fc" id="L174">      throw new Exception(</span>
+          &quot;The stored GitHub PAT has read-only access to repo %s; read/write access is required&quot;
+<span class="fc" id="L176">              .formatted(plRepo.getRepoName()));</span>
+    }
+    PrairieLearnService.CourseInstanceInfo instanceInfo;
+    try {
+<span class="fc" id="L180">      instanceInfo = prairieLearnService.getCourseInstance(plInstance.getNumericId(), plToken);</span>
+<span class="fc" id="L181">    } catch (HttpClientErrorException e) {</span>
+<span class="fc" id="L182">      throw new Exception(</span>
+          &quot;The stored PrairieLearn PAT cannot access course instance %d (HTTP %d); check the token on the /profile page&quot;
+<span class="fc" id="L184">              .formatted(plInstance.getNumericId(), e.getStatusCode().value()));</span>
+<span class="fc" id="L185">    }</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">    if (instanceInfo == null) {</span>
+<span class="fc" id="L187">      throw new Exception(</span>
+          &quot;PrairieLearn returned no data for course instance %d&quot;
+<span class="fc" id="L189">              .formatted(plInstance.getNumericId()));</span>
+    }
+<span class="fc" id="L191">    ctx.log(</span>
+        &quot;Access verified: repo %s (read/write) and PrairieLearn instance %d&quot;
+<span class="fc" id="L193">            .formatted(plRepo.getRepoName(), plInstance.getNumericId()));</span>
+
+    // (4) Sanity-check the instance metadata instead of repopulating the PlInstance table.
+<span class="fc" id="L196">    sanityCheckInstance(ctx, plInstance, instanceInfo);</span>
+
+    try {
+<span class="fc" id="L199">      syncQuestions(ctx, plRepo, githubToken);</span>
+<span class="fc" id="L200">      syncAssessments(ctx, plRepo, plInstance, githubToken);</span>
+<span class="fc" id="L201">    } catch (HttpClientErrorException.Unauthorized | HttpClientErrorException.Forbidden e) {</span>
+<span class="fc" id="L202">      throw new Exception(</span>
+          &quot;GitHub rejected the stored PAT (HTTP %d). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/Github_PAT.md)&quot;
+<span class="fc" id="L204">              .formatted(e.getStatusCode().value()));</span>
+<span class="fc" id="L205">    }</span>
+
+    // (5) Copy the PrairieLearn-side assessment fields onto the matching rows.
+<span class="fc" id="L208">    enrichAssessmentsFromPrairieLearn(ctx, plRepo, plInstance, plToken);</span>
+<span class="fc" id="L209">  }</span>
+
+  /**
+   * Keeps the stored shortName/longName in line with what PrairieLearn reports for the instance's
+   * numeric id — the association was verified when it was created, so a difference here means the
+   * instance was renamed on the PrairieLearn side.
+   */
+  private void sanityCheckInstance(
+      JobContext ctx, PlInstance plInstance, PrairieLearnService.CourseInstanceInfo info) {
+<span class="fc" id="L218">    boolean changed = false;</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">    if (!Objects.equals(info.shortName(), plInstance.getShortName())) {</span>
+<span class="fc" id="L220">      ctx.log(</span>
+          &quot;Instance shortName changed on PrairieLearn: %s -&gt; %s&quot;
+<span class="fc" id="L222">              .formatted(plInstance.getShortName(), info.shortName()));</span>
+<span class="fc" id="L223">      plInstance.setShortName(info.shortName());</span>
+<span class="fc" id="L224">      changed = true;</span>
+    }
+<span class="fc bfc" id="L226" title="All 2 branches covered.">    if (!Objects.equals(info.longName(), plInstance.getLongName())) {</span>
+<span class="fc" id="L227">      ctx.log(</span>
+          &quot;Instance longName changed on PrairieLearn: %s -&gt; %s&quot;
+<span class="fc" id="L229">              .formatted(plInstance.getLongName(), info.longName()));</span>
+<span class="fc" id="L230">      plInstance.setLongName(info.longName());</span>
+<span class="fc" id="L231">      changed = true;</span>
+    }
+<span class="fc bfc" id="L233" title="All 2 branches covered.">    if (changed) {</span>
+<span class="fc" id="L234">      plInstanceRepository.save(plInstance);</span>
+    } else {
+<span class="fc" id="L236">      ctx.log(&quot;Instance %s metadata verified&quot;.formatted(plInstance.getShortName()));</span>
+    }
+<span class="fc" id="L238">  }</span>
+
+  private void syncQuestions(JobContext ctx, PlRepo plRepo, String token) {
+<span class="fc" id="L241">    Map&lt;String, QuestionInfo&gt; foundQuestions = new LinkedHashMap&lt;&gt;();</span>
+    try {
+<span class="fc" id="L243">      walkQuestionsDirectory(ctx, plRepo, token, QUESTIONS_PATH, &quot;&quot;, foundQuestions);</span>
+<span class="fc" id="L244">    } catch (HttpClientErrorException.NotFound e) {</span>
+<span class="fc" id="L245">      ctx.log(</span>
+          &quot;Repo %s has no %s directory (or the token cannot see the repo); skipping question sync&quot;
+<span class="fc" id="L247">              .formatted(plRepo.getRepoName(), QUESTIONS_PATH));</span>
+<span class="fc" id="L248">      return;</span>
+<span class="fc" id="L249">    }</span>
+
+<span class="fc" id="L251">    Map&lt;String, PlQuestion&gt; existingByQuestionId = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">    for (PlQuestion question : plQuestionRepository.findByPlRepoId(plRepo.getId())) {</span>
+<span class="fc" id="L253">      existingByQuestionId.put(question.getQuestionId(), question);</span>
+<span class="fc" id="L254">    }</span>
+
+<span class="fc" id="L256">    int added = 0;</span>
+<span class="fc" id="L257">    int updated = 0;</span>
+<span class="fc" id="L258">    int unchanged = 0;</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">    for (Map.Entry&lt;String, QuestionInfo&gt; entry : foundQuestions.entrySet()) {</span>
+<span class="fc" id="L260">      String questionId = entry.getKey();</span>
+<span class="fc" id="L261">      QuestionInfo info = entry.getValue();</span>
+<span class="fc" id="L262">      PlQuestion existing = existingByQuestionId.get(questionId);</span>
+<span class="fc bfc" id="L263" title="All 2 branches covered.">      if (existing == null) {</span>
+<span class="fc" id="L264">        plQuestionRepository.save(</span>
+<span class="fc" id="L265">            PlQuestion.builder()</span>
+<span class="fc" id="L266">                .plRepoId(plRepo.getId())</span>
+<span class="fc" id="L267">                .questionId(questionId)</span>
+<span class="fc" id="L268">                .uuid(info.uuid())</span>
+<span class="fc" id="L269">                .title(info.title())</span>
+<span class="fc" id="L270">                .build());</span>
+<span class="fc" id="L271">        added++;</span>
+<span class="fc" id="L272">        ctx.log(&quot;Added question %s (%s)&quot;.formatted(questionId, info.title()));</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">      } else if (!existing.getUuid().equals(info.uuid())</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">          || !existing.getTitle().equals(info.title())) {</span>
+<span class="fc" id="L275">        existing.setUuid(info.uuid());</span>
+<span class="fc" id="L276">        existing.setTitle(info.title());</span>
+<span class="fc" id="L277">        plQuestionRepository.save(existing);</span>
+<span class="fc" id="L278">        updated++;</span>
+<span class="fc" id="L279">        ctx.log(&quot;Updated question %s (%s)&quot;.formatted(questionId, info.title()));</span>
+      } else {
+<span class="fc" id="L281">        unchanged++;</span>
+      }
+<span class="fc" id="L283">    }</span>
+
+<span class="fc" id="L285">    int deleted = 0;</span>
+<span class="fc" id="L286">    List&lt;String&gt; staleQuestionIds =</span>
+<span class="fc" id="L287">        existingByQuestionId.keySet().stream()</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">            .filter(questionId -&gt; !foundQuestions.containsKey(questionId))</span>
+<span class="fc" id="L289">            .sorted()</span>
+<span class="fc" id="L290">            .toList();</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">    for (String questionId : staleQuestionIds) {</span>
+<span class="fc" id="L292">      PlQuestion stale = existingByQuestionId.get(questionId);</span>
+<span class="fc" id="L293">      plScaffoldAssessmentRepository.deleteByPlQuestionId(stale.getId());</span>
+<span class="fc" id="L294">      plAssessmentQuestionRepository.deleteByPlQuestionId(stale.getId());</span>
+<span class="fc" id="L295">      plQuestionRepository.delete(stale);</span>
+<span class="fc" id="L296">      deleted++;</span>
+<span class="fc" id="L297">      ctx.log(&quot;Deleted question %s (no longer on GitHub)&quot;.formatted(questionId));</span>
+<span class="fc" id="L298">    }</span>
+
+<span class="fc" id="L300">    ctx.log(</span>
+        &quot;Questions: %d added, %d updated, %d deleted, %d unchanged&quot;
+<span class="fc" id="L302">            .formatted(added, updated, deleted, unchanged));</span>
+<span class="fc" id="L303">  }</span>
+
+  /** Syncs assessments from GitHub for the course's own instance only. */
+  private void syncAssessments(JobContext ctx, PlRepo plRepo, PlInstance instance, String token) {
+<span class="fc" id="L307">    Map&lt;String, PlQuestion&gt; questionsByQuestionId = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L308" title="All 2 branches covered.">    for (PlQuestion question : plQuestionRepository.findByPlRepoId(plRepo.getId())) {</span>
+<span class="fc" id="L309">      questionsByQuestionId.put(question.getQuestionId(), question);</span>
+<span class="fc" id="L310">    }</span>
+
+<span class="fc" id="L312">    int added = 0;</span>
+<span class="fc" id="L313">    int deleted = 0;</span>
+<span class="fc" id="L314">    int unchanged = 0;</span>
+<span class="fc" id="L315">    String assessmentsPath =</span>
+<span class="fc" id="L316">        &quot;%s/%s/%s&quot;.formatted(COURSE_INSTANCES_PATH, instance.getShortName(), ASSESSMENTS_DIRECTORY);</span>
+    List&lt;DirectoryEntry&gt; entries;
+    try {
+<span class="fc" id="L319">      entries = githubService.listDirectory(plRepo.getRepoName(), assessmentsPath, token);</span>
+<span class="fc" id="L320">    } catch (HttpClientErrorException.NotFound e) {</span>
+<span class="fc" id="L321">      ctx.log(</span>
+          &quot;Instance %s has no %s directory; skipping assessment sync&quot;
+<span class="fc" id="L323">              .formatted(instance.getShortName(), ASSESSMENTS_DIRECTORY));</span>
+<span class="fc" id="L324">      return;</span>
+<span class="fc" id="L325">    }</span>
+
+<span class="fc" id="L327">    Map&lt;String, PlAssessment&gt; existingByName = new LinkedHashMap&lt;&gt;();</span>
+    for (PlAssessment assessment :
+<span class="fc bfc" id="L329" title="All 2 branches covered.">        plAssessmentRepository.findByPlRepoIdAndPlInstanceId(plRepo.getId(), instance.getId())) {</span>
+<span class="fc" id="L330">      existingByName.put(assessment.getName(), assessment);</span>
+<span class="fc" id="L331">    }</span>
+
+<span class="fc" id="L333">    Set&lt;String&gt; foundNames = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L334" title="All 2 branches covered.">    for (DirectoryEntry entry : entries) {</span>
+<span class="fc bfc" id="L335" title="All 2 branches covered.">      if (!&quot;dir&quot;.equals(entry.type())) {</span>
+<span class="fc" id="L336">        continue;</span>
+      }
+<span class="fc" id="L338">      String assessmentPath = assessmentsPath + &quot;/&quot; + entry.name();</span>
+<span class="fc" id="L339">      boolean hasInfoAssessment =</span>
+<span class="fc" id="L340">          githubService.listDirectory(plRepo.getRepoName(), assessmentPath, token).stream()</span>
+<span class="fc bfc" id="L341" title="All 4 branches covered.">              .anyMatch(e -&gt; INFO_ASSESSMENT_JSON.equals(e.name()) &amp;&amp; &quot;file&quot;.equals(e.type()));</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">      if (!hasInfoAssessment) {</span>
+<span class="fc" id="L343">        continue;</span>
+      }
+<span class="fc" id="L345">      String content =</span>
+<span class="fc" id="L346">          githubService.getFileContent(</span>
+<span class="fc" id="L347">              plRepo.getRepoName(), assessmentPath + &quot;/&quot; + INFO_ASSESSMENT_JSON, token);</span>
+      JsonNode root;
+      try {
+<span class="fc" id="L350">        root = MAPPER.readTree(content);</span>
+<span class="fc" id="L351">      } catch (Exception e) {</span>
+<span class="fc" id="L352">        ctx.log(</span>
+            &quot;Skipping assessment %s (instance %s): could not parse %s&quot;
+<span class="fc" id="L354">                .formatted(entry.name(), instance.getShortName(), INFO_ASSESSMENT_JSON));</span>
+<span class="fc" id="L355">        continue;</span>
+<span class="fc" id="L356">      }</span>
+<span class="fc" id="L357">      foundNames.add(entry.name());</span>
+
+<span class="fc" id="L359">      PlAssessment assessment = existingByName.get(entry.name());</span>
+<span class="fc bfc" id="L360" title="All 2 branches covered.">      if (assessment == null) {</span>
+<span class="fc" id="L361">        assessment =</span>
+<span class="fc" id="L362">            plAssessmentRepository.save(</span>
+<span class="fc" id="L363">                PlAssessment.builder()</span>
+<span class="fc" id="L364">                    .plRepoId(plRepo.getId())</span>
+<span class="fc" id="L365">                    .plInstanceId(instance.getId())</span>
+<span class="fc" id="L366">                    .name(entry.name())</span>
+<span class="fc" id="L367">                    .build());</span>
+<span class="fc" id="L368">        added++;</span>
+<span class="fc" id="L369">        ctx.log(</span>
+<span class="fc" id="L370">            &quot;Added assessment %s (instance %s)&quot;.formatted(entry.name(), instance.getShortName()));</span>
+      } else {
+<span class="fc" id="L372">        unchanged++;</span>
+      }
+
+      // get(&quot;zones&quot;) is null when the key is absent; collectQuestionIds treats that as no links
+<span class="fc" id="L376">      syncAssessmentQuestions(</span>
+<span class="fc" id="L377">          ctx, plRepo, instance, assessment, root.get(&quot;zones&quot;), questionsByQuestionId);</span>
+<span class="fc" id="L378">    }</span>
+
+<span class="fc" id="L380">    List&lt;String&gt; staleNames =</span>
+<span class="fc" id="L381">        existingByName.keySet().stream()</span>
+<span class="fc bfc" id="L382" title="All 2 branches covered.">            .filter(name -&gt; !foundNames.contains(name))</span>
+<span class="fc" id="L383">            .sorted()</span>
+<span class="fc" id="L384">            .toList();</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">    for (String name : staleNames) {</span>
+<span class="fc" id="L386">      PlAssessment stale = existingByName.get(name);</span>
+<span class="fc" id="L387">      plAssessmentQuestionRepository.deleteByPlAssessmentId(stale.getId());</span>
+<span class="fc" id="L388">      plAssessmentRepository.delete(stale);</span>
+<span class="fc" id="L389">      deleted++;</span>
+<span class="fc" id="L390">      ctx.log(</span>
+          &quot;Deleted assessment %s (instance %s) (no longer on GitHub)&quot;
+<span class="fc" id="L392">              .formatted(name, instance.getShortName()));</span>
+<span class="fc" id="L393">    }</span>
+
+<span class="fc" id="L395">    ctx.log(&quot;Assessments: %d added, %d deleted, %d unchanged&quot;.formatted(added, deleted, unchanged));</span>
+<span class="fc" id="L396">  }</span>
+
+  /**
+   * Copies the PrairieLearn-side fields (issue #71) onto the PlAssessment rows of this instance,
+   * matched by assessment name. A PrairieLearn assessment with no matching repo row (or the
+   * reverse) is logged and left alone; the GitHub sync is the source of truth for which rows exist.
+   */
+  private void enrichAssessmentsFromPrairieLearn(
+      JobContext ctx, PlRepo plRepo, PlInstance plInstance, String plToken) {
+    List&lt;PrairieLearnService.AssessmentInfo&gt; plAssessments;
+    try {
+<span class="fc" id="L407">      plAssessments = prairieLearnService.getAssessments(plInstance.getNumericId(), plToken);</span>
+<span class="fc" id="L408">    } catch (HttpClientErrorException e) {</span>
+<span class="fc" id="L409">      ctx.log(</span>
+          &quot;Could not list assessments from PrairieLearn (HTTP %d); skipping assessment field updates&quot;
+<span class="fc" id="L411">              .formatted(e.getStatusCode().value()));</span>
+<span class="fc" id="L412">      return;</span>
+<span class="fc" id="L413">    }</span>
+
+<span class="fc" id="L415">    Map&lt;String, PlAssessment&gt; existingByName = new LinkedHashMap&lt;&gt;();</span>
+    for (PlAssessment assessment :
+<span class="fc bfc" id="L417" title="All 2 branches covered.">        plAssessmentRepository.findByPlRepoIdAndPlInstanceId(plRepo.getId(), plInstance.getId())) {</span>
+<span class="fc" id="L418">      existingByName.put(assessment.getName(), assessment);</span>
+<span class="fc" id="L419">    }</span>
+
+<span class="fc" id="L421">    int updated = 0;</span>
+<span class="fc" id="L422">    int unmatched = 0;</span>
+<span class="fc bfc" id="L423" title="All 2 branches covered.">    for (PrairieLearnService.AssessmentInfo info : plAssessments) {</span>
+<span class="fc" id="L424">      PlAssessment assessment = existingByName.get(info.assessmentName());</span>
+<span class="fc bfc" id="L425" title="All 2 branches covered.">      if (assessment == null) {</span>
+<span class="fc" id="L426">        unmatched++;</span>
+<span class="fc" id="L427">        ctx.log(</span>
+            &quot;PrairieLearn assessment %s has no matching assessment directory in the repo; skipping&quot;
+<span class="fc" id="L429">                .formatted(info.assessmentName()));</span>
+<span class="fc" id="L430">        continue;</span>
+      }
+<span class="fc" id="L432">      assessment.setPlAssessmentId(info.assessmentId());</span>
+<span class="fc" id="L433">      assessment.setPlAssessmentNumber(info.assessmentNumber());</span>
+<span class="fc" id="L434">      assessment.setPlAssessmentOrder(info.assessmentOrderBy());</span>
+<span class="fc" id="L435">      assessment.setPlAssessmentTitle(info.title());</span>
+<span class="fc" id="L436">      assessment.setPlAssessmentSetAbbreviation(info.assessmentSetAbbreviation());</span>
+<span class="fc" id="L437">      assessment.setPlAssessmentSetNumber(info.assessmentSetNumber());</span>
+<span class="fc" id="L438">      assessment.setPlAssessmentSetHeading(info.assessmentSetHeading());</span>
+<span class="fc" id="L439">      assessment.setPlAssessmentSetColor(info.assessmentSetColor());</span>
+<span class="fc" id="L440">      plAssessmentRepository.save(assessment);</span>
+<span class="fc" id="L441">      updated++;</span>
+<span class="fc" id="L442">      ctx.log(&quot;Updated PrairieLearn fields for assessment %s&quot;.formatted(info.assessmentName()));</span>
+<span class="fc" id="L443">    }</span>
+<span class="fc" id="L444">    ctx.log(</span>
+        &quot;PrairieLearn assessment fields: %d updated, %d without a matching repo assessment&quot;
+<span class="fc" id="L446">            .formatted(updated, unmatched));</span>
+<span class="fc" id="L447">  }</span>
+
+  /**
+   * Rewrites the assessment's question list (join rows, in zone order) to match the ids referenced
+   * by the zones node of its infoAssessment.json. Ids that don't match any PlQuestion of this repo
+   * are logged and skipped. If the list already matches, the rows are left untouched.
+   */
+  private void syncAssessmentQuestions(
+      JobContext ctx,
+      PlRepo plRepo,
+      PlInstance instance,
+      PlAssessment assessment,
+      JsonNode zones,
+      Map&lt;String, PlQuestion&gt; questionsByQuestionId) {
+<span class="fc" id="L461">    Set&lt;String&gt; referencedIds = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L462">    collectQuestionIds(zones, referencedIds);</span>
+
+<span class="fc" id="L464">    List&lt;Long&gt; desiredQuestionRowIds = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L465" title="All 2 branches covered.">    for (String questionId : referencedIds) {</span>
+<span class="fc" id="L466">      PlQuestion question = questionsByQuestionId.get(questionId);</span>
+<span class="fc bfc" id="L467" title="All 2 branches covered.">      if (question == null) {</span>
+<span class="fc" id="L468">        ctx.log(</span>
+            &quot;Assessment %s (instance %s) references unknown question id %s; skipping that link&quot;
+<span class="fc" id="L470">                .formatted(assessment.getName(), instance.getShortName(), questionId));</span>
+<span class="fc" id="L471">        continue;</span>
+      }
+<span class="fc" id="L473">      desiredQuestionRowIds.add(question.getId());</span>
+<span class="fc" id="L474">    }</span>
+
+<span class="fc" id="L476">    List&lt;Long&gt; currentQuestionRowIds =</span>
+        plAssessmentQuestionRepository
+<span class="fc" id="L478">            .findByPlAssessmentIdOrderByOrdinalAsc(assessment.getId())</span>
+<span class="fc" id="L479">            .stream()</span>
+<span class="fc" id="L480">            .map(PlAssessmentQuestion::getPlQuestionId)</span>
+<span class="fc" id="L481">            .toList();</span>
+<span class="fc bfc" id="L482" title="All 2 branches covered.">    if (currentQuestionRowIds.equals(desiredQuestionRowIds)) {</span>
+<span class="fc" id="L483">      return;</span>
+    }
+
+<span class="fc" id="L486">    plAssessmentQuestionRepository.deleteByPlAssessmentId(assessment.getId());</span>
+    // flush so the deletes hit the database before the re-inserts; Hibernate otherwise orders
+    // inserts first within the transaction, violating the (assessment, question) unique constraint
+<span class="fc" id="L489">    plAssessmentQuestionRepository.flush();</span>
+<span class="fc bfc" id="L490" title="All 2 branches covered.">    for (int i = 0; i &lt; desiredQuestionRowIds.size(); i++) {</span>
+<span class="fc" id="L491">      plAssessmentQuestionRepository.save(</span>
+<span class="fc" id="L492">          PlAssessmentQuestion.builder()</span>
+<span class="fc" id="L493">              .plRepoId(plRepo.getId())</span>
+<span class="fc" id="L494">              .plAssessmentId(assessment.getId())</span>
+<span class="fc" id="L495">              .plQuestionId(desiredQuestionRowIds.get(i))</span>
+<span class="fc" id="L496">              .ordinal(i)</span>
+<span class="fc" id="L497">              .build());</span>
+    }
+<span class="fc" id="L499">    ctx.log(</span>
+        &quot;Linked %d question(s) to assessment %s (instance %s)&quot;
+<span class="fc" id="L501">            .formatted(</span>
+<span class="fc" id="L502">                desiredQuestionRowIds.size(), assessment.getName(), instance.getShortName()));</span>
+<span class="fc" id="L503">  }</span>
+
+  /**
+   * Recursively collects the value of every {@code &quot;id&quot;} key in the JSON tree under the zones node
+   * of an infoAssessment.json — each one references a question — preserving document order and
+   * dropping duplicates.
+   */
+  static void collectQuestionIds(JsonNode node, Set&lt;String&gt; ids) {
+<span class="fc bfc" id="L511" title="All 2 branches covered.">    if (node == null) {</span>
+<span class="fc" id="L512">      return;</span>
+    }
+<span class="fc bfc" id="L514" title="All 4 branches covered.">    if (node.isObject() &amp;&amp; node.hasNonNull(&quot;id&quot;)) {</span>
+<span class="fc" id="L515">      ids.add(node.get(&quot;id&quot;).asText());</span>
+    }
+<span class="fc bfc" id="L517" title="All 2 branches covered.">    for (JsonNode child : node) {</span>
+<span class="fc" id="L518">      collectQuestionIds(child, ids);</span>
+<span class="fc" id="L519">    }</span>
+<span class="fc" id="L520">  }</span>
+
+  /**
+   * Recursively walks a directory under {@code questions}. {@code questionId} is the path relative
+   * to the questions directory (&quot;&quot; for the questions directory itself, which is never a question).
+   */
+  private void walkQuestionsDirectory(
+      JobContext ctx,
+      PlRepo plRepo,
+      String token,
+      String path,
+      String questionId,
+      Map&lt;String, QuestionInfo&gt; foundQuestions) {
+<span class="fc" id="L533">    List&lt;DirectoryEntry&gt; entries = githubService.listDirectory(plRepo.getRepoName(), path, token);</span>
+
+<span class="fc" id="L535">    boolean hasInfoJson =</span>
+<span class="fc" id="L536">        entries.stream()</span>
+<span class="fc bfc" id="L537" title="All 4 branches covered.">            .anyMatch(entry -&gt; INFO_JSON.equals(entry.name()) &amp;&amp; &quot;file&quot;.equals(entry.type()));</span>
+<span class="fc bfc" id="L538" title="All 4 branches covered.">    if (hasInfoJson &amp;&amp; !questionId.isEmpty()) {</span>
+<span class="fc" id="L539">      String content =</span>
+<span class="fc" id="L540">          githubService.getFileContent(plRepo.getRepoName(), path + &quot;/&quot; + INFO_JSON, token);</span>
+<span class="fc" id="L541">      QuestionInfo info = parseInfoJson(ctx, questionId, content);</span>
+<span class="fc bfc" id="L542" title="All 2 branches covered.">      if (info != null) {</span>
+<span class="fc" id="L543">        foundQuestions.put(questionId, info);</span>
+      }
+<span class="fc" id="L545">      return; // a question directory's subdirectories belong to the question; don't recurse</span>
+    }
+
+<span class="fc bfc" id="L548" title="All 2 branches covered.">    for (DirectoryEntry entry : entries) {</span>
+<span class="fc bfc" id="L549" title="All 2 branches covered.">      if (!&quot;dir&quot;.equals(entry.type())) {</span>
+<span class="fc" id="L550">        continue;</span>
+      }
+<span class="fc bfc" id="L552" title="All 2 branches covered.">      if (DRAFTS_DIRECTORY.equals(entry.name())) {</span>
+<span class="fc" id="L553">        ctx.log(&quot;Skipping directory %s/%s&quot;.formatted(path, entry.name()));</span>
+<span class="fc" id="L554">        continue;</span>
+      }
+      String childQuestionId =
+<span class="fc bfc" id="L557" title="All 2 branches covered.">          questionId.isEmpty() ? entry.name() : questionId + &quot;/&quot; + entry.name();</span>
+<span class="fc" id="L558">      walkQuestionsDirectory(</span>
+<span class="fc" id="L559">          ctx, plRepo, token, path + &quot;/&quot; + entry.name(), childQuestionId, foundQuestions);</span>
+<span class="fc" id="L560">    }</span>
+<span class="fc" id="L561">  }</span>
+
+  /** Returns the parsed uuid/title, or null (with a log message) if info.json is unusable. */
+  private QuestionInfo parseInfoJson(JobContext ctx, String questionId, String content) {
+    try {
+<span class="fc" id="L566">      JsonNode node = MAPPER.readTree(content);</span>
+<span class="fc bfc" id="L567" title="All 4 branches covered.">      if (!node.hasNonNull(&quot;uuid&quot;) || !node.hasNonNull(&quot;title&quot;)) {</span>
+<span class="fc" id="L568">        ctx.log(&quot;Skipping question %s: info.json is missing uuid or title&quot;.formatted(questionId));</span>
+<span class="fc" id="L569">        return null;</span>
+      }
+<span class="fc" id="L571">      return new QuestionInfo(</span>
+<span class="fc" id="L572">          UUID.fromString(node.get(&quot;uuid&quot;).asText()), node.get(&quot;title&quot;).asText());</span>
+<span class="fc" id="L573">    } catch (Exception e) {</span>
+<span class="fc" id="L574">      ctx.log(&quot;Skipping question %s: could not parse info.json&quot;.formatted(questionId));</span>
+<span class="fc" id="L575">      return null;</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

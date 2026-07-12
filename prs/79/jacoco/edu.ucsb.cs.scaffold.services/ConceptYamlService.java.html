@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConceptYamlService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.services</a> &gt; <span class="el_source">ConceptYamlService.java</span></div><h1>ConceptYamlService.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.services;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import edu.ucsb.cs.scaffold.entity.Concept;
+import edu.ucsb.cs.scaffold.entity.ConceptEdge;
+import edu.ucsb.cs.scaffold.entity.Course;
+import edu.ucsb.cs.scaffold.entity.PracticeProblem;
+import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.model.ConceptGraphYamlDTO;
+import edu.ucsb.cs.scaffold.model.UserStateV2;
+import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
+import edu.ucsb.cs.scaffold.repository.ConceptRepository;
+import edu.ucsb.cs.scaffold.repository.CourseRepository;
+import edu.ucsb.cs.scaffold.repository.PracticeProblemRepository;
+import edu.ucsb.cs.scaffold.repository.UserStateV2Repository;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Exports and imports a course's entire concept-graph content (concepts, subconcepts, prerequisite
+ * edges, and practice problems) as a human-editable YAML document. See docs/yaml-format.md for the
+ * format specification.
+ */
+@Service
+@RequiredArgsConstructor
+public class ConceptYamlService {
+
+  // Emits multi-line Markdown as | block scalars and leaves simple strings unquoted, so the
+  // export is pleasant to hand-edit. Reading is strict (FAIL_ON_UNKNOWN_PROPERTIES is on by
+  // default outside Spring): an unknown key in an uploaded file is almost always a typo.
+  private static final YAMLMapper YAML_MAPPER =
+<span class="fc" id="L46">      YAMLMapper.builder()</span>
+<span class="fc" id="L47">          .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)</span>
+<span class="fc" id="L48">          .enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)</span>
+<span class="fc" id="L49">          .enable(YAMLGenerator.Feature.INDENT_ARRAYS_WITH_INDICATOR)</span>
+<span class="fc" id="L50">          .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)</span>
+<span class="fc" id="L51">          .build();</span>
+
+  // The order subconcepts are listed under their parent: the author's ordering, with the same
+  // id tiebreaker as the /api/concepts/graph endpoint.
+<span class="fc" id="L55">  private static final Comparator&lt;Concept&gt; SUBCONCEPT_DISPLAY_ORDER =</span>
+<span class="fc" id="L56">      Comparator.comparing(Concept::getSortOrder, Comparator.nullsLast(Comparator.naturalOrder()))</span>
+<span class="fc" id="L57">          .thenComparing(Concept::getId);</span>
+
+  // Matches the practice_problems.url column width.
+  public static final int MAX_URL_LENGTH = 512;
+
+  private final ConceptRepository conceptRepository;
+  private final ConceptEdgeRepository conceptEdgeRepository;
+  private final PracticeProblemRepository practiceProblemRepository;
+  private final CourseRepository courseRepository;
+  private final UserStateV2Repository userStateV2Repository;
+  private final MarkdownService markdownService;
+  private final ConceptGraphService conceptGraphService;
+
+  /**
+   * The complete concept-graph content of the course as a YAML document (see docs/yaml-format.md).
+   * Top-level concepts are numbered with consecutive external ids 1..n in database-id order; edges
+   * refer to those external ids.
+   */
+  public String createYAML(long courseId) throws EntityNotFoundException, JsonProcessingException {
+<span class="fc" id="L76">    Course course =</span>
+        courseRepository
+<span class="fc" id="L78">            .findById(courseId)</span>
+<span class="fc" id="L79">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L81">    List&lt;Concept&gt; concepts = conceptRepository.findByCourseId(courseId);</span>
+
+<span class="fc" id="L83">    List&lt;Concept&gt; topLevelConcepts =</span>
+<span class="fc" id="L84">        concepts.stream()</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">            .filter(concept -&gt; !concept.isSubconcept())</span>
+<span class="fc" id="L86">            .sorted(Comparator.comparing(Concept::getId))</span>
+<span class="fc" id="L87">            .toList();</span>
+
+<span class="fc" id="L89">    Map&lt;Long, List&lt;Concept&gt;&gt; subconceptsByParentId =</span>
+<span class="fc" id="L90">        concepts.stream()</span>
+<span class="fc" id="L91">            .filter(Concept::isSubconcept)</span>
+<span class="fc" id="L92">            .sorted(SUBCONCEPT_DISPLAY_ORDER)</span>
+<span class="fc" id="L93">            .collect(</span>
+<span class="fc" id="L94">                Collectors.groupingBy(</span>
+<span class="fc" id="L95">                    concept -&gt; concept.getParent().getId(), HashMap::new, Collectors.toList()));</span>
+
+<span class="fc" id="L97">    Map&lt;Long, List&lt;String&gt;&gt; urlsByConceptId = urlsByConceptId(courseId);</span>
+
+<span class="fc" id="L99">    Map&lt;Long, Long&gt; externalIdByInternalId = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">    for (int i = 0; i &lt; topLevelConcepts.size(); i++) {</span>
+<span class="fc" id="L101">      externalIdByInternalId.put(topLevelConcepts.get(i).getId(), (long) (i + 1));</span>
+    }
+
+<span class="fc" id="L104">    List&lt;ConceptGraphYamlDTO.ConceptNodeDTO&gt; conceptNodes = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">    for (Concept concept : topLevelConcepts) {</span>
+<span class="fc" id="L106">      List&lt;ConceptGraphYamlDTO.SubconceptNodeDTO&gt; subconceptNodes =</span>
+<span class="fc" id="L107">          subconceptsByParentId.getOrDefault(concept.getId(), List.of()).stream()</span>
+<span class="fc" id="L108">              .map(</span>
+                  sub -&gt;
+<span class="fc" id="L110">                      ConceptGraphYamlDTO.SubconceptNodeDTO.builder()</span>
+<span class="fc" id="L111">                          .label(sub.getLabel())</span>
+<span class="fc" id="L112">                          .description(sub.getDescription())</span>
+<span class="fc" id="L113">                          .example(sub.getExample())</span>
+<span class="fc" id="L114">                          .practiceProblems(urlsByConceptId.get(sub.getId()))</span>
+<span class="fc" id="L115">                          .build())</span>
+<span class="fc" id="L116">              .toList();</span>
+<span class="fc" id="L117">      conceptNodes.add(</span>
+<span class="fc" id="L118">          ConceptGraphYamlDTO.ConceptNodeDTO.builder()</span>
+<span class="fc" id="L119">              .id(externalIdByInternalId.get(concept.getId()))</span>
+<span class="fc" id="L120">              .label(concept.getLabel())</span>
+<span class="fc" id="L121">              .color(concept.getColor())</span>
+<span class="fc" id="L122">              .level(concept.getLevel())</span>
+<span class="fc" id="L123">              .x(concept.getX())</span>
+<span class="fc" id="L124">              .y(concept.getY())</span>
+<span class="fc" id="L125">              .description(concept.getDescription())</span>
+<span class="fc" id="L126">              .example(concept.getExample())</span>
+<span class="fc" id="L127">              .practiceProblems(urlsByConceptId.get(concept.getId()))</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">              .subconcepts(subconceptNodes.isEmpty() ? null : subconceptNodes)</span>
+<span class="fc" id="L129">              .build());</span>
+<span class="fc" id="L130">    }</span>
+
+<span class="fc" id="L132">    List&lt;ConceptGraphYamlDTO.EdgeNodeDTO&gt; edgeNodes =</span>
+<span class="fc" id="L133">        conceptEdgeRepository.findByCourseId(courseId).stream()</span>
+<span class="fc" id="L134">            .map(</span>
+                edge -&gt;
+<span class="fc" id="L136">                    ConceptGraphYamlDTO.EdgeNodeDTO.builder()</span>
+<span class="fc" id="L137">                        .from(externalIdByInternalId.get(edge.getSource().getId()))</span>
+<span class="fc" id="L138">                        .to(externalIdByInternalId.get(edge.getTarget().getId()))</span>
+<span class="fc" id="L139">                        .build())</span>
+<span class="fc" id="L140">            .sorted(</span>
+<span class="fc" id="L141">                Comparator.comparing(ConceptGraphYamlDTO.EdgeNodeDTO::getFrom)</span>
+<span class="fc" id="L142">                    .thenComparing(ConceptGraphYamlDTO.EdgeNodeDTO::getTo))</span>
+<span class="fc" id="L143">            .toList();</span>
+
+    ConceptGraphYamlDTO dto =
+<span class="fc" id="L146">        ConceptGraphYamlDTO.builder().format(1).concepts(conceptNodes).edges(edgeNodes).build();</span>
+
+<span class="fc" id="L148">    String header =</span>
+        &quot;# Concept graph for course %d (%s)%n# See docs/yaml-format.md for the format.%n&quot;
+<span class="fc" id="L150">            .formatted(course.getId(), course.getCourseName());</span>
+<span class="fc" id="L151">    return header + YAML_MAPPER.writeValueAsString(dto);</span>
+  }
+
+  /**
+   * Replaces the course's entire concept-graph content with the content of a YAML document in the
+   * docs/yaml-format.md format, reporting the outcome as a JSON-shaped map.
+   *
+   * &lt;p&gt;The replacement is all-or-nothing: the document is fully parsed and validated first, and if
+   * anything is wrong the course is left untouched and every problem found is reported under {@code
+   * errors}. Only a valid document deletes the course's concepts, edges, practice problems, and
+   * per-user scaffold state ({@code user_state_v2} rows, which refer to concepts by ids that no
+   * longer exist after a replacement) before creating the new content.
+   */
+  @Transactional
+  public Map&lt;String, Object&gt; replaceFromYAML(long courseId, InputStream yamlStream)
+      throws EntityNotFoundException {
+<span class="fc" id="L167">    Course course =</span>
+        courseRepository
+<span class="fc" id="L169">            .findById(courseId)</span>
+<span class="fc" id="L170">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L172">    List&lt;String&gt; errors = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L173">    ConceptGraphYamlDTO dto = parseYaml(yamlStream, errors);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">    if (dto != null) {</span>
+<span class="fc" id="L175">      validate(dto, errors);</span>
+    }
+<span class="fc bfc" id="L177" title="All 2 branches covered.">    if (!errors.isEmpty()) {</span>
+<span class="fc" id="L178">      return report(false, errors, 0, 0, 0, 0, 0);</span>
+    }
+
+<span class="fc" id="L181">    int userStatesCleared = deleteCourseContentAndUserState(courseId);</span>
+
+<span class="fc" id="L183">    int conceptsCreated = 0;</span>
+<span class="fc" id="L184">    int subconceptsCreated = 0;</span>
+<span class="fc" id="L185">    int edgesCreated = 0;</span>
+<span class="fc" id="L186">    int practiceProblemsCreated = 0;</span>
+
+<span class="fc" id="L188">    Map&lt;Long, Concept&gt; savedByExternalId = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">    for (ConceptGraphYamlDTO.ConceptNodeDTO node : dto.getConcepts()) {</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">      int level = node.getLevel() != null ? node.getLevel() : 1;</span>
+<span class="fc" id="L191">      Concept saved =</span>
+<span class="fc" id="L192">          conceptRepository.save(</span>
+<span class="fc" id="L193">              Concept.builder()</span>
+<span class="fc" id="L194">                  .course(course)</span>
+<span class="fc" id="L195">                  .label(markdownService.clean(node.getLabel()))</span>
+<span class="fc" id="L196">                  .description(markdownService.clean(node.getDescription()))</span>
+<span class="fc" id="L197">                  .example(markdownService.clean(node.getExample()))</span>
+<span class="fc" id="L198">                  .color(</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">                      node.getColor() != null</span>
+<span class="fc" id="L200">                          ? node.getColor()</span>
+<span class="fc" id="L201">                          : conceptGraphService.colorForLevel(level))</span>
+<span class="fc" id="L202">                  .level(level)</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">                  .x(node.getX() != null ? node.getX() : 0)</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">                  .y(node.getY() != null ? node.getY() : 0)</span>
+<span class="fc" id="L205">                  .build());</span>
+<span class="fc" id="L206">      savedByExternalId.put(node.getId(), saved);</span>
+<span class="fc" id="L207">      conceptsCreated++;</span>
+<span class="fc" id="L208">      practiceProblemsCreated += savePracticeProblems(course, saved, node.getPracticeProblems());</span>
+
+      List&lt;ConceptGraphYamlDTO.SubconceptNodeDTO&gt; subconcepts =
+<span class="fc bfc" id="L211" title="All 2 branches covered.">          node.getSubconcepts() != null ? node.getSubconcepts() : List.of();</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">      for (int i = 0; i &lt; subconcepts.size(); i++) {</span>
+<span class="fc" id="L213">        ConceptGraphYamlDTO.SubconceptNodeDTO subNode = subconcepts.get(i);</span>
+<span class="fc" id="L214">        Concept savedSub =</span>
+<span class="fc" id="L215">            conceptRepository.save(</span>
+<span class="fc" id="L216">                Concept.builder()</span>
+<span class="fc" id="L217">                    .course(course)</span>
+<span class="fc" id="L218">                    .label(markdownService.clean(subNode.getLabel()))</span>
+<span class="fc" id="L219">                    .description(markdownService.clean(subNode.getDescription()))</span>
+<span class="fc" id="L220">                    .example(markdownService.clean(subNode.getExample()))</span>
+<span class="fc" id="L221">                    .parent(saved)</span>
+<span class="fc" id="L222">                    .sortOrder(i)</span>
+<span class="fc" id="L223">                    .build());</span>
+<span class="fc" id="L224">        subconceptsCreated++;</span>
+<span class="fc" id="L225">        practiceProblemsCreated +=</span>
+<span class="fc" id="L226">            savePracticeProblems(course, savedSub, subNode.getPracticeProblems());</span>
+      }
+<span class="fc" id="L228">    }</span>
+
+    for (ConceptGraphYamlDTO.EdgeNodeDTO edgeNode :
+<span class="fc bfc" id="L231" title="All 4 branches covered.">        dto.getEdges() != null ? dto.getEdges() : List.&lt;ConceptGraphYamlDTO.EdgeNodeDTO&gt;of()) {</span>
+<span class="fc" id="L232">      conceptEdgeRepository.save(</span>
+<span class="fc" id="L233">          ConceptEdge.builder()</span>
+<span class="fc" id="L234">              .course(course)</span>
+<span class="fc" id="L235">              .source(savedByExternalId.get(edgeNode.getFrom()))</span>
+<span class="fc" id="L236">              .target(savedByExternalId.get(edgeNode.getTo()))</span>
+<span class="fc" id="L237">              .build());</span>
+<span class="fc" id="L238">      edgesCreated++;</span>
+<span class="fc" id="L239">    }</span>
+
+<span class="fc" id="L241">    return report(</span>
+        true,
+        errors,
+        conceptsCreated,
+        subconceptsCreated,
+        edgesCreated,
+        practiceProblemsCreated,
+        userStatesCleared);
+  }
+
+  private ConceptGraphYamlDTO parseYaml(InputStream yamlStream, List&lt;String&gt; errors) {
+    // Read the stream ourselves before handing the text to Jackson: Jackson wraps stream
+    // IOExceptions in JsonProcessingException, which would make an unreadable upload look
+    // like a syntax error in the file.
+    try {
+<span class="fc" id="L256">      String yaml = new String(yamlStream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);</span>
+<span class="fc" id="L257">      return YAML_MAPPER.readValue(yaml, ConceptGraphYamlDTO.class);</span>
+<span class="fc" id="L258">    } catch (JsonProcessingException e) {</span>
+<span class="fc" id="L259">      errors.add(&quot;could not parse YAML: &quot; + e.getOriginalMessage());</span>
+<span class="fc" id="L260">    } catch (IOException e) {</span>
+<span class="fc" id="L261">      errors.add(&quot;could not read file: &quot; + e.getMessage());</span>
+<span class="fc" id="L262">    }</span>
+<span class="fc" id="L263">    return null;</span>
+  }
+
+  /**
+   * Checks everything that could make the document unloadable or leave the course in a state the
+   * rest of the app does not expect (the same invariants the single-concept endpoints enforce).
+   * Every problem found is appended to {@code errors}; an empty list afterward means the document
+   * is safe to load.
+   */
+  private void validate(ConceptGraphYamlDTO dto, List&lt;String&gt; errors) {
+<span class="fc bfc" id="L273" title="All 2 branches covered.">    if (dto.getFormat() == null) {</span>
+<span class="fc" id="L274">      errors.add(&quot;format is required (expected: format: 1)&quot;);</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">    } else if (dto.getFormat() != 1) {</span>
+<span class="fc" id="L276">      errors.add(&quot;unsupported format %d (expected: format: 1)&quot;.formatted(dto.getFormat()));</span>
+    }
+<span class="fc bfc" id="L278" title="All 2 branches covered.">    if (dto.getConcepts() == null) {</span>
+<span class="fc" id="L279">      errors.add(&quot;concepts is required (may be an empty list: concepts: [])&quot;);</span>
+    }
+
+<span class="fc" id="L282">    Set&lt;Long&gt; externalIds = new HashSet&lt;&gt;();</span>
+    List&lt;ConceptGraphYamlDTO.ConceptNodeDTO&gt; concepts =
+<span class="fc bfc" id="L284" title="All 2 branches covered.">        dto.getConcepts() != null ? dto.getConcepts() : List.of();</span>
+<span class="fc bfc" id="L285" title="All 2 branches covered.">    for (int i = 0; i &lt; concepts.size(); i++) {</span>
+<span class="fc" id="L286">      ConceptGraphYamlDTO.ConceptNodeDTO node = concepts.get(i);</span>
+<span class="fc" id="L287">      String where = &quot;concepts[%d]&quot;.formatted(i);</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">      if (node == null) {</span>
+<span class="fc" id="L289">        errors.add(where + &quot; is empty&quot;);</span>
+<span class="fc" id="L290">        continue;</span>
+      }
+<span class="fc bfc" id="L292" title="All 2 branches covered.">      if (node.getId() == null) {</span>
+<span class="fc" id="L293">        errors.add(where + &quot;: id is required&quot;);</span>
+<span class="fc bfc" id="L294" title="All 2 branches covered.">      } else if (!externalIds.add(node.getId())) {</span>
+<span class="fc" id="L295">        errors.add(where + &quot;: duplicate id &quot; + node.getId());</span>
+      }
+<span class="fc" id="L297">      validateLabel(where, node.getLabel(), errors);</span>
+<span class="fc" id="L298">      validateUrls(where, node.getPracticeProblems(), errors);</span>
+
+<span class="fc" id="L300">      Set&lt;String&gt; subconceptLabels = new HashSet&lt;&gt;();</span>
+      List&lt;ConceptGraphYamlDTO.SubconceptNodeDTO&gt; subconcepts =
+<span class="fc bfc" id="L302" title="All 2 branches covered.">          node.getSubconcepts() != null ? node.getSubconcepts() : List.of();</span>
+<span class="fc bfc" id="L303" title="All 2 branches covered.">      for (int j = 0; j &lt; subconcepts.size(); j++) {</span>
+<span class="fc" id="L304">        ConceptGraphYamlDTO.SubconceptNodeDTO subNode = subconcepts.get(j);</span>
+<span class="fc" id="L305">        String subWhere = where + &quot;.subconcepts[%d]&quot;.formatted(j);</span>
+<span class="fc bfc" id="L306" title="All 2 branches covered.">        if (subNode == null) {</span>
+<span class="fc" id="L307">          errors.add(subWhere + &quot; is empty&quot;);</span>
+<span class="fc" id="L308">          continue;</span>
+        }
+<span class="fc" id="L310">        String cleanLabel = validateLabel(subWhere, subNode.getLabel(), errors);</span>
+<span class="fc bfc" id="L311" title="All 4 branches covered.">        if (cleanLabel != null &amp;&amp; !subconceptLabels.add(cleanLabel)) {</span>
+<span class="fc" id="L312">          errors.add(subWhere + &quot;: duplicate subconcept label &quot; + cleanLabel);</span>
+        }
+<span class="fc" id="L314">        validateUrls(subWhere, subNode.getPracticeProblems(), errors);</span>
+      }
+    }
+
+    // Edges are checked in order against the edges accepted so far, so the cycle message points
+    // at the edge that closes the cycle.
+<span class="fc" id="L320">    List&lt;ConceptEdge&gt; acceptedEdges = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L321">    Set&lt;List&lt;Long&gt;&gt; seenEndpoints = new HashSet&lt;&gt;();</span>
+    List&lt;ConceptGraphYamlDTO.EdgeNodeDTO&gt; edges =
+<span class="fc bfc" id="L323" title="All 2 branches covered.">        dto.getEdges() != null ? dto.getEdges() : List.of();</span>
+<span class="fc bfc" id="L324" title="All 2 branches covered.">    for (int i = 0; i &lt; edges.size(); i++) {</span>
+<span class="fc" id="L325">      ConceptGraphYamlDTO.EdgeNodeDTO edge = edges.get(i);</span>
+<span class="fc" id="L326">      String where = &quot;edges[%d]&quot;.formatted(i);</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">      if (edge == null) {</span>
+<span class="fc" id="L328">        errors.add(where + &quot; is empty&quot;);</span>
+<span class="fc" id="L329">        continue;</span>
+      }
+<span class="fc bfc" id="L331" title="All 4 branches covered.">      if (edge.getFrom() == null || edge.getTo() == null) {</span>
+<span class="fc" id="L332">        errors.add(where + &quot;: from and to are required&quot;);</span>
+<span class="fc" id="L333">        continue;</span>
+      }
+<span class="fc" id="L335">      boolean endpointsExist = true;</span>
+<span class="fc bfc" id="L336" title="All 2 branches covered.">      if (!externalIds.contains(edge.getFrom())) {</span>
+<span class="fc" id="L337">        errors.add(where + &quot;: no concept with id &quot; + edge.getFrom());</span>
+<span class="fc" id="L338">        endpointsExist = false;</span>
+      }
+<span class="fc bfc" id="L340" title="All 2 branches covered.">      if (!externalIds.contains(edge.getTo())) {</span>
+<span class="fc" id="L341">        errors.add(where + &quot;: no concept with id &quot; + edge.getTo());</span>
+<span class="fc" id="L342">        endpointsExist = false;</span>
+      }
+<span class="fc bfc" id="L344" title="All 2 branches covered.">      if (!endpointsExist) {</span>
+<span class="fc" id="L345">        continue;</span>
+      }
+<span class="fc bfc" id="L347" title="All 2 branches covered.">      if (edge.getFrom().equals(edge.getTo())) {</span>
+<span class="fc" id="L348">        errors.add(where + &quot;: an edge cannot connect a concept to itself&quot;);</span>
+<span class="fc" id="L349">        continue;</span>
+      }
+<span class="fc bfc" id="L351" title="All 2 branches covered.">      if (!seenEndpoints.add(List.of(edge.getFrom(), edge.getTo()))) {</span>
+<span class="fc" id="L352">        errors.add(</span>
+<span class="fc" id="L353">            where + &quot;: duplicate edge from %d to %d&quot;.formatted(edge.getFrom(), edge.getTo()));</span>
+<span class="fc" id="L354">        continue;</span>
+      }
+<span class="fc bfc" id="L356" title="All 2 branches covered.">      if (conceptGraphService.wouldCreateCycle(acceptedEdges, edge.getFrom(), edge.getTo())) {</span>
+<span class="fc" id="L357">        errors.add(</span>
+            where
+                + &quot;: edge from %d to %d would create a cycle&quot;
+<span class="fc" id="L360">                    .formatted(edge.getFrom(), edge.getTo()));</span>
+<span class="fc" id="L361">        continue;</span>
+      }
+<span class="fc" id="L363">      acceptedEdges.add(</span>
+<span class="fc" id="L364">          ConceptEdge.builder()</span>
+<span class="fc" id="L365">              .source(Concept.builder().id(edge.getFrom()).build())</span>
+<span class="fc" id="L366">              .target(Concept.builder().id(edge.getTo()).build())</span>
+<span class="fc" id="L367">              .build());</span>
+    }
+<span class="fc" id="L369">  }</span>
+
+  /**
+   * Validates a concept or subconcept label the same way the single-concept endpoints do, and
+   * returns the cleaned label (used for duplicate detection), or null if it was invalid.
+   */
+  private String validateLabel(String where, String label, List&lt;String&gt; errors) {
+<span class="fc" id="L376">    String cleanLabel = markdownService.clean(label);</span>
+<span class="fc bfc" id="L377" title="All 4 branches covered.">    if (cleanLabel == null || cleanLabel.isEmpty()) {</span>
+<span class="fc" id="L378">      errors.add(where + &quot;: label may not be empty&quot;);</span>
+<span class="fc" id="L379">      return null;</span>
+    }
+<span class="fc" id="L381">    int renderedLength = markdownService.renderedLength(cleanLabel);</span>
+<span class="fc bfc" id="L382" title="All 2 branches covered.">    if (renderedLength &gt; Concept.MAX_RENDERED_LABEL_LENGTH) {</span>
+<span class="fc" id="L383">      errors.add(</span>
+          where
+              + &quot;: label renders to %d characters; the maximum is %d&quot;
+<span class="fc" id="L386">                  .formatted(renderedLength, Concept.MAX_RENDERED_LABEL_LENGTH));</span>
+<span class="fc" id="L387">      return null;</span>
+    }
+<span class="fc" id="L389">    return cleanLabel;</span>
+  }
+
+  private void validateUrls(String where, List&lt;String&gt; urls, List&lt;String&gt; errors) {
+<span class="fc bfc" id="L393" title="All 2 branches covered.">    if (urls == null) {</span>
+<span class="fc" id="L394">      return;</span>
+    }
+<span class="fc" id="L396">    Set&lt;String&gt; seen = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L397" title="All 2 branches covered.">    for (int i = 0; i &lt; urls.size(); i++) {</span>
+<span class="fc" id="L398">      String url = urls.get(i);</span>
+<span class="fc" id="L399">      String urlWhere = where + &quot;.practiceProblems[%d]&quot;.formatted(i);</span>
+<span class="fc bfc" id="L400" title="All 4 branches covered.">      if (url == null || url.isBlank()) {</span>
+<span class="fc" id="L401">        errors.add(urlWhere + &quot;: url may not be empty&quot;);</span>
+<span class="fc" id="L402">        continue;</span>
+      }
+<span class="fc" id="L404">      String cleanUrl = url.strip();</span>
+<span class="fc bfc" id="L405" title="All 2 branches covered.">      if (cleanUrl.length() &gt; MAX_URL_LENGTH) {</span>
+<span class="fc" id="L406">        errors.add(</span>
+            urlWhere
+                + &quot;: url is %d characters long; the maximum is %d&quot;
+<span class="fc" id="L409">                    .formatted(cleanUrl.length(), MAX_URL_LENGTH));</span>
+<span class="fc" id="L410">        continue;</span>
+      }
+<span class="fc bfc" id="L412" title="All 2 branches covered.">      if (!seen.add(cleanUrl)) {</span>
+<span class="fc" id="L413">        errors.add(urlWhere + &quot;: duplicate practice problem url &quot; + cleanUrl);</span>
+      }
+    }
+<span class="fc" id="L416">  }</span>
+
+  /**
+   * Deletes the course's practice problems, edges, and concepts (children before parents, in an
+   * order that never breaks a foreign key), plus every user's per-course scaffold state. Returns
+   * how many user-state rows were cleared.
+   */
+  private int deleteCourseContentAndUserState(long courseId) {
+<span class="fc" id="L424">    practiceProblemRepository.deleteAll(practiceProblemRepository.findByCourseId(courseId));</span>
+<span class="fc" id="L425">    conceptEdgeRepository.deleteAll(conceptEdgeRepository.findByCourseId(courseId));</span>
+
+<span class="fc" id="L427">    List&lt;Concept&gt; existingConcepts = conceptRepository.findByCourseId(courseId);</span>
+<span class="fc" id="L428">    conceptRepository.deleteAll(existingConcepts.stream().filter(Concept::isSubconcept).toList());</span>
+<span class="fc" id="L429">    conceptRepository.deleteAll(</span>
+<span class="fc bfc" id="L430" title="All 2 branches covered.">        existingConcepts.stream().filter(concept -&gt; !concept.isSubconcept()).toList());</span>
+
+<span class="fc" id="L432">    List&lt;UserStateV2&gt; userStates = userStateV2Repository.findByCourseId(courseId);</span>
+<span class="fc" id="L433">    userStateV2Repository.deleteAll(userStates);</span>
+<span class="fc" id="L434">    return userStates.size();</span>
+  }
+
+  private int savePracticeProblems(Course course, Concept concept, List&lt;String&gt; urls) {
+<span class="fc bfc" id="L438" title="All 2 branches covered.">    if (urls == null) {</span>
+<span class="fc" id="L439">      return 0;</span>
+    }
+<span class="fc bfc" id="L441" title="All 2 branches covered.">    for (String url : urls) {</span>
+<span class="fc" id="L442">      practiceProblemRepository.save(</span>
+<span class="fc" id="L443">          PracticeProblem.builder().course(course).concept(concept).url(url.strip()).build());</span>
+<span class="fc" id="L444">    }</span>
+<span class="fc" id="L445">    return urls.size();</span>
+  }
+
+  private Map&lt;String, Object&gt; report(
+      boolean success,
+      List&lt;String&gt; errors,
+      int conceptsCreated,
+      int subconceptsCreated,
+      int edgesCreated,
+      int practiceProblemsCreated,
+      int userStatesCleared) {
+<span class="fc" id="L456">    Map&lt;String, Object&gt; report = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L457">    report.put(&quot;success&quot;, success);</span>
+<span class="fc" id="L458">    report.put(&quot;errors&quot;, errors);</span>
+<span class="fc" id="L459">    report.put(&quot;conceptsCreated&quot;, conceptsCreated);</span>
+<span class="fc" id="L460">    report.put(&quot;subconceptsCreated&quot;, subconceptsCreated);</span>
+<span class="fc" id="L461">    report.put(&quot;edgesCreated&quot;, edgesCreated);</span>
+<span class="fc" id="L462">    report.put(&quot;practiceProblemsCreated&quot;, practiceProblemsCreated);</span>
+<span class="fc" id="L463">    report.put(&quot;userStatesCleared&quot;, userStatesCleared);</span>
+<span class="fc" id="L464">    return report;</span>
+  }
+
+  /**
+   * Every practice problem URL in the course, grouped by concept id, each concept's URLs in
+   * database-id order (the order they were added). Concepts with no practice problems are absent,
+   * so lookups feed straight into the NON_EMPTY-serialized DTO fields.
+   */
+  private Map&lt;Long, List&lt;String&gt;&gt; urlsByConceptId(long courseId) {
+<span class="fc" id="L473">    Map&lt;Long, List&lt;String&gt;&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L474">    practiceProblemRepository.findByCourseId(courseId).stream()</span>
+<span class="fc" id="L475">        .sorted(Comparator.comparing(PracticeProblem::getId))</span>
+<span class="fc" id="L476">        .forEach(</span>
+            problem -&gt;
+                result
+<span class="fc" id="L479">                    .computeIfAbsent(problem.getConcept().getId(), k -&gt; new ArrayList&lt;&gt;())</span>
+<span class="fc" id="L480">                    .add(problem.getUrl()));</span>
+<span class="fc" id="L481">    return result;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
