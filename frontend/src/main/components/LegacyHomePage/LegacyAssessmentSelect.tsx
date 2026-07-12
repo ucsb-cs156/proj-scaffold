@@ -3,7 +3,7 @@
 // it must not be affected by refactors to the shared Scaffold components.
 // Do not consolidate this with main/components/Scaffold/AssessmentSelect.
 import { useState, useEffect, useRef } from "react";
-import type { Assessment } from "../../api/client";
+import type { Assessment } from "../../api/legacyClient";
 
 interface AssessmentSelectProps {
   assessments: Assessment[];

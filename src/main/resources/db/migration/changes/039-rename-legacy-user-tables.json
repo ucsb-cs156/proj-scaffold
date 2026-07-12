@@ -1,0 +1,42 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "039-rename-user-state-to-legacy-user-state",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "tableExists": { "tableName": "user_state" } },
+          { "not": { "tableExists": { "tableName": "legacy_user_state" } } }
+        ],
+        "changes": [
+          {
+            "renameTable": {
+              "oldTableName": "user_state",
+              "newTableName": "legacy_user_state"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "039-rename-user-activity-to-legacy-user-activity",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "tableExists": { "tableName": "user_activity" } },
+          { "not": { "tableExists": { "tableName": "legacy_user_activity" } } }
+        ],
+        "changes": [
+          {
+            "renameTable": {
+              "oldTableName": "user_activity",
+              "newTableName": "legacy_user_activity"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

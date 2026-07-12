@@ -9,11 +9,11 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-@Table(name = "user_activity_v2")
+@Table(name = "legacy_user_activity")
 @Getter
 @Setter
 @NoArgsConstructor
-public class UserActivityV2 {
+public class LegacyUserActivity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -21,9 +21,6 @@ public class UserActivityV2 {
 
   @Column(nullable = false)
   private Long userid;
-
-  @Column(name = "course_id", nullable = false)
-  private Long courseId;
 
   @Column(name = "event_type", nullable = false)
   private String eventType;

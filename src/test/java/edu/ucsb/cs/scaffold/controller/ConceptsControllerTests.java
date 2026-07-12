@@ -23,12 +23,12 @@ import edu.ucsb.cs.scaffold.entity.Concept;
 import edu.ucsb.cs.scaffold.entity.ConceptEdge;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.PracticeProblem;
-import edu.ucsb.cs.scaffold.model.UserStateV2;
+import edu.ucsb.cs.scaffold.model.UserState;
 import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
 import edu.ucsb.cs.scaffold.repository.ConceptRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PracticeProblemRepository;
-import edu.ucsb.cs.scaffold.repository.UserStateV2Repository;
+import edu.ucsb.cs.scaffold.repository.UserStateRepository;
 import edu.ucsb.cs.scaffold.services.ConceptGraphService;
 import edu.ucsb.cs.scaffold.services.MarkdownService;
 import java.util.ArrayList;
@@ -55,7 +55,7 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @MockitoBean private CourseRepository courseRepository;
 
-  @MockitoBean private UserStateV2Repository userStateV2Repository;
+  @MockitoBean private UserStateRepository userStateRepository;
 
   private List<Concept> buildSampleConcepts() {
     Course course = Course.builder().id(42L).courseName("CMPSC 8").build();
@@ -2261,10 +2261,9 @@ public class ConceptsControllerTests extends ControllerTestCase {
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a, b));
     when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
 
-    UserStateV2 callerState = new UserStateV2();
+    UserState callerState = new UserState();
     callerState.setTopLevelPositions("{\"1\": {\"x\": -500, \"y\": 0}}");
-    when(userStateV2Repository.findByUseridAndCourseId(1L, 42L))
-        .thenReturn(Optional.of(callerState));
+    when(userStateRepository.findByUseridAndCourseId(1L, 42L)).thenReturn(Optional.of(callerState));
 
     mockMvc
         .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
@@ -2287,10 +2286,9 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
     // The override entry for "a" exists but has no x (only y is set), so its saved x (500)
     // is still used for sorting, keeping it to the right of b.
-    UserStateV2 callerState = new UserStateV2();
+    UserState callerState = new UserState();
     callerState.setTopLevelPositions("{\"1\": {\"y\": 50}}");
-    when(userStateV2Repository.findByUseridAndCourseId(1L, 42L))
-        .thenReturn(Optional.of(callerState));
+    when(userStateRepository.findByUseridAndCourseId(1L, 42L)).thenReturn(Optional.of(callerState));
 
     mockMvc
         .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
@@ -2309,10 +2307,9 @@ public class ConceptsControllerTests extends ControllerTestCase {
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a));
     when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
 
-    UserStateV2 callerState = new UserStateV2();
+    UserState callerState = new UserState();
     callerState.setTopLevelPositions("not valid json");
-    when(userStateV2Repository.findByUseridAndCourseId(1L, 42L))
-        .thenReturn(Optional.of(callerState));
+    when(userStateRepository.findByUseridAndCourseId(1L, 42L)).thenReturn(Optional.of(callerState));
 
     jakarta.servlet.ServletException thrown =
         assertThrows(
@@ -2351,21 +2348,21 @@ public class ConceptsControllerTests extends ControllerTestCase {
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a));
     when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
 
-    UserStateV2 instructorState = new UserStateV2();
+    UserState instructorState = new UserState();
     instructorState.setTopLevelPositions("{\"1\": {\"x\": 999, \"y\": 0}}");
-    UserStateV2 studentState = new UserStateV2();
+    UserState studentState = new UserState();
     studentState.setTopLevelPositions("{\"1\": {\"x\": -999, \"y\": 0}}");
-    when(userStateV2Repository.findByUseridAndCourseId(1L, 42L))
+    when(userStateRepository.findByUseridAndCourseId(1L, 42L))
         .thenReturn(Optional.of(instructorState));
-    when(userStateV2Repository.findByCourseId(42L))
+    when(userStateRepository.findByCourseId(42L))
         .thenReturn(List.of(instructorState, studentState));
 
     mockMvc
         .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
         .andExpect(status().isOk());
 
-    ArgumentCaptor<List<UserStateV2>> captor = ArgumentCaptor.forClass(List.class);
-    verify(userStateV2Repository).saveAll(captor.capture());
+    ArgumentCaptor<List<UserState>> captor = ArgumentCaptor.forClass(List.class);
+    verify(userStateRepository).saveAll(captor.capture());
     assertEquals(List.of(instructorState, studentState), captor.getValue());
     assertEquals("{}", instructorState.getTopLevelPositions());
     assertEquals("{}", studentState.getTopLevelPositions());

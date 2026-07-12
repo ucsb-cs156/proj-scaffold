@@ -5,25 +5,20 @@ import ScaffoldConceptGraph from "main/components/Scaffold/ScaffoldConceptGraph"
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 
-import {
-  fetchAssessments,
-  fetchCourse,
-  fetchQuestions,
-  fetchQuestionConcepts,
-  fetchConceptGraph,
-  fetchConceptContent,
-  fetchConceptPositions,
-  fetchConceptEdges,
-  fetchScaffoldUserState,
-  logScaffoldUserActivity,
-  saveScaffoldUserState,
-  reorderSubconcepts,
-  type MajorConceptDTO,
-  type SubconceptDTO,
-  type ConceptContentDTO,
-  type EdgeDTO,
-} from "main/api/client";
-import type { Assessment, Course, Question } from "main/api/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useBackend, useBackendMutation } from "main/utils/useBackend";
+import type {
+  Assessment,
+  Course,
+  Question,
+  QuestionConcept,
+  MajorConceptDTO,
+  SubconceptDTO,
+  ConceptContentDTO,
+  PositionDTO,
+  EdgeDTO,
+  UserStateResponse,
+} from "main/types/conceptGraph";
 import LoginScreen from "main/components/Auth/LoginScreen";
 import ScaffoldTopBar from "main/components/Scaffold/ScaffoldTopBar";
 import { useCurrentUser } from "main/utils/currentUser";
@@ -35,10 +30,11 @@ import {
 } from "main/utils/conceptGraphUtils";
 
 // Database-driven counterpart to LegacyHomePage.tsx, rendered at /course/{courseId}.
-// Everything here is fetched from the concepts/* and user-state-v2/
-// user-activity-v2 backend endpoints instead of the hardcoded data files, so
-// this page can eventually support any course, not just the one LegacyHomePage.tsx
-// has baked in. LegacyHomePage.tsx itself is untouched.
+// All backend access goes through useBackend/useBackendMutation (React Query),
+// against the concepts/*, user-state, and user-activity endpoints, so this page
+// can eventually support any course, not just the one LegacyHomePage.tsx has
+// baked in. LegacyHomePage.tsx itself is untouched and talks to the frozen
+// /api/legacy/* endpoints via main/api/legacyClient.ts instead.
 
 interface SavedDetailCard {
   cardType: string;
@@ -72,11 +68,46 @@ function ConceptGraphPageContent() {
     ? (currentUser.root.user?.id ?? null)
     : null;
 
-  const [course, setCourse] = useState<Course | undefined>(undefined);
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const queryClient = useQueryClient();
+
   const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
   const [selectedQuestionId, setSelectedQuestionId] = useState("");
+
+  const { data: assessments = [] } = useBackend<Assessment[]>(
+    ["/api/assessments"],
+    { method: "GET", url: "/api/assessments" },
+    [],
+  );
+
+  // The course endpoint is staff-only; for students the request fails and the
+  // UI simply omits staff affordances like the settings link, so the expected
+  // error must not toast.
+  const { data: course } = useBackend<Course | undefined>(
+    ["/api/courses", courseId],
+    { method: "GET", url: `/api/courses/${courseId}` },
+    undefined,
+    true,
+    { enabled: courseIdIsValid, retry: false },
+  );
+
+  const { data: questions = [] } = useBackend<Question[]>(
+    ["/api/assessments", selectedAssessmentId, "questions"],
+    {
+      method: "GET",
+      url: `/api/assessments/${selectedAssessmentId}/questions`,
+    },
+    [],
+    false,
+    { enabled: !!selectedAssessmentId },
+  );
+
+  const { data: questionConcepts = [] } = useBackend<QuestionConcept[]>(
+    ["/api/questions", selectedQuestionId, "concepts"],
+    { method: "GET", url: `/api/questions/${selectedQuestionId}/concepts` },
+    [],
+    false,
+    { enabled: !!selectedQuestionId },
+  );
   const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(
     null,
@@ -99,23 +130,144 @@ function ConceptGraphPageContent() {
     new Set(),
   );
 
-  // Graph data fetched from the backend for this course.
+  // Graph data fetched from the backend for this course. These four queries
+  // feed state that the user mutates locally (dragging, reordering), so window
+  // focus must not silently refetch and clobber the local copy; retry is off so
+  // a failure surfaces as the error screen right away, as the old fetch did.
+  const graphQueryKey = ["/api/concepts/graph", courseId];
+  const graphQuery = useBackend<MajorConceptDTO[]>(
+    graphQueryKey,
+    { method: "GET", url: "/api/concepts/graph", params: { courseId } },
+    [],
+    false,
+    {
+      enabled: courseIdIsValid,
+      retry: false,
+      refetchOnWindowFocus: false,
+      // A refetch must snap the locally-reordered copy below back to the
+      // authoritative order even when the server data is unchanged, so the
+      // mirror effect needs a fresh data reference on every fetch.
+      structuralSharing: false,
+    },
+  );
+  const contentQuery = useBackend<Record<string, ConceptContentDTO>>(
+    ["/api/concepts/content", courseId],
+    { method: "GET", url: "/api/concepts/content", params: { courseId } },
+    {},
+    false,
+    { enabled: courseIdIsValid, retry: false, refetchOnWindowFocus: false },
+  );
+  const positionsQuery = useBackend<Record<string, PositionDTO>>(
+    ["/api/concepts/positions", courseId],
+    { method: "GET", url: "/api/concepts/positions", params: { courseId } },
+    {},
+    false,
+    { enabled: courseIdIsValid, retry: false, refetchOnWindowFocus: false },
+  );
+  const edgesQuery = useBackend<EdgeDTO[]>(
+    ["/api/concepts/edges", courseId],
+    { method: "GET", url: "/api/concepts/edges", params: { courseId } },
+    [],
+    false,
+    { enabled: courseIdIsValid, retry: false, refetchOnWindowFocus: false },
+  );
+
+  // Shared, instructor-controlled top-level positions (only POST
+  // /api/course/scaffold/reset changes them).
+  const positions = useMemo(
+    () => positionsQuery.data ?? {},
+    [positionsQuery.data],
+  );
+  const conceptContent = useMemo(
+    () => contentQuery.data ?? {},
+    [contentQuery.data],
+  );
+  const prereqEdgeData = useMemo(
+    () => edgesQuery.data ?? [],
+    [edgesQuery.data],
+  );
+
+  const graphDataError =
+    graphQuery.isError ||
+    contentQuery.isError ||
+    positionsQuery.isError ||
+    edgesQuery.isError
+      ? `Failed to load concept graph data for course ${courseId}.`
+      : null;
+  // initialData makes these queries "successful" from the first render, so
+  // gate the page on isFetched (the first real response) instead.
+  const graphDataLoaded =
+    graphQuery.isFetched &&
+    contentQuery.isFetched &&
+    positionsQuery.isFetched &&
+    edgesQuery.isFetched;
+
+  // Local copy of the fetched graph: subconcept reordering updates it
+  // optimistically, and a refetch (e.g. invalidation after a rejected reorder)
+  // snaps it back to the authoritative order.
   const [majorConcepts, setMajorConcepts] = useState<MajorConceptDTO[]>([]);
-  const [positions, setPositions] = useState<
-    Record<string, { x: number; y: number }>
-  >({});
-  // Private, per-user overrides of top-level concept positions (dragged by this user);
-  // takes precedence over the shared `positions` above, which only an instructor's
-  // POST /api/course/scaffold/reset can change. Cleared course-wide by that same reset.
+  const graphData = graphQuery.data;
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMajorConcepts(graphData ?? []);
+  }, [graphData]);
+
+  // Private, per-user overrides of top-level concept positions (dragged by this
+  // user); takes precedence over the shared `positions` above. Cleared
+  // course-wide by an instructor's scaffold reset.
   const [topLevelPositions, setTopLevelPositions] = useState<
     Record<string, { x: number; y: number }>
   >({});
-  const [conceptContent, setConceptContent] = useState<
-    Record<string, ConceptContentDTO>
-  >({});
-  const [prereqEdgeData, setPrereqEdgeData] = useState<EdgeDTO[]>([]);
-  const [graphDataLoaded, setGraphDataLoaded] = useState(false);
-  const [graphDataError, setGraphDataError] = useState<string | null>(null);
+
+  const userStateQuery = useBackend<UserStateResponse | undefined>(
+    ["/api/user-state", userId, courseId],
+    {
+      method: "GET",
+      url: "/api/user-state",
+      params: { userid: userId, courseId },
+    },
+    undefined,
+    false,
+    {
+      enabled: !!userId && courseIdIsValid,
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  );
+
+  const saveUserStateMutation = useBackendMutation<{
+    userid: number;
+    courseId: number;
+    starred_ids: string[];
+    detail_cards: unknown[];
+    mastered_subconcepts: string[];
+    top_level_positions: Record<string, { x: number; y: number }>;
+  }>((body) => ({ method: "POST", url: "/api/user-state", data: body }), {});
+
+  const logActivityMutation = useBackendMutation<{
+    userid: number;
+    courseId: number;
+    event_type: string;
+    payload: object;
+  }>((body) => ({ method: "POST", url: "/api/user-activity", data: body }), {});
+
+  const reorderMutation = useBackendMutation<
+    { parentConceptId: number; orderedSubconceptIds: number[] },
+    SubconceptDTO[]
+  >(
+    ({ parentConceptId, orderedSubconceptIds }) => ({
+      method: "PUT",
+      url: "/api/concepts/subconcepts/reorder",
+      params: { parentConceptId },
+      data: orderedSubconceptIds,
+    }),
+    {
+      // If the backend rejects the reorder, refetch the graph so the local
+      // order snaps back to the authoritative one (replaces the default toast;
+      // the snap-back itself is the user-visible signal).
+      onError: () => queryClient.invalidateQueries({ queryKey: graphQueryKey }),
+    },
+  );
 
   const masteredSubconceptsRef = useRef<Set<string>>(masteredSubconcepts);
   useEffect(() => {
@@ -138,69 +290,51 @@ function ConceptGraphPageContent() {
     topLevelPositionsRef.current = topLevelPositions;
   }, [topLevelPositions]);
 
-  // Fetch the concept graph data for this course once on mount.
-  useEffect(() => {
-    if (!courseIdIsValid) return;
-    let cancelled = false;
-
-    Promise.all([
-      fetchConceptGraph(courseId),
-      fetchConceptContent(courseId),
-      fetchConceptPositions(courseId),
-      fetchConceptEdges(courseId),
-    ])
-      .then(([graph, content, positionsData, edges]) => {
-        if (cancelled) return;
-        setMajorConcepts(graph);
-        setConceptContent(content);
-        setPositions(positionsData);
-        setPrereqEdgeData(edges);
-        setGraphDataLoaded(true);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setGraphDataError(
-          `Failed to load concept graph data for course ${courseId}.`,
-        );
+  const { mutate: logActivityMutate } = logActivityMutation;
+  const logActivity = useCallback(
+    (eventType: string, payload: object) => {
+      if (!userId || !courseIdIsValid) return;
+      logActivityMutate({
+        userid: userId,
+        courseId,
+        event_type: eventType,
+        payload,
       });
+    },
+    [userId, courseId, courseIdIsValid, logActivityMutate],
+  );
 
-    return () => {
-      cancelled = true;
-    };
-  }, [courseId, courseIdIsValid]);
-
-  // Load the user's saved state once on login (and once graph data is ready).
-  const userStateLoadedRef = useRef(false);
+  // Log the login once per visit, as soon as we know who the user is.
+  const loginLoggedRef = useRef(false);
   useEffect(() => {
-    if (!userId || !courseIdIsValid || userStateLoadedRef.current) return;
-    userStateLoadedRef.current = true;
+    if (!userId || !courseIdIsValid || loginLoggedRef.current) return;
+    loginLoggedRef.current = true;
+    logActivity("login", { consented: true });
+  }, [userId, courseIdIsValid, logActivity]);
 
-    logScaffoldUserActivity({
-      userid: userId,
-      courseId,
-      event_type: "login",
-      payload: { consented: true },
-    });
+  // Seed the locally-mutated state from the user's saved state exactly once;
+  // later query refetches must not clobber unsaved local changes.
+  const userStateSeededRef = useRef(false);
+  const savedUserState = userStateQuery.data;
+  useEffect(() => {
+    if (!savedUserState || userStateSeededRef.current) return;
+    userStateSeededRef.current = true;
+    setStarredIds(new Set(savedUserState.starred_ids as string[]));
+    const cards = (savedUserState.detail_cards as SavedDetailCard[]) ?? [];
+    setSavedDetailCards(cards);
+    setAddedDetailKeys(
+      new Set(cards.map((c) => `${c.cardType}:${c.itemLabel}`)),
+    );
+    setInitialDetailCards(cards);
+    setMasteredSubconcepts(
+      new Set((savedUserState.mastered_subconcepts ?? []) as string[]),
+    );
+    setTopLevelPositions(savedUserState.top_level_positions ?? {});
+  }, [savedUserState]);
 
-    fetchScaffoldUserState(userId, courseId).then((data) => {
-      if (data) {
-        setStarredIds(new Set(data.starred_ids as string[]));
-        const cards = (data.detail_cards as SavedDetailCard[]) ?? [];
-        setSavedDetailCards(cards);
-        setAddedDetailKeys(
-          new Set(cards.map((c) => `${c.cardType}:${c.itemLabel}`)),
-        );
-        setInitialDetailCards(cards);
-        setMasteredSubconcepts(
-          new Set((data.mastered_subconcepts ?? []) as string[]),
-        );
-        setTopLevelPositions(data.top_level_positions ?? {});
-      }
-    });
-  }, [userId, courseId, courseIdIsValid]);
-
+  const { mutate: saveUserStateMutate } = saveUserStateMutation;
   const persistState = useCallback(
-    async (
+    (
       stars: Set<string>,
       cards: SavedDetailCard[],
       mastered: Set<string> = masteredSubconceptsRef.current,
@@ -210,7 +344,7 @@ function ConceptGraphPageContent() {
       > = topLevelPositionsRef.current,
     ) => {
       if (!userId || !courseIdIsValid) return;
-      await saveScaffoldUserState({
+      saveUserStateMutate({
         userid: userId,
         courseId,
         starred_ids: Array.from(stars),
@@ -219,7 +353,7 @@ function ConceptGraphPageContent() {
         top_level_positions: topLevelPos,
       });
     },
-    [userId, courseId, courseIdIsValid],
+    [userId, courseId, courseIdIsValid, saveUserStateMutate],
   );
 
   // Private overrides take precedence over the shared, instructor-controlled positions.
@@ -257,8 +391,8 @@ function ConceptGraphPageContent() {
   // An author (with subconcepts unlocked) drag-and-dropped a card's
   // subconcepts. ScaffoldConceptGraph already updated its own nodes; mirror the new
   // order in our copy of the graph data (so anything rebuilt from it agrees)
-  // and persist it. If the backend rejects the reorder, refetch the graph so
-  // the local order snaps back to the authoritative one.
+  // and persist it via the reorder mutation, whose onError snaps the local
+  // order back to the authoritative one.
   const handleSubconceptsReordered = (
     parentConceptId: number,
     orderedSubconceptIds: number[],
@@ -277,23 +411,8 @@ function ConceptGraphPageContent() {
           : concept,
       ),
     );
-    reorderSubconcepts(parentConceptId, orderedSubconceptIds).catch(() => {
-      fetchConceptGraph(courseId).then(setMajorConcepts);
-    });
+    reorderMutation.mutate({ parentConceptId, orderedSubconceptIds });
   };
-
-  const logActivity = useCallback(
-    async (eventType: string, payload: object) => {
-      if (!userId || !courseIdIsValid) return;
-      await logScaffoldUserActivity({
-        userid: userId,
-        courseId,
-        event_type: eventType,
-        payload,
-      });
-    },
-    [userId, courseId, courseIdIsValid],
-  );
 
   const handlePaneClick = () => {
     if (!selectedQuestionId) {
@@ -303,59 +422,53 @@ function ConceptGraphPageContent() {
     }
   };
 
+  // Selecting a different assessment clears the question selection and any
+  // question-driven highlighting; the questions query above refetches on its
+  // own because its key includes selectedAssessmentId.
   useEffect(() => {
-    fetchAssessments().then(setAssessments);
-  }, []);
-
-  useEffect(() => {
-    if (!courseIdIsValid) return;
-    fetchCourse(courseId).then((c) => setCourse(c ?? undefined));
-  }, [courseId, courseIdIsValid]);
-
-  useEffect(() => {
-    if (!selectedAssessmentId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setQuestions([]);
-      return;
-    }
-    setQuestions([]);
-    fetchQuestions(selectedAssessmentId).then(setQuestions);
+    if (!selectedAssessmentId) return;
+    /* eslint-disable react-hooks/set-state-in-effect */
     setSelectedQuestionId("");
     setHighlightedIds(new Set());
     setSelectedConceptId(null);
     setHighlightedSubconcepts(new Map());
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [selectedAssessmentId]);
 
   useEffect(() => {
-    if (!selectedQuestionId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setHighlightedIds(new Set());
+    if (!selectedQuestionId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedConceptId(null);
+    logActivity("question_viewed", { questionId: selectedQuestionId });
+  }, [logActivity, selectedQuestionId]);
 
+  // Recompute the question-driven highlighting whenever the question's
+  // concepts arrive or the edges finish loading, so a question selected before
+  // that point still gets its full prerequisite chain highlighted rather than
+  // only the tagged concepts.
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (!selectedQuestionId) {
+      setHighlightedIds(new Set());
       setHighlightedSubconcepts(new Map());
       return;
     }
-    fetchQuestionConcepts(selectedQuestionId).then((concepts) => {
-      setHighlightedIds(
-        computeScaffoldSubgraph(
-          concepts.map((c) => c.concept_id),
-          prereqEdgeData,
-        ),
-      );
-      const subMap = new Map<string, Set<string>>();
-      concepts.forEach((c) => {
-        if (c.subconcept_label) {
-          if (!subMap.has(c.concept_id)) subMap.set(c.concept_id, new Set());
-          subMap.get(c.concept_id)!.add(normalize(c.subconcept_label));
-        }
-      });
-      setHighlightedSubconcepts(subMap);
+    setHighlightedIds(
+      computeScaffoldSubgraph(
+        questionConcepts.map((c) => c.concept_id),
+        prereqEdgeData,
+      ),
+    );
+    const subMap = new Map<string, Set<string>>();
+    questionConcepts.forEach((c) => {
+      if (c.subconcept_label) {
+        if (!subMap.has(c.concept_id)) subMap.set(c.concept_id, new Set());
+        subMap.get(c.concept_id)!.add(normalize(c.subconcept_label));
+      }
     });
-    setSelectedConceptId(null);
-    logActivity("question_viewed", { questionId: selectedQuestionId });
-    // Including prereqEdgeData also re-runs this when the edges finish loading,
-    // so a question selected before that point still gets its full
-    // prerequisite chain highlighted rather than only the tagged concepts.
-  }, [logActivity, selectedQuestionId, prereqEdgeData]);
+    setHighlightedSubconcepts(subMap);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [selectedQuestionId, questionConcepts, prereqEdgeData]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

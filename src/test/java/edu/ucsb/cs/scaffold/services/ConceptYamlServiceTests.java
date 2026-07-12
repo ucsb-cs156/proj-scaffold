@@ -16,12 +16,12 @@ import edu.ucsb.cs.scaffold.entity.ConceptEdge;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.PracticeProblem;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
-import edu.ucsb.cs.scaffold.model.UserStateV2;
+import edu.ucsb.cs.scaffold.model.UserState;
 import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
 import edu.ucsb.cs.scaffold.repository.ConceptRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PracticeProblemRepository;
-import edu.ucsb.cs.scaffold.repository.UserStateV2Repository;
+import edu.ucsb.cs.scaffold.repository.UserStateRepository;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +40,7 @@ public class ConceptYamlServiceTests {
   private final PracticeProblemRepository practiceProblemRepository =
       mock(PracticeProblemRepository.class);
   private final CourseRepository courseRepository = mock(CourseRepository.class);
-  private final UserStateV2Repository userStateV2Repository = mock(UserStateV2Repository.class);
+  private final UserStateRepository userStateRepository = mock(UserStateRepository.class);
 
   private final ConceptYamlService service =
       new ConceptYamlService(
@@ -48,7 +48,7 @@ public class ConceptYamlServiceTests {
           conceptEdgeRepository,
           practiceProblemRepository,
           courseRepository,
-          userStateV2Repository,
+          userStateRepository,
           new MarkdownService(),
           new ConceptGraphService());
 
@@ -138,7 +138,7 @@ public class ConceptYamlServiceTests {
     verify(conceptRepository, never()).deleteAll(any());
     verify(conceptEdgeRepository, never()).deleteAll(any());
     verify(practiceProblemRepository, never()).deleteAll(any());
-    verify(userStateV2Repository, never()).deleteAll(any());
+    verify(userStateRepository, never()).deleteAll(any());
     return report;
   }
 
@@ -308,13 +308,13 @@ public class ConceptYamlServiceTests {
                 .concept(oldTop)
                 .url("https://old.example.org")
                 .build());
-    List<UserStateV2> oldStates = List.of(new UserStateV2(), new UserStateV2());
+    List<UserState> oldStates = List.of(new UserState(), new UserState());
 
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(oldTop, oldSub));
     when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(oldEdges);
     when(practiceProblemRepository.findByCourseId(42L)).thenReturn(oldProblems);
-    when(userStateV2Repository.findByCourseId(42L)).thenReturn(oldStates);
+    when(userStateRepository.findByCourseId(42L)).thenReturn(oldStates);
     stubSavesToAssignIds();
 
     // The exact document createYAML produces, plus an unquoted y (accepted on upload even
@@ -369,7 +369,7 @@ public class ConceptYamlServiceTests {
     verify(conceptEdgeRepository).deleteAll(oldEdges);
     verify(conceptRepository).deleteAll(List.of(oldSub));
     verify(conceptRepository).deleteAll(List.of(oldTop));
-    verify(userStateV2Repository).deleteAll(oldStates);
+    verify(userStateRepository).deleteAll(oldStates);
 
     ArgumentCaptor<Concept> conceptCaptor = ArgumentCaptor.forClass(Concept.class);
     verify(conceptRepository, org.mockito.Mockito.times(6)).save(conceptCaptor.capture());
@@ -431,7 +431,7 @@ public class ConceptYamlServiceTests {
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of());
     when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
     when(practiceProblemRepository.findByCourseId(42L)).thenReturn(List.of());
-    when(userStateV2Repository.findByCourseId(42L)).thenReturn(List.of());
+    when(userStateRepository.findByCourseId(42L)).thenReturn(List.of());
     stubSavesToAssignIds();
 
     String yaml =
@@ -466,7 +466,7 @@ public class ConceptYamlServiceTests {
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of());
     when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
     when(practiceProblemRepository.findByCourseId(42L)).thenReturn(List.of());
-    when(userStateV2Repository.findByCourseId(42L)).thenReturn(List.of());
+    when(userStateRepository.findByCourseId(42L)).thenReturn(List.of());
     stubSavesToAssignIds();
 
     String yaml =
@@ -492,7 +492,7 @@ public class ConceptYamlServiceTests {
     when(conceptRepository.findByCourseId(42L)).thenReturn(List.of());
     when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of());
     when(practiceProblemRepository.findByCourseId(42L)).thenReturn(List.of());
-    when(userStateV2Repository.findByCourseId(42L)).thenReturn(List.of());
+    when(userStateRepository.findByCourseId(42L)).thenReturn(List.of());
 
     String yaml = """
         format: 1

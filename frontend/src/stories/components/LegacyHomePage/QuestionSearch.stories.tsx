@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import LegacyQuestionSearch from "main/components/LegacyHomePage/LegacyQuestionSearch";
-import type { Question } from "main/api/client";
+import type { Question } from "main/api/legacyClient";
 
 const sampleQuestions: Question[] = [
   {

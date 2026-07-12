@@ -1,4 +1,4 @@
-import type { Assessment, Question, Course } from "main/api/client";
+import type { Assessment, Question, Course } from "main/types/conceptGraph";
 import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
 import QuestionSearch from "main/components/Scaffold/QuestionSearch";
 import LinkToSettings from "main/components/Scaffold/LinkToSettings";

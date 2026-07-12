@@ -20,15 +20,19 @@ public class UserActivityController {
   private final UserActivityRepository userActivityRepository;
   private final ObjectMapper objectMapper;
 
-  @Operation(summary = "Insert a user activity event")
+  @Operation(summary = "Insert a user activity event with a course ID")
   @PostMapping("/api/user-activity")
   public ResponseEntity<Void> insertUserActivity(@RequestBody UserActivityRequest body) {
-    if (body.userid() == null || body.eventType() == null || body.eventType().isBlank()) {
+    if (body.userid() == null
+        || body.courseId() == null
+        || body.eventType() == null
+        || body.eventType().isBlank()) {
       return ResponseEntity.badRequest().build();
     }
 
     UserActivity activity = new UserActivity();
     activity.setUserid(body.userid());
+    activity.setCourseId(body.courseId());
     activity.setEventType(body.eventType());
     activity.setPayload(
         writeJson(body.payload() == null ? objectMapper.createObjectNode() : body.payload()));
@@ -45,5 +49,8 @@ public class UserActivityController {
   }
 
   public record UserActivityRequest(
-      Long userid, @JsonProperty("event_type") String eventType, JsonNode payload) {}
+      Long userid,
+      @JsonProperty("courseId") Long courseId,
+      @JsonProperty("event_type") String eventType,
+      JsonNode payload) {}
 }
