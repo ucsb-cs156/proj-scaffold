@@ -79,7 +79,7 @@ scaffold,edu.ucsb.cs.scaffold.services,PatEncryptionService.EncryptedPat,0,9,0,0
 scaffold,edu.ucsb.cs.scaffold.services,SystemInfoServiceImpl,0,58,0,4,0,15,0,5,0,3
 scaffold,edu.ucsb.cs.scaffold.services,CurrentUserService,0,10,0,2,0,2,0,3,0,2
 scaffold,edu.ucsb.cs.scaffold.services,GithubService.DirectoryEntry,0,9,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.services,MarkdownService.new AbstractVisitor() {...},9,39,0,0,3,12,1,4,1,4
+scaffold,edu.ucsb.cs.scaffold.services,MarkdownService.new AbstractVisitor() {...},0,48,0,0,0,15,0,5,0,5
 scaffold,edu.ucsb.cs.scaffold.services,MarkdownService.new AbstractVisitor() {...},0,51,0,4,0,17,0,7,0,5
 scaffold,edu.ucsb.cs.scaffold.services,GithubService,0,217,0,10,0,50,0,15,0,10
 scaffold,edu.ucsb.cs.scaffold.services,PatEncryptionService.VersionedKey,0,9,0,0,0,1,0,1,0,1

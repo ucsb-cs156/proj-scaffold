@@ -167,9 +167,9 @@ import org.springframework.stereotype.Service;
 
           @Override
           public void visit(Image image) {
-<span class="nc" id="L170">            image.setDestination(safeDestination(image.getDestination()));</span>
-<span class="nc" id="L171">            visitChildren(image);</span>
-<span class="nc" id="L172">          }</span>
+<span class="fc" id="L170">            image.setDestination(safeDestination(image.getDestination()));</span>
+<span class="fc" id="L171">            visitChildren(image);</span>
+<span class="fc" id="L172">          }</span>
         });
 <span class="fc" id="L174">    return markdownRenderer.render(document).strip();</span>
   }
