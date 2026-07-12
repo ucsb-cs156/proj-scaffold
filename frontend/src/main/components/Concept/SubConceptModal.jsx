@@ -35,6 +35,10 @@ export default function SubConceptModal({
   }, [initialContents, reset]);
 
   const editorOptions = useMemo(() => ({ spellChecker: false }), []);
+  const labelEditorOptions = useMemo(
+    () => ({ spellChecker: false, minHeight: "50px", toolbar: false }),
+    [],
+  );
 
   const closeModal = () => {
     toggleShowModal(false);
@@ -82,19 +86,25 @@ export default function SubConceptModal({
           </Form.Group>
           <Form.Group className="mt-3">
             <Form.Label htmlFor="label">Label</Form.Label>
-            <Form.Control
-              data-testid={"SubConceptModal-label"}
-              id="label"
-              type="text"
-              size={40}
-              isInvalid={Boolean(errors.label)}
-              {...register("label", {
-                required: "Label is required.",
-              })}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.label?.message}
-            </Form.Control.Feedback>
+            <div data-testid={"SubConceptModal-label"}>
+              <Controller
+                name="label"
+                control={control}
+                rules={{ required: "Label is required." }}
+                render={({ field }) => (
+                  <SimpleMdeReact
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    options={labelEditorOptions}
+                  />
+                )}
+              />
+            </div>
+            {errors.label && (
+              <div className="invalid-feedback d-block">
+                {errors.label?.message}
+              </div>
+            )}
           </Form.Group>
           <Form.Group className="mt-3">
             <Form.Label htmlFor="description">Description</Form.Label>

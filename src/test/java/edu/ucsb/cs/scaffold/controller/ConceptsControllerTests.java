@@ -582,9 +582,15 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void post_concept_rejects_a_label_that_cleans_to_empty() throws Exception {
+  public void post_concept_treats_html_looking_label_content_as_literal_text() throws Exception {
+    // Labels have no legitimate use for embedded raw HTML (unlike descriptions/examples), so
+    // rather than sanitizing (and potentially emptying) HTML-looking label content, it is kept
+    // as literal, escaped Markdown text. This also means CS notation such as "List<Integer>"
+    // survives intact instead of being silently stripped by an HTML sanitizer.
     Course course = Course.builder().id(42L).build();
     when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.save(any(Concept.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
 
     String body =
         """
@@ -594,14 +600,10 @@ public class ConceptsControllerTests extends ControllerTestCase {
         y: 2
         """;
 
-    MvcResult response =
-        mockMvc
-            .perform(post("/api/concept").with(csrf()).contentType(YAML).content(body))
-            .andExpect(status().isBadRequest())
-            .andReturn();
-    Map<String, Object> json = responseToJson(response);
-    assertEquals("label may not be empty", json.get("message"));
-    verify(conceptRepository, never()).save(any(Concept.class));
+    mockMvc
+        .perform(post("/api/concept").with(csrf()).contentType(YAML).content(body))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.label").value("\\<script\\>alert('x')\\</script\\>"));
   }
 
   @Test

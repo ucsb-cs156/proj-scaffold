@@ -89,7 +89,7 @@ describe("SubConceptModal tests", () => {
       </div>,
     );
 
-    fireEvent.change(screen.getByLabelText("Label"), {
+    fireEvent.change(editorTextarea("SubConceptModal-label"), {
       target: { value: "While loops" },
     });
     fireEvent.change(editorTextarea("SubConceptModal-description"), {
@@ -160,7 +160,7 @@ describe("SubConceptModal tests", () => {
       expect(screen.getByTestId("SubConceptModal-parentLabel").value).toBe(
         "Variables",
       );
-      expect(screen.getByTestId("SubConceptModal-label").value).toBe(
+      expect(editorTextarea("SubConceptModal-label").value).toBe(
         "Updating variables",
       );
     });

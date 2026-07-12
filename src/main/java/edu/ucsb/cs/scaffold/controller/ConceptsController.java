@@ -797,7 +797,7 @@ public class ConceptsController extends ApiController {
   }
 
   private String cleanAndValidateLabel(String label) {
-    String cleanLabel = markdownService.clean(label);
+    String cleanLabel = markdownService.cleanLabel(label);
     if (cleanLabel == null || cleanLabel.isEmpty()) {
       throw new IllegalArgumentException("label may not be empty");
     }

@@ -165,9 +165,12 @@ describe("SubConceptTabComponent tests", () => {
     fireEvent.change(selector, { target: { value: "1" } });
     fireEvent.click(screen.getByTestId("test-createSubConceptButton"));
 
-    fireEvent.change(screen.getByLabelText("Label"), {
-      target: { value: "While loops" },
-    });
+    fireEvent.change(
+      screen.getByTestId("SubConceptModal-label").querySelector("textarea"),
+      {
+        target: { value: "While loops" },
+      },
+    );
     fireEvent.change(
       screen
         .getByTestId("SubConceptModal-description")
@@ -211,9 +214,12 @@ describe("SubConceptTabComponent tests", () => {
     expect(await screen.findByText("Edit SubConcept")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Declaring variables")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Label"), {
-      target: { value: "Updated subconcept" },
-    });
+    fireEvent.change(
+      screen.getByTestId("SubConceptModal-label").querySelector("textarea"),
+      {
+        target: { value: "Updated subconcept" },
+      },
+    );
     fireEvent.change(
       screen
         .getByTestId("SubConceptModal-description")

@@ -112,9 +112,12 @@ describe("ConceptTabComponent tests", () => {
 
     fireEvent.click(screen.getByTestId("test-post-button"));
 
-    fireEvent.change(screen.getByLabelText("Label"), {
-      target: { value: "Recursion" },
-    });
+    fireEvent.change(
+      screen.getByTestId("ConceptModal-label").querySelector("textarea"),
+      {
+        target: { value: "Recursion" },
+      },
+    );
     fireEvent.change(
       screen.getByTestId("ConceptModal-description").querySelector("textarea"),
       {
@@ -166,9 +169,12 @@ describe("ConceptTabComponent tests", () => {
     expect(await screen.findByText("Edit Concept")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Variables")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Label"), {
-      target: { value: "Updated Variables" },
-    });
+    fireEvent.change(
+      screen.getByTestId("ConceptModal-label").querySelector("textarea"),
+      {
+        target: { value: "Updated Variables" },
+      },
+    );
     fireEvent.change(
       screen.getByTestId("ConceptModal-description").querySelector("textarea"),
       {

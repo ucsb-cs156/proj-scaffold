@@ -83,7 +83,7 @@ describe("ConceptModal tests", () => {
       </div>,
     );
 
-    fireEvent.change(screen.getByLabelText("Label"), {
+    fireEvent.change(editorTextarea("ConceptModal-label"), {
       target: { value: "Recursion" },
     });
     fireEvent.change(editorTextarea("ConceptModal-description"), {
@@ -132,7 +132,7 @@ describe("ConceptModal tests", () => {
 
     const { rerender } = render(<MockConceptModal initialContents={null} />);
 
-    expect(screen.getByTestId("ConceptModal-label").value).toBe("");
+    expect(editorTextarea("ConceptModal-label").value).toBe("");
 
     rerender(
       <MockConceptModal
@@ -141,7 +141,7 @@ describe("ConceptModal tests", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("ConceptModal-label").value).toBe("Loops");
+      expect(editorTextarea("ConceptModal-label").value).toBe("Loops");
       expect(editorTextarea("ConceptModal-description").value).toBe(
         "Repeated execution of a block of code.",
       );
