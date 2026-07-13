@@ -256,6 +256,37 @@ public class CopyConceptGraphJobTests {
   }
 
   @Test
+  public void terminates_when_user_is_not_a_matching_staff_member_on_from_course()
+      throws Exception {
+    Job jobStarted = Job.builder().build();
+    JobContext ctx = new JobContext(null, jobStarted);
+
+    CourseStaff unrelatedStaffMember =
+        CourseStaff.builder().email("other-staff@example.org").build();
+    Course fromCourse =
+        Course.builder()
+            .id(3L)
+            .instructorEmail("someone-else@example.org")
+            .courseStaff(List.of(unrelatedStaffMember))
+            .build();
+    Course toCourse = Course.builder().id(4L).instructorEmail("user@example.org").build();
+    User user = User.builder().id(1L).email("user@example.org").build();
+
+    when(courseRepository.findById(3L)).thenReturn(Optional.of(fromCourse));
+    when(courseRepository.findById(4L)).thenReturn(Optional.of(toCourse));
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(adminRepository.existsByEmail("user@example.org")).thenReturn(false);
+
+    CopyConceptGraphJob job = jobBuilder().build();
+    Exception thrown = assertThrows(Exception.class, () -> job.accept(ctx));
+    assertEquals(
+        "Cannot copy concept graph: user user@example.org does not have admin or"
+            + " instructor/staff access to the from course (id 3)",
+        thrown.getMessage());
+    verify(conceptYamlService, never()).createYAML(anyLong());
+  }
+
+  @Test
   public void terminates_when_yaml_import_reports_failure() throws Exception {
     Job jobStarted = Job.builder().build();
     JobContext ctx = new JobContext(null, jobStarted);
