@@ -1,6 +1,7 @@
 # Monolog + Copilot setup
 
-This repository includes MCP configuration for the [Monolog research logger](https://monolog.work/research.html).
+Instructions for integrating Copilot with [Monolog research logging](https://monolog.work/research.html#researchers):
+
 
 ## Local key setup
 
@@ -23,7 +24,7 @@ It sets:
 
 ## Copilot instructions
 
-Use the text in `MONOLOG-COPILOT-INSTRUCTIONS.md` in the appropriate Copilot instruction location for your VS Code/Copilot setup.
+The file .github/copilot-instructions.md contains instructions for monolog logging.
 
 ## Final step
 
