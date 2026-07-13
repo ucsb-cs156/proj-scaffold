@@ -325,8 +325,7 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(
-                post("/api/jobs/launch/copyConceptGraph?fromCourseId=3&toCourseId=4")
-                    .with(csrf()))
+                post("/api/jobs/launch/copyConceptGraph?fromCourseId=3&toCourseId=4").with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -343,8 +342,7 @@ public class JobsControllerJobsTests extends ControllerTestCase {
     when(jobService.runAsJob(any(CopyConceptGraphJob.class))).thenReturn(jobStarted);
 
     mockMvc
-        .perform(
-            post("/api/jobs/launch/copyConceptGraph?fromCourseId=3&toCourseId=4").with(csrf()))
+        .perform(post("/api/jobs/launch/copyConceptGraph?fromCourseId=3&toCourseId=4").with(csrf()))
         .andExpect(status().isOk());
 
     verify(jobService, times(1)).runAsJob(any(CopyConceptGraphJob.class));
@@ -354,8 +352,7 @@ public class JobsControllerJobsTests extends ControllerTestCase {
   @Test
   public void regular_users_cannot_launch_copyConceptGraph_job() throws Exception {
     mockMvc
-        .perform(
-            post("/api/jobs/launch/copyConceptGraph?fromCourseId=3&toCourseId=4").with(csrf()))
+        .perform(post("/api/jobs/launch/copyConceptGraph?fromCourseId=3&toCourseId=4").with(csrf()))
         .andExpect(status().is(403));
   }
 

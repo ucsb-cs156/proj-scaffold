@@ -97,7 +97,11 @@ public class CopyConceptGraphJobTests {
     JobContext ctx = new JobContext(null, jobStarted);
 
     Course fromCourse =
-        Course.builder().id(3L).courseName("CS156-from").instructorEmail("prof@example.org").build();
+        Course.builder()
+            .id(3L)
+            .courseName("CS156-from")
+            .instructorEmail("prof@example.org")
+            .build();
     Course toCourse =
         Course.builder().id(4L).courseName("CS156-to").instructorEmail("prof@example.org").build();
     User instructor = User.builder().id(1L).email("prof@example.org").build();
@@ -141,7 +145,7 @@ public class CopyConceptGraphJobTests {
   }
 
   @Test
-  public void terminates_when_from_course_is_missing() {
+  public void terminates_when_from_course_is_missing() throws Exception {
     Job jobStarted = Job.builder().build();
     JobContext ctx = new JobContext(null, jobStarted);
 
@@ -150,13 +154,12 @@ public class CopyConceptGraphJobTests {
 
     CopyConceptGraphJob job = jobBuilder().build();
     Exception thrown = assertThrows(Exception.class, () -> job.accept(ctx));
-    assertEquals(
-        "Cannot copy concept graph: from course id 3 not found", thrown.getMessage());
+    assertEquals("Cannot copy concept graph: from course id 3 not found", thrown.getMessage());
     verify(conceptYamlService, never()).createYAML(anyLong());
   }
 
   @Test
-  public void terminates_when_to_course_is_missing() {
+  public void terminates_when_to_course_is_missing() throws Exception {
     Job jobStarted = Job.builder().build();
     JobContext ctx = new JobContext(null, jobStarted);
 
@@ -199,12 +202,11 @@ public class CopyConceptGraphJobTests {
   }
 
   @Test
-  public void terminates_when_user_lacks_permission_on_from_course() {
+  public void terminates_when_user_lacks_permission_on_from_course() throws Exception {
     Job jobStarted = Job.builder().build();
     JobContext ctx = new JobContext(null, jobStarted);
 
-    Course fromCourse =
-        Course.builder().id(3L).instructorEmail("someone-else@example.org").build();
+    Course fromCourse = Course.builder().id(3L).instructorEmail("someone-else@example.org").build();
     Course toCourse = Course.builder().id(4L).instructorEmail("user@example.org").build();
     User user = User.builder().id(1L).email("user@example.org").build();
 
@@ -223,13 +225,12 @@ public class CopyConceptGraphJobTests {
   }
 
   @Test
-  public void terminates_when_user_lacks_permission_on_to_course() {
+  public void terminates_when_user_lacks_permission_on_to_course() throws Exception {
     Job jobStarted = Job.builder().build();
     JobContext ctx = new JobContext(null, jobStarted);
 
     Course fromCourse = Course.builder().id(3L).instructorEmail("user@example.org").build();
-    Course toCourse =
-        Course.builder().id(4L).instructorEmail("someone-else@example.org").build();
+    Course toCourse = Course.builder().id(4L).instructorEmail("someone-else@example.org").build();
     User user = User.builder().id(1L).email("user@example.org").build();
 
     when(courseRepository.findById(3L)).thenReturn(Optional.of(fromCourse));
@@ -247,7 +248,7 @@ public class CopyConceptGraphJobTests {
   }
 
   @Test
-  public void terminates_when_yaml_import_reports_failure() {
+  public void terminates_when_yaml_import_reports_failure() throws Exception {
     Job jobStarted = Job.builder().build();
     JobContext ctx = new JobContext(null, jobStarted);
 

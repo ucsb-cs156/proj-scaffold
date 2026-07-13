@@ -22,8 +22,8 @@ import lombok.Builder;
  * clearing every user's saved per-course scaffold state for that course.
  *
  * <p>Implemented as an in-memory YAML export of the "from" course immediately followed by a YAML
- * import into the "to" course (see docs/yaml-format.md), so this job cannot drift from the
- * behavior of the download/upload endpoints in {@link
+ * import into the "to" course (see docs/yaml-format.md), so this job cannot drift from the behavior
+ * of the download/upload endpoints in {@link
  * edu.ucsb.cs.scaffold.controller.ConceptsYamlController}: the same code performs both, and any
  * future bug fix in {@link ConceptYamlService} applies to this job automatically.
  *
