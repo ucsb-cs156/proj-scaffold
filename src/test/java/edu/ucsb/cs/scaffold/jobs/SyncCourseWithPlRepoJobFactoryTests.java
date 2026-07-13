@@ -53,7 +53,8 @@ public class SyncCourseWithPlRepoJobFactoryTests {
     SyncCourseWithPlRepoJob job = factory.create(7L, course);
 
     assertEquals(7L, ReflectionTestUtils.getField(job, "userId"));
-    assertSame(course, job.getCourse());
+    assertSame(course, ReflectionTestUtils.getField(job, "course"));
+    assertEquals(course.getId(), job.getScopeId());
     assertSame(
         patCredentialRepository, ReflectionTestUtils.getField(job, "patCredentialRepository"));
     assertSame(patEncryptionService, ReflectionTestUtils.getField(job, "patEncryptionService"));

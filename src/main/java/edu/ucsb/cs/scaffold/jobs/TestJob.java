@@ -1,8 +1,8 @@
 package edu.ucsb.cs.scaffold.jobs;
 
-import edu.ucsb.cs.scaffold.services.jobs.JobContext;
-import edu.ucsb.cs.scaffold.services.jobs.JobContextConsumer;
 import edu.ucsb.cs.scaffold.utilities.Sleep;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import lombok.Builder;
 
 @Builder

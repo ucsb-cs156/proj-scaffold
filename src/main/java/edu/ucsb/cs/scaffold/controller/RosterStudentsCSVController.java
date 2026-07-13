@@ -13,7 +13,7 @@ import edu.ucsb.cs.scaffold.model.UpsertResponse;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
-import edu.ucsb.cs.scaffold.services.jobs.JobService;
+import edu.ucsb.cs156.jobs.services.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

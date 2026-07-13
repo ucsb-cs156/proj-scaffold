@@ -17,7 +17,7 @@ import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.services.CurrentUserService;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
-import edu.ucsb.cs.scaffold.services.jobs.JobService;
+import edu.ucsb.cs156.jobs.services.JobService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

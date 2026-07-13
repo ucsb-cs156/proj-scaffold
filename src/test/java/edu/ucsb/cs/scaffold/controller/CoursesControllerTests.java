@@ -37,7 +37,6 @@ import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.InstructorRepository;
-import edu.ucsb.cs.scaffold.repository.JobsRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
@@ -48,7 +47,8 @@ import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.PrairieLearnService;
 import edu.ucsb.cs.scaffold.services.PrairieLearnService.CourseInstanceInfo;
-import edu.ucsb.cs.scaffold.services.jobs.JobService;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
+import edu.ucsb.cs156.jobs.services.JobService;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -1044,7 +1044,7 @@ public class CoursesControllerTests extends ControllerTestCase {
             .perform(delete("/api/courses").param("courseId", "1").with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
-    verify(jobsRepository).deleteByCourse_Id(eq(1L));
+    verify(jobsRepository).deleteByScopeTypeAndScopeId(eq("course"), eq(1L));
     verify(courseRepository).findById(eq(1L));
     verify(courseRepository).delete(eq(course));
     verifyNoMoreInteractions(courseRepository, rosterStudentRepository, jobsRepository);

@@ -12,7 +12,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import edu.ucsb.cs.scaffold.entity.Course;
-import edu.ucsb.cs.scaffold.entity.Job;
 import edu.ucsb.cs.scaffold.entity.PatCredential;
 import edu.ucsb.cs.scaffold.entity.PlAssessment;
 import edu.ucsb.cs.scaffold.entity.PlAssessmentQuestion;
@@ -34,7 +33,8 @@ import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.PrairieLearnService;
 import edu.ucsb.cs.scaffold.services.PrairieLearnService.AssessmentInfo;
 import edu.ucsb.cs.scaffold.services.PrairieLearnService.CourseInstanceInfo;
-import edu.ucsb.cs.scaffold.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
@@ -1165,7 +1165,8 @@ public class SyncCourseWithPlRepoJobTests {
   }
 
   @Test
-  public void the_job_reports_its_course_for_the_jobs_table() {
-    assertEquals(course, job().getCourse());
+  public void the_job_reports_its_course_scope_for_the_jobs_table() {
+    assertEquals("course", job().getScopeType());
+    assertEquals(course.getId(), job().getScopeId());
   }
 }
