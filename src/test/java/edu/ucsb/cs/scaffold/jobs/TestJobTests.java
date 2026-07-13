@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mockStatic;
 
-import edu.ucsb.cs.scaffold.entity.Job;
-import edu.ucsb.cs.scaffold.services.jobs.JobContext;
 import edu.ucsb.cs.scaffold.utilities.Sleep;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 

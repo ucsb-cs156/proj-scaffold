@@ -22,8 +22,8 @@ import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.GithubService.DirectoryEntry;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.PrairieLearnService;
-import edu.ucsb.cs.scaffold.services.jobs.JobContext;
-import edu.ucsb.cs.scaffold.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -99,8 +99,13 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
   record QuestionInfo(UUID uuid, String title) {}
 
   @Override
-  public Course getCourse() {
-    return course;
+  public String getScopeType() {
+    return "course";
+  }
+
+  @Override
+  public Long getScopeId() {
+    return course.getId();
   }
 
   @Override

@@ -19,7 +19,6 @@ import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.InstructorRepository;
-import edu.ucsb.cs.scaffold.repository.JobsRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
@@ -28,7 +27,8 @@ import edu.ucsb.cs.scaffold.repository.UserRepository;
 import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.PrairieLearnService;
-import edu.ucsb.cs.scaffold.services.jobs.JobService;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
+import edu.ucsb.cs156.jobs.services.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -550,7 +550,7 @@ public class CoursesController extends ApiController {
       throw new IllegalArgumentException("Cannot delete course with students or staff");
     }
 
-    jobsRepository.deleteByCourse_Id(courseId);
+    jobsRepository.deleteByScopeTypeAndScopeId("course", courseId);
     courseRepository.delete(course);
     return genericMessage("Course with id %s deleted".formatted(course.getId()));
   }

@@ -4,8 +4,8 @@ import edu.ucsb.cs.scaffold.entity.PatCredential;
 import edu.ucsb.cs.scaffold.errors.NoSuchKeyVersionException;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
-import edu.ucsb.cs.scaffold.services.jobs.JobContext;
-import edu.ucsb.cs.scaffold.services.jobs.JobContextConsumer;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
 import lombok.Builder;
 
 /**

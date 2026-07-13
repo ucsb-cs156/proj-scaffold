@@ -10,13 +10,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import edu.ucsb.cs.scaffold.entity.Job;
 import edu.ucsb.cs.scaffold.entity.PatCredential;
 import edu.ucsb.cs.scaffold.errors.NoSuchKeyVersionException;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService.EncryptedPat;
-import edu.ucsb.cs.scaffold.services.jobs.JobContext;
+import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.services.JobContext;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
