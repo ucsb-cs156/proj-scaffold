@@ -937,6 +937,7 @@ function ConceptGraphPageContent() {
         {/* ── Top bar ── */}
         <ScaffoldTopBar
           course={course}
+          courseId={courseId}
           assessments={assessments}
           selectedAssessmentId={selectedAssessmentId}
           onSelectAssessment={(id) => {

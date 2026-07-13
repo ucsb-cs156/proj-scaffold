@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ScaffoldTopBar from "main/components/Scaffold/ScaffoldTopBar";
+import { StaffToolsProvider } from "main/utils/staffTools";
+import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import type { Assessment, Course, Question } from "main/types/conceptGraph";
 
 const sampleAssessments: Assessment[] = [
@@ -31,6 +34,7 @@ const meta: Meta<typeof ScaffoldTopBar> = {
   tags: ["autodocs"],
   args: {
     course: sampleCourse,
+    courseId: 1,
     assessments: sampleAssessments,
     selectedAssessmentId: "",
     onSelectAssessment: () => {},
@@ -52,4 +56,26 @@ export const AssessmentSelected: Story = {
     selectedAssessmentId: "1",
     questions: sampleQuestions,
   },
+};
+
+// Shows the "Unlock Assessments" button, which only renders for an
+// admin/instructor. StaffToolsProvider derives canUseStaffTools from the
+// current-user query, so it's preset here the same way AdminDeveloperPage's
+// story presets systemInfo.
+export const AsInstructor: Story = {
+  decorators: [
+    (Story) => {
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+      queryClient.setQueryData(["current user"], currentUserFixtures.adminUser);
+      return (
+        <QueryClientProvider client={queryClient}>
+          <StaffToolsProvider>
+            <Story />
+          </StaffToolsProvider>
+        </QueryClientProvider>
+      );
+    },
+  ],
 };

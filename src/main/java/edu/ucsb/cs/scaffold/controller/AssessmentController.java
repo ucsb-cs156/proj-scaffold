@@ -5,6 +5,7 @@ import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.PlAssessment;
 import edu.ucsb.cs.scaffold.entity.PlAssessmentQuestion;
 import edu.ucsb.cs.scaffold.entity.PlQuestion;
+import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
@@ -18,8 +19,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Assessments")
 @RestController
 @RequiredArgsConstructor
-public class AssessmentController {
+public class AssessmentController extends ApiController {
 
   private final CourseRepository courseRepository;
   private final PlAssessmentRepository plAssessmentRepository;
@@ -40,7 +43,8 @@ public class AssessmentController {
 
   @Operation(
       summary =
-          "List the assessments available for a course's associated PrairieLearn repo/instance")
+          "List the unlocked assessments available for a course's associated PrairieLearn"
+              + " repo/instance")
   @GetMapping("/api/assessments")
   public List<AssessmentDTO> getAssessments(
       @Parameter(description = "Id of the course") @RequestParam Long courseId) {
@@ -54,6 +58,7 @@ public class AssessmentController {
     return plAssessmentRepository
         .findByPlRepoIdAndPlInstanceId(course.getPlRepoId(), course.getPlInstanceId())
         .stream()
+        .filter(a -> !a.isLocked())
         .sorted(
             Comparator.comparing(
                     PlAssessment::getPlAssessmentOrder,
@@ -61,6 +66,61 @@ public class AssessmentController {
                 .thenComparing(PlAssessment::getName))
         .map(AssessmentController::toAssessmentDTO)
         .toList();
+  }
+
+  @Operation(
+      summary =
+          "List all assessments (locked and unlocked) for a course, for instructor management")
+  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
+  @GetMapping("/api/assessments/all")
+  public List<AssessmentManagementDTO> getAllAssessments(
+      @Parameter(description = "Id of the course") @RequestParam Long courseId) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    if (course.getPlRepoId() == null || course.getPlInstanceId() == null) {
+      throw new EntityNotFoundException(Course.class, courseId);
+    }
+
+    return plAssessmentRepository
+        .findByPlRepoIdAndPlInstanceId(course.getPlRepoId(), course.getPlInstanceId())
+        .stream()
+        .sorted(
+            Comparator.comparing(
+                    PlAssessment::getPlAssessmentOrder,
+                    Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(PlAssessment::getName))
+        .map(AssessmentController::toAssessmentManagementDTO)
+        .toList();
+  }
+
+  @Operation(summary = "Lock or unlock an assessment so it is hidden from or shown to students")
+  @PreAuthorize("@CourseSecurity.hasInstructorPermissions(#root, #courseId)")
+  @PutMapping("/api/assessments/lock")
+  public AssessmentManagementDTO setLocked(
+      @Parameter(description = "Id of the course") @RequestParam Long courseId,
+      @Parameter(description = "Id of the PlAssessment") @RequestParam Long assessmentId,
+      @Parameter(description = "true to lock (hide), false to unlock (show)") @RequestParam
+          boolean locked) {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    PlAssessment assessment =
+        plAssessmentRepository
+            .findById(assessmentId)
+            .orElseThrow(() -> new EntityNotFoundException(PlAssessment.class, assessmentId));
+
+    if (!Objects.equals(assessment.getPlRepoId(), course.getPlRepoId())
+        || !Objects.equals(assessment.getPlInstanceId(), course.getPlInstanceId())) {
+      throw new IllegalArgumentException(
+          "assessmentId %d belongs to a different course".formatted(assessmentId));
+    }
+
+    assessment.setLocked(locked);
+    plAssessmentRepository.save(assessment);
+    return toAssessmentManagementDTO(assessment);
   }
 
   @Operation(
@@ -88,11 +148,18 @@ public class AssessmentController {
   }
 
   private static AssessmentDTO toAssessmentDTO(PlAssessment a) {
-    String label = a.getPlAssessmentTitle() != null ? a.getPlAssessmentTitle() : a.getName();
     return new AssessmentDTO(
         String.valueOf(a.getId()),
         a.getPlAssessmentId() != null ? String.valueOf(a.getPlAssessmentId()) : null,
-        label);
+        assessmentLabel(a));
+  }
+
+  private static AssessmentManagementDTO toAssessmentManagementDTO(PlAssessment a) {
+    return new AssessmentManagementDTO(String.valueOf(a.getId()), assessmentLabel(a), a.isLocked());
+  }
+
+  private static String assessmentLabel(PlAssessment a) {
+    return a.getPlAssessmentTitle() != null ? a.getPlAssessmentTitle() : a.getName();
   }
 
   private static QuestionDTO toQuestionDTO(PlQuestion q, Long assessmentId) {
@@ -105,6 +172,8 @@ public class AssessmentController {
 
   public record AssessmentDTO(
       String id, @JsonProperty("pl_assessment_id") String plAssessmentId, String name) {}
+
+  public record AssessmentManagementDTO(String id, String name, boolean locked) {}
 
   public record QuestionDTO(
       String id,

@@ -1,13 +1,17 @@
+import { useState } from "react";
 import type { Assessment, Question, Course } from "main/types/conceptGraph";
 import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
 import QuestionSearch from "main/components/Scaffold/QuestionSearch";
 import LinkToSettings from "main/components/Scaffold/LinkToSettings";
 import StarStatus from "main/components/Scaffold/StarStatus";
+import UnlockAssessmentsModal from "main/components/Scaffold/UnlockAssessmentsModal";
+import { useStaffTools } from "main/utils/useStaffTools";
 
 interface ScaffoldTopBarProps {
   // Undefined while the course is still loading; the settings link is
   // omitted until it arrives.
   course?: Course;
+  courseId: number;
   assessments: Assessment[];
   selectedAssessmentId: string;
   onSelectAssessment: (id: string) => void;
@@ -20,6 +24,7 @@ interface ScaffoldTopBarProps {
 
 export default function ScaffoldTopBar({
   course,
+  courseId,
   assessments,
   selectedAssessmentId,
   onSelectAssessment,
@@ -29,12 +34,40 @@ export default function ScaffoldTopBar({
   numStarredConcepts,
   numTotalConcepts,
 }: ScaffoldTopBarProps) {
+  const { canUseStaffTools } = useStaffTools();
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+
   return (
     <div className="scaffold-top-bar" data-testid="ScaffoldTopBar">
+      {canUseStaffTools && (
+        <button
+          data-testid="ScaffoldTopBar-unlockAssessments"
+          onClick={() => setShowUnlockModal(true)}
+          style={{
+            height: 28,
+            padding: "0px 10px",
+            fontFamily: "Helvetica, Arial, sans-serif",
+            fontSize: 13,
+            background: "#ffffff",
+            color: "#1E293B",
+            border: "1px solid #000000",
+            borderRadius: 6,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Unlock Assessments
+        </button>
+      )}
       <AssessmentSelect
         assessments={assessments}
         selectedAssessmentId={selectedAssessmentId}
         onSelect={onSelectAssessment}
+      />
+      <UnlockAssessmentsModal
+        show={showUnlockModal}
+        onHide={() => setShowUnlockModal(false)}
+        courseId={courseId}
       />
       <div style={{ width: 300 }}>
         <QuestionSearch
