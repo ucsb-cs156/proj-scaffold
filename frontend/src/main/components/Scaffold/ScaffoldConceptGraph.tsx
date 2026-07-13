@@ -31,7 +31,7 @@ import {
   type SubconceptLike,
   type EdgeLike,
 } from "main/utils/layout";
-import type { ConceptContentDTO } from "main/api/client";
+import type { ConceptContentDTO } from "main/types/conceptGraph";
 import { useStaffTools } from "main/utils/useStaffTools";
 import LevelLegend from "main/components/Scaffold/LevelLegend";
 import ResetButton from "main/components/Scaffold/ResetButton";

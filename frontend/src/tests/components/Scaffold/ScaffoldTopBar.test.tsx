@@ -2,7 +2,7 @@ import { describe, test, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import ScaffoldTopBar from "main/components/Scaffold/ScaffoldTopBar";
-import type { Assessment, Course, Question } from "main/api/client";
+import type { Assessment, Course, Question } from "main/types/conceptGraph";
 
 const assessments: Assessment[] = [
   { id: "1", pl_assessment_id: "pl1", name: "HW1" },

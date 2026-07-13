@@ -12,12 +12,12 @@ import edu.ucsb.cs.scaffold.model.CreateConceptDTO;
 import edu.ucsb.cs.scaffold.model.CreateSubconceptDTO;
 import edu.ucsb.cs.scaffold.model.UpdateConceptDTO;
 import edu.ucsb.cs.scaffold.model.UpdateSubconceptDTO;
-import edu.ucsb.cs.scaffold.model.UserStateV2;
+import edu.ucsb.cs.scaffold.model.UserState;
 import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
 import edu.ucsb.cs.scaffold.repository.ConceptRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PracticeProblemRepository;
-import edu.ucsb.cs.scaffold.repository.UserStateV2Repository;
+import edu.ucsb.cs.scaffold.repository.UserStateRepository;
 import edu.ucsb.cs.scaffold.services.ConceptGraphService;
 import edu.ucsb.cs.scaffold.services.MarkdownService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,7 +74,7 @@ public class ConceptsController extends ApiController {
   private final PracticeProblemRepository practiceProblemRepository;
   private final ConceptEdgeRepository conceptEdgeRepository;
   private final CourseRepository courseRepository;
-  private final UserStateV2Repository userStateV2Repository;
+  private final UserStateRepository userStateRepository;
   private final MarkdownService markdownService;
   private final ConceptGraphService conceptGraphService;
   private final ObjectMapper objectMapper;
@@ -864,12 +864,12 @@ public class ConceptsController extends ApiController {
 
   /**
    * The requesting user's own private, unsaved top-level position overrides for the course (see
-   * {@link UserStateV2#getTopLevelPositions()}), keyed by the concept's numeric id as a string.
-   * Empty if the user has never dragged a top-level node or has no saved state for the course.
+   * {@link UserState#getTopLevelPositions()}), keyed by the concept's numeric id as a string. Empty
+   * if the user has never dragged a top-level node or has no saved state for the course.
    */
   private Map<String, StoredPosition> callerPrivatePositions(Long courseId) {
     Long userId = getCurrentUser().getUser().getId();
-    return userStateV2Repository
+    return userStateRepository
         .findByUseridAndCourseId(userId, courseId)
         .map(state -> parseTopLevelPositions(state.getTopLevelPositions()))
         .orElseGet(Map::of);
@@ -904,11 +904,11 @@ public class ConceptsController extends ApiController {
    * stale private override render in the wrong row.
    */
   private void clearPrivateTopLevelPositions(Long courseId) {
-    List<UserStateV2> states = userStateV2Repository.findByCourseId(courseId);
-    for (UserStateV2 state : states) {
+    List<UserState> states = userStateRepository.findByCourseId(courseId);
+    for (UserState state : states) {
       state.setTopLevelPositions("{}");
     }
-    userStateV2Repository.saveAll(states);
+    userStateRepository.saveAll(states);
   }
 
   private record StoredPosition(Integer x, Integer y) {}

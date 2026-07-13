@@ -22,6 +22,9 @@ public class UserActivity {
   @Column(nullable = false)
   private Long userid;
 
+  @Column(name = "course_id", nullable = false)
+  private Long courseId;
+
   @Column(name = "event_type", nullable = false)
   private String eventType;
 

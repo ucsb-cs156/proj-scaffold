@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import ScaffoldTopBar from "main/components/Scaffold/ScaffoldTopBar";
-import type { Assessment, Course, Question } from "main/api/client";
+import type { Assessment, Course, Question } from "main/types/conceptGraph";
 
 const sampleAssessments: Assessment[] = [
   { id: "1", pl_assessment_id: "pl1", name: "HW1" },

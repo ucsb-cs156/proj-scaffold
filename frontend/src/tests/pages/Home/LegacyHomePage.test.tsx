@@ -11,15 +11,15 @@ import type {
   Question,
   QuestionConcept,
   LegacyUserStateResponse,
-} from "main/api/client";
-import * as client from "main/api/client";
+} from "main/api/legacyClient";
+import * as client from "main/api/legacyClient";
 
 import axios from "axios";
 import axiosMockAdapter from "axios-mock-adapter";
 
 const axiosMock = new axiosMockAdapter(axios);
 
-vi.mock("main/api/client", () => ({
+vi.mock("main/api/legacyClient", () => ({
   fetchAssessments: vi.fn(),
   fetchQuestions: vi.fn(),
   fetchQuestionConcepts: vi.fn(),

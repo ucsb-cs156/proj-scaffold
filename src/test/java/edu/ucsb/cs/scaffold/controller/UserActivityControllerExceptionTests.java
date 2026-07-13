@@ -25,7 +25,7 @@ class UserActivityControllerExceptionTests {
     when(objectMapper.writeValueAsString(any()))
         .thenThrow(new JsonProcessingException("forced failure") {});
 
-    var request = new UserActivityController.UserActivityRequest(1L, "test", null);
+    var request = new UserActivityController.UserActivityRequest(1L, 2L, "test", null);
     assertThrows(IllegalArgumentException.class, () -> controller.insertUserActivity(request));
   }
 }

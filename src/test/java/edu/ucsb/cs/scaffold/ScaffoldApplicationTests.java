@@ -7,10 +7,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
+import edu.ucsb.cs.scaffold.repository.LegacyUserActivityRepository;
+import edu.ucsb.cs.scaffold.repository.LegacyUserStateRepository;
 import edu.ucsb.cs.scaffold.repository.UserActivityRepository;
-import edu.ucsb.cs.scaffold.repository.UserActivityV2Repository;
 import edu.ucsb.cs.scaffold.repository.UserStateRepository;
-import edu.ucsb.cs.scaffold.repository.UserStateV2Repository;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,13 +25,13 @@ class ScaffoldApplicationTests {
 
   @Autowired private MockMvc mockMvc;
 
+  @Autowired private LegacyUserStateRepository legacyUserStateRepository;
+
+  @Autowired private LegacyUserActivityRepository legacyUserActivityRepository;
+
   @Autowired private UserStateRepository userStateRepository;
 
   @Autowired private UserActivityRepository userActivityRepository;
-
-  @Autowired private UserStateV2Repository userStateV2Repository;
-
-  @Autowired private UserActivityV2Repository userActivityV2Repository;
 
   @Autowired private CourseRepository courseRepository;
 
@@ -53,12 +53,21 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void userStateCanBeUpsertedAndFetchedByUserId() throws Exception {
-    userStateRepository.deleteAll();
+  void getLegacyAssessmentsReturnsEmptyList() throws Exception {
+    mockMvc
+        .perform(get("/api/legacy/assessments"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().json("[]"));
+  }
+
+  @Test
+  void legacyUserStateCanBeUpsertedAndFetchedByUserId() throws Exception {
+    legacyUserStateRepository.deleteAll();
 
     mockMvc
         .perform(
-            post("/api/user-state")
+            post("/api/legacy/user-state")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -72,7 +81,7 @@ class ScaffoldApplicationTests {
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(get("/api/user-state/1234"))
+        .perform(get("/api/legacy/user-state/1234"))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.starred_ids[0]").value("graph-a"))
@@ -82,19 +91,19 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void missingUserStateReturns404() throws Exception {
-    userStateRepository.deleteAll();
+  void missingLegacyUserStateReturns404() throws Exception {
+    legacyUserStateRepository.deleteAll();
 
-    mockMvc.perform(get("/api/user-state/0")).andExpect(status().isNotFound());
+    mockMvc.perform(get("/api/legacy/user-state/0")).andExpect(status().isNotFound());
   }
 
   @Test
-  void userActivityCanBeLogged() throws Exception {
-    userActivityRepository.deleteAll();
+  void legacyUserActivityCanBeLogged() throws Exception {
+    legacyUserActivityRepository.deleteAll();
 
     mockMvc
         .perform(
-            post("/api/user-activity")
+            post("/api/legacy/user-activity")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -106,14 +115,14 @@ class ScaffoldApplicationTests {
                                 """))
         .andExpect(status().isNoContent());
 
-    assertThat(userActivityRepository.count()).isEqualTo(1);
+    assertThat(legacyUserActivityRepository.count()).isEqualTo(1);
   }
 
   @Test
-  void insertUserActivityWithNullUseridReturnsBadRequest() throws Exception {
+  void insertLegacyUserActivityWithNullUseridReturnsBadRequest() throws Exception {
     mockMvc
         .perform(
-            post("/api/user-activity")
+            post("/api/legacy/user-activity")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -125,10 +134,10 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void insertUserActivityWithNullEventTypeReturnsBadRequest() throws Exception {
+  void insertLegacyUserActivityWithNullEventTypeReturnsBadRequest() throws Exception {
     mockMvc
         .perform(
-            post("/api/user-activity")
+            post("/api/legacy/user-activity")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -140,10 +149,10 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void insertUserActivityWithBlankEventTypeReturnsBadRequest() throws Exception {
+  void insertLegacyUserActivityWithBlankEventTypeReturnsBadRequest() throws Exception {
     mockMvc
         .perform(
-            post("/api/user-activity")
+            post("/api/legacy/user-activity")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -156,12 +165,12 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void insertUserActivityWithNullPayloadSucceeds() throws Exception {
-    userActivityRepository.deleteAll();
+  void insertLegacyUserActivityWithNullPayloadSucceeds() throws Exception {
+    legacyUserActivityRepository.deleteAll();
 
     mockMvc
         .perform(
-            post("/api/user-activity")
+            post("/api/legacy/user-activity")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -172,14 +181,14 @@ class ScaffoldApplicationTests {
                                 """))
         .andExpect(status().isNoContent());
 
-    assertThat(userActivityRepository.count()).isEqualTo(1);
+    assertThat(legacyUserActivityRepository.count()).isEqualTo(1);
   }
 
   @Test
-  void upsertUserStateWithNullUseridReturnsBadRequest() throws Exception {
+  void upsertLegacyUserStateWithNullUseridReturnsBadRequest() throws Exception {
     mockMvc
         .perform(
-            post("/api/user-state")
+            post("/api/legacy/user-state")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -191,12 +200,12 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void upsertUserStateWithNullFieldsUsesDefaults() throws Exception {
-    userStateRepository.deleteAll();
+  void upsertLegacyUserStateWithNullFieldsUsesDefaults() throws Exception {
+    legacyUserStateRepository.deleteAll();
 
     mockMvc
         .perform(
-            post("/api/user-state")
+            post("/api/legacy/user-state")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -207,7 +216,7 @@ class ScaffoldApplicationTests {
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(get("/api/user-state/42"))
+        .perform(get("/api/legacy/user-state/42"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.starred_ids").isArray())
         .andExpect(jsonPath("$.mastered_subconcepts").isArray());
@@ -238,14 +247,30 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void userStateV2CanBeUpsertedAndFetchedByUserIdAndCourseId() throws Exception {
-    userStateV2Repository.deleteAll();
+  void getLegacyQuestionsForAssessmentReturnsEmptyList() throws Exception {
+    mockMvc
+        .perform(get("/api/legacy/assessments/{id}/questions", UUID.randomUUID()))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+  }
+
+  @Test
+  void getLegacyConceptsForQuestionReturnsEmptyList() throws Exception {
+    mockMvc
+        .perform(get("/api/legacy/questions/{id}/concepts", UUID.randomUUID()))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+  }
+
+  @Test
+  void userStateCanBeUpsertedAndFetchedByUserIdAndCourseId() throws Exception {
+    userStateRepository.deleteAll();
     Long courseId =
         courseRepository.save(Course.builder().courseName("Test Course").build()).getId();
 
     mockMvc
         .perform(
-            post("/api/user-state-v2")
+            post("/api/user-state")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -261,7 +286,7 @@ class ScaffoldApplicationTests {
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(get("/api/user-state-v2").param("userid", "1234").param("courseId", "" + courseId))
+        .perform(get("/api/user-state").param("userid", "1234").param("courseId", "" + courseId))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.starred_ids[0]").value("graph-a"))
@@ -271,14 +296,14 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void userStateV2IsScopedPerCourseNotJustUserid() throws Exception {
-    userStateV2Repository.deleteAll();
+  void userStateIsScopedPerCourseNotJustUserid() throws Exception {
+    userStateRepository.deleteAll();
     Long courseA = courseRepository.save(Course.builder().courseName("Course A").build()).getId();
     Long courseB = courseRepository.save(Course.builder().courseName("Course B").build()).getId();
 
     mockMvc
         .perform(
-            post("/api/user-state-v2")
+            post("/api/user-state")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -289,7 +314,7 @@ class ScaffoldApplicationTests {
 
     mockMvc
         .perform(
-            post("/api/user-state-v2")
+            post("/api/user-state")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -299,30 +324,36 @@ class ScaffoldApplicationTests {
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(get("/api/user-state-v2").param("userid", "999").param("courseId", "" + courseA))
+        .perform(get("/api/user-state").param("userid", "999").param("courseId", "" + courseA))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.starred_ids[0]").value("course-a-concept"));
 
     mockMvc
-        .perform(get("/api/user-state-v2").param("userid", "999").param("courseId", "" + courseB))
+        .perform(get("/api/user-state").param("userid", "999").param("courseId", "" + courseB))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.starred_ids[0]").value("course-b-concept"));
   }
 
   @Test
-  void missingUserStateV2Returns404() throws Exception {
-    userStateV2Repository.deleteAll();
+  void missingUserStateReturnsEmptyDefaults() throws Exception {
+    userStateRepository.deleteAll();
 
+    // A brand-new user gets 200 with empty defaults (not a 404), so the frontend's
+    // useBackend query treats "no saved state yet" as data rather than an error.
     mockMvc
-        .perform(get("/api/user-state-v2").param("userid", "0").param("courseId", "0"))
-        .andExpect(status().isNotFound());
+        .perform(get("/api/user-state").param("userid", "0").param("courseId", "0"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.starred_ids").isEmpty())
+        .andExpect(jsonPath("$.detail_cards").isEmpty())
+        .andExpect(jsonPath("$.mastered_subconcepts").isEmpty())
+        .andExpect(jsonPath("$.top_level_positions").isEmpty());
   }
 
   @Test
-  void upsertUserStateV2WithNullUseridReturnsBadRequest() throws Exception {
+  void upsertUserStateWithNullUseridReturnsBadRequest() throws Exception {
     mockMvc
         .perform(
-            post("/api/user-state-v2")
+            post("/api/user-state")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -335,10 +366,10 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void upsertUserStateV2WithNullCourseIdReturnsBadRequest() throws Exception {
+  void upsertUserStateWithNullCourseIdReturnsBadRequest() throws Exception {
     mockMvc
         .perform(
-            post("/api/user-state-v2")
+            post("/api/user-state")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -351,14 +382,14 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void upsertUserStateV2WithNullFieldsUsesDefaults() throws Exception {
-    userStateV2Repository.deleteAll();
+  void upsertUserStateWithNullFieldsUsesDefaults() throws Exception {
+    userStateRepository.deleteAll();
     Long courseId =
         courseRepository.save(Course.builder().courseName("Test Course").build()).getId();
 
     mockMvc
         .perform(
-            post("/api/user-state-v2")
+            post("/api/user-state")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -371,21 +402,21 @@ class ScaffoldApplicationTests {
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(get("/api/user-state-v2").param("userid", "42").param("courseId", "" + courseId))
+        .perform(get("/api/user-state").param("userid", "42").param("courseId", "" + courseId))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.starred_ids").isArray())
         .andExpect(jsonPath("$.mastered_subconcepts").isArray());
   }
 
   @Test
-  void userActivityV2CanBeLogged() throws Exception {
-    userActivityV2Repository.deleteAll();
+  void userActivityCanBeLogged() throws Exception {
+    userActivityRepository.deleteAll();
     Long courseId =
         courseRepository.save(Course.builder().courseName("Test Course").build()).getId();
 
     mockMvc
         .perform(
-            post("/api/user-activity-v2")
+            post("/api/user-activity")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -399,14 +430,14 @@ class ScaffoldApplicationTests {
                         .formatted(courseId)))
         .andExpect(status().isNoContent());
 
-    assertThat(userActivityV2Repository.count()).isEqualTo(1);
+    assertThat(userActivityRepository.count()).isEqualTo(1);
   }
 
   @Test
-  void insertUserActivityV2WithNullUseridReturnsBadRequest() throws Exception {
+  void insertUserActivityWithNullUseridReturnsBadRequest() throws Exception {
     mockMvc
         .perform(
-            post("/api/user-activity-v2")
+            post("/api/user-activity")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -419,10 +450,10 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void insertUserActivityV2WithNullCourseIdReturnsBadRequest() throws Exception {
+  void insertUserActivityWithNullCourseIdReturnsBadRequest() throws Exception {
     mockMvc
         .perform(
-            post("/api/user-activity-v2")
+            post("/api/user-activity")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """

@@ -9,12 +9,12 @@ import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.PracticeProblem;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.model.ConceptGraphYamlDTO;
-import edu.ucsb.cs.scaffold.model.UserStateV2;
+import edu.ucsb.cs.scaffold.model.UserState;
 import edu.ucsb.cs.scaffold.repository.ConceptEdgeRepository;
 import edu.ucsb.cs.scaffold.repository.ConceptRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PracticeProblemRepository;
-import edu.ucsb.cs.scaffold.repository.UserStateV2Repository;
+import edu.ucsb.cs.scaffold.repository.UserStateRepository;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -63,7 +63,7 @@ public class ConceptYamlService {
   private final ConceptEdgeRepository conceptEdgeRepository;
   private final PracticeProblemRepository practiceProblemRepository;
   private final CourseRepository courseRepository;
-  private final UserStateV2Repository userStateV2Repository;
+  private final UserStateRepository userStateRepository;
   private final MarkdownService markdownService;
   private final ConceptGraphService conceptGraphService;
 
@@ -158,8 +158,8 @@ public class ConceptYamlService {
    * <p>The replacement is all-or-nothing: the document is fully parsed and validated first, and if
    * anything is wrong the course is left untouched and every problem found is reported under {@code
    * errors}. Only a valid document deletes the course's concepts, edges, practice problems, and
-   * per-user scaffold state ({@code user_state_v2} rows, which refer to concepts by ids that no
-   * longer exist after a replacement) before creating the new content.
+   * per-user scaffold state ({@code user_state} rows, which refer to concepts by ids that no longer
+   * exist after a replacement) before creating the new content.
    */
   @Transactional
   public Map<String, Object> replaceFromYAML(long courseId, InputStream yamlStream)
@@ -432,8 +432,8 @@ public class ConceptYamlService {
     conceptRepository.deleteAll(
         existingConcepts.stream().filter(concept -> !concept.isSubconcept()).toList());
 
-    List<UserStateV2> userStates = userStateV2Repository.findByCourseId(courseId);
-    userStateV2Repository.deleteAll(userStates);
+    List<UserState> userStates = userStateRepository.findByCourseId(courseId);
+    userStateRepository.deleteAll(userStates);
     return userStates.size();
   }
 
