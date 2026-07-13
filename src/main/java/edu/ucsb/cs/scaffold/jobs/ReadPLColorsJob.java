@@ -95,7 +95,9 @@ public class ReadPLColorsJob implements JobContextConsumer {
     int added = 0;
     int updated = 0;
     int unchanged = 0;
+    int seen = 0;
     while (entryMatcher.find()) {
+      seen++;
       String colorName = entryMatcher.group(1);
       String hexCode = "#" + entryMatcher.group(2).toLowerCase();
 
@@ -116,7 +118,7 @@ public class ReadPLColorsJob implements JobContextConsumer {
       }
     }
 
-    if (added == 0 && updated == 0 && unchanged == 0) {
+    if (seen == 0) {
       String message =
           "%s did not contain any 'name': #hex color entries".formatted(COLORS_SCSS_PATH);
       ctx.log(message);
