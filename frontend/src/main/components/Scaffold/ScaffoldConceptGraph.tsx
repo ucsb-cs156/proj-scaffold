@@ -656,13 +656,13 @@ export default function ScaffoldConceptGraph({
     majorConceptsRef.current = majorConcepts;
 
     setNodes((nds) => {
-      const freshMajorIds = new Set(initialNodes.map((n) => n.id));
+      const freshMajorById = new Map(initialNodes.map((n) => [n.id, n]));
       const merged = nds
-        .filter((n) => n.type !== "major" || freshMajorIds.has(n.id))
+        .filter((n) => n.type !== "major" || freshMajorById.has(n.id))
         .map((n) => {
           if (n.type !== "major") return n;
-          const fresh = initialNodes.find((fn) => fn.id === n.id);
-          return fresh ? { ...n, data: { ...n.data, ...fresh.data } } : n;
+          const fresh = freshMajorById.get(n.id)!;
+          return { ...n, data: { ...n.data, ...fresh.data } };
         });
       const existingIds = new Set(merged.map((n) => n.id));
       const newMajors = initialNodes.filter((n) => !existingIds.has(n.id));
