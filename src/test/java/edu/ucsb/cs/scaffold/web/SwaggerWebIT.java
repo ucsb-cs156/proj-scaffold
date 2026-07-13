@@ -3,6 +3,7 @@ package edu.ucsb.cs.scaffold.web;
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
 import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.assertions.LocatorAssertions;
 import edu.ucsb.cs.scaffold.WebTestCase;
 import edu.ucsb.cs.scaffold.testconfig.IntegrationConfig;
 import org.junit.jupiter.api.Test;
@@ -42,12 +43,16 @@ public class SwaggerWebIT extends WebTestCase {
     setupRegularUser();
     page.navigate(page.url().replaceAll("(http://localhost:\\d+).*", "$1/swagger-ui/index.html"));
 
-    assertThat(page.locator("body")).not().containsText("Failed to load API definition");
+    // Swagger UI fetches and renders the OpenAPI definition asynchronously, which can
+    // take longer than Playwright's default 5s timeout on a busy CI runner, so we
+    // allow extra time here before asserting on the rendered page contents.
+    Locator rosterStudentsTag =
+        page.locator("span")
+            .filter(new Locator.FilterOptions().setHasText("RosterStudents"))
+            .first();
+    assertThat(rosterStudentsTag)
+        .isVisible(new LocatorAssertions.IsVisibleOptions().setTimeout(30000));
 
-    assertThat(
-            page.locator("span")
-                .filter(new Locator.FilterOptions().setHasText("RosterStudents"))
-                .first())
-        .isVisible();
+    assertThat(page.locator("body")).not().containsText("Failed to load API definition");
   }
 }
