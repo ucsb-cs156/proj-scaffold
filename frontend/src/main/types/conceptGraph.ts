@@ -3,9 +3,11 @@
 // The legacy counterparts live in main/api/legacyClient.ts and are deliberately
 // separate copies — do not consolidate (see LegacyHomePage isolation).
 
+// id is the PlAssessment row id (as a string); pl_assessment_id is PrairieLearn's own numeric
+// assessment id, null until the PL-API sync job (issue #71) fills it in.
 export interface Assessment {
   id: string;
-  pl_assessment_id: string;
+  pl_assessment_id: string | null;
   name: string;
 }
 

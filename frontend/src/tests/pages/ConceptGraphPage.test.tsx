@@ -351,7 +351,8 @@ describe("ConceptGraphPage", () => {
     renderConceptGraphPage(currentUserFixtures.userOnly, "not-a-number");
 
     expect(screen.getByText("Invalid course id.")).toBeInTheDocument();
-    await waitFor(() => expect(getsTo("/api/assessments")).toHaveLength(1));
+    // Assessments are course-scoped now, so an invalid course id must not fetch them either.
+    expect(getsTo("/api/assessments")).toHaveLength(0);
     expect(getsTo("/api/concepts/graph")).toHaveLength(0);
   });
 
@@ -396,6 +397,7 @@ describe("ConceptGraphPage", () => {
       courseId: 7,
     });
     expect(getsTo("/api/concepts/edges")[0].params).toEqual({ courseId: 7 });
+    expect(getsTo("/api/assessments")[0].params).toEqual({ courseId: 7 });
   });
 
   test("shows an error message when fetching the concept graph data fails", async () => {

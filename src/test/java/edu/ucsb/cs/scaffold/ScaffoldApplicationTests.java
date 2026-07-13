@@ -44,9 +44,9 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void getAssessmentsReturnsEmptyList() throws Exception {
+  void getAssessmentsReturnsEmptyListForANonexistentCourse() throws Exception {
     mockMvc
-        .perform(get("/api/assessments"))
+        .perform(get("/api/assessments").param("courseId", "999999"))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(content().json("[]"));
@@ -233,7 +233,7 @@ class ScaffoldApplicationTests {
   @Test
   void getQuestionsForAssessmentReturnsEmptyList() throws Exception {
     mockMvc
-        .perform(get("/api/assessments/{id}/questions", UUID.randomUUID()))
+        .perform(get("/api/assessments/{id}/questions", 999999L))
         .andExpect(status().isOk())
         .andExpect(content().json("[]"));
   }
@@ -241,7 +241,7 @@ class ScaffoldApplicationTests {
   @Test
   void getConceptsForQuestionReturnsEmptyList() throws Exception {
     mockMvc
-        .perform(get("/api/questions/{id}/concepts", UUID.randomUUID()))
+        .perform(get("/api/questions/{id}/concepts", 999999L))
         .andExpect(status().isOk())
         .andExpect(content().json("[]"));
   }

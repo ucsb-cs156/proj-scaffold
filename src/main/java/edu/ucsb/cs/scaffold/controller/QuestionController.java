@@ -1,28 +1,36 @@
 package edu.ucsb.cs.scaffold.controller;
 
-import edu.ucsb.cs.scaffold.model.QuestionConcept;
-import edu.ucsb.cs.scaffold.repository.QuestionConceptRepository;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
-import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+// Serves ConceptGraphPage only (via useBackend, not legacyClient.ts). Concept highlighting for a
+// selected question is dark until PL questions have their own concept tagging: the old
+// question_concepts table is keyed by the legacy questions.id UUID, which has no relationship to
+// PlQuestion ids, and must not be bridged between the two. LegacyQuestionController (frozen, at
+// /api/legacy/questions/{id}/concepts) still serves the legacy table for LegacyHomePage.
 @Tag(name = "Questions")
 @RestController
-@RequiredArgsConstructor
 public class QuestionController {
 
-  private final QuestionConceptRepository questionConceptRepository;
-
-  @Operation(summary = "List concepts associated with a question")
+  @Operation(
+      summary =
+          "List concepts tagged on a question (currently always empty; PL question concept"
+              + " tagging doesn't exist yet)")
   @GetMapping("/api/questions/{questionId}/concepts")
-  public List<QuestionConcept> getQuestionConcepts(
-      @Parameter(description = "UUID of the question") @PathVariable UUID questionId) {
-    return questionConceptRepository.findByQuestionId(questionId);
+  public List<QuestionConceptDTO> getQuestionConcepts(
+      @Parameter(description = "Id of the PlQuestion") @PathVariable Long questionId) {
+    return List.of();
   }
+
+  public record QuestionConceptDTO(
+      String id,
+      @JsonProperty("question_id") String questionId,
+      @JsonProperty("concept_id") String conceptId,
+      @JsonProperty("subconcept_label") String subconceptLabel) {}
 }
