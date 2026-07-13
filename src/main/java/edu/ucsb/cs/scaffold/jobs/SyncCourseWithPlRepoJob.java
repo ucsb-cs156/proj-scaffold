@@ -285,9 +285,15 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
     }
 
     JsonNode assessmentSets = root.get(ASSESSMENT_SETS_KEY);
-    if (assessmentSets == null || !assessmentSets.isArray()) {
+    if (assessmentSets == null) {
       ctx.log(
-          "Instance %s's %s has no %s array; skipping assessment set sync"
+          "Instance %s's %s has no %s key; skipping assessment set sync"
+              .formatted(instance.getShortName(), INFO_COURSE_INSTANCE_JSON, ASSESSMENT_SETS_KEY));
+      return;
+    }
+    if (!assessmentSets.isArray()) {
+      ctx.log(
+          "Instance %s's %s has a non-array %s value; skipping assessment set sync"
               .formatted(instance.getShortName(), INFO_COURSE_INSTANCE_JSON, ASSESSMENT_SETS_KEY));
       return;
     }
@@ -300,15 +306,20 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
     int added = 0;
     int updated = 0;
     int unchanged = 0;
+    int skipped = 0;
     Set<String> foundAbbreviations = new LinkedHashSet<>();
     for (JsonNode entry : assessmentSets) {
       String abbreviation = entry.path("abbreviation").asText(null);
-      if (abbreviation == null) {
-        continue;
-      }
       String name = entry.path("name").asText(null);
       String heading = entry.path("heading").asText(null);
       String color = entry.path("color").asText(null);
+      if (abbreviation == null || name == null || heading == null || color == null) {
+        skipped++;
+        ctx.log(
+            "Skipping assessment set entry %s (instance %s): missing abbreviation, name, heading, or color"
+                .formatted(entry, instance.getShortName()));
+        continue;
+      }
       foundAbbreviations.add(abbreviation);
 
       PlAssessmentSet set = existingByAbbreviation.get(abbreviation);
@@ -344,8 +355,8 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
     }
 
     ctx.log(
-        "Assessment sets: %d added, %d updated, %d deleted, %d unchanged"
-            .formatted(added, updated, deleted, unchanged));
+        "Assessment sets: %d added, %d updated, %d deleted, %d unchanged, %d skipped"
+            .formatted(added, updated, deleted, unchanged, skipped));
   }
 
   private void syncQuestions(JobContext ctx, PlRepo plRepo, String token) {

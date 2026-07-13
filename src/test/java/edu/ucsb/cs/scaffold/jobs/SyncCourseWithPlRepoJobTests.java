@@ -447,7 +447,7 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         %s
         %s
-        Assessment sets: 2 added, 0 updated, 0 deleted, 0 unchanged
+        Assessment sets: 2 added, 0 updated, 0 deleted, 0 unchanged, 0 skipped
         %s
         %s
         %s"""
@@ -505,6 +505,24 @@ public class SyncCourseWithPlRepoJobTests {
   }
 
   @Test
+  public void skips_assessment_set_entries_missing_a_required_field() throws Exception {
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn(
+            """
+            {
+              "assessmentSets": [
+                { "abbreviation": "LEC", "name": "Lecture", "heading": "Lectures" }
+              ]
+            }""");
+    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of());
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository, never()).save(any());
+    verify(plAssessmentSetRepository, never()).delete(any());
+  }
+
+  @Test
   public void skips_assessment_set_sync_when_infoCourseInstance_json_cannot_be_parsed()
       throws Exception {
     when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
@@ -542,6 +560,23 @@ public class SyncCourseWithPlRepoJobTests {
 
     verify(plAssessmentSetRepository, never()).save(any());
     verify(plAssessmentSetRepository, never()).delete(any());
+    String expected =
+        """
+        %s
+        %s
+        %s
+        Instance Fall2025's infoCourseInstance.json has no assessmentSets key; skipping assessment set sync
+        %s
+        %s
+        %s"""
+            .formatted(
+                HEADER,
+                ACCESS_LINE,
+                VERIFIED_LINE,
+                SKIP_QUESTIONS_LINE,
+                SKIP_ASSESSMENTS_LINE,
+                ENRICH_ZERO_SUMMARY);
+    assertEquals(expected, jobStarted.getLog());
   }
 
   // ────────────────────────── question sync ──────────────────────────
