@@ -17,10 +17,10 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 /**
  * Verifies that the Swagger UI page loads correctly.
  *
- * <p>This is intentionally a light-weight smoke test: it only checks that the API definition
- * loaded successfully and that at least one known controller tag (RosterStudents) is rendered on
- * the page. This is meant to catch cases where the Swagger page fails to load entirely, without
- * requiring frequent updates as the API surface changes.
+ * <p>This is intentionally a light-weight smoke test: it only checks that the API definition loaded
+ * successfully and that at least one known controller tag (RosterStudents) is rendered on the page.
+ * This is meant to catch cases where the Swagger page fails to load entirely, without requiring
+ * frequent updates as the API surface changes.
  *
  * <p>Prerequisites: the frontend must be built ({@code npm run build} inside {@code frontend/}) so
  * that {@code target/classes/public/index.html} exists. Run with:
