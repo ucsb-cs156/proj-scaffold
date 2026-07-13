@@ -21,9 +21,8 @@ import org.springframework.web.client.HttpClientErrorException;
  * /api/jobs/launch/readPLColors), using that admin's own stored GitHub PAT.
  *
  * &lt;p&gt;PrairieLearn does not expose these colors through an API, so this job reads the raw {@code
- * colors.scss} stylesheet from the public PrairieLearn repo and locates the {@code
- * $custom-colors: ( 'name': #hex, ... )} Sass map with a regular expression, rather than a full
- * SCSS parser.
+ * colors.scss} stylesheet from the public PrairieLearn repo and locates the {@code $custom-colors:
+ * ( 'name': #hex, ... )} Sass map with a regular expression, rather than a full SCSS parser.
  */
 @Builder
 public class ReadPLColorsJob implements JobContextConsumer {
@@ -33,12 +32,12 @@ public class ReadPLColorsJob implements JobContextConsumer {
 
   // Matches the $custom-colors: ( ... ); Sass map as a whole, non-greedily, so that only the
   // color map's own entries (and not any later parentheses in the file) are captured.
-<span class="fc" id="L36">  static final Pattern COLOR_MAP_PATTERN =</span>
-<span class="fc" id="L37">      Pattern.compile(&quot;\\$custom-colors\\s*:\\s*\\((.*?)\\)\\s*;&quot;, Pattern.DOTALL);</span>
+<span class="fc" id="L35">  static final Pattern COLOR_MAP_PATTERN =</span>
+<span class="fc" id="L36">      Pattern.compile(&quot;\\$custom-colors\\s*:\\s*\\((.*?)\\)\\s*;&quot;, Pattern.DOTALL);</span>
 
   // Matches a single 'name': #hex entry within the color map.
-<span class="fc" id="L40">  static final Pattern COLOR_ENTRY_PATTERN =</span>
-<span class="fc" id="L41">      Pattern.compile(&quot;['\&quot;]([a-zA-Z0-9_-]+)['\&quot;]\\s*:\\s*#([0-9a-fA-F]{3,8})&quot;);</span>
+<span class="fc" id="L39">  static final Pattern COLOR_ENTRY_PATTERN =</span>
+<span class="fc" id="L40">      Pattern.compile(&quot;['\&quot;]([a-zA-Z0-9_-]+)['\&quot;]\\s*:\\s*#([0-9a-fA-F]{3,8})&quot;);</span>
 
   private long userId;
   private PatCredentialRepository patCredentialRepository;
@@ -48,13 +47,14 @@ public class ReadPLColorsJob implements JobContextConsumer {
 
   @Override
   public void accept(JobContext ctx) throws Exception {
-<span class="fc" id="L51">    ctx.log(&quot;Reading PrairieLearn colors from %s&quot;.formatted(COLORS_SCSS_PATH));</span>
+<span class="fc" id="L50">    ctx.log(&quot;Reading PrairieLearn colors from %s&quot;.formatted(COLORS_SCSS_PATH));</span>
 
-<span class="fc" id="L53">    Optional&lt;PatCredential&gt; githubCredential =</span>
-<span class="fc" id="L54">        patCredentialRepository.findByUserIdAndPlatform(userId, PatPlatform.GITHUB);</span>
-<span class="fc bfc" id="L55" title="All 2 branches covered.">    if (githubCredential.isEmpty()) {</span>
-<span class="fc" id="L56">      String message =</span>
-          &quot;No GitHub PAT is set up for this user; set one up on the /profile page before running this job&quot;;
+<span class="fc" id="L52">    Optional&lt;PatCredential&gt; githubCredential =</span>
+<span class="fc" id="L53">        patCredentialRepository.findByUserIdAndPlatform(userId, PatPlatform.GITHUB);</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">    if (githubCredential.isEmpty()) {</span>
+<span class="fc" id="L55">      String message =</span>
+          &quot;No GitHub PAT is set up for this user; set one up on the /profile page before running&quot;
+              + &quot; this job&quot;;
 <span class="fc" id="L58">      ctx.log(message);</span>
 <span class="fc" id="L59">      throw new Exception(message);</span>
     }
@@ -123,8 +123,7 @@ public class ReadPLColorsJob implements JobContextConsumer {
 <span class="nc" id="L123">      throw new Exception(message);</span>
     }
 
-<span class="fc" id="L126">    ctx.log(</span>
-<span class="fc" id="L127">        &quot;Done: %d added, %d updated, %d unchanged&quot;.formatted(added, updated, unchanged));</span>
-<span class="fc" id="L128">  }</span>
+<span class="fc" id="L126">    ctx.log(&quot;Done: %d added, %d updated, %d unchanged&quot;.formatted(added, updated, unchanged));</span>
+<span class="fc" id="L127">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
