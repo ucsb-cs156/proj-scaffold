@@ -661,7 +661,13 @@ export default function ScaffoldConceptGraph({
         .filter((n) => n.type !== "major" || freshMajorById.has(n.id))
         .map((n) => {
           if (n.type !== "major") return n;
-          const fresh = freshMajorById.get(n.id)!;
+          const fresh = freshMajorById.get(n.id);
+          if (!fresh) return n;
+          // Spread n.data first so any local additions from other effects
+          // (e.g. highlighted/starred flags, onConceptDoubleClick handlers set
+          // by the highlightedIds effect below) survive; fresh.data only ever
+          // contains labelHtml/color/subconcepts (see
+          // buildScaffoldGraphElements), so those are the only keys refreshed.
           return { ...n, data: { ...n.data, ...fresh.data } };
         });
       const existingIds = new Set(merged.map((n) => n.id));
