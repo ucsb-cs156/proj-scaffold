@@ -95,35 +95,37 @@ public class ReadPLColorsJob implements JobContextConsumer {
 <span class="fc" id="L95">    int added = 0;</span>
 <span class="fc" id="L96">    int updated = 0;</span>
 <span class="fc" id="L97">    int unchanged = 0;</span>
-<span class="fc bfc" id="L98" title="All 2 branches covered.">    while (entryMatcher.find()) {</span>
-<span class="fc" id="L99">      String colorName = entryMatcher.group(1);</span>
-<span class="fc" id="L100">      String hexCode = &quot;#&quot; + entryMatcher.group(2).toLowerCase();</span>
+<span class="fc" id="L98">    boolean anyEntries = false;</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">    while (entryMatcher.find()) {</span>
+<span class="fc" id="L100">      anyEntries = true;</span>
+<span class="fc" id="L101">      String colorName = entryMatcher.group(1);</span>
+<span class="fc" id="L102">      String hexCode = &quot;#&quot; + entryMatcher.group(2).toLowerCase();</span>
 
-<span class="fc" id="L102">      Optional&lt;PlColor&gt; existing = plColorRepository.findById(colorName);</span>
-<span class="fc bfc" id="L103" title="All 2 branches covered.">      if (existing.isEmpty()) {</span>
-<span class="fc" id="L104">        plColorRepository.save(PlColor.builder().colorName(colorName).hexCode(hexCode).build());</span>
-<span class="fc" id="L105">        added++;</span>
-<span class="fc" id="L106">        ctx.log(&quot;Added color %s: %s&quot;.formatted(colorName, hexCode));</span>
-<span class="fc bfc" id="L107" title="All 2 branches covered.">      } else if (!existing.get().getHexCode().equalsIgnoreCase(hexCode)) {</span>
-<span class="fc" id="L108">        PlColor color = existing.get();</span>
-<span class="fc" id="L109">        String oldHexCode = color.getHexCode();</span>
-<span class="fc" id="L110">        color.setHexCode(hexCode);</span>
-<span class="fc" id="L111">        plColorRepository.save(color);</span>
-<span class="fc" id="L112">        updated++;</span>
-<span class="fc" id="L113">        ctx.log(&quot;Updated color %s: %s -&gt; %s&quot;.formatted(colorName, oldHexCode, hexCode));</span>
-<span class="fc" id="L114">      } else {</span>
-<span class="fc" id="L115">        unchanged++;</span>
+<span class="fc" id="L104">      Optional&lt;PlColor&gt; existing = plColorRepository.findById(colorName);</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">      if (existing.isEmpty()) {</span>
+<span class="fc" id="L106">        plColorRepository.save(PlColor.builder().colorName(colorName).hexCode(hexCode).build());</span>
+<span class="fc" id="L107">        added++;</span>
+<span class="fc" id="L108">        ctx.log(&quot;Added color %s: %s&quot;.formatted(colorName, hexCode));</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">      } else if (!existing.get().getHexCode().equalsIgnoreCase(hexCode)) {</span>
+<span class="fc" id="L110">        PlColor color = existing.get();</span>
+<span class="fc" id="L111">        String oldHexCode = color.getHexCode();</span>
+<span class="fc" id="L112">        color.setHexCode(hexCode);</span>
+<span class="fc" id="L113">        plColorRepository.save(color);</span>
+<span class="fc" id="L114">        updated++;</span>
+<span class="fc" id="L115">        ctx.log(&quot;Updated color %s: %s -&gt; %s&quot;.formatted(colorName, oldHexCode, hexCode));</span>
+<span class="fc" id="L116">      } else {</span>
+<span class="fc" id="L117">        unchanged++;</span>
       }
-<span class="fc" id="L117">    }</span>
+<span class="fc" id="L119">    }</span>
 
-<span class="pc bpc" id="L119" title="2 of 6 branches missed.">    if (added == 0 &amp;&amp; updated == 0 &amp;&amp; unchanged == 0) {</span>
-<span class="fc" id="L120">      String message =</span>
-<span class="fc" id="L121">          &quot;%s did not contain any 'name': #hex color entries&quot;.formatted(COLORS_SCSS_PATH);</span>
-<span class="fc" id="L122">      ctx.log(message);</span>
-<span class="fc" id="L123">      throw new Exception(message);</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">    if (!anyEntries) {</span>
+<span class="fc" id="L122">      String message =</span>
+<span class="fc" id="L123">          &quot;%s did not contain any 'name': #hex color entries&quot;.formatted(COLORS_SCSS_PATH);</span>
+<span class="fc" id="L124">      ctx.log(message);</span>
+<span class="fc" id="L125">      throw new Exception(message);</span>
     }
 
-<span class="fc" id="L126">    ctx.log(&quot;Done: %d added, %d updated, %d unchanged&quot;.formatted(added, updated, unchanged));</span>
-<span class="fc" id="L127">  }</span>
+<span class="fc" id="L128">    ctx.log(&quot;Done: %d added, %d updated, %d unchanged&quot;.formatted(added, updated, unchanged));</span>
+<span class="fc" id="L129">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
