@@ -124,10 +124,14 @@ function ConceptGraphPageContent() {
   const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
   const [selectedQuestionId, setSelectedQuestionId] = useState("");
 
+  // Course-scoped: the backend returns [] when the course has no associated
+  // PlRepo/PlInstance yet, rather than an error.
   const { data: assessments = [] } = useBackend<Assessment[]>(
-    ["/api/assessments"],
-    { method: "GET", url: "/api/assessments" },
+    ["/api/assessments", courseId],
+    { method: "GET", url: "/api/assessments", params: { courseId } },
     [],
+    false,
+    { enabled: courseIdIsValid },
   );
 
   // The course endpoint is staff-only; for students the request fails and the
