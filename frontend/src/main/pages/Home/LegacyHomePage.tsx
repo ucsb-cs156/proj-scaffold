@@ -10,8 +10,8 @@ import {
   fetchLegacyUserState,
   logLegacyUserActivity,
   saveLegacyUserState,
-} from "main/api/client";
-import type { Assessment, Question } from "main/api/client";
+} from "main/api/legacyClient";
+import type { Assessment, Question } from "main/api/legacyClient";
 import { majorConcepts } from "main/data/conceptGraph";
 import LegacyQuestionSearch from "main/components/LegacyHomePage/LegacyQuestionSearch";
 import LegacyAssessmentSelect from "main/components/LegacyHomePage/LegacyAssessmentSelect";

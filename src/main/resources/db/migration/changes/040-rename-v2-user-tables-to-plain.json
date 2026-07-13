@@ -1,0 +1,85 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "040-rename-user-state-v2-to-user-state",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "tableExists": { "tableName": "user_state_v2" } },
+          { "not": { "tableExists": { "tableName": "user_state" } } }
+        ],
+        "changes": [
+          {
+            "renameTable": {
+              "oldTableName": "user_state_v2",
+              "newTableName": "user_state"
+            }
+          },
+          {
+            "dropUniqueConstraint": {
+              "tableName": "user_state",
+              "constraintName": "UK_USER_STATE_V2_USER_COURSE"
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "user_state",
+              "columnNames": "userid, course_id",
+              "constraintName": "UK_USER_STATE_USER_COURSE"
+            }
+          },
+          {
+            "dropForeignKeyConstraint": {
+              "baseTableName": "user_state",
+              "constraintName": "FK_USER_STATE_V2_COURSE_ID"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "user_state",
+              "baseColumnNames": "course_id",
+              "referencedTableName": "course",
+              "referencedColumnNames": "id",
+              "constraintName": "FK_USER_STATE_COURSE_ID"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "040-rename-user-activity-v2-to-user-activity",
+        "author": "pc",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "tableExists": { "tableName": "user_activity_v2" } },
+          { "not": { "tableExists": { "tableName": "user_activity" } } }
+        ],
+        "changes": [
+          {
+            "renameTable": {
+              "oldTableName": "user_activity_v2",
+              "newTableName": "user_activity"
+            }
+          },
+          {
+            "dropForeignKeyConstraint": {
+              "baseTableName": "user_activity",
+              "constraintName": "FK_USER_ACTIVITY_V2_COURSE_ID"
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "user_activity",
+              "baseColumnNames": "course_id",
+              "referencedTableName": "course",
+              "referencedColumnNames": "id",
+              "constraintName": "FK_USER_ACTIVITY_COURSE_ID"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

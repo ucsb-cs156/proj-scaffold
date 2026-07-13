@@ -1,7 +1,7 @@
 import { describe, test, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import QuestionSearch from "main/components/Scaffold/QuestionSearch";
-import type { Question } from "main/api/client";
+import type { Question } from "main/types/conceptGraph";
 
 const questions: Question[] = [
   { id: "1", assessment_id: "a1", pl_question_uuid: "u1", title: "Loops 101" },

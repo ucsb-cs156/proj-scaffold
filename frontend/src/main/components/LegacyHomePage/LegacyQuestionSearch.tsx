@@ -3,7 +3,7 @@
 // it must not be affected by refactors to the shared Scaffold components.
 // Do not consolidate this with main/components/Scaffold/QuestionSearch.
 import { useState, useEffect, useRef } from "react";
-import type { Question } from "../../api/client";
+import type { Question } from "../../api/legacyClient";
 
 interface QuestionSearchProps {
   questions: Question[];

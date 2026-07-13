@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import QuestionSearch from "main/components/Scaffold/QuestionSearch";
-import type { Question } from "main/api/client";
+import type { Question } from "main/types/conceptGraph";
 
 const sampleQuestions: Question[] = [
   {

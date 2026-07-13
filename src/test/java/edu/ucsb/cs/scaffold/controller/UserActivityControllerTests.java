@@ -30,8 +30,22 @@ public class UserActivityControllerTests extends ControllerTestCase {
         .perform(
             post("/api/user-activity")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {"event_type": "click"}
+                .content(
+                    """
+                    {"courseId": 1, "event_type": "click"}
+                    """))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  public void post_with_null_course_id_returns_400() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/user-activity")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {"userid": 1, "event_type": "click"}
                     """))
         .andExpect(status().isBadRequest());
   }
@@ -42,8 +56,9 @@ public class UserActivityControllerTests extends ControllerTestCase {
         .perform(
             post("/api/user-activity")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {"userid": 1}
+                .content(
+                    """
+                    {"userid": 1, "courseId": 1}
                     """))
         .andExpect(status().isBadRequest());
   }
@@ -56,7 +71,7 @@ public class UserActivityControllerTests extends ControllerTestCase {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
-                    {"userid": 1, "event_type": "   "}
+                    {"userid": 1, "courseId": 1, "event_type": "   "}
                     """))
         .andExpect(status().isBadRequest());
   }
@@ -69,13 +84,14 @@ public class UserActivityControllerTests extends ControllerTestCase {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
-                    {"userid": 1, "event_type": "click"}
+                    {"userid": 1, "courseId": 1, "event_type": "click"}
                     """))
         .andExpect(status().isNoContent());
 
     ArgumentCaptor<UserActivity> captor = ArgumentCaptor.forClass(UserActivity.class);
     verify(userActivityRepository).save(captor.capture());
     assertThat(captor.getValue().getPayload()).isEqualTo("{}");
+    assertThat(captor.getValue().getCourseId()).isEqualTo(1L);
   }
 
   @Test
@@ -86,7 +102,7 @@ public class UserActivityControllerTests extends ControllerTestCase {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
-                    {"userid": 1, "event_type": "click", "payload": {"key": "value"}}
+                    {"userid": 1, "courseId": 1, "event_type": "click", "payload": {"key": "value"}}
                     """))
         .andExpect(status().isNoContent());
 

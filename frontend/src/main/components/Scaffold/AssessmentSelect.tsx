@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import type { Assessment } from "../../api/client";
+import type { Assessment } from "main/types/conceptGraph";
 
 interface AssessmentSelectProps {
   assessments: Assessment[];

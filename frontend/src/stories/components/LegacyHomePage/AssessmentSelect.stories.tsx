@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import LegacyAssessmentSelect from "main/components/LegacyHomePage/LegacyAssessmentSelect";
-import type { Assessment } from "main/api/client";
+import type { Assessment } from "main/api/legacyClient";
 
 const sampleAssessments: Assessment[] = [
   { id: "1", pl_assessment_id: "pl1", name: "HW1" },

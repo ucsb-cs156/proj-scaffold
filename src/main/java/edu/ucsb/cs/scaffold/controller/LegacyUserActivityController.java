@@ -4,39 +4,37 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.ucsb.cs.scaffold.model.UserActivityV2;
-import edu.ucsb.cs.scaffold.repository.UserActivityV2Repository;
+import edu.ucsb.cs.scaffold.model.LegacyUserActivity;
+import edu.ucsb.cs.scaffold.repository.LegacyUserActivityRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "User Activity V2")
+// Serves only LegacyHomePage.tsx (via legacyClient.ts). Events here have no course
+// scoping; the course-scoped counterpart is UserActivityController at /api/user-activity.
+@Tag(name = "Legacy User Activity")
 @RestController
 @RequiredArgsConstructor
-public class UserActivityV2Controller {
+public class LegacyUserActivityController {
 
-  private final UserActivityV2Repository userActivityV2Repository;
+  private final LegacyUserActivityRepository legacyUserActivityRepository;
   private final ObjectMapper objectMapper;
 
-  @Operation(summary = "Insert a user activity event with a course ID")
-  @PostMapping("/api/user-activity-v2")
-  public ResponseEntity<Void> insertUserActivity(@RequestBody UserActivityV2Request body) {
-    if (body.userid() == null
-        || body.courseId() == null
-        || body.eventType() == null
-        || body.eventType().isBlank()) {
+  @Operation(summary = "Insert a legacy user activity event")
+  @PostMapping("/api/legacy/user-activity")
+  public ResponseEntity<Void> insertUserActivity(@RequestBody LegacyUserActivityRequest body) {
+    if (body.userid() == null || body.eventType() == null || body.eventType().isBlank()) {
       return ResponseEntity.badRequest().build();
     }
 
-    UserActivityV2 activity = new UserActivityV2();
+    LegacyUserActivity activity = new LegacyUserActivity();
     activity.setUserid(body.userid());
-    activity.setCourseId(body.courseId());
     activity.setEventType(body.eventType());
     activity.setPayload(
         writeJson(body.payload() == null ? objectMapper.createObjectNode() : body.payload()));
-    userActivityV2Repository.save(activity);
+    legacyUserActivityRepository.save(activity);
     return ResponseEntity.noContent().build();
   }
 
@@ -48,9 +46,6 @@ public class UserActivityV2Controller {
     }
   }
 
-  public record UserActivityV2Request(
-      Long userid,
-      @JsonProperty("courseId") Long courseId,
-      @JsonProperty("event_type") String eventType,
-      JsonNode payload) {}
+  public record LegacyUserActivityRequest(
+      Long userid, @JsonProperty("event_type") String eventType, JsonNode payload) {}
 }

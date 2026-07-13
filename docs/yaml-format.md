@@ -143,7 +143,7 @@ A successful upload, in one transaction:
 
 1. Deletes every concept, subconcept, prerequisite edge, and practice problem
    for the course.
-2. Deletes every user's saved per-course scaffold state (`user_state_v2`):
+2. Deletes every user's saved per-course scaffold state (`user_state`):
    starred concepts, open detail cards, mastered subconcepts, and private
    drag positions. This state refers to concepts by id, and every id changes
    on upload, so it would be meaningless afterward — **every student starts
@@ -151,7 +151,7 @@ A successful upload, in one transaction:
 3. Creates the concepts, subconcepts, edges, and practice problems from the
    file.
 
-The user activity log (`user_activity_v2`) is retained as a historical record.
+The user activity log (`user_activity`) is retained as a historical record.
 
 ## Error reporting
 
