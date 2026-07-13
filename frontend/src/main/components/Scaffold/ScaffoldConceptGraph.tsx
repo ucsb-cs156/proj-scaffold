@@ -620,10 +620,15 @@ export default function ScaffoldConceptGraph({
   onSubconceptDoubleClick,
   onAddSubconcept,
 }: ScaffoldConceptGraphProps) {
-  // majorConcepts/positions/prereqEdgeData are only expected to be stable for
-  // the lifetime of a mounted instance (the page that renders this component
-  // waits for all backend fetches to resolve before rendering it at all), so
-  // computing these once via useMemo is safe.
+  // majorConcepts/positions/prereqEdgeData were only stable for the lifetime
+  // of a mounted instance until concept/subconcept create/update mutations
+  // started invalidating the graph query in place, so this memo can now be
+  // recomputed after mount (e.g. after creating/editing a concept or
+  // subconcept). useNodesState only consumes its initial argument once, so
+  // the effect below re-syncs "major" nodes whenever majorConcepts changes,
+  // without clobbering locally-added detail cards or dragged node positions.
+  // (Prereq edges are already re-synced from majorConcepts/initialEdges by
+  // the highlightedIds effect further down.)
   const { nodes: initialNodes, edges: initialEdges } = useMemo(
     () => buildScaffoldGraphElements(positions, majorConcepts, prereqEdgeData),
     [positions, majorConcepts, prereqEdgeData],
@@ -637,6 +642,33 @@ export default function ScaffoldConceptGraph({
   useEffect(() => {
     nodesRef.current = nodes;
   }, [nodes]);
+
+  // Re-sync "major" nodes whenever the fetched concept graph changes (e.g.
+  // after creating a concept, editing a concept, or adding/editing a
+  // subconcept). Existing major nodes keep their current position (preserving
+  // drags/local reordering); their data (label, color, subconcepts, etc.) is
+  // refreshed from the latest fetch. New concepts are appended, and any major
+  // nodes no longer present in the graph are removed. Non-"major" nodes (e.g.
+  // detail cards) are left untouched.
+  const majorConceptsRef = useRef(majorConcepts);
+  useEffect(() => {
+    if (majorConceptsRef.current === majorConcepts) return;
+    majorConceptsRef.current = majorConcepts;
+
+    setNodes((nds) => {
+      const freshMajorIds = new Set(initialNodes.map((n) => n.id));
+      const merged = nds
+        .filter((n) => n.type !== "major" || freshMajorIds.has(n.id))
+        .map((n) => {
+          if (n.type !== "major") return n;
+          const fresh = initialNodes.find((fn) => fn.id === n.id);
+          return fresh ? { ...n, data: { ...n.data, ...fresh.data } } : n;
+        });
+      const existingIds = new Set(merged.map((n) => n.id));
+      const newMajors = initialNodes.filter((n) => !existingIds.has(n.id));
+      return [...merged, ...newMajors];
+    });
+  }, [majorConcepts, initialNodes, setNodes]);
 
   const highlightedIdsRef = useRef(highlightedIds);
   useEffect(() => {

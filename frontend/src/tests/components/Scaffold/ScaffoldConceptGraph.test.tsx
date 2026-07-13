@@ -376,6 +376,99 @@ describe("ScaffoldConceptGraph", () => {
   });
 });
 
+describe("ScaffoldConceptGraph re-syncs when majorConcepts changes", () => {
+  // Regression test: after creating/editing a concept or subconcept, the
+  // page's majorConcepts refetch used to have no effect on the already
+  // mounted graph until a full page refresh, because useNodesState only
+  // consumes its initial value once.
+  test("shows a newly-added top-level concept without remounting", () => {
+    const props = baseProps();
+    const { rerender } = render(<ScaffoldConceptGraph {...props} />);
+
+    expect(screen.queryByText("Recursion")).toBeInTheDocument();
+    expect(screen.queryByText("Iteration")).not.toBeInTheDocument();
+
+    const updatedMajorConcepts = [
+      ...sampleMajorConcepts,
+      {
+        id: 6,
+        labelHtml: "Iteration",
+        color: "#c0ffee",
+        subconcepts: [],
+      },
+    ];
+    rerender(
+      <ScaffoldConceptGraph {...props} majorConcepts={updatedMajorConcepts} />,
+    );
+
+    expect(screen.getByText("Iteration")).toBeInTheDocument();
+  });
+
+  test("shows a newly-added subconcept on an existing concept without remounting", () => {
+    const props = baseProps();
+    const { rerender } = render(<ScaffoldConceptGraph {...props} />);
+
+    expect(screen.queryByText("Recursive case")).not.toBeInTheDocument();
+
+    const updatedMajorConcepts = sampleMajorConcepts.map((concept) =>
+      concept.id === 1
+        ? {
+            ...concept,
+            subconcepts: [
+              ...concept.subconcepts,
+              { id: 7, parentId: 1, labelHtml: "Recursive case" },
+            ],
+          }
+        : concept,
+    );
+    rerender(
+      <ScaffoldConceptGraph {...props} majorConcepts={updatedMajorConcepts} />,
+    );
+
+    expect(screen.getByText("Recursive case")).toBeInTheDocument();
+  });
+
+  test("shows an edited concept's label without remounting", () => {
+    const props = baseProps();
+    const { rerender } = render(<ScaffoldConceptGraph {...props} />);
+
+    expect(screen.queryByText("Recursion")).toBeInTheDocument();
+
+    const updatedMajorConcepts = sampleMajorConcepts.map((concept) =>
+      concept.id === 1
+        ? { ...concept, labelHtml: "Recursion (renamed)" }
+        : concept,
+    );
+    rerender(
+      <ScaffoldConceptGraph {...props} majorConcepts={updatedMajorConcepts} />,
+    );
+
+    expect(screen.queryByText("Recursion")).not.toBeInTheDocument();
+    expect(screen.getByText("Recursion (renamed)")).toBeInTheDocument();
+  });
+
+  test("keeps a dragged concept's position when majorConcepts is refreshed", () => {
+    const props = baseProps();
+    const { rerender, container } = render(<ScaffoldConceptGraph {...props} />);
+
+    const nodeBefore = container.querySelector('[data-id="1"]') as HTMLElement;
+    const transformBefore = nodeBefore.style.transform;
+
+    const updatedMajorConcepts = sampleMajorConcepts.map((concept) =>
+      concept.id === 1
+        ? { ...concept, labelHtml: "Recursion updated" }
+        : concept,
+    );
+    rerender(
+      <ScaffoldConceptGraph {...props} majorConcepts={updatedMajorConcepts} />,
+    );
+
+    const nodeAfter = container.querySelector('[data-id="1"]') as HTMLElement;
+    expect(nodeAfter.style.transform).toBe(transformBefore);
+    expect(screen.getByText("Recursion updated")).toBeInTheDocument();
+  });
+});
+
 describe("ScaffoldConceptGraph debug mode tooltips", () => {
   function renderWithDebugMode(ui: ReactElement, debugMode: boolean) {
     return render(
