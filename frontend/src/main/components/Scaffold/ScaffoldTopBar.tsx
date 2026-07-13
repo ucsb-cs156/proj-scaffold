@@ -34,12 +34,12 @@ export default function ScaffoldTopBar({
   numStarredConcepts,
   numTotalConcepts,
 }: ScaffoldTopBarProps) {
-  const { canUseStaffTools } = useStaffTools();
+  const { enableEditing } = useStaffTools();
   const [showUnlockModal, setShowUnlockModal] = useState(false);
 
   return (
     <div className="scaffold-top-bar" data-testid="ScaffoldTopBar">
-      {canUseStaffTools && (
+      {enableEditing && (
         <button
           data-testid="ScaffoldTopBar-unlockAssessments"
           onClick={() => setShowUnlockModal(true)}

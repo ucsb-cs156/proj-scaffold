@@ -59,6 +59,7 @@ describe("ScaffoldTopBar", () => {
 
   beforeEach(() => {
     restoreConsole = mockConsole();
+    sessionStorage.clear();
     axiosMock.reset();
     axiosMock.resetHistory();
     axiosMock.onGet("/api/assessments/all").reply(200, []);
@@ -66,6 +67,7 @@ describe("ScaffoldTopBar", () => {
 
   afterEach(() => {
     restoreConsole();
+    sessionStorage.clear();
   });
 
   test("renders the bar with its className and testid", () => {
@@ -127,14 +129,29 @@ describe("ScaffoldTopBar", () => {
     ).toBeDisabled();
   });
 
-  test("does not show the Unlock Assessments button for a non-staff user", () => {
+  test("does not show the Unlock Assessments button for a non-staff user, even in editing mode", () => {
+    sessionStorage.setItem(
+      "staffTools",
+      JSON.stringify({ enableEditing: true }),
+    );
     renderTopBar({}, currentUserFixtures.userOnly);
     expect(
       screen.queryByTestId("ScaffoldTopBar-unlockAssessments"),
     ).not.toBeInTheDocument();
   });
 
-  test("shows the Unlock Assessments button for an admin and opens the modal", async () => {
+  test("does not show the Unlock Assessments button for an admin outside editing mode", () => {
+    renderTopBar({}, currentUserFixtures.adminUser);
+    expect(
+      screen.queryByTestId("ScaffoldTopBar-unlockAssessments"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("shows the Unlock Assessments button for an admin in editing mode and opens the modal", async () => {
+    sessionStorage.setItem(
+      "staffTools",
+      JSON.stringify({ enableEditing: true }),
+    );
     renderTopBar({}, currentUserFixtures.adminUser);
     const button = screen.getByTestId("ScaffoldTopBar-unlockAssessments");
     expect(button).toBeInTheDocument();

@@ -59,12 +59,18 @@ export const AssessmentSelected: Story = {
 };
 
 // Shows the "Unlock Assessments" button, which only renders for an
-// admin/instructor. StaffToolsProvider derives canUseStaffTools from the
-// current-user query, so it's preset here the same way AdminDeveloperPage's
-// story presets systemInfo.
-export const AsInstructor: Story = {
+// admin/instructor who also has the "Enable Editing" toggle on.
+// StaffToolsProvider derives canUseStaffTools from the current-user query
+// (preset here the same way AdminDeveloperPage's story presets systemInfo)
+// and reads enableEditing from sessionStorage, matching how the toggle
+// persists in the real app.
+export const AsInstructorInEditingMode: Story = {
   decorators: [
     (Story) => {
+      sessionStorage.setItem(
+        "staffTools",
+        JSON.stringify({ enableEditing: true }),
+      );
       const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false } },
       });
