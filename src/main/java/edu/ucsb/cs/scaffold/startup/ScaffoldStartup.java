@@ -2,14 +2,18 @@ package edu.ucsb.cs.scaffold.startup;
 
 import edu.ucsb.cs.scaffold.entity.Admin;
 import edu.ucsb.cs.scaffold.entity.Course;
+import edu.ucsb.cs.scaffold.entity.PlColor;
 import edu.ucsb.cs.scaffold.enums.School;
 import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
+import edu.ucsb.cs.scaffold.repository.PlColorRepository;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,12 +30,53 @@ public class ScaffoldStartup {
   static final Long SEED_COURSE_ID = 1L;
   static final String SEED_DATA_RESOURCE = "db/seed/concepts.sql";
 
+  // Default PrairieLearn badge colors (issue #96), taken from the $custom-colors map in
+  // https://github.com/PrairieLearn/PrairieLearn/blob/master/apps/prairielearn/public/stylesheets/colors.scss.
+  // ReadPLColorsJob keeps these up to date with any changes on the PrairieLearn side; this seed
+  // only fills in rows that don't already exist so a restart never clobbers job updates.
+  static final Map<String, String> SEED_PL_COLORS = new LinkedHashMap<>();
+
+  static {
+    SEED_PL_COLORS.put("red1", "#ffccbc");
+    SEED_PL_COLORS.put("red2", "#ff6c5c");
+    SEED_PL_COLORS.put("red3", "#c72c1c");
+    SEED_PL_COLORS.put("pink1", "#ffbcd8");
+    SEED_PL_COLORS.put("pink2", "#fa5c98");
+    SEED_PL_COLORS.put("pink3", "#ba1c58");
+    SEED_PL_COLORS.put("purple1", "#dcc6e0");
+    SEED_PL_COLORS.put("purple2", "#9b59b6");
+    SEED_PL_COLORS.put("purple3", "#5e147d");
+    SEED_PL_COLORS.put("blue1", "#39d5ff");
+    SEED_PL_COLORS.put("blue2", "#1297e0");
+    SEED_PL_COLORS.put("blue3", "#0057a0");
+    SEED_PL_COLORS.put("turquoise1", "#5efaf7");
+    SEED_PL_COLORS.put("turquoise2", "#27cbc0");
+    SEED_PL_COLORS.put("turquoise3", "#008b80");
+    SEED_PL_COLORS.put("green1", "#8effc1");
+    SEED_PL_COLORS.put("green2", "#2ecc71");
+    SEED_PL_COLORS.put("green3", "#008c31");
+    SEED_PL_COLORS.put("yellow1", "#fdeea5");
+    SEED_PL_COLORS.put("yellow2", "#f5ce32");
+    SEED_PL_COLORS.put("yellow3", "#d6a100");
+    SEED_PL_COLORS.put("orange1", "#ffdcb5");
+    SEED_PL_COLORS.put("orange2", "#ff926b");
+    SEED_PL_COLORS.put("orange3", "#c3522b");
+    SEED_PL_COLORS.put("brown1", "#e6bfa8");
+    SEED_PL_COLORS.put("brown2", "#c0957c");
+    SEED_PL_COLORS.put("brown3", "#7d5640");
+    SEED_PL_COLORS.put("gray1", "#e0e0e0");
+    SEED_PL_COLORS.put("gray2", "#909090");
+    SEED_PL_COLORS.put("gray3", "#505050");
+  }
+
   @Value("#{'${app.admin.emails}'.split(',')}")
   List<String> adminEmails;
 
   @Autowired AdminRepository adminRepository;
 
   @Autowired CourseRepository courseRepository;
+
+  @Autowired PlColorRepository plColorRepository;
 
   @Autowired JdbcTemplate jdbcTemplate;
 
@@ -57,6 +102,21 @@ public class ScaffoldStartup {
     } catch (Exception e) {
       log.error("Error seeding concept graph demo data:", e);
     }
+
+    try {
+      seedPlColors();
+    } catch (Exception e) {
+      log.error("Error seeding pl_color table:", e);
+    }
+  }
+
+  private void seedPlColors() {
+    SEED_PL_COLORS.forEach(
+        (colorName, hexCode) -> {
+          if (!plColorRepository.existsById(colorName)) {
+            plColorRepository.save(PlColor.builder().colorName(colorName).hexCode(hexCode).build());
+          }
+        });
   }
 
   private void seedCourseOne() {
