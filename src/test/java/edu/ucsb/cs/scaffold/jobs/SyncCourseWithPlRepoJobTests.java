@@ -523,6 +523,114 @@ public class SyncCourseWithPlRepoJobTests {
   }
 
   @Test
+  public void skips_assessment_set_entries_missing_an_abbreviation() throws Exception {
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn(
+            """
+            {
+              "assessmentSets": [
+                { "name": "Lecture", "heading": "Lectures", "color": "turquoise2" }
+              ]
+            }""");
+    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of());
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository, never()).save(any());
+    verify(plAssessmentSetRepository, never()).delete(any());
+  }
+
+  @Test
+  public void skips_assessment_set_entries_missing_a_name() throws Exception {
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn(
+            """
+            {
+              "assessmentSets": [
+                { "abbreviation": "LEC", "heading": "Lectures", "color": "turquoise2" }
+              ]
+            }""");
+    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of());
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository, never()).save(any());
+    verify(plAssessmentSetRepository, never()).delete(any());
+  }
+
+  @Test
+  public void skips_assessment_set_entries_missing_a_heading() throws Exception {
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn(
+            """
+            {
+              "assessmentSets": [
+                { "abbreviation": "LEC", "name": "Lecture", "color": "turquoise2" }
+              ]
+            }""");
+    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of());
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository, never()).save(any());
+    verify(plAssessmentSetRepository, never()).delete(any());
+  }
+
+  @Test
+  public void updates_an_assessment_set_whose_heading_alone_changed() throws Exception {
+    PlAssessmentSet existing =
+        PlAssessmentSet.builder()
+            .id(58L)
+            .plInstanceId(10L)
+            .abbreviation("LEC")
+            .name("Lecture")
+            .heading("Lectures (old)")
+            .color("turquoise2")
+            .build();
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn(
+            """
+            {
+              "assessmentSets": [
+                { "abbreviation": "LEC", "name": "Lecture", "heading": "Lectures", "color": "turquoise2" }
+              ]
+            }""");
+    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of(existing));
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository).save(eq(existing));
+    assertEquals("Lectures", existing.getHeading());
+  }
+
+  @Test
+  public void updates_an_assessment_set_whose_color_alone_changed() throws Exception {
+    PlAssessmentSet existing =
+        PlAssessmentSet.builder()
+            .id(59L)
+            .plInstanceId(10L)
+            .abbreviation("LEC")
+            .name("Lecture")
+            .heading("Lectures")
+            .color("blue1")
+            .build();
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn(
+            """
+            {
+              "assessmentSets": [
+                { "abbreviation": "LEC", "name": "Lecture", "heading": "Lectures", "color": "turquoise2" }
+              ]
+            }""");
+    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of(existing));
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository).save(eq(existing));
+    assertEquals("turquoise2", existing.getColor());
+  }
+
+  @Test
   public void skips_assessment_set_sync_when_infoCourseInstance_json_cannot_be_parsed()
       throws Exception {
     when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
@@ -566,6 +674,79 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         %s
         Instance Fall2025's infoCourseInstance.json has no assessmentSets key; skipping assessment set sync
+        %s
+        %s
+        %s"""
+            .formatted(
+                HEADER,
+                ACCESS_LINE,
+                VERIFIED_LINE,
+                SKIP_QUESTIONS_LINE,
+                SKIP_ASSESSMENTS_LINE,
+                ENRICH_ZERO_SUMMARY);
+    assertEquals(expected, jobStarted.getLog());
+  }
+
+  @Test
+  public void skips_assessment_set_sync_when_assessmentSets_value_is_not_an_array()
+      throws Exception {
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn("{ \"assessmentSets\": \"not an array\" }");
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository, never()).save(any());
+    verify(plAssessmentSetRepository, never()).delete(any());
+    String expected =
+        """
+        %s
+        %s
+        %s
+        Instance Fall2025's infoCourseInstance.json has a non-array assessmentSets value; skipping assessment set sync
+        %s
+        %s
+        %s"""
+            .formatted(
+                HEADER,
+                ACCESS_LINE,
+                VERIFIED_LINE,
+                SKIP_QUESTIONS_LINE,
+                SKIP_ASSESSMENTS_LINE,
+                ENRICH_ZERO_SUMMARY);
+    assertEquals(expected, jobStarted.getLog());
+  }
+
+  @Test
+  public void leaves_an_unchanged_assessment_set_untouched() throws Exception {
+    PlAssessmentSet existing =
+        PlAssessmentSet.builder()
+            .id(57L)
+            .plInstanceId(10L)
+            .abbreviation("LEC")
+            .name("Lecture")
+            .heading("Lectures")
+            .color("turquoise2")
+            .build();
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn(
+            """
+            {
+              "assessmentSets": [
+                { "abbreviation": "LEC", "name": "Lecture", "heading": "Lectures", "color": "turquoise2" }
+              ]
+            }""");
+    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of(existing));
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository, never()).save(any());
+    verify(plAssessmentSetRepository, never()).delete(any());
+    String expected =
+        """
+        %s
+        %s
+        %s
+        Assessment sets: 0 added, 0 updated, 0 deleted, 1 unchanged, 0 skipped
         %s
         %s
         %s"""
