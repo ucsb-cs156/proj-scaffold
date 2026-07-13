@@ -252,24 +252,28 @@ public class AssessmentControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
-  public void getAllAssessments_returns_404_when_pl_repo_id_is_null() throws Exception {
+  public void getAllAssessments_returns_empty_list_when_pl_repo_id_is_null() throws Exception {
+    // No PlRepo/PlInstance associated with the course yet is a normal, unconfigured state,
+    // not an error -- the modal should just show nothing to manage.
     Course course = Course.builder().id(1L).plRepoId(null).plInstanceId(2L).build();
     when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     mockMvc
         .perform(get("/api/assessments/all").param("courseId", "1"))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
   }
 
   @Test
   @WithInstructorCoursePermissions
-  public void getAllAssessments_returns_404_when_pl_instance_id_is_null() throws Exception {
+  public void getAllAssessments_returns_empty_list_when_pl_instance_id_is_null() throws Exception {
     Course course = Course.builder().id(1L).plRepoId(10L).plInstanceId(null).build();
     when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
     mockMvc
         .perform(get("/api/assessments/all").param("courseId", "1"))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
   }
 
   @Test

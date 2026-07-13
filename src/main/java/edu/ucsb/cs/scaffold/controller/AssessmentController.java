@@ -80,7 +80,9 @@ public class AssessmentController extends ApiController {
             .findById(courseId)
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     if (course.getPlRepoId() == null || course.getPlInstanceId() == null) {
-      throw new EntityNotFoundException(Course.class, courseId);
+      // No PrairieLearn repo/instance associated with this course yet: a normal,
+      // not-yet-configured state, not an error. The modal shows no assessments to manage.
+      return List.of();
     }
 
     return plAssessmentRepository
