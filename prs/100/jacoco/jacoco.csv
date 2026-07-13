@@ -44,7 +44,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,AdminsController.AdminDTO,0,18,0,0,0,3,
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.SubConceptTableRowDTO,0,30,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserStateController.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.ScaffoldResetReportDTO,0,12,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController,0,257,0,22,0,64,0,26,0,15
+scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController,0,253,0,22,0,64,0,26,0,15
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.StaffCoursesDTO,0,18,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,InstructorsController,0,65,0,2,0,14,0,6,0,5
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateController,0,180,0,12,0,48,0,14,0,8
