@@ -364,9 +364,11 @@ describe("LegacyConceptGraph debug mode tooltips", () => {
       <StaffToolsContext.Provider
         value={{
           debugMode: true,
-          unlockSubconcepts: false,
+          enableEditing: false,
           setStaffTool: vi.fn(),
           canUseStaffTools: true,
+          newConceptHandler: null,
+          registerNewConceptHandler: vi.fn(),
         }}
       >
         <LegacyConceptGraph {...baseProps()} />

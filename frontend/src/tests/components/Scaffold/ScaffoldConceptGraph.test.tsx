@@ -376,15 +376,110 @@ describe("ScaffoldConceptGraph", () => {
   });
 });
 
+describe("ScaffoldConceptGraph re-syncs when majorConcepts changes", () => {
+  // Regression test: after creating/editing a concept or subconcept, the
+  // page's majorConcepts refetch used to have no effect on the already
+  // mounted graph until a full page refresh, because useNodesState only
+  // consumes its initial value once.
+  test("shows a newly-added top-level concept without remounting", () => {
+    const props = baseProps();
+    const { rerender } = render(<ScaffoldConceptGraph {...props} />);
+
+    expect(screen.queryByText("Recursion")).toBeInTheDocument();
+    expect(screen.queryByText("Iteration")).not.toBeInTheDocument();
+
+    const updatedMajorConcepts = [
+      ...sampleMajorConcepts,
+      {
+        id: 6,
+        labelHtml: "Iteration",
+        color: "#c0ffee",
+        subconcepts: [],
+      },
+    ];
+    rerender(
+      <ScaffoldConceptGraph {...props} majorConcepts={updatedMajorConcepts} />,
+    );
+
+    expect(screen.getByText("Iteration")).toBeInTheDocument();
+  });
+
+  test("shows a newly-added subconcept on an existing concept without remounting", () => {
+    const props = baseProps();
+    const { rerender } = render(<ScaffoldConceptGraph {...props} />);
+
+    expect(screen.queryByText("Recursive case")).not.toBeInTheDocument();
+
+    const updatedMajorConcepts = sampleMajorConcepts.map((concept) =>
+      concept.id === 1
+        ? {
+            ...concept,
+            subconcepts: [
+              ...concept.subconcepts,
+              { id: 7, parentId: 1, labelHtml: "Recursive case" },
+            ],
+          }
+        : concept,
+    );
+    rerender(
+      <ScaffoldConceptGraph {...props} majorConcepts={updatedMajorConcepts} />,
+    );
+
+    expect(screen.getByText("Recursive case")).toBeInTheDocument();
+  });
+
+  test("shows an edited concept's label without remounting", () => {
+    const props = baseProps();
+    const { rerender } = render(<ScaffoldConceptGraph {...props} />);
+
+    expect(screen.queryByText("Recursion")).toBeInTheDocument();
+
+    const updatedMajorConcepts = sampleMajorConcepts.map((concept) =>
+      concept.id === 1
+        ? { ...concept, labelHtml: "Recursion (renamed)" }
+        : concept,
+    );
+    rerender(
+      <ScaffoldConceptGraph {...props} majorConcepts={updatedMajorConcepts} />,
+    );
+
+    expect(screen.queryByText("Recursion")).not.toBeInTheDocument();
+    expect(screen.getByText("Recursion (renamed)")).toBeInTheDocument();
+  });
+
+  test("keeps a dragged concept's position when majorConcepts is refreshed", () => {
+    const props = baseProps();
+    const { rerender, container } = render(<ScaffoldConceptGraph {...props} />);
+
+    const nodeBefore = container.querySelector('[data-id="1"]') as HTMLElement;
+    const transformBefore = nodeBefore.style.transform;
+
+    const updatedMajorConcepts = sampleMajorConcepts.map((concept) =>
+      concept.id === 1
+        ? { ...concept, labelHtml: "Recursion updated" }
+        : concept,
+    );
+    rerender(
+      <ScaffoldConceptGraph {...props} majorConcepts={updatedMajorConcepts} />,
+    );
+
+    const nodeAfter = container.querySelector('[data-id="1"]') as HTMLElement;
+    expect(nodeAfter.style.transform).toBe(transformBefore);
+    expect(screen.getByText("Recursion updated")).toBeInTheDocument();
+  });
+});
+
 describe("ScaffoldConceptGraph debug mode tooltips", () => {
   function renderWithDebugMode(ui: ReactElement, debugMode: boolean) {
     return render(
       <StaffToolsContext.Provider
         value={{
           debugMode,
-          unlockSubconcepts: false,
+          enableEditing: false,
           setStaffTool: vi.fn(),
           canUseStaffTools: true,
+          newConceptHandler: null,
+          registerNewConceptHandler: vi.fn(),
         }}
       >
         {ui}
@@ -434,14 +529,16 @@ describe("ScaffoldConceptGraph debug mode tooltips", () => {
 });
 
 describe("ScaffoldConceptGraph subconcept drag-and-drop reordering", () => {
-  function renderWithUnlock(ui: ReactElement, unlockSubconcepts: boolean) {
+  function renderWithEditing(ui: ReactElement, enableEditing: boolean) {
     return render(
       <StaffToolsContext.Provider
         value={{
           debugMode: false,
-          unlockSubconcepts,
+          enableEditing,
           setStaffTool: vi.fn(),
           canUseStaffTools: true,
+          newConceptHandler: null,
+          registerNewConceptHandler: vi.fn(),
         }}
       >
         {ui}
@@ -464,18 +561,64 @@ describe("ScaffoldConceptGraph subconcept drag-and-drop reordering", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("rows are draggable and show a drag handle when unlocked", () => {
-    renderWithUnlock(<ScaffoldConceptGraph {...baseProps()} />, true);
+  test("rows are draggable and show a drag handle when editing is enabled", () => {
+    renderWithEditing(<ScaffoldConceptGraph {...baseProps()} />, true);
     const row = screen.getByTestId("subconcept-row-1-0");
     expect(row).toHaveAttribute("draggable", "true");
+    expect(screen.getByTestId("add-subconcept-button-1")).toBeInTheDocument();
     expect(
       screen.getByTestId("subconcept-drag-handle-1-0"),
     ).toBeInTheDocument();
   });
 
+  test("double-clicking a concept header invokes the edit callback only when editing is enabled", () => {
+    const onConceptDoubleClick = vi.fn();
+    renderWithEditing(
+      <ScaffoldConceptGraph
+        {...baseProps()}
+        onConceptDoubleClick={onConceptDoubleClick}
+      />,
+      true,
+    );
+
+    fireEvent.doubleClick(screen.getByTestId("major-node-header-1"));
+
+    expect(onConceptDoubleClick).toHaveBeenCalledWith("1");
+  });
+
+  test("double-clicking a subconcept row invokes the edit callback only when editing is enabled", () => {
+    const onSubconceptDoubleClick = vi.fn();
+    renderWithEditing(
+      <ScaffoldConceptGraph
+        {...baseProps()}
+        onSubconceptDoubleClick={onSubconceptDoubleClick}
+      />,
+      true,
+    );
+
+    fireEvent.doubleClick(screen.getByTestId("subconcept-row-1-0"));
+
+    expect(onSubconceptDoubleClick).toHaveBeenCalledWith("1", "2");
+  });
+
+  test("clicking add subconcept invokes the callback only when editing is enabled", () => {
+    const onAddSubconcept = vi.fn();
+    renderWithEditing(
+      <ScaffoldConceptGraph
+        {...baseProps()}
+        onAddSubconcept={onAddSubconcept}
+      />,
+      true,
+    );
+
+    fireEvent.click(screen.getByTestId("add-subconcept-button-1"));
+
+    expect(onAddSubconcept).toHaveBeenCalledWith("1");
+  });
+
   test("dropping a row on another reorders the card and reports the new id order", () => {
     const props = { ...baseProps(), onSubconceptsReordered: vi.fn() };
-    renderWithUnlock(<ScaffoldConceptGraph {...props} />, true);
+    renderWithEditing(<ScaffoldConceptGraph {...props} />, true);
 
     // "Recursion" (node 1) starts as [Base case (2), State change (3)];
     // drag row 0 onto row 1.
@@ -499,7 +642,7 @@ describe("ScaffoldConceptGraph subconcept drag-and-drop reordering", () => {
 
   test("dropping a row back on itself changes nothing and reports nothing", () => {
     const props = { ...baseProps(), onSubconceptsReordered: vi.fn() };
-    renderWithUnlock(<ScaffoldConceptGraph {...props} />, true);
+    renderWithEditing(<ScaffoldConceptGraph {...props} />, true);
 
     fireEvent.dragStart(screen.getByTestId("subconcept-row-1-0"), {
       dataTransfer,
@@ -514,7 +657,7 @@ describe("ScaffoldConceptGraph subconcept drag-and-drop reordering", () => {
 
   test("dropping something that is not a row drag (no dragStart) is ignored", () => {
     const props = { ...baseProps(), onSubconceptsReordered: vi.fn() };
-    renderWithUnlock(<ScaffoldConceptGraph {...props} />, true);
+    renderWithEditing(<ScaffoldConceptGraph {...props} />, true);
 
     // e.g. a detail-card drag entering a row: dragIndex is null, so the row
     // must not intercept it.
@@ -528,7 +671,7 @@ describe("ScaffoldConceptGraph subconcept drag-and-drop reordering", () => {
 
   test("dragEnd clears the in-progress drag state", () => {
     const props = { ...baseProps(), onSubconceptsReordered: vi.fn() };
-    renderWithUnlock(<ScaffoldConceptGraph {...props} />, true);
+    renderWithEditing(<ScaffoldConceptGraph {...props} />, true);
 
     const row0 = screen.getByTestId("subconcept-row-1-0");
     fireEvent.dragStart(row0, { dataTransfer });

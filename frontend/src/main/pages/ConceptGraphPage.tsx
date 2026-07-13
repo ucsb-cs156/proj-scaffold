@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams } from "react-router";
 import { Spinner } from "react-bootstrap";
+import { toast } from "react-toastify";
 import ScaffoldConceptGraph from "main/components/Scaffold/ScaffoldConceptGraph";
+import ConceptModal from "main/components/Concept/ConceptModal";
+import SubConceptModal from "main/components/Concept/SubConceptModal";
 
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
 
@@ -23,6 +26,7 @@ import LoginScreen from "main/components/Auth/LoginScreen";
 import ScaffoldTopBar from "main/components/Scaffold/ScaffoldTopBar";
 import { useCurrentUser } from "main/utils/currentUser";
 import { StaffToolsProvider } from "main/utils/staffTools";
+import { useStaffTools } from "main/utils/useStaffTools";
 import {
   normalize,
   toPastel,
@@ -45,6 +49,45 @@ interface SavedDetailCard {
   posY: number;
 }
 
+interface EditableConcept {
+  id: number;
+  label: string;
+  description?: string | null;
+  example?: string | null;
+}
+
+interface EditableSubconcept extends EditableConcept {
+  parentId?: number;
+  parentLabel?: string;
+  parent?: {
+    id: number;
+    label: string;
+  };
+}
+
+type ConceptModalState =
+  { mode: "create" } | { mode: "edit"; conceptId: number };
+type SubConceptModalState =
+  | { mode: "create"; parentConceptId: number }
+  | { mode: "edit"; subConceptId: number };
+
+const DEFAULT_NEW_CONCEPT_POSITION = { x: 0, y: 0 };
+
+function htmlToPlainText(html?: string | null) {
+  return html
+    ?.replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+}
+
+function getEditableConceptLabel(concept?: EditableConcept | MajorConceptDTO) {
+  if (!concept) return "";
+  return "label" in concept
+    ? concept.label
+    : (htmlToPlainText(concept.labelHtml) ?? "");
+}
+
 // The staff tools (debug tooltips, subconcept reordering) act on this page's
 // concept graph, so their provider is mounted here — not at the app root —
 // and the Footer's toggles only appear here.
@@ -63,6 +106,7 @@ function ConceptGraphPageContent() {
     courseIdParam !== undefined && !Number.isNaN(courseId);
 
   const currentUser = useCurrentUser();
+  const { registerNewConceptHandler } = useStaffTools();
   // Derive the numeric id from the users table; null when not logged in.
   const userId: number | null = currentUser?.loggedIn
     ? (currentUser.root.user?.id ?? null)
@@ -218,6 +262,10 @@ function ConceptGraphPageContent() {
   const [topLevelPositions, setTopLevelPositions] = useState<
     Record<string, { x: number; y: number }>
   >({});
+  const [conceptModalState, setConceptModalState] =
+    useState<ConceptModalState | null>(null);
+  const [subConceptModalState, setSubConceptModalState] =
+    useState<SubConceptModalState | null>(null);
 
   const userStateQuery = useBackend<UserStateResponse | undefined>(
     ["/api/user-state", userId, courseId],
@@ -269,6 +317,43 @@ function ConceptGraphPageContent() {
     },
   );
 
+  const conceptsPath = `/api/concepts/course?courseId=${courseId}`;
+  const editableConceptsQueryKey = [conceptsPath];
+  const editableSubconceptsQueryKey = ["/api/concepts/subconcepts", courseId];
+  const conceptMutationInvalidations = [
+    conceptsPath,
+    "/api/concepts/top-level",
+    "/api/concepts/subconcepts",
+    "/api/concepts/graph",
+    "/api/concepts/content",
+  ];
+  const subConceptMutationInvalidations = [
+    conceptsPath,
+    "/api/concepts/subconcepts",
+    "/api/concepts/graph",
+    "/api/concepts/content",
+  ];
+
+  const { data: editableConcepts = [] } = useBackend<EditableConcept[]>(
+    editableConceptsQueryKey,
+    { method: "GET", url: conceptsPath },
+    [],
+    true,
+    { enabled: currentUser?.loggedIn && courseIdIsValid },
+  );
+
+  const { data: editableSubconcepts = [] } = useBackend<EditableSubconcept[]>(
+    editableSubconceptsQueryKey,
+    {
+      method: "GET",
+      url: "/api/concepts/subconcepts",
+      params: { courseId },
+    },
+    [],
+    true,
+    { enabled: currentUser?.loggedIn && courseIdIsValid },
+  );
+
   const masteredSubconceptsRef = useRef<Set<string>>(masteredSubconcepts);
   useEffect(() => {
     masteredSubconceptsRef.current = masteredSubconcepts;
@@ -303,6 +388,25 @@ function ConceptGraphPageContent() {
     },
     [userId, courseId, courseIdIsValid, logActivityMutate],
   );
+
+  const openCreateConceptModal = useCallback(
+    () => setConceptModalState({ mode: "create" }),
+    [],
+  );
+
+  useEffect(() => {
+    if (!currentUser?.loggedIn || !courseIdIsValid) {
+      registerNewConceptHandler(null);
+      return;
+    }
+    registerNewConceptHandler(openCreateConceptModal);
+    return () => registerNewConceptHandler(null);
+  }, [
+    currentUser?.loggedIn,
+    courseIdIsValid,
+    openCreateConceptModal,
+    registerNewConceptHandler,
+  ]);
 
   // Log the login once per visit, as soon as we know who the user is.
   const loginLoggedRef = useRef(false);
@@ -388,7 +492,7 @@ function ConceptGraphPageContent() {
     });
   };
 
-  // An author (with subconcepts unlocked) drag-and-dropped a card's
+  // An author (with editing enabled) drag-and-dropped a card's
   // subconcepts. ScaffoldConceptGraph already updated its own nodes; mirror the new
   // order in our copy of the graph data (so anything rebuilt from it agrees)
   // and persist it via the reorder mutation, whose onError snaps the local
@@ -413,6 +517,170 @@ function ConceptGraphPageContent() {
     );
     reorderMutation.mutate({ parentConceptId, orderedSubconceptIds });
   };
+
+  const conceptModalInitialContents = useMemo(() => {
+    if (!conceptModalState || conceptModalState.mode === "create")
+      return undefined;
+
+    const editableConcept = editableConcepts.find(
+      (concept) => concept.id === conceptModalState.conceptId,
+    );
+    if (editableConcept) return editableConcept;
+
+    const fallbackConcept = majorConcepts.find(
+      (concept) => concept.id === conceptModalState.conceptId,
+    );
+    const fallbackContent = conceptContent[String(conceptModalState.conceptId)];
+    return {
+      label: htmlToPlainText(fallbackConcept?.labelHtml) ?? "",
+      description: htmlToPlainText(fallbackContent?.descriptionHtml) ?? "",
+      example: htmlToPlainText(fallbackContent?.exampleHtml) ?? "",
+    };
+  }, [conceptModalState, editableConcepts, majorConcepts, conceptContent]);
+
+  const subConceptModalInitialContents = useMemo(() => {
+    if (!subConceptModalState) return undefined;
+
+    if (subConceptModalState.mode === "create") {
+      const parentConcept =
+        editableConcepts.find(
+          (concept) => concept.id === subConceptModalState.parentConceptId,
+        ) ??
+        majorConcepts.find(
+          (concept) => concept.id === subConceptModalState.parentConceptId,
+        );
+
+      return {
+        parentId: subConceptModalState.parentConceptId,
+        parentLabel: getEditableConceptLabel(parentConcept),
+      };
+    }
+
+    const editableSubconcept = editableSubconcepts.find(
+      (subconcept) => subconcept.id === subConceptModalState.subConceptId,
+    );
+    if (editableSubconcept) {
+      return {
+        ...editableSubconcept,
+        parentId:
+          editableSubconcept.parentId ?? editableSubconcept.parent?.id ?? "",
+        parentLabel:
+          editableSubconcept.parentLabel ??
+          editableSubconcept.parent?.label ??
+          "",
+      };
+    }
+
+    const fallbackParent = majorConcepts.find((concept) =>
+      concept.subconcepts.some(
+        (subconcept) => subconcept.id === subConceptModalState.subConceptId,
+      ),
+    );
+    const fallbackSubconcept = fallbackParent?.subconcepts.find(
+      (subconcept) => subconcept.id === subConceptModalState.subConceptId,
+    );
+    const fallbackContent =
+      conceptContent[String(subConceptModalState.subConceptId)];
+    return {
+      parentId: fallbackParent?.id ?? "",
+      parentLabel: htmlToPlainText(fallbackParent?.labelHtml) ?? "",
+      label: htmlToPlainText(fallbackSubconcept?.labelHtml) ?? "",
+      description: htmlToPlainText(fallbackContent?.descriptionHtml) ?? "",
+      example: htmlToPlainText(fallbackContent?.exampleHtml) ?? "",
+    };
+  }, [
+    subConceptModalState,
+    editableConcepts,
+    editableSubconcepts,
+    majorConcepts,
+    conceptContent,
+  ]);
+
+  const createConceptMutation = useBackendMutation(
+    (concept: EditableConcept) => ({
+      url: "/api/concept",
+      method: "POST",
+      data: {
+        courseId,
+        label: concept.label,
+        description: concept.description,
+        example: concept.example,
+        ...DEFAULT_NEW_CONCEPT_POSITION,
+      },
+    }),
+    {
+      onSuccess: async (concept: EditableConcept) => {
+        toast(`Concept ${concept.label} created`);
+        setConceptModalState(null);
+      },
+    },
+    conceptMutationInvalidations,
+  );
+
+  const updateConceptMutation = useBackendMutation(
+    (concept: EditableConcept) => ({
+      url: `/api/concept/put?conceptId=${
+        conceptModalState?.mode === "edit" ? conceptModalState.conceptId : ""
+      }`,
+      method: "PUT",
+      data: {
+        label: concept.label,
+        description: concept.description,
+        example: concept.example,
+      },
+    }),
+    {
+      onSuccess: async (concept: EditableConcept) => {
+        toast(`Concept ${concept.label} updated`);
+        setConceptModalState(null);
+      },
+    },
+    conceptMutationInvalidations,
+  );
+
+  const createSubconceptMutation = useBackendMutation(
+    (subconcept: EditableSubconcept) => ({
+      url: "/api/concept/subconcept",
+      method: "POST",
+      data: {
+        courseId,
+        parentConceptId: Number(subconcept.parentId),
+        label: subconcept.label,
+        description: subconcept.description,
+        example: subconcept.example,
+      },
+    }),
+    {
+      onSuccess: async (subconcept: EditableSubconcept) => {
+        toast(`SubConcept ${subconcept.label} created`);
+        setSubConceptModalState(null);
+      },
+    },
+    subConceptMutationInvalidations,
+  );
+
+  const updateSubconceptMutation = useBackendMutation(
+    (subconcept: EditableSubconcept) => ({
+      url: `/api/concept/subconcept/put?conceptId=${
+        subConceptModalState?.mode === "edit"
+          ? subConceptModalState.subConceptId
+          : ""
+      }`,
+      method: "PUT",
+      data: {
+        label: subconcept.label,
+        description: subconcept.description,
+        example: subconcept.example,
+      },
+    }),
+    {
+      onSuccess: async (subconcept: EditableSubconcept) => {
+        toast(`SubConcept ${subconcept.label} updated`);
+        setSubConceptModalState(null);
+      },
+    },
+    subConceptMutationInvalidations,
+  );
 
   const handlePaneClick = () => {
     if (!selectedQuestionId) {
@@ -570,6 +838,27 @@ function ConceptGraphPageContent() {
     });
   };
 
+  const handleConceptDoubleClick = (conceptId: string) => {
+    setConceptModalState({ mode: "edit", conceptId: Number(conceptId) });
+  };
+
+  const handleSubconceptDoubleClick = (
+    _parentConceptId: string,
+    subconceptId: string,
+  ) => {
+    setSubConceptModalState({
+      mode: "edit",
+      subConceptId: Number(subconceptId),
+    });
+  };
+
+  const handleAddSubconcept = (parentConceptId: string) => {
+    setSubConceptModalState({
+      mode: "create",
+      parentConceptId: Number(parentConceptId),
+    });
+  };
+
   if (!currentUser?.loggedIn) {
     return (
       <BasicLayout>
@@ -664,9 +953,50 @@ function ConceptGraphPageContent() {
             masteredSubconcepts={masteredSubconcepts}
             onSubconceptMastered={handleSubconceptMastered}
             onSubconceptsReordered={handleSubconceptsReordered}
+            onConceptDoubleClick={handleConceptDoubleClick}
+            onSubconceptDoubleClick={handleSubconceptDoubleClick}
+            onAddSubconcept={handleAddSubconcept}
             onPaneClick={handlePaneClick}
           />
         </div>
+        <ConceptModal
+          showModal={conceptModalState !== null}
+          toggleShowModal={(show: boolean) => {
+            if (!show) setConceptModalState(null);
+          }}
+          initialContents={conceptModalInitialContents}
+          onSubmitAction={(concept: EditableConcept) =>
+            conceptModalState?.mode === "edit"
+              ? updateConceptMutation.mutate(concept)
+              : createConceptMutation.mutate(concept)
+          }
+          buttonText={conceptModalState?.mode === "edit" ? "Update" : "Create"}
+          modalTitle={
+            conceptModalState?.mode === "edit"
+              ? "Edit Concept"
+              : "Create Concept"
+          }
+        />
+        <SubConceptModal
+          showModal={subConceptModalState !== null}
+          toggleShowModal={(show: boolean) => {
+            if (!show) setSubConceptModalState(null);
+          }}
+          initialContents={subConceptModalInitialContents}
+          onSubmitAction={(subconcept: EditableSubconcept) =>
+            subConceptModalState?.mode === "edit"
+              ? updateSubconceptMutation.mutate(subconcept)
+              : createSubconceptMutation.mutate(subconcept)
+          }
+          buttonText={
+            subConceptModalState?.mode === "edit" ? "Update" : "Create"
+          }
+          modalTitle={
+            subConceptModalState?.mode === "edit"
+              ? "Edit SubConcept"
+              : "Create SubConcept"
+          }
+        />
 
         {/* ── Bottom toolbar ── */}
         <div

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { useCurrentUser, hasRole } from "main/utils/currentUser";
 import {
   DEFAULT_STAFF_TOOL_SETTINGS,
@@ -13,7 +13,7 @@ function readStoredSettings(): StaffToolSettings {
     const parsed = JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? "");
     return {
       debugMode: parsed.debugMode === true,
-      unlockSubconcepts: parsed.unlockSubconcepts === true,
+      enableEditing: parsed.enableEditing === true,
     };
   } catch {
     // No stored value, corrupt JSON, or sessionStorage unavailable
@@ -37,6 +37,16 @@ export function StaffToolsProvider({ children }: { children: ReactNode }) {
 
   const [settings, setSettings] =
     useState<StaffToolSettings>(readStoredSettings);
+  const [newConceptHandler, setNewConceptHandler] = useState<
+    (() => void) | null
+  >(null);
+
+  const registerNewConceptHandler = useCallback(
+    (handler: (() => void) | null) => {
+      setNewConceptHandler(() => handler);
+    },
+    [],
+  );
 
   const setStaffTool = (tool: keyof StaffToolSettings, value: boolean) => {
     const next = { ...settings, [tool]: value };
@@ -53,9 +63,11 @@ export function StaffToolsProvider({ children }: { children: ReactNode }) {
     <StaffToolsContext.Provider
       value={{
         debugMode: canUseStaffTools && settings.debugMode,
-        unlockSubconcepts: canUseStaffTools && settings.unlockSubconcepts,
+        enableEditing: canUseStaffTools && settings.enableEditing,
         canUseStaffTools,
         setStaffTool,
+        newConceptHandler,
+        registerNewConceptHandler,
       }}
     >
       {children}
