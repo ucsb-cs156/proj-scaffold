@@ -17,10 +17,12 @@ import edu.ucsb.cs.scaffold.ControllerTestCase;
 import edu.ucsb.cs.scaffold.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.User;
+import edu.ucsb.cs.scaffold.jobs.CopyConceptGraphJob;
 import edu.ucsb.cs.scaffold.jobs.RotatePatKeysJob;
 import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJob;
 import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJobFactory;
 import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
+import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
@@ -32,6 +34,7 @@ import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
 import edu.ucsb.cs.scaffold.repository.PlScaffoldAssessmentRepository;
 import edu.ucsb.cs.scaffold.repository.RosterStudentRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
+import edu.ucsb.cs.scaffold.services.ConceptYamlService;
 import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
@@ -93,6 +96,10 @@ public class JobsControllerJobsTests extends ControllerTestCase {
   @MockitoBean GithubService githubService;
 
   @MockitoBean SyncCourseWithPlRepoJobFactory syncCourseWithPlRepoJobFactory;
+
+  @MockitoBean AdminRepository adminRepository;
+
+  @MockitoBean ConceptYamlService conceptYamlService;
 
   @Autowired ObjectMapper objectMapper;
 
@@ -292,5 +299,70 @@ public class JobsControllerJobsTests extends ControllerTestCase {
   @Test
   public void regular_users_cannot_get_jobs_by_course() throws Exception {
     mockMvc.perform(get("/api/jobs/course").param("courseId", "5")).andExpect(status().is(403));
+  }
+
+  @WithInstructorCoursePermissions
+  @Test
+  public void instructor_with_course_permissions_can_launch_copyConceptGraph_job()
+      throws Exception {
+
+    // arrange
+
+    User user = currentUserService.getUser();
+
+    Job jobStarted =
+        Job.builder()
+            .id(0L)
+            .createdById(user.getId())
+            .createdAt(null)
+            .updatedAt(null)
+            .status("started")
+            .build();
+
+    when(jobService.runAsJob(any(CopyConceptGraphJob.class))).thenReturn(jobStarted);
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/jobs/launch/copyConceptGraph?fromCourseId=3&toCourseId=4")
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+    verify(jobService, times(1)).runAsJob(any(CopyConceptGraphJob.class));
+    String expectedJson = objectMapper.writeValueAsString(jobStarted);
+    assertEquals(expectedJson, response.getResponse().getContentAsString());
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_can_launch_copyConceptGraph_job() throws Exception {
+    Job jobStarted = Job.builder().id(0L).status("started").build();
+    when(jobService.runAsJob(any(CopyConceptGraphJob.class))).thenReturn(jobStarted);
+
+    mockMvc
+        .perform(
+            post("/api/jobs/launch/copyConceptGraph?fromCourseId=3&toCourseId=4").with(csrf()))
+        .andExpect(status().isOk());
+
+    verify(jobService, times(1)).runAsJob(any(CopyConceptGraphJob.class));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void regular_users_cannot_launch_copyConceptGraph_job() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/jobs/launch/copyConceptGraph?fromCourseId=3&toCourseId=4").with(csrf()))
+        .andExpect(status().is(403));
+  }
+
+  @Test
+  public void logged_out_users_cannot_launch_copyConceptGraph_job() throws Exception {
+    mockMvc
+        .perform(post("/api/jobs/launch/copyConceptGraph?fromCourseId=3&toCourseId=4"))
+        .andExpect(status().is(403));
   }
 }

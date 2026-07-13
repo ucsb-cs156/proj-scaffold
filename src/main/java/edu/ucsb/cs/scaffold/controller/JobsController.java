@@ -2,12 +2,16 @@ package edu.ucsb.cs.scaffold.controller;
 
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.jobs.CopyConceptGraphJob;
 import edu.ucsb.cs.scaffold.jobs.RotatePatKeysJob;
 import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJob;
 import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJobFactory;
 import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
+import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.UserRepository;
+import edu.ucsb.cs.scaffold.services.ConceptYamlService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
 import edu.ucsb.cs156.jobs.entities.Job;
@@ -45,6 +49,9 @@ public class JobsController extends ApiController {
   @Autowired private PatEncryptionService patEncryptionService;
   @Autowired private PatCredentialRepository patCredentialRepository;
   @Autowired private SyncCourseWithPlRepoJobFactory syncCourseWithPlRepoJobFactory;
+  @Autowired private UserRepository userRepository;
+  @Autowired private AdminRepository adminRepository;
+  @Autowired private ConceptYamlService conceptYamlService;
 
   @Operation(summary = "Launch UpdateAll job")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -85,6 +92,31 @@ public class JobsController extends ApiController {
             .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
     SyncCourseWithPlRepoJob job =
         syncCourseWithPlRepoJobFactory.create(getCurrentUser().getUser().getId(), course);
+    return jobService.runAsJob(job);
+  }
+
+  @Operation(
+      summary =
+          "Launch CopyConceptGraph job (replace the to course's concept graph with a copy of the"
+              + " from course's concept graph, and clear the to course's user state)")
+  @PreAuthorize(
+      "@CourseSecurity.hasManagePermissions(#root, #fromCourseId) and"
+          + " @CourseSecurity.hasManagePermissions(#root, #toCourseId)")
+  @PostMapping("/launch/copyConceptGraph")
+  public Job launchCopyConceptGraphJob(
+      @Parameter(name = "fromCourseId") @RequestParam Long fromCourseId,
+      @Parameter(name = "toCourseId") @RequestParam Long toCourseId) {
+
+    CopyConceptGraphJob job =
+        CopyConceptGraphJob.builder()
+            .userId(getCurrentUser().getUser().getId())
+            .fromCourseId(fromCourseId)
+            .toCourseId(toCourseId)
+            .userRepository(userRepository)
+            .courseRepository(courseRepository)
+            .adminRepository(adminRepository)
+            .conceptYamlService(conceptYamlService)
+            .build();
     return jobService.runAsJob(job);
   }
 
