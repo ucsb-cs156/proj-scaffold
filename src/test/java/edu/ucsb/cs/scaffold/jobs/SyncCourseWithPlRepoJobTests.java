@@ -482,6 +482,23 @@ public class SyncCourseWithPlRepoJobTests {
     assertEquals("Lecture", existing.getName());
     assertEquals("Lectures", existing.getHeading());
     assertEquals("turquoise2", existing.getColor());
+    String expected =
+        """
+        %s
+        %s
+        %s
+        Assessment sets: 1 added, 1 updated, 0 deleted, 0 unchanged, 0 skipped
+        %s
+        %s
+        %s"""
+            .formatted(
+                HEADER,
+                ACCESS_LINE,
+                VERIFIED_LINE,
+                SKIP_QUESTIONS_LINE,
+                SKIP_ASSESSMENTS_LINE,
+                ENRICH_ZERO_SUMMARY);
+    assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
@@ -502,6 +519,23 @@ public class SyncCourseWithPlRepoJobTests {
     job().accept(ctx);
 
     verify(plAssessmentSetRepository).delete(eq(stale));
+    String expected =
+        """
+        %s
+        %s
+        %s
+        Assessment sets: 2 added, 0 updated, 1 deleted, 0 unchanged, 0 skipped
+        %s
+        %s
+        %s"""
+            .formatted(
+                HEADER,
+                ACCESS_LINE,
+                VERIFIED_LINE,
+                SKIP_QUESTIONS_LINE,
+                SKIP_ASSESSMENTS_LINE,
+                ENRICH_ZERO_SUMMARY);
+    assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
@@ -520,6 +554,24 @@ public class SyncCourseWithPlRepoJobTests {
 
     verify(plAssessmentSetRepository, never()).save(any());
     verify(plAssessmentSetRepository, never()).delete(any());
+    String expected =
+        """
+        %s
+        %s
+        %s
+        Skipping assessment set entry {"abbreviation":"LEC","name":"Lecture","heading":"Lectures"} (instance Fall2025): missing abbreviation, name, heading, or color
+        Assessment sets: 0 added, 0 updated, 0 deleted, 0 unchanged, 1 skipped
+        %s
+        %s
+        %s"""
+            .formatted(
+                HEADER,
+                ACCESS_LINE,
+                VERIFIED_LINE,
+                SKIP_QUESTIONS_LINE,
+                SKIP_ASSESSMENTS_LINE,
+                ENRICH_ZERO_SUMMARY);
+    assertEquals(expected, jobStarted.getLog());
   }
 
   @Test
