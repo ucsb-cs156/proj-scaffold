@@ -58,6 +58,7 @@ describe("ScaffoldTabComponent tests", () => {
     axiosMock
       .onPost("/api/course/scaffold/reset")
       .reply(200, { message: "Scaffold reset completed." });
+    axiosMock.onGet("/api/courses/list").reply(200, []);
   });
 
   test("renders the Scaffold heading", () => {
@@ -319,5 +320,214 @@ describe("ScaffoldTabComponent tests", () => {
         (r) => r.url === "/api/concepts/yaml/upload",
       ).length,
     ).toBe(0);
+  });
+
+  const otherCourses = [
+    {
+      id: 2,
+      courseName: "CMPSC 156",
+      term: "F25",
+      school: { key: "UCSB", displayName: "UCSB" },
+      instructorEmail: "instructor@example.org",
+      studentAccess: false,
+      staffAccess: false,
+      instructorAccess: true,
+      adminAccess: false,
+    },
+    {
+      id: 3,
+      courseName: "CMPSC 24",
+      term: "F25",
+      school: { key: "UCSB", displayName: "UCSB" },
+      instructorEmail: "staffprof@example.org",
+      studentAccess: false,
+      staffAccess: true,
+      instructorAccess: false,
+      adminAccess: false,
+    },
+    {
+      id: 1,
+      courseName: "CMPSC 8",
+      term: "S26",
+      school: { key: "UCSB", displayName: "UCSB" },
+      instructorEmail: "self@example.org",
+      studentAccess: false,
+      staffAccess: false,
+      instructorAccess: true,
+      adminAccess: false,
+    },
+  ];
+
+  test("renders the Copy Concept Graph section with courses grouped by access, excluding the current course", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, otherCourses);
+
+    renderScaffoldTabComponent({ courseId: 1 });
+
+    expect(
+      screen.getByText("Copy Concept Graph from Another Course"),
+    ).toBeInTheDocument();
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /CMPSC 156/ }),
+      ).toBeInTheDocument(),
+    );
+    expect(
+      screen.getByRole("option", { name: /CMPSC 24/ }),
+    ).toBeInTheDocument();
+    // The current course (id 1) is not offered as a "from" choice.
+    expect(
+      screen.queryByRole("option", { name: /CMPSC 8/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("shows an Admin group listing every course when the user has adminAccess", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, [
+      {
+        id: 5,
+        courseName: "CMPSC 130",
+        term: "F25",
+        school: { key: "UCSB", displayName: "UCSB" },
+        instructorEmail: "someone@example.org",
+        studentAccess: false,
+        staffAccess: false,
+        instructorAccess: false,
+        adminAccess: true,
+      },
+    ]);
+
+    renderScaffoldTabComponent({ courseId: 1 });
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /CMPSC 130/ }),
+      ).toBeInTheDocument(),
+    );
+    const select = screen.getByTestId(
+      "test-copy-concept-graph-from-course-select",
+    );
+    expect(select.querySelector("optgroup[label='Admin']")).not.toBeNull();
+  });
+
+  test("Copy Concept Graph button is disabled until a from-course is selected", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, otherCourses);
+
+    renderScaffoldTabComponent({ courseId: 1 });
+
+    const copyButton = screen.getByTestId("test-copy-concept-graph-button");
+    expect(copyButton).toBeDisabled();
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /CMPSC 156/ }),
+      ).toBeInTheDocument(),
+    );
+    fireEvent.change(
+      screen.getByTestId("test-copy-concept-graph-from-course-select"),
+      { target: { value: "2" } },
+    );
+
+    expect(copyButton).not.toBeDisabled();
+  });
+
+  test("clicking Copy Concept Graph opens the confirmation modal, and Yes launches the job", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, otherCourses);
+    axiosMock
+      .onPost("/api/jobs/launch/copyConceptGraph")
+      .reply(200, { id: 42, status: "queued" });
+
+    renderScaffoldTabComponent({ courseId: 1 });
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /CMPSC 156/ }),
+      ).toBeInTheDocument(),
+    );
+    fireEvent.change(
+      screen.getByTestId("test-copy-concept-graph-from-course-select"),
+      { target: { value: "2" } },
+    );
+    fireEvent.click(screen.getByTestId("test-copy-concept-graph-button"));
+
+    expect(
+      screen.getByText(
+        "This will replace ALL content in the Concept Graph, and erase all User State; are you sure?",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByTestId("test-copyConceptGraphModal-yes-button"),
+    );
+
+    await waitFor(() =>
+      expect(
+        axiosMock.history.post.filter(
+          (r) => r.url === "/api/jobs/launch/copyConceptGraph",
+        ).length,
+      ).toBe(1),
+    );
+    const request = axiosMock.history.post.find(
+      (r) => r.url === "/api/jobs/launch/copyConceptGraph",
+    );
+    expect(request.params).toEqual({ fromCourseId: "2", toCourseId: 1 });
+
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith(
+        "Copy Concept Graph job (id 42) launched. You can monitor its progress on the Jobs tab.",
+      ),
+    );
+  });
+
+  test("clicking No on the confirmation modal does not launch the job", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, otherCourses);
+
+    renderScaffoldTabComponent({ courseId: 1 });
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /CMPSC 156/ }),
+      ).toBeInTheDocument(),
+    );
+    fireEvent.change(
+      screen.getByTestId("test-copy-concept-graph-from-course-select"),
+      { target: { value: "2" } },
+    );
+    fireEvent.click(screen.getByTestId("test-copy-concept-graph-button"));
+    fireEvent.click(screen.getByTestId("test-copyConceptGraphModal-no-button"));
+
+    expect(
+      axiosMock.history.post.filter(
+        (r) => r.url === "/api/jobs/launch/copyConceptGraph",
+      ).length,
+    ).toBe(0);
+  });
+
+  test("shows an error toast when launching the Copy Concept Graph job fails", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, otherCourses);
+    axiosMock
+      .onPost("/api/jobs/launch/copyConceptGraph")
+      .reply(403, { message: "Forbidden" });
+
+    renderScaffoldTabComponent({ courseId: 1 });
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /CMPSC 156/ }),
+      ).toBeInTheDocument(),
+    );
+    fireEvent.change(
+      screen.getByTestId("test-copy-concept-graph-from-course-select"),
+      { target: { value: "2" } },
+    );
+    fireEvent.click(screen.getByTestId("test-copy-concept-graph-button"));
+    fireEvent.click(
+      screen.getByTestId("test-copyConceptGraphModal-yes-button"),
+    );
+
+    await waitFor(() =>
+      expect(mockToastError).toHaveBeenCalledWith(
+        "Error launching Copy Concept Graph job: Forbidden",
+      ),
+    );
   });
 });

@@ -68,22 +68,28 @@ public class CopyConceptGraphJob implements JobContextConsumer {
     }
     if (!missingCourses.isEmpty()) {
       throw new Exception(
-          "Cannot copy concept graph: %s not found".formatted(String.join(" and ", missingCourses)));
+          "Cannot copy concept graph: %s not found"
+              .formatted(String.join(" and ", missingCourses)));
     }
 
     User user =
         userRepository
             .findById(userId)
-            .orElseThrow(() -> new Exception("Cannot copy concept graph: user %d not found".formatted(userId)));
+            .orElseThrow(
+                () ->
+                    new Exception(
+                        "Cannot copy concept graph: user %d not found".formatted(userId)));
 
     if (!hasManagePermissions(user, fromCourse.get())) {
       throw new Exception(
-          "Cannot copy concept graph: user %s does not have admin or instructor/staff access to the from course (id %d)"
+          ("Cannot copy concept graph: user %s does not have admin or instructor/staff access"
+                  + " to the from course (id %d)")
               .formatted(user.getEmail(), fromCourseId));
     }
     if (!hasManagePermissions(user, toCourse.get())) {
       throw new Exception(
-          "Cannot copy concept graph: user %s does not have admin or instructor/staff access to the to course (id %d)"
+          ("Cannot copy concept graph: user %s does not have admin or instructor/staff access"
+                  + " to the to course (id %d)")
               .formatted(user.getEmail(), toCourseId));
     }
 
@@ -93,12 +99,12 @@ public class CopyConceptGraphJob implements JobContextConsumer {
             toCourseId, new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
 
     if (!Boolean.TRUE.equals(report.get("success"))) {
-      throw new Exception(
-          "Failed to copy concept graph: %s".formatted(report.get("errors")));
+      throw new Exception("Failed to copy concept graph: %s".formatted(report.get("errors")));
     }
 
     ctx.log(
-        "Copied concept graph: %s concepts, %s subconcepts, %s edges, %s practice problems created; %s user states cleared"
+        ("Copied concept graph: %s concepts, %s subconcepts, %s edges, %s practice problems"
+                + " created; %s user states cleared")
             .formatted(
                 report.get("conceptsCreated"),
                 report.get("subconceptsCreated"),
@@ -113,8 +119,7 @@ public class CopyConceptGraphJob implements JobContextConsumer {
       return true;
     }
     if (course.getCourseStaff() != null
-        && course.getCourseStaff().stream()
-            .anyMatch(staff -> email.equals(staff.getEmail()))) {
+        && course.getCourseStaff().stream().anyMatch(staff -> email.equals(staff.getEmail()))) {
       return true;
     }
     return email.equals(course.getInstructorEmail());
