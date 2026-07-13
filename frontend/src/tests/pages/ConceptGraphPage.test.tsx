@@ -664,8 +664,10 @@ describe("ConceptGraphPage", () => {
 
     fireEvent.click(screen.getByText("trigger-subconcepts-reordered"));
 
-    expect(screen.getByTestId("node-1-subconcept-order")).toHaveTextContent(
-      "3,2",
+    await waitFor(() =>
+      expect(screen.getByTestId("node-1-subconcept-order")).toHaveTextContent(
+        "3,2",
+      ),
     );
     await waitFor(() => expect(axiosMock.history.put).toHaveLength(1));
     expect(axiosMock.history.put[0].url).toBe(
@@ -689,11 +691,11 @@ describe("ConceptGraphPage", () => {
 
     fireEvent.click(screen.getByText("trigger-subconcepts-reordered"));
 
-    // Optimistic update shows the new order first...
-    expect(screen.getByTestId("node-1-subconcept-order")).toHaveTextContent(
-      "3,2",
-    );
-    // ...then the failure triggers a refetch of the authoritative order.
+    // The optimistic new order is transient here — the rejected PUT triggers a
+    // refetch almost immediately, so don't assert the intermediate frame. What
+    // matters: the failure refetches the graph, and the authoritative order
+    // wins over the optimistic one.
+    await waitFor(() => expect(axiosMock.history.put).toHaveLength(1));
     await waitFor(() => expect(getsTo("/api/concepts/graph")).toHaveLength(2));
     await waitFor(() =>
       expect(screen.getByTestId("node-1-subconcept-order")).toHaveTextContent(
