@@ -71,6 +71,12 @@ public class ReadPLColorsJobTests {
             + " job",
         thrown.getMessage());
     verify(plColorRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    org.junit.jupiter.api.Assertions.assertTrue(
+        jobStarted
+            .getLog()
+            .contains(
+                "No GitHub PAT is set up for this user; set one up on the /profile page before"
+                    + " running this job"));
   }
 
   @Test
@@ -91,6 +97,13 @@ public class ReadPLColorsJobTests {
             + " PrairieLearn/PrairieLearn (HTTP 404); the file may not exist or may not be"
             + " accessible",
         thrown.getMessage());
+    org.junit.jupiter.api.Assertions.assertTrue(
+        jobStarted
+            .getLog()
+            .contains(
+                "Could not read apps/prairielearn/public/stylesheets/colors.scss from"
+                    + " PrairieLearn/PrairieLearn (HTTP 404); the file may not exist or may not be"
+                    + " accessible"));
   }
 
   @Test
@@ -111,6 +124,12 @@ public class ReadPLColorsJobTests {
             + " $custom-colors color mapping",
         thrown.getMessage());
     verify(plColorRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    org.junit.jupiter.api.Assertions.assertTrue(
+        jobStarted
+            .getLog()
+            .contains(
+                "apps/prairielearn/public/stylesheets/colors.scss does not contain the expected"
+                    + " $custom-colors color mapping"));
   }
 
   @Test
@@ -130,6 +149,12 @@ public class ReadPLColorsJobTests {
         "apps/prairielearn/public/stylesheets/colors.scss in PrairieLearn/PrairieLearn is empty"
             + " or could not be read",
         thrown.getMessage());
+    org.junit.jupiter.api.Assertions.assertTrue(
+        jobStarted
+            .getLog()
+            .contains(
+                "apps/prairielearn/public/stylesheets/colors.scss in PrairieLearn/PrairieLearn is"
+                    + " empty or could not be read"));
   }
 
   @Test
@@ -150,6 +175,12 @@ public class ReadPLColorsJobTests {
             + " entries",
         thrown.getMessage());
     verify(plColorRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    org.junit.jupiter.api.Assertions.assertTrue(
+        jobStarted
+            .getLog()
+            .contains(
+                "apps/prairielearn/public/stylesheets/colors.scss did not contain any 'name':"
+                    + " #hex color entries"));
   }
 
   @Test
@@ -191,6 +222,10 @@ public class ReadPLColorsJobTests {
         .save(PlColor.builder().colorName("blue1").hexCode("#39d5ff").build());
 
     String log = jobStarted.getLog();
+    org.junit.jupiter.api.Assertions.assertTrue(
+        log.contains(
+            "Reading PrairieLearn colors from"
+                + " apps/prairielearn/public/stylesheets/colors.scss"));
     org.junit.jupiter.api.Assertions.assertTrue(log.contains("Added color blue1: #39d5ff"));
     org.junit.jupiter.api.Assertions.assertTrue(
         log.contains("Updated color red2: #c72c1c -> #ff0000"));
