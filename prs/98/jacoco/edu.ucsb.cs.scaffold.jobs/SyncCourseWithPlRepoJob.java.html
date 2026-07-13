@@ -285,226 +285,237 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
 <span class="fc" id="L285">    }</span>
 
 <span class="fc" id="L287">    JsonNode assessmentSets = root.get(ASSESSMENT_SETS_KEY);</span>
-<span class="pc bpc" id="L288" title="1 of 4 branches missed.">    if (assessmentSets == null || !assessmentSets.isArray()) {</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">    if (assessmentSets == null) {</span>
 <span class="fc" id="L289">      ctx.log(</span>
-          &quot;Instance %s's %s has no %s array; skipping assessment set sync&quot;
+          &quot;Instance %s's %s has no %s key; skipping assessment set sync&quot;
 <span class="fc" id="L291">              .formatted(instance.getShortName(), INFO_COURSE_INSTANCE_JSON, ASSESSMENT_SETS_KEY));</span>
 <span class="fc" id="L292">      return;</span>
     }
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">    if (!assessmentSets.isArray()) {</span>
+<span class="nc" id="L295">      ctx.log(</span>
+          &quot;Instance %s's %s has a non-array %s value; skipping assessment set sync&quot;
+<span class="nc" id="L297">              .formatted(instance.getShortName(), INFO_COURSE_INSTANCE_JSON, ASSESSMENT_SETS_KEY));</span>
+<span class="nc" id="L298">      return;</span>
+    }
 
-<span class="fc" id="L295">    Map&lt;String, PlAssessmentSet&gt; existingByAbbreviation = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L296" title="All 2 branches covered.">    for (PlAssessmentSet set : plAssessmentSetRepository.findByPlInstanceId(instance.getId())) {</span>
-<span class="fc" id="L297">      existingByAbbreviation.put(set.getAbbreviation(), set);</span>
-<span class="fc" id="L298">    }</span>
+<span class="fc" id="L301">    Map&lt;String, PlAssessmentSet&gt; existingByAbbreviation = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">    for (PlAssessmentSet set : plAssessmentSetRepository.findByPlInstanceId(instance.getId())) {</span>
+<span class="fc" id="L303">      existingByAbbreviation.put(set.getAbbreviation(), set);</span>
+<span class="fc" id="L304">    }</span>
 
-<span class="fc" id="L300">    int added = 0;</span>
-<span class="fc" id="L301">    int updated = 0;</span>
-<span class="fc" id="L302">    int unchanged = 0;</span>
-<span class="fc" id="L303">    Set&lt;String&gt; foundAbbreviations = new LinkedHashSet&lt;&gt;();</span>
-<span class="fc bfc" id="L304" title="All 2 branches covered.">    for (JsonNode entry : assessmentSets) {</span>
-<span class="fc" id="L305">      String abbreviation = entry.path(&quot;abbreviation&quot;).asText(null);</span>
-<span class="pc bpc" id="L306" title="1 of 2 branches missed.">      if (abbreviation == null) {</span>
-<span class="nc" id="L307">        continue;</span>
+<span class="fc" id="L306">    int added = 0;</span>
+<span class="fc" id="L307">    int updated = 0;</span>
+<span class="fc" id="L308">    int unchanged = 0;</span>
+<span class="fc" id="L309">    int skipped = 0;</span>
+<span class="fc" id="L310">    Set&lt;String&gt; foundAbbreviations = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L311" title="All 2 branches covered.">    for (JsonNode entry : assessmentSets) {</span>
+<span class="fc" id="L312">      String abbreviation = entry.path(&quot;abbreviation&quot;).asText(null);</span>
+<span class="fc" id="L313">      String name = entry.path(&quot;name&quot;).asText(null);</span>
+<span class="fc" id="L314">      String heading = entry.path(&quot;heading&quot;).asText(null);</span>
+<span class="fc" id="L315">      String color = entry.path(&quot;color&quot;).asText(null);</span>
+<span class="pc bpc" id="L316" title="3 of 8 branches missed.">      if (abbreviation == null || name == null || heading == null || color == null) {</span>
+<span class="fc" id="L317">        skipped++;</span>
+<span class="fc" id="L318">        ctx.log(</span>
+            &quot;Skipping assessment set entry %s (instance %s): missing abbreviation, name, heading, or color&quot;
+<span class="fc" id="L320">                .formatted(entry, instance.getShortName()));</span>
+<span class="fc" id="L321">        continue;</span>
       }
-<span class="fc" id="L309">      String name = entry.path(&quot;name&quot;).asText(null);</span>
-<span class="fc" id="L310">      String heading = entry.path(&quot;heading&quot;).asText(null);</span>
-<span class="fc" id="L311">      String color = entry.path(&quot;color&quot;).asText(null);</span>
-<span class="fc" id="L312">      foundAbbreviations.add(abbreviation);</span>
+<span class="fc" id="L323">      foundAbbreviations.add(abbreviation);</span>
 
-<span class="fc" id="L314">      PlAssessmentSet set = existingByAbbreviation.get(abbreviation);</span>
-<span class="fc bfc" id="L315" title="All 2 branches covered.">      if (set == null) {</span>
-<span class="fc" id="L316">        plAssessmentSetRepository.save(</span>
-<span class="fc" id="L317">            PlAssessmentSet.builder()</span>
-<span class="fc" id="L318">                .plInstanceId(instance.getId())</span>
-<span class="fc" id="L319">                .abbreviation(abbreviation)</span>
-<span class="fc" id="L320">                .name(name)</span>
-<span class="fc" id="L321">                .heading(heading)</span>
-<span class="fc" id="L322">                .color(color)</span>
-<span class="fc" id="L323">                .build());</span>
-<span class="fc" id="L324">        added++;</span>
-<span class="pc bpc" id="L325" title="1 of 2 branches missed.">      } else if (!Objects.equals(set.getName(), name)</span>
-<span class="nc bnc" id="L326" title="All 2 branches missed.">          || !Objects.equals(set.getHeading(), heading)</span>
-<span class="nc bnc" id="L327" title="All 2 branches missed.">          || !Objects.equals(set.getColor(), color)) {</span>
-<span class="fc" id="L328">        set.setName(name);</span>
-<span class="fc" id="L329">        set.setHeading(heading);</span>
-<span class="fc" id="L330">        set.setColor(color);</span>
-<span class="fc" id="L331">        plAssessmentSetRepository.save(set);</span>
-<span class="fc" id="L332">        updated++;</span>
+<span class="fc" id="L325">      PlAssessmentSet set = existingByAbbreviation.get(abbreviation);</span>
+<span class="fc bfc" id="L326" title="All 2 branches covered.">      if (set == null) {</span>
+<span class="fc" id="L327">        plAssessmentSetRepository.save(</span>
+<span class="fc" id="L328">            PlAssessmentSet.builder()</span>
+<span class="fc" id="L329">                .plInstanceId(instance.getId())</span>
+<span class="fc" id="L330">                .abbreviation(abbreviation)</span>
+<span class="fc" id="L331">                .name(name)</span>
+<span class="fc" id="L332">                .heading(heading)</span>
+<span class="fc" id="L333">                .color(color)</span>
+<span class="fc" id="L334">                .build());</span>
+<span class="fc" id="L335">        added++;</span>
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">      } else if (!Objects.equals(set.getName(), name)</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">          || !Objects.equals(set.getHeading(), heading)</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">          || !Objects.equals(set.getColor(), color)) {</span>
+<span class="fc" id="L339">        set.setName(name);</span>
+<span class="fc" id="L340">        set.setHeading(heading);</span>
+<span class="fc" id="L341">        set.setColor(color);</span>
+<span class="fc" id="L342">        plAssessmentSetRepository.save(set);</span>
+<span class="fc" id="L343">        updated++;</span>
       } else {
-<span class="nc" id="L334">        unchanged++;</span>
+<span class="nc" id="L345">        unchanged++;</span>
       }
-<span class="fc" id="L336">    }</span>
+<span class="fc" id="L347">    }</span>
 
-<span class="fc" id="L338">    int deleted = 0;</span>
-<span class="fc bfc" id="L339" title="All 2 branches covered.">    for (String abbreviation : existingByAbbreviation.keySet()) {</span>
-<span class="fc bfc" id="L340" title="All 2 branches covered.">      if (!foundAbbreviations.contains(abbreviation)) {</span>
-<span class="fc" id="L341">        plAssessmentSetRepository.delete(existingByAbbreviation.get(abbreviation));</span>
-<span class="fc" id="L342">        deleted++;</span>
+<span class="fc" id="L349">    int deleted = 0;</span>
+<span class="fc bfc" id="L350" title="All 2 branches covered.">    for (String abbreviation : existingByAbbreviation.keySet()) {</span>
+<span class="fc bfc" id="L351" title="All 2 branches covered.">      if (!foundAbbreviations.contains(abbreviation)) {</span>
+<span class="fc" id="L352">        plAssessmentSetRepository.delete(existingByAbbreviation.get(abbreviation));</span>
+<span class="fc" id="L353">        deleted++;</span>
       }
-<span class="fc" id="L344">    }</span>
+<span class="fc" id="L355">    }</span>
 
-<span class="fc" id="L346">    ctx.log(</span>
-        &quot;Assessment sets: %d added, %d updated, %d deleted, %d unchanged&quot;
-<span class="fc" id="L348">            .formatted(added, updated, deleted, unchanged));</span>
-<span class="fc" id="L349">  }</span>
+<span class="fc" id="L357">    ctx.log(</span>
+        &quot;Assessment sets: %d added, %d updated, %d deleted, %d unchanged, %d skipped&quot;
+<span class="fc" id="L359">            .formatted(added, updated, deleted, unchanged, skipped));</span>
+<span class="fc" id="L360">  }</span>
 
   private void syncQuestions(JobContext ctx, PlRepo plRepo, String token) {
-<span class="fc" id="L352">    Map&lt;String, QuestionInfo&gt; foundQuestions = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L363">    Map&lt;String, QuestionInfo&gt; foundQuestions = new LinkedHashMap&lt;&gt;();</span>
     try {
-<span class="fc" id="L354">      walkQuestionsDirectory(ctx, plRepo, token, QUESTIONS_PATH, &quot;&quot;, foundQuestions);</span>
-<span class="fc" id="L355">    } catch (HttpClientErrorException.NotFound e) {</span>
-<span class="fc" id="L356">      ctx.log(</span>
+<span class="fc" id="L365">      walkQuestionsDirectory(ctx, plRepo, token, QUESTIONS_PATH, &quot;&quot;, foundQuestions);</span>
+<span class="fc" id="L366">    } catch (HttpClientErrorException.NotFound e) {</span>
+<span class="fc" id="L367">      ctx.log(</span>
           &quot;Repo %s has no %s directory (or the token cannot see the repo); skipping question sync&quot;
-<span class="fc" id="L358">              .formatted(plRepo.getRepoName(), QUESTIONS_PATH));</span>
-<span class="fc" id="L359">      return;</span>
-<span class="fc" id="L360">    }</span>
+<span class="fc" id="L369">              .formatted(plRepo.getRepoName(), QUESTIONS_PATH));</span>
+<span class="fc" id="L370">      return;</span>
+<span class="fc" id="L371">    }</span>
 
-<span class="fc" id="L362">    Map&lt;String, PlQuestion&gt; existingByQuestionId = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L363" title="All 2 branches covered.">    for (PlQuestion question : plQuestionRepository.findByPlRepoId(plRepo.getId())) {</span>
-<span class="fc" id="L364">      existingByQuestionId.put(question.getQuestionId(), question);</span>
-<span class="fc" id="L365">    }</span>
+<span class="fc" id="L373">    Map&lt;String, PlQuestion&gt; existingByQuestionId = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L374" title="All 2 branches covered.">    for (PlQuestion question : plQuestionRepository.findByPlRepoId(plRepo.getId())) {</span>
+<span class="fc" id="L375">      existingByQuestionId.put(question.getQuestionId(), question);</span>
+<span class="fc" id="L376">    }</span>
 
-<span class="fc" id="L367">    int added = 0;</span>
-<span class="fc" id="L368">    int updated = 0;</span>
-<span class="fc" id="L369">    int unchanged = 0;</span>
-<span class="fc bfc" id="L370" title="All 2 branches covered.">    for (Map.Entry&lt;String, QuestionInfo&gt; entry : foundQuestions.entrySet()) {</span>
-<span class="fc" id="L371">      String questionId = entry.getKey();</span>
-<span class="fc" id="L372">      QuestionInfo info = entry.getValue();</span>
-<span class="fc" id="L373">      PlQuestion existing = existingByQuestionId.get(questionId);</span>
-<span class="fc bfc" id="L374" title="All 2 branches covered.">      if (existing == null) {</span>
-<span class="fc" id="L375">        plQuestionRepository.save(</span>
-<span class="fc" id="L376">            PlQuestion.builder()</span>
-<span class="fc" id="L377">                .plRepoId(plRepo.getId())</span>
-<span class="fc" id="L378">                .questionId(questionId)</span>
-<span class="fc" id="L379">                .uuid(info.uuid())</span>
-<span class="fc" id="L380">                .title(info.title())</span>
-<span class="fc" id="L381">                .build());</span>
-<span class="fc" id="L382">        added++;</span>
-<span class="fc" id="L383">        ctx.log(&quot;Added question %s (%s)&quot;.formatted(questionId, info.title()));</span>
-<span class="fc bfc" id="L384" title="All 2 branches covered.">      } else if (!existing.getUuid().equals(info.uuid())</span>
-<span class="fc bfc" id="L385" title="All 2 branches covered.">          || !existing.getTitle().equals(info.title())) {</span>
-<span class="fc" id="L386">        existing.setUuid(info.uuid());</span>
-<span class="fc" id="L387">        existing.setTitle(info.title());</span>
-<span class="fc" id="L388">        plQuestionRepository.save(existing);</span>
-<span class="fc" id="L389">        updated++;</span>
-<span class="fc" id="L390">        ctx.log(&quot;Updated question %s (%s)&quot;.formatted(questionId, info.title()));</span>
+<span class="fc" id="L378">    int added = 0;</span>
+<span class="fc" id="L379">    int updated = 0;</span>
+<span class="fc" id="L380">    int unchanged = 0;</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">    for (Map.Entry&lt;String, QuestionInfo&gt; entry : foundQuestions.entrySet()) {</span>
+<span class="fc" id="L382">      String questionId = entry.getKey();</span>
+<span class="fc" id="L383">      QuestionInfo info = entry.getValue();</span>
+<span class="fc" id="L384">      PlQuestion existing = existingByQuestionId.get(questionId);</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">      if (existing == null) {</span>
+<span class="fc" id="L386">        plQuestionRepository.save(</span>
+<span class="fc" id="L387">            PlQuestion.builder()</span>
+<span class="fc" id="L388">                .plRepoId(plRepo.getId())</span>
+<span class="fc" id="L389">                .questionId(questionId)</span>
+<span class="fc" id="L390">                .uuid(info.uuid())</span>
+<span class="fc" id="L391">                .title(info.title())</span>
+<span class="fc" id="L392">                .build());</span>
+<span class="fc" id="L393">        added++;</span>
+<span class="fc" id="L394">        ctx.log(&quot;Added question %s (%s)&quot;.formatted(questionId, info.title()));</span>
+<span class="fc bfc" id="L395" title="All 2 branches covered.">      } else if (!existing.getUuid().equals(info.uuid())</span>
+<span class="fc bfc" id="L396" title="All 2 branches covered.">          || !existing.getTitle().equals(info.title())) {</span>
+<span class="fc" id="L397">        existing.setUuid(info.uuid());</span>
+<span class="fc" id="L398">        existing.setTitle(info.title());</span>
+<span class="fc" id="L399">        plQuestionRepository.save(existing);</span>
+<span class="fc" id="L400">        updated++;</span>
+<span class="fc" id="L401">        ctx.log(&quot;Updated question %s (%s)&quot;.formatted(questionId, info.title()));</span>
       } else {
-<span class="fc" id="L392">        unchanged++;</span>
+<span class="fc" id="L403">        unchanged++;</span>
       }
-<span class="fc" id="L394">    }</span>
+<span class="fc" id="L405">    }</span>
 
-<span class="fc" id="L396">    int deleted = 0;</span>
-<span class="fc" id="L397">    List&lt;String&gt; staleQuestionIds =</span>
-<span class="fc" id="L398">        existingByQuestionId.keySet().stream()</span>
-<span class="fc bfc" id="L399" title="All 2 branches covered.">            .filter(questionId -&gt; !foundQuestions.containsKey(questionId))</span>
-<span class="fc" id="L400">            .sorted()</span>
-<span class="fc" id="L401">            .toList();</span>
-<span class="fc bfc" id="L402" title="All 2 branches covered.">    for (String questionId : staleQuestionIds) {</span>
-<span class="fc" id="L403">      PlQuestion stale = existingByQuestionId.get(questionId);</span>
-<span class="fc" id="L404">      plScaffoldAssessmentRepository.deleteByPlQuestionId(stale.getId());</span>
-<span class="fc" id="L405">      plAssessmentQuestionRepository.deleteByPlQuestionId(stale.getId());</span>
-<span class="fc" id="L406">      plQuestionRepository.delete(stale);</span>
-<span class="fc" id="L407">      deleted++;</span>
-<span class="fc" id="L408">      ctx.log(&quot;Deleted question %s (no longer on GitHub)&quot;.formatted(questionId));</span>
-<span class="fc" id="L409">    }</span>
+<span class="fc" id="L407">    int deleted = 0;</span>
+<span class="fc" id="L408">    List&lt;String&gt; staleQuestionIds =</span>
+<span class="fc" id="L409">        existingByQuestionId.keySet().stream()</span>
+<span class="fc bfc" id="L410" title="All 2 branches covered.">            .filter(questionId -&gt; !foundQuestions.containsKey(questionId))</span>
+<span class="fc" id="L411">            .sorted()</span>
+<span class="fc" id="L412">            .toList();</span>
+<span class="fc bfc" id="L413" title="All 2 branches covered.">    for (String questionId : staleQuestionIds) {</span>
+<span class="fc" id="L414">      PlQuestion stale = existingByQuestionId.get(questionId);</span>
+<span class="fc" id="L415">      plScaffoldAssessmentRepository.deleteByPlQuestionId(stale.getId());</span>
+<span class="fc" id="L416">      plAssessmentQuestionRepository.deleteByPlQuestionId(stale.getId());</span>
+<span class="fc" id="L417">      plQuestionRepository.delete(stale);</span>
+<span class="fc" id="L418">      deleted++;</span>
+<span class="fc" id="L419">      ctx.log(&quot;Deleted question %s (no longer on GitHub)&quot;.formatted(questionId));</span>
+<span class="fc" id="L420">    }</span>
 
-<span class="fc" id="L411">    ctx.log(</span>
+<span class="fc" id="L422">    ctx.log(</span>
         &quot;Questions: %d added, %d updated, %d deleted, %d unchanged&quot;
-<span class="fc" id="L413">            .formatted(added, updated, deleted, unchanged));</span>
-<span class="fc" id="L414">  }</span>
+<span class="fc" id="L424">            .formatted(added, updated, deleted, unchanged));</span>
+<span class="fc" id="L425">  }</span>
 
   /** Syncs assessments from GitHub for the course's own instance only. */
   private void syncAssessments(JobContext ctx, PlRepo plRepo, PlInstance instance, String token) {
-<span class="fc" id="L418">    Map&lt;String, PlQuestion&gt; questionsByQuestionId = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L419" title="All 2 branches covered.">    for (PlQuestion question : plQuestionRepository.findByPlRepoId(plRepo.getId())) {</span>
-<span class="fc" id="L420">      questionsByQuestionId.put(question.getQuestionId(), question);</span>
-<span class="fc" id="L421">    }</span>
+<span class="fc" id="L429">    Map&lt;String, PlQuestion&gt; questionsByQuestionId = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L430" title="All 2 branches covered.">    for (PlQuestion question : plQuestionRepository.findByPlRepoId(plRepo.getId())) {</span>
+<span class="fc" id="L431">      questionsByQuestionId.put(question.getQuestionId(), question);</span>
+<span class="fc" id="L432">    }</span>
 
-<span class="fc" id="L423">    int added = 0;</span>
-<span class="fc" id="L424">    int deleted = 0;</span>
-<span class="fc" id="L425">    int unchanged = 0;</span>
-<span class="fc" id="L426">    String assessmentsPath =</span>
-<span class="fc" id="L427">        &quot;%s/%s/%s&quot;.formatted(COURSE_INSTANCES_PATH, instance.getShortName(), ASSESSMENTS_DIRECTORY);</span>
+<span class="fc" id="L434">    int added = 0;</span>
+<span class="fc" id="L435">    int deleted = 0;</span>
+<span class="fc" id="L436">    int unchanged = 0;</span>
+<span class="fc" id="L437">    String assessmentsPath =</span>
+<span class="fc" id="L438">        &quot;%s/%s/%s&quot;.formatted(COURSE_INSTANCES_PATH, instance.getShortName(), ASSESSMENTS_DIRECTORY);</span>
     List&lt;DirectoryEntry&gt; entries;
     try {
-<span class="fc" id="L430">      entries = githubService.listDirectory(plRepo.getRepoName(), assessmentsPath, token);</span>
-<span class="fc" id="L431">    } catch (HttpClientErrorException.NotFound e) {</span>
-<span class="fc" id="L432">      ctx.log(</span>
+<span class="fc" id="L441">      entries = githubService.listDirectory(plRepo.getRepoName(), assessmentsPath, token);</span>
+<span class="fc" id="L442">    } catch (HttpClientErrorException.NotFound e) {</span>
+<span class="fc" id="L443">      ctx.log(</span>
           &quot;Instance %s has no %s directory; skipping assessment sync&quot;
-<span class="fc" id="L434">              .formatted(instance.getShortName(), ASSESSMENTS_DIRECTORY));</span>
-<span class="fc" id="L435">      return;</span>
-<span class="fc" id="L436">    }</span>
+<span class="fc" id="L445">              .formatted(instance.getShortName(), ASSESSMENTS_DIRECTORY));</span>
+<span class="fc" id="L446">      return;</span>
+<span class="fc" id="L447">    }</span>
 
-<span class="fc" id="L438">    Map&lt;String, PlAssessment&gt; existingByName = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L449">    Map&lt;String, PlAssessment&gt; existingByName = new LinkedHashMap&lt;&gt;();</span>
     for (PlAssessment assessment :
-<span class="fc bfc" id="L440" title="All 2 branches covered.">        plAssessmentRepository.findByPlRepoIdAndPlInstanceId(plRepo.getId(), instance.getId())) {</span>
-<span class="fc" id="L441">      existingByName.put(assessment.getName(), assessment);</span>
-<span class="fc" id="L442">    }</span>
+<span class="fc bfc" id="L451" title="All 2 branches covered.">        plAssessmentRepository.findByPlRepoIdAndPlInstanceId(plRepo.getId(), instance.getId())) {</span>
+<span class="fc" id="L452">      existingByName.put(assessment.getName(), assessment);</span>
+<span class="fc" id="L453">    }</span>
 
-<span class="fc" id="L444">    Set&lt;String&gt; foundNames = new LinkedHashSet&lt;&gt;();</span>
-<span class="fc bfc" id="L445" title="All 2 branches covered.">    for (DirectoryEntry entry : entries) {</span>
-<span class="fc bfc" id="L446" title="All 2 branches covered.">      if (!&quot;dir&quot;.equals(entry.type())) {</span>
-<span class="fc" id="L447">        continue;</span>
+<span class="fc" id="L455">    Set&lt;String&gt; foundNames = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L456" title="All 2 branches covered.">    for (DirectoryEntry entry : entries) {</span>
+<span class="fc bfc" id="L457" title="All 2 branches covered.">      if (!&quot;dir&quot;.equals(entry.type())) {</span>
+<span class="fc" id="L458">        continue;</span>
       }
-<span class="fc" id="L449">      String assessmentPath = assessmentsPath + &quot;/&quot; + entry.name();</span>
-<span class="fc" id="L450">      boolean hasInfoAssessment =</span>
-<span class="fc" id="L451">          githubService.listDirectory(plRepo.getRepoName(), assessmentPath, token).stream()</span>
-<span class="fc bfc" id="L452" title="All 4 branches covered.">              .anyMatch(e -&gt; INFO_ASSESSMENT_JSON.equals(e.name()) &amp;&amp; &quot;file&quot;.equals(e.type()));</span>
-<span class="fc bfc" id="L453" title="All 2 branches covered.">      if (!hasInfoAssessment) {</span>
-<span class="fc" id="L454">        continue;</span>
+<span class="fc" id="L460">      String assessmentPath = assessmentsPath + &quot;/&quot; + entry.name();</span>
+<span class="fc" id="L461">      boolean hasInfoAssessment =</span>
+<span class="fc" id="L462">          githubService.listDirectory(plRepo.getRepoName(), assessmentPath, token).stream()</span>
+<span class="fc bfc" id="L463" title="All 4 branches covered.">              .anyMatch(e -&gt; INFO_ASSESSMENT_JSON.equals(e.name()) &amp;&amp; &quot;file&quot;.equals(e.type()));</span>
+<span class="fc bfc" id="L464" title="All 2 branches covered.">      if (!hasInfoAssessment) {</span>
+<span class="fc" id="L465">        continue;</span>
       }
-<span class="fc" id="L456">      String content =</span>
-<span class="fc" id="L457">          githubService.getFileContent(</span>
-<span class="fc" id="L458">              plRepo.getRepoName(), assessmentPath + &quot;/&quot; + INFO_ASSESSMENT_JSON, token);</span>
+<span class="fc" id="L467">      String content =</span>
+<span class="fc" id="L468">          githubService.getFileContent(</span>
+<span class="fc" id="L469">              plRepo.getRepoName(), assessmentPath + &quot;/&quot; + INFO_ASSESSMENT_JSON, token);</span>
       JsonNode root;
       try {
-<span class="fc" id="L461">        root = MAPPER.readTree(content);</span>
-<span class="fc" id="L462">      } catch (Exception e) {</span>
-<span class="fc" id="L463">        ctx.log(</span>
+<span class="fc" id="L472">        root = MAPPER.readTree(content);</span>
+<span class="fc" id="L473">      } catch (Exception e) {</span>
+<span class="fc" id="L474">        ctx.log(</span>
             &quot;Skipping assessment %s (instance %s): could not parse %s&quot;
-<span class="fc" id="L465">                .formatted(entry.name(), instance.getShortName(), INFO_ASSESSMENT_JSON));</span>
-<span class="fc" id="L466">        continue;</span>
-<span class="fc" id="L467">      }</span>
-<span class="fc" id="L468">      foundNames.add(entry.name());</span>
+<span class="fc" id="L476">                .formatted(entry.name(), instance.getShortName(), INFO_ASSESSMENT_JSON));</span>
+<span class="fc" id="L477">        continue;</span>
+<span class="fc" id="L478">      }</span>
+<span class="fc" id="L479">      foundNames.add(entry.name());</span>
 
-<span class="fc" id="L470">      PlAssessment assessment = existingByName.get(entry.name());</span>
-<span class="fc bfc" id="L471" title="All 2 branches covered.">      if (assessment == null) {</span>
-<span class="fc" id="L472">        assessment =</span>
-<span class="fc" id="L473">            plAssessmentRepository.save(</span>
-<span class="fc" id="L474">                PlAssessment.builder()</span>
-<span class="fc" id="L475">                    .plRepoId(plRepo.getId())</span>
-<span class="fc" id="L476">                    .plInstanceId(instance.getId())</span>
-<span class="fc" id="L477">                    .name(entry.name())</span>
-<span class="fc" id="L478">                    .build());</span>
-<span class="fc" id="L479">        added++;</span>
-<span class="fc" id="L480">        ctx.log(</span>
-<span class="fc" id="L481">            &quot;Added assessment %s (instance %s)&quot;.formatted(entry.name(), instance.getShortName()));</span>
+<span class="fc" id="L481">      PlAssessment assessment = existingByName.get(entry.name());</span>
+<span class="fc bfc" id="L482" title="All 2 branches covered.">      if (assessment == null) {</span>
+<span class="fc" id="L483">        assessment =</span>
+<span class="fc" id="L484">            plAssessmentRepository.save(</span>
+<span class="fc" id="L485">                PlAssessment.builder()</span>
+<span class="fc" id="L486">                    .plRepoId(plRepo.getId())</span>
+<span class="fc" id="L487">                    .plInstanceId(instance.getId())</span>
+<span class="fc" id="L488">                    .name(entry.name())</span>
+<span class="fc" id="L489">                    .build());</span>
+<span class="fc" id="L490">        added++;</span>
+<span class="fc" id="L491">        ctx.log(</span>
+<span class="fc" id="L492">            &quot;Added assessment %s (instance %s)&quot;.formatted(entry.name(), instance.getShortName()));</span>
       } else {
-<span class="fc" id="L483">        unchanged++;</span>
+<span class="fc" id="L494">        unchanged++;</span>
       }
 
       // get(&quot;zones&quot;) is null when the key is absent; collectQuestionIds treats that as no links
-<span class="fc" id="L487">      syncAssessmentQuestions(</span>
-<span class="fc" id="L488">          ctx, plRepo, instance, assessment, root.get(&quot;zones&quot;), questionsByQuestionId);</span>
-<span class="fc" id="L489">    }</span>
+<span class="fc" id="L498">      syncAssessmentQuestions(</span>
+<span class="fc" id="L499">          ctx, plRepo, instance, assessment, root.get(&quot;zones&quot;), questionsByQuestionId);</span>
+<span class="fc" id="L500">    }</span>
 
-<span class="fc" id="L491">    List&lt;String&gt; staleNames =</span>
-<span class="fc" id="L492">        existingByName.keySet().stream()</span>
-<span class="fc bfc" id="L493" title="All 2 branches covered.">            .filter(name -&gt; !foundNames.contains(name))</span>
-<span class="fc" id="L494">            .sorted()</span>
-<span class="fc" id="L495">            .toList();</span>
-<span class="fc bfc" id="L496" title="All 2 branches covered.">    for (String name : staleNames) {</span>
-<span class="fc" id="L497">      PlAssessment stale = existingByName.get(name);</span>
-<span class="fc" id="L498">      plAssessmentQuestionRepository.deleteByPlAssessmentId(stale.getId());</span>
-<span class="fc" id="L499">      plAssessmentRepository.delete(stale);</span>
-<span class="fc" id="L500">      deleted++;</span>
-<span class="fc" id="L501">      ctx.log(</span>
+<span class="fc" id="L502">    List&lt;String&gt; staleNames =</span>
+<span class="fc" id="L503">        existingByName.keySet().stream()</span>
+<span class="fc bfc" id="L504" title="All 2 branches covered.">            .filter(name -&gt; !foundNames.contains(name))</span>
+<span class="fc" id="L505">            .sorted()</span>
+<span class="fc" id="L506">            .toList();</span>
+<span class="fc bfc" id="L507" title="All 2 branches covered.">    for (String name : staleNames) {</span>
+<span class="fc" id="L508">      PlAssessment stale = existingByName.get(name);</span>
+<span class="fc" id="L509">      plAssessmentQuestionRepository.deleteByPlAssessmentId(stale.getId());</span>
+<span class="fc" id="L510">      plAssessmentRepository.delete(stale);</span>
+<span class="fc" id="L511">      deleted++;</span>
+<span class="fc" id="L512">      ctx.log(</span>
           &quot;Deleted assessment %s (instance %s) (no longer on GitHub)&quot;
-<span class="fc" id="L503">              .formatted(name, instance.getShortName()));</span>
-<span class="fc" id="L504">    }</span>
+<span class="fc" id="L514">              .formatted(name, instance.getShortName()));</span>
+<span class="fc" id="L515">    }</span>
 
-<span class="fc" id="L506">    ctx.log(&quot;Assessments: %d added, %d deleted, %d unchanged&quot;.formatted(added, deleted, unchanged));</span>
-<span class="fc" id="L507">  }</span>
+<span class="fc" id="L517">    ctx.log(&quot;Assessments: %d added, %d deleted, %d unchanged&quot;.formatted(added, deleted, unchanged));</span>
+<span class="fc" id="L518">  }</span>
 
   /**
    * Copies the PrairieLearn-side fields (issue #71) onto the PlAssessment rows of this instance,
@@ -515,47 +526,47 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
       JobContext ctx, PlRepo plRepo, PlInstance plInstance, String plToken) {
     List&lt;PrairieLearnService.AssessmentInfo&gt; plAssessments;
     try {
-<span class="fc" id="L518">      plAssessments = prairieLearnService.getAssessments(plInstance.getNumericId(), plToken);</span>
-<span class="fc" id="L519">    } catch (HttpClientErrorException e) {</span>
-<span class="fc" id="L520">      ctx.log(</span>
+<span class="fc" id="L529">      plAssessments = prairieLearnService.getAssessments(plInstance.getNumericId(), plToken);</span>
+<span class="fc" id="L530">    } catch (HttpClientErrorException e) {</span>
+<span class="fc" id="L531">      ctx.log(</span>
           &quot;Could not list assessments from PrairieLearn (HTTP %d); skipping assessment field updates&quot;
-<span class="fc" id="L522">              .formatted(e.getStatusCode().value()));</span>
-<span class="fc" id="L523">      return;</span>
-<span class="fc" id="L524">    }</span>
+<span class="fc" id="L533">              .formatted(e.getStatusCode().value()));</span>
+<span class="fc" id="L534">      return;</span>
+<span class="fc" id="L535">    }</span>
 
-<span class="fc" id="L526">    Map&lt;String, PlAssessment&gt; existingByName = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L537">    Map&lt;String, PlAssessment&gt; existingByName = new LinkedHashMap&lt;&gt;();</span>
     for (PlAssessment assessment :
-<span class="fc bfc" id="L528" title="All 2 branches covered.">        plAssessmentRepository.findByPlRepoIdAndPlInstanceId(plRepo.getId(), plInstance.getId())) {</span>
-<span class="fc" id="L529">      existingByName.put(assessment.getName(), assessment);</span>
-<span class="fc" id="L530">    }</span>
+<span class="fc bfc" id="L539" title="All 2 branches covered.">        plAssessmentRepository.findByPlRepoIdAndPlInstanceId(plRepo.getId(), plInstance.getId())) {</span>
+<span class="fc" id="L540">      existingByName.put(assessment.getName(), assessment);</span>
+<span class="fc" id="L541">    }</span>
 
-<span class="fc" id="L532">    int updated = 0;</span>
-<span class="fc" id="L533">    int unmatched = 0;</span>
-<span class="fc bfc" id="L534" title="All 2 branches covered.">    for (PrairieLearnService.AssessmentInfo info : plAssessments) {</span>
-<span class="fc" id="L535">      PlAssessment assessment = existingByName.get(info.assessmentName());</span>
-<span class="fc bfc" id="L536" title="All 2 branches covered.">      if (assessment == null) {</span>
-<span class="fc" id="L537">        unmatched++;</span>
-<span class="fc" id="L538">        ctx.log(</span>
+<span class="fc" id="L543">    int updated = 0;</span>
+<span class="fc" id="L544">    int unmatched = 0;</span>
+<span class="fc bfc" id="L545" title="All 2 branches covered.">    for (PrairieLearnService.AssessmentInfo info : plAssessments) {</span>
+<span class="fc" id="L546">      PlAssessment assessment = existingByName.get(info.assessmentName());</span>
+<span class="fc bfc" id="L547" title="All 2 branches covered.">      if (assessment == null) {</span>
+<span class="fc" id="L548">        unmatched++;</span>
+<span class="fc" id="L549">        ctx.log(</span>
             &quot;PrairieLearn assessment %s has no matching assessment directory in the repo; skipping&quot;
-<span class="fc" id="L540">                .formatted(info.assessmentName()));</span>
-<span class="fc" id="L541">        continue;</span>
+<span class="fc" id="L551">                .formatted(info.assessmentName()));</span>
+<span class="fc" id="L552">        continue;</span>
       }
-<span class="fc" id="L543">      assessment.setPlAssessmentId(info.assessmentId());</span>
-<span class="fc" id="L544">      assessment.setPlAssessmentNumber(info.assessmentNumber());</span>
-<span class="fc" id="L545">      assessment.setPlAssessmentOrder(info.assessmentOrderBy());</span>
-<span class="fc" id="L546">      assessment.setPlAssessmentTitle(info.title());</span>
-<span class="fc" id="L547">      assessment.setPlAssessmentSetAbbreviation(info.assessmentSetAbbreviation());</span>
-<span class="fc" id="L548">      assessment.setPlAssessmentSetNumber(info.assessmentSetNumber());</span>
-<span class="fc" id="L549">      assessment.setPlAssessmentSetHeading(info.assessmentSetHeading());</span>
-<span class="fc" id="L550">      assessment.setPlAssessmentSetColor(info.assessmentSetColor());</span>
-<span class="fc" id="L551">      plAssessmentRepository.save(assessment);</span>
-<span class="fc" id="L552">      updated++;</span>
-<span class="fc" id="L553">      ctx.log(&quot;Updated PrairieLearn fields for assessment %s&quot;.formatted(info.assessmentName()));</span>
-<span class="fc" id="L554">    }</span>
-<span class="fc" id="L555">    ctx.log(</span>
+<span class="fc" id="L554">      assessment.setPlAssessmentId(info.assessmentId());</span>
+<span class="fc" id="L555">      assessment.setPlAssessmentNumber(info.assessmentNumber());</span>
+<span class="fc" id="L556">      assessment.setPlAssessmentOrder(info.assessmentOrderBy());</span>
+<span class="fc" id="L557">      assessment.setPlAssessmentTitle(info.title());</span>
+<span class="fc" id="L558">      assessment.setPlAssessmentSetAbbreviation(info.assessmentSetAbbreviation());</span>
+<span class="fc" id="L559">      assessment.setPlAssessmentSetNumber(info.assessmentSetNumber());</span>
+<span class="fc" id="L560">      assessment.setPlAssessmentSetHeading(info.assessmentSetHeading());</span>
+<span class="fc" id="L561">      assessment.setPlAssessmentSetColor(info.assessmentSetColor());</span>
+<span class="fc" id="L562">      plAssessmentRepository.save(assessment);</span>
+<span class="fc" id="L563">      updated++;</span>
+<span class="fc" id="L564">      ctx.log(&quot;Updated PrairieLearn fields for assessment %s&quot;.formatted(info.assessmentName()));</span>
+<span class="fc" id="L565">    }</span>
+<span class="fc" id="L566">    ctx.log(</span>
         &quot;PrairieLearn assessment fields: %d updated, %d without a matching repo assessment&quot;
-<span class="fc" id="L557">            .formatted(updated, unmatched));</span>
-<span class="fc" id="L558">  }</span>
+<span class="fc" id="L568">            .formatted(updated, unmatched));</span>
+<span class="fc" id="L569">  }</span>
 
   /**
    * Rewrites the assessment's question list (join rows, in zone order) to match the ids referenced
@@ -569,49 +580,49 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
       PlAssessment assessment,
       JsonNode zones,
       Map&lt;String, PlQuestion&gt; questionsByQuestionId) {
-<span class="fc" id="L572">    Set&lt;String&gt; referencedIds = new LinkedHashSet&lt;&gt;();</span>
-<span class="fc" id="L573">    collectQuestionIds(zones, referencedIds);</span>
+<span class="fc" id="L583">    Set&lt;String&gt; referencedIds = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L584">    collectQuestionIds(zones, referencedIds);</span>
 
-<span class="fc" id="L575">    List&lt;Long&gt; desiredQuestionRowIds = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L576" title="All 2 branches covered.">    for (String questionId : referencedIds) {</span>
-<span class="fc" id="L577">      PlQuestion question = questionsByQuestionId.get(questionId);</span>
-<span class="fc bfc" id="L578" title="All 2 branches covered.">      if (question == null) {</span>
-<span class="fc" id="L579">        ctx.log(</span>
+<span class="fc" id="L586">    List&lt;Long&gt; desiredQuestionRowIds = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L587" title="All 2 branches covered.">    for (String questionId : referencedIds) {</span>
+<span class="fc" id="L588">      PlQuestion question = questionsByQuestionId.get(questionId);</span>
+<span class="fc bfc" id="L589" title="All 2 branches covered.">      if (question == null) {</span>
+<span class="fc" id="L590">        ctx.log(</span>
             &quot;Assessment %s (instance %s) references unknown question id %s; skipping that link&quot;
-<span class="fc" id="L581">                .formatted(assessment.getName(), instance.getShortName(), questionId));</span>
-<span class="fc" id="L582">        continue;</span>
+<span class="fc" id="L592">                .formatted(assessment.getName(), instance.getShortName(), questionId));</span>
+<span class="fc" id="L593">        continue;</span>
       }
-<span class="fc" id="L584">      desiredQuestionRowIds.add(question.getId());</span>
-<span class="fc" id="L585">    }</span>
+<span class="fc" id="L595">      desiredQuestionRowIds.add(question.getId());</span>
+<span class="fc" id="L596">    }</span>
 
-<span class="fc" id="L587">    List&lt;Long&gt; currentQuestionRowIds =</span>
+<span class="fc" id="L598">    List&lt;Long&gt; currentQuestionRowIds =</span>
         plAssessmentQuestionRepository
-<span class="fc" id="L589">            .findByPlAssessmentIdOrderByOrdinalAsc(assessment.getId())</span>
-<span class="fc" id="L590">            .stream()</span>
-<span class="fc" id="L591">            .map(PlAssessmentQuestion::getPlQuestionId)</span>
-<span class="fc" id="L592">            .toList();</span>
-<span class="fc bfc" id="L593" title="All 2 branches covered.">    if (currentQuestionRowIds.equals(desiredQuestionRowIds)) {</span>
-<span class="fc" id="L594">      return;</span>
+<span class="fc" id="L600">            .findByPlAssessmentIdOrderByOrdinalAsc(assessment.getId())</span>
+<span class="fc" id="L601">            .stream()</span>
+<span class="fc" id="L602">            .map(PlAssessmentQuestion::getPlQuestionId)</span>
+<span class="fc" id="L603">            .toList();</span>
+<span class="fc bfc" id="L604" title="All 2 branches covered.">    if (currentQuestionRowIds.equals(desiredQuestionRowIds)) {</span>
+<span class="fc" id="L605">      return;</span>
     }
 
-<span class="fc" id="L597">    plAssessmentQuestionRepository.deleteByPlAssessmentId(assessment.getId());</span>
+<span class="fc" id="L608">    plAssessmentQuestionRepository.deleteByPlAssessmentId(assessment.getId());</span>
     // flush so the deletes hit the database before the re-inserts; Hibernate otherwise orders
     // inserts first within the transaction, violating the (assessment, question) unique constraint
-<span class="fc" id="L600">    plAssessmentQuestionRepository.flush();</span>
-<span class="fc bfc" id="L601" title="All 2 branches covered.">    for (int i = 0; i &lt; desiredQuestionRowIds.size(); i++) {</span>
-<span class="fc" id="L602">      plAssessmentQuestionRepository.save(</span>
-<span class="fc" id="L603">          PlAssessmentQuestion.builder()</span>
-<span class="fc" id="L604">              .plRepoId(plRepo.getId())</span>
-<span class="fc" id="L605">              .plAssessmentId(assessment.getId())</span>
-<span class="fc" id="L606">              .plQuestionId(desiredQuestionRowIds.get(i))</span>
-<span class="fc" id="L607">              .ordinal(i)</span>
-<span class="fc" id="L608">              .build());</span>
+<span class="fc" id="L611">    plAssessmentQuestionRepository.flush();</span>
+<span class="fc bfc" id="L612" title="All 2 branches covered.">    for (int i = 0; i &lt; desiredQuestionRowIds.size(); i++) {</span>
+<span class="fc" id="L613">      plAssessmentQuestionRepository.save(</span>
+<span class="fc" id="L614">          PlAssessmentQuestion.builder()</span>
+<span class="fc" id="L615">              .plRepoId(plRepo.getId())</span>
+<span class="fc" id="L616">              .plAssessmentId(assessment.getId())</span>
+<span class="fc" id="L617">              .plQuestionId(desiredQuestionRowIds.get(i))</span>
+<span class="fc" id="L618">              .ordinal(i)</span>
+<span class="fc" id="L619">              .build());</span>
     }
-<span class="fc" id="L610">    ctx.log(</span>
+<span class="fc" id="L621">    ctx.log(</span>
         &quot;Linked %d question(s) to assessment %s (instance %s)&quot;
-<span class="fc" id="L612">            .formatted(</span>
-<span class="fc" id="L613">                desiredQuestionRowIds.size(), assessment.getName(), instance.getShortName()));</span>
-<span class="fc" id="L614">  }</span>
+<span class="fc" id="L623">            .formatted(</span>
+<span class="fc" id="L624">                desiredQuestionRowIds.size(), assessment.getName(), instance.getShortName()));</span>
+<span class="fc" id="L625">  }</span>
 
   /**
    * Recursively collects the value of every {@code &quot;id&quot;} key in the JSON tree under the zones node
@@ -619,16 +630,16 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
    * dropping duplicates.
    */
   static void collectQuestionIds(JsonNode node, Set&lt;String&gt; ids) {
-<span class="fc bfc" id="L622" title="All 2 branches covered.">    if (node == null) {</span>
-<span class="fc" id="L623">      return;</span>
+<span class="fc bfc" id="L633" title="All 2 branches covered.">    if (node == null) {</span>
+<span class="fc" id="L634">      return;</span>
     }
-<span class="fc bfc" id="L625" title="All 4 branches covered.">    if (node.isObject() &amp;&amp; node.hasNonNull(&quot;id&quot;)) {</span>
-<span class="fc" id="L626">      ids.add(node.get(&quot;id&quot;).asText());</span>
+<span class="fc bfc" id="L636" title="All 4 branches covered.">    if (node.isObject() &amp;&amp; node.hasNonNull(&quot;id&quot;)) {</span>
+<span class="fc" id="L637">      ids.add(node.get(&quot;id&quot;).asText());</span>
     }
-<span class="fc bfc" id="L628" title="All 2 branches covered.">    for (JsonNode child : node) {</span>
-<span class="fc" id="L629">      collectQuestionIds(child, ids);</span>
-<span class="fc" id="L630">    }</span>
-<span class="fc" id="L631">  }</span>
+<span class="fc bfc" id="L639" title="All 2 branches covered.">    for (JsonNode child : node) {</span>
+<span class="fc" id="L640">      collectQuestionIds(child, ids);</span>
+<span class="fc" id="L641">    }</span>
+<span class="fc" id="L642">  }</span>
 
   /**
    * Recursively walks a directory under {@code questions}. {@code questionId} is the path relative
@@ -641,49 +652,49 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
       String path,
       String questionId,
       Map&lt;String, QuestionInfo&gt; foundQuestions) {
-<span class="fc" id="L644">    List&lt;DirectoryEntry&gt; entries = githubService.listDirectory(plRepo.getRepoName(), path, token);</span>
+<span class="fc" id="L655">    List&lt;DirectoryEntry&gt; entries = githubService.listDirectory(plRepo.getRepoName(), path, token);</span>
 
-<span class="fc" id="L646">    boolean hasInfoJson =</span>
-<span class="fc" id="L647">        entries.stream()</span>
-<span class="fc bfc" id="L648" title="All 4 branches covered.">            .anyMatch(entry -&gt; INFO_JSON.equals(entry.name()) &amp;&amp; &quot;file&quot;.equals(entry.type()));</span>
-<span class="fc bfc" id="L649" title="All 4 branches covered.">    if (hasInfoJson &amp;&amp; !questionId.isEmpty()) {</span>
-<span class="fc" id="L650">      String content =</span>
-<span class="fc" id="L651">          githubService.getFileContent(plRepo.getRepoName(), path + &quot;/&quot; + INFO_JSON, token);</span>
-<span class="fc" id="L652">      QuestionInfo info = parseInfoJson(ctx, questionId, content);</span>
-<span class="fc bfc" id="L653" title="All 2 branches covered.">      if (info != null) {</span>
-<span class="fc" id="L654">        foundQuestions.put(questionId, info);</span>
+<span class="fc" id="L657">    boolean hasInfoJson =</span>
+<span class="fc" id="L658">        entries.stream()</span>
+<span class="fc bfc" id="L659" title="All 4 branches covered.">            .anyMatch(entry -&gt; INFO_JSON.equals(entry.name()) &amp;&amp; &quot;file&quot;.equals(entry.type()));</span>
+<span class="fc bfc" id="L660" title="All 4 branches covered.">    if (hasInfoJson &amp;&amp; !questionId.isEmpty()) {</span>
+<span class="fc" id="L661">      String content =</span>
+<span class="fc" id="L662">          githubService.getFileContent(plRepo.getRepoName(), path + &quot;/&quot; + INFO_JSON, token);</span>
+<span class="fc" id="L663">      QuestionInfo info = parseInfoJson(ctx, questionId, content);</span>
+<span class="fc bfc" id="L664" title="All 2 branches covered.">      if (info != null) {</span>
+<span class="fc" id="L665">        foundQuestions.put(questionId, info);</span>
       }
-<span class="fc" id="L656">      return; // a question directory's subdirectories belong to the question; don't recurse</span>
+<span class="fc" id="L667">      return; // a question directory's subdirectories belong to the question; don't recurse</span>
     }
 
-<span class="fc bfc" id="L659" title="All 2 branches covered.">    for (DirectoryEntry entry : entries) {</span>
-<span class="fc bfc" id="L660" title="All 2 branches covered.">      if (!&quot;dir&quot;.equals(entry.type())) {</span>
-<span class="fc" id="L661">        continue;</span>
+<span class="fc bfc" id="L670" title="All 2 branches covered.">    for (DirectoryEntry entry : entries) {</span>
+<span class="fc bfc" id="L671" title="All 2 branches covered.">      if (!&quot;dir&quot;.equals(entry.type())) {</span>
+<span class="fc" id="L672">        continue;</span>
       }
-<span class="fc bfc" id="L663" title="All 2 branches covered.">      if (DRAFTS_DIRECTORY.equals(entry.name())) {</span>
-<span class="fc" id="L664">        ctx.log(&quot;Skipping directory %s/%s&quot;.formatted(path, entry.name()));</span>
-<span class="fc" id="L665">        continue;</span>
+<span class="fc bfc" id="L674" title="All 2 branches covered.">      if (DRAFTS_DIRECTORY.equals(entry.name())) {</span>
+<span class="fc" id="L675">        ctx.log(&quot;Skipping directory %s/%s&quot;.formatted(path, entry.name()));</span>
+<span class="fc" id="L676">        continue;</span>
       }
       String childQuestionId =
-<span class="fc bfc" id="L668" title="All 2 branches covered.">          questionId.isEmpty() ? entry.name() : questionId + &quot;/&quot; + entry.name();</span>
-<span class="fc" id="L669">      walkQuestionsDirectory(</span>
-<span class="fc" id="L670">          ctx, plRepo, token, path + &quot;/&quot; + entry.name(), childQuestionId, foundQuestions);</span>
-<span class="fc" id="L671">    }</span>
-<span class="fc" id="L672">  }</span>
+<span class="fc bfc" id="L679" title="All 2 branches covered.">          questionId.isEmpty() ? entry.name() : questionId + &quot;/&quot; + entry.name();</span>
+<span class="fc" id="L680">      walkQuestionsDirectory(</span>
+<span class="fc" id="L681">          ctx, plRepo, token, path + &quot;/&quot; + entry.name(), childQuestionId, foundQuestions);</span>
+<span class="fc" id="L682">    }</span>
+<span class="fc" id="L683">  }</span>
 
   /** Returns the parsed uuid/title, or null (with a log message) if info.json is unusable. */
   private QuestionInfo parseInfoJson(JobContext ctx, String questionId, String content) {
     try {
-<span class="fc" id="L677">      JsonNode node = MAPPER.readTree(content);</span>
-<span class="fc bfc" id="L678" title="All 4 branches covered.">      if (!node.hasNonNull(&quot;uuid&quot;) || !node.hasNonNull(&quot;title&quot;)) {</span>
-<span class="fc" id="L679">        ctx.log(&quot;Skipping question %s: info.json is missing uuid or title&quot;.formatted(questionId));</span>
-<span class="fc" id="L680">        return null;</span>
+<span class="fc" id="L688">      JsonNode node = MAPPER.readTree(content);</span>
+<span class="fc bfc" id="L689" title="All 4 branches covered.">      if (!node.hasNonNull(&quot;uuid&quot;) || !node.hasNonNull(&quot;title&quot;)) {</span>
+<span class="fc" id="L690">        ctx.log(&quot;Skipping question %s: info.json is missing uuid or title&quot;.formatted(questionId));</span>
+<span class="fc" id="L691">        return null;</span>
       }
-<span class="fc" id="L682">      return new QuestionInfo(</span>
-<span class="fc" id="L683">          UUID.fromString(node.get(&quot;uuid&quot;).asText()), node.get(&quot;title&quot;).asText());</span>
-<span class="fc" id="L684">    } catch (Exception e) {</span>
-<span class="fc" id="L685">      ctx.log(&quot;Skipping question %s: could not parse info.json&quot;.formatted(questionId));</span>
-<span class="fc" id="L686">      return null;</span>
+<span class="fc" id="L693">      return new QuestionInfo(</span>
+<span class="fc" id="L694">          UUID.fromString(node.get(&quot;uuid&quot;).asText()), node.get(&quot;title&quot;).asText());</span>
+<span class="fc" id="L695">    } catch (Exception e) {</span>
+<span class="fc" id="L696">      ctx.log(&quot;Skipping question %s: could not parse info.json&quot;.formatted(questionId));</span>
+<span class="fc" id="L697">      return null;</span>
     }
   }
 }
