@@ -20,4 +20,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: []
+pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/add-plcolors-table","number":97,"title":"[WIP] Add PlColors table with migration, entity, and seeds","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/97"}]
