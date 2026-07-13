@@ -133,6 +133,26 @@ public class ReadPLColorsJobTests {
   }
 
   @Test
+  public void fails_when_the_color_map_is_found_but_has_no_entries() {
+    Job jobStarted = Job.builder().build();
+    JobContext ctx = new JobContext(null, jobStarted);
+    stubGithubCredential();
+    when(githubService.getFileContent(
+            eq("PrairieLearn/PrairieLearn"),
+            eq("apps/prairielearn/public/stylesheets/colors.scss"),
+            eq("ghp_plaintext")))
+        .thenReturn("$custom-colors: (\n);\n");
+
+    Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
+
+    assertEquals(
+        "apps/prairielearn/public/stylesheets/colors.scss did not contain any 'name': #hex color"
+            + " entries",
+        thrown.getMessage());
+    verify(plColorRepository, never()).save(org.mockito.ArgumentMatchers.any());
+  }
+
+  @Test
   public void adds_new_colors_and_updates_changed_hex_codes_and_leaves_unchanged_ones_alone()
       throws Exception {
     Job jobStarted = Job.builder().build();

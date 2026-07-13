@@ -73,7 +73,7 @@ public class ReadPLColorsJob implements JobContextConsumer {
       throw new Exception(message);
     }
 
-    if (scss == null || scss.isBlank()) {
+    if (scss.isBlank()) {
       String message =
           "%s in %s is empty or could not be read".formatted(COLORS_SCSS_PATH, PL_REPO_NAME);
       ctx.log(message);
