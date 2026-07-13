@@ -96,14 +96,22 @@ public class CopyConceptGraphJobTests {
     Job jobStarted = Job.builder().build();
     JobContext ctx = new JobContext(null, jobStarted);
 
+    CourseStaff unrelatedStaffMember =
+        CourseStaff.builder().email("other-staff@example.org").build();
     Course fromCourse =
         Course.builder()
             .id(3L)
             .courseName("CS156-from")
             .instructorEmail("prof@example.org")
+            .courseStaff(List.of(unrelatedStaffMember))
             .build();
     Course toCourse =
-        Course.builder().id(4L).courseName("CS156-to").instructorEmail("prof@example.org").build();
+        Course.builder()
+            .id(4L)
+            .courseName("CS156-to")
+            .instructorEmail("prof@example.org")
+            .courseStaff(List.of(unrelatedStaffMember))
+            .build();
     User instructor = User.builder().id(1L).email("prof@example.org").build();
 
     when(courseRepository.findById(3L)).thenReturn(Optional.of(fromCourse));
