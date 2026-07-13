@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReadPLColorsJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.jobs</a> &gt; <span class="el_source">ReadPLColorsJob.java</span></div><h1>ReadPLColorsJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.jobs;
+
+import edu.ucsb.cs.scaffold.entity.PatCredential;
+import edu.ucsb.cs.scaffold.entity.PlColor;
+import edu.ucsb.cs.scaffold.enums.PatPlatform;
+import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlColorRepository;
+import edu.ucsb.cs.scaffold.services.GithubService;
+import edu.ucsb.cs.scaffold.services.PatEncryptionService;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import lombok.Builder;
+import org.springframework.web.client.HttpClientErrorException;
+
+/**
+ * Reads PrairieLearn's badge color map from GitHub (issue #96) and upserts the {@code pl_color}
+ * table with any colors that are new or whose hex code has changed. Launched by an admin (POST
+ * /api/jobs/launch/readPLColors), using that admin's own stored GitHub PAT.
+ *
+ * &lt;p&gt;PrairieLearn does not expose these colors through an API, so this job reads the raw {@code
+ * colors.scss} stylesheet from the public PrairieLearn repo and locates the {@code
+ * $custom-colors: ( 'name': #hex, ... )} Sass map with a regular expression, rather than a full
+ * SCSS parser.
+ */
+@Builder
+public class ReadPLColorsJob implements JobContextConsumer {
+
+  static final String PL_REPO_NAME = &quot;PrairieLearn/PrairieLearn&quot;;
+  static final String COLORS_SCSS_PATH = &quot;apps/prairielearn/public/stylesheets/colors.scss&quot;;
+
+  // Matches the $custom-colors: ( ... ); Sass map as a whole, non-greedily, so that only the
+  // color map's own entries (and not any later parentheses in the file) are captured.
+<span class="fc" id="L36">  static final Pattern COLOR_MAP_PATTERN =</span>
+<span class="fc" id="L37">      Pattern.compile(&quot;\\$custom-colors\\s*:\\s*\\((.*?)\\)\\s*;&quot;, Pattern.DOTALL);</span>
+
+  // Matches a single 'name': #hex entry within the color map.
+<span class="fc" id="L40">  static final Pattern COLOR_ENTRY_PATTERN =</span>
+<span class="fc" id="L41">      Pattern.compile(&quot;['\&quot;]([a-zA-Z0-9_-]+)['\&quot;]\\s*:\\s*#([0-9a-fA-F]{3,8})&quot;);</span>
+
+  private long userId;
+  private PatCredentialRepository patCredentialRepository;
+  private PatEncryptionService patEncryptionService;
+  private GithubService githubService;
+  private PlColorRepository plColorRepository;
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L51">    ctx.log(&quot;Reading PrairieLearn colors from %s&quot;.formatted(COLORS_SCSS_PATH));</span>
+
+<span class="fc" id="L53">    Optional&lt;PatCredential&gt; githubCredential =</span>
+<span class="fc" id="L54">        patCredentialRepository.findByUserIdAndPlatform(userId, PatPlatform.GITHUB);</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">    if (githubCredential.isEmpty()) {</span>
+<span class="fc" id="L56">      String message =</span>
+          &quot;No GitHub PAT is set up for this user; set one up on the /profile page before running this job&quot;;
+<span class="fc" id="L58">      ctx.log(message);</span>
+<span class="fc" id="L59">      throw new Exception(message);</span>
+    }
+<span class="fc" id="L61">    String githubToken =</span>
+<span class="fc" id="L62">        patEncryptionService.decrypt(</span>
+<span class="fc" id="L63">            githubCredential.get().getCiphertext(), githubCredential.get().getKeyVersion());</span>
+
+    String scss;
+    try {
+<span class="fc" id="L67">      scss = githubService.getFileContent(PL_REPO_NAME, COLORS_SCSS_PATH, githubToken);</span>
+<span class="fc" id="L68">    } catch (HttpClientErrorException e) {</span>
+<span class="fc" id="L69">      String message =</span>
+          &quot;Could not read %s from %s (HTTP %d); the file may not exist or may not be accessible&quot;
+<span class="fc" id="L71">              .formatted(COLORS_SCSS_PATH, PL_REPO_NAME, e.getStatusCode().value());</span>
+<span class="fc" id="L72">      ctx.log(message);</span>
+<span class="fc" id="L73">      throw new Exception(message);</span>
+<span class="fc" id="L74">    }</span>
+
+<span class="pc bpc" id="L76" title="1 of 4 branches missed.">    if (scss == null || scss.isBlank()) {</span>
+<span class="fc" id="L77">      String message =</span>
+<span class="fc" id="L78">          &quot;%s in %s is empty or could not be read&quot;.formatted(COLORS_SCSS_PATH, PL_REPO_NAME);</span>
+<span class="fc" id="L79">      ctx.log(message);</span>
+<span class="fc" id="L80">      throw new Exception(message);</span>
+    }
+
+<span class="fc" id="L83">    Matcher mapMatcher = COLOR_MAP_PATTERN.matcher(scss);</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">    if (!mapMatcher.find()) {</span>
+<span class="fc" id="L85">      String message =</span>
+          &quot;%s does not contain the expected $custom-colors color mapping&quot;
+<span class="fc" id="L87">              .formatted(COLORS_SCSS_PATH);</span>
+<span class="fc" id="L88">      ctx.log(message);</span>
+<span class="fc" id="L89">      throw new Exception(message);</span>
+    }
+
+<span class="fc" id="L92">    String colorMapBody = mapMatcher.group(1);</span>
+<span class="fc" id="L93">    Matcher entryMatcher = COLOR_ENTRY_PATTERN.matcher(colorMapBody);</span>
+
+<span class="fc" id="L95">    int added = 0;</span>
+<span class="fc" id="L96">    int updated = 0;</span>
+<span class="fc" id="L97">    int unchanged = 0;</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">    while (entryMatcher.find()) {</span>
+<span class="fc" id="L99">      String colorName = entryMatcher.group(1);</span>
+<span class="fc" id="L100">      String hexCode = &quot;#&quot; + entryMatcher.group(2).toLowerCase();</span>
+
+<span class="fc" id="L102">      Optional&lt;PlColor&gt; existing = plColorRepository.findById(colorName);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">      if (existing.isEmpty()) {</span>
+<span class="fc" id="L104">        plColorRepository.save(PlColor.builder().colorName(colorName).hexCode(hexCode).build());</span>
+<span class="fc" id="L105">        added++;</span>
+<span class="fc" id="L106">        ctx.log(&quot;Added color %s: %s&quot;.formatted(colorName, hexCode));</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">      } else if (!existing.get().getHexCode().equalsIgnoreCase(hexCode)) {</span>
+<span class="fc" id="L108">        PlColor color = existing.get();</span>
+<span class="fc" id="L109">        String oldHexCode = color.getHexCode();</span>
+<span class="fc" id="L110">        color.setHexCode(hexCode);</span>
+<span class="fc" id="L111">        plColorRepository.save(color);</span>
+<span class="fc" id="L112">        updated++;</span>
+<span class="fc" id="L113">        ctx.log(&quot;Updated color %s: %s -&gt; %s&quot;.formatted(colorName, oldHexCode, hexCode));</span>
+<span class="fc" id="L114">      } else {</span>
+<span class="fc" id="L115">        unchanged++;</span>
+      }
+<span class="fc" id="L117">    }</span>
+
+<span class="pc bpc" id="L119" title="5 of 6 branches missed.">    if (added == 0 &amp;&amp; updated == 0 &amp;&amp; unchanged == 0) {</span>
+<span class="nc" id="L120">      String message =</span>
+<span class="nc" id="L121">          &quot;%s did not contain any 'name': #hex color entries&quot;.formatted(COLORS_SCSS_PATH);</span>
+<span class="nc" id="L122">      ctx.log(message);</span>
+<span class="nc" id="L123">      throw new Exception(message);</span>
+    }
+
+<span class="fc" id="L126">    ctx.log(</span>
+<span class="fc" id="L127">        &quot;Done: %d added, %d updated, %d unchanged&quot;.formatted(added, updated, unchanged));</span>
+<span class="fc" id="L128">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
