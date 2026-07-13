@@ -92,9 +92,16 @@ function getEditableConceptLabel(concept?: EditableConcept | MajorConceptDTO) {
 // concept graph, so their provider is mounted here — not at the app root —
 // and the Footer's toggles only appear here.
 export default function ConceptGraphPage() {
+  const { courseId } = useParams<{ courseId: string }>();
   return (
     <StaffToolsProvider>
-      <ConceptGraphPageContent />
+      {/* One mount per course: navigating between courses through the Courses
+          menu keeps this route's element mounted, but everything below —
+          per-course user state seeding, selections, and ScaffoldConceptGraph's
+          mount-time snapshot of the graph — assumes a fresh mount per course.
+          Keying by courseId enforces that; the React Query cache lives outside
+          the components, so returning to a visited course is still instant. */}
+      <ConceptGraphPageContent key={courseId} />
     </StaffToolsProvider>
   );
 }
@@ -184,15 +191,7 @@ function ConceptGraphPageContent() {
     { method: "GET", url: "/api/concepts/graph", params: { courseId } },
     [],
     false,
-    {
-      enabled: courseIdIsValid,
-      retry: false,
-      refetchOnWindowFocus: false,
-      // A refetch must snap the locally-reordered copy below back to the
-      // authoritative order even when the server data is unchanged, so the
-      // mirror effect needs a fresh data reference on every fetch.
-      structuralSharing: false,
-    },
+    { enabled: courseIdIsValid, retry: false, refetchOnWindowFocus: false },
   );
   const contentQuery = useBackend<Record<string, ConceptContentDTO>>(
     ["/api/concepts/content", courseId],
@@ -246,15 +245,15 @@ function ConceptGraphPageContent() {
     positionsQuery.isFetched &&
     edgesQuery.isFetched;
 
-  // Local copy of the fetched graph: subconcept reordering updates it
-  // optimistically, and a refetch (e.g. invalidation after a rejected reorder)
-  // snaps it back to the authoritative order.
-  const [majorConcepts, setMajorConcepts] = useState<MajorConceptDTO[]>([]);
+  // The graph comes straight from the query cache; subconcept reordering
+  // updates the cache optimistically (see handleSubconceptsReordered), and a
+  // refetch (e.g. invalidation after a rejected reorder) snaps it back to the
+  // authoritative order. Do NOT mirror this into useState: a mirror seeded by
+  // an effect lags one render behind, and ScaffoldConceptGraph snapshots the
+  // graph on mount — when all four queries resolve in one render batch, it
+  // would mount against the empty pre-effect value and stay blank.
   const graphData = graphQuery.data;
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMajorConcepts(graphData ?? []);
-  }, [graphData]);
+  const majorConcepts = useMemo(() => graphData ?? [], [graphData]);
 
   // Private, per-user overrides of top-level concept positions (dragged by this
   // user); takes precedence over the shared `positions` above. Cleared
@@ -448,16 +447,31 @@ function ConceptGraphPageContent() {
       > = topLevelPositionsRef.current,
     ) => {
       if (!userId || !courseIdIsValid) return;
+      const starredIdsArray = Array.from(stars);
+      const masteredArray = Array.from(mastered);
       saveUserStateMutate({
         userid: userId,
         courseId,
-        starred_ids: Array.from(stars),
+        starred_ids: starredIdsArray,
         detail_cards: cards,
-        mastered_subconcepts: Array.from(mastered),
+        mastered_subconcepts: masteredArray,
         top_level_positions: topLevelPos,
       });
+      // Mirror the save into the cached user state, so that remounting this
+      // course (switching away and back) seeds from the state the user last
+      // saw — the cache otherwise still holds the snapshot fetched when the
+      // course was first opened, and the once-per-mount seed would restore it.
+      queryClient.setQueryData<UserStateResponse>(
+        ["/api/user-state", userId, courseId],
+        {
+          starred_ids: starredIdsArray,
+          detail_cards: cards,
+          mastered_subconcepts: masteredArray,
+          top_level_positions: topLevelPos,
+        },
+      );
     },
-    [userId, courseId, courseIdIsValid, saveUserStateMutate],
+    [userId, courseId, courseIdIsValid, saveUserStateMutate, queryClient],
   );
 
   // Private overrides take precedence over the shared, instructor-controlled positions.
@@ -493,16 +507,16 @@ function ConceptGraphPageContent() {
   };
 
   // An author (with editing enabled) drag-and-dropped a card's
-  // subconcepts. ScaffoldConceptGraph already updated its own nodes; mirror the new
-  // order in our copy of the graph data (so anything rebuilt from it agrees)
-  // and persist it via the reorder mutation, whose onError snaps the local
-  // order back to the authoritative one.
+  // subconcepts. ScaffoldConceptGraph already updated its own nodes; mirror the
+  // new order into the cached graph data (so anything rebuilt from it agrees)
+  // and persist it via the reorder mutation, whose onError refetches so the
+  // order snaps back to the authoritative one.
   const handleSubconceptsReordered = (
     parentConceptId: number,
     orderedSubconceptIds: number[],
   ) => {
-    setMajorConcepts((prev) =>
-      prev.map((concept) =>
+    queryClient.setQueryData<MajorConceptDTO[]>(graphQueryKey, (prev) =>
+      prev?.map((concept) =>
         concept.id === parentConceptId
           ? {
               ...concept,
