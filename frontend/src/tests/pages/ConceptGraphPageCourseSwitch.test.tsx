@@ -241,4 +241,24 @@ describe("ConceptGraphPage course switching", () => {
     expect(screen.queryByText("Pointers")).not.toBeInTheDocument();
     expect(screen.queryByText("Memory")).not.toBeInTheDocument();
   });
+
+  test("stars added during a visit survive switching away and back", async () => {
+    renderAtCourseOne();
+    expect(await screen.findByText("Recursion")).toBeInTheDocument();
+    expect(await screen.findByText("1 / 2")).toBeInTheDocument();
+
+    // Star "Recursion" (concept id 1): now 2 of course 1's 2 concepts.
+    fireEvent.click(screen.getByTestId("star-button-1"));
+    expect(await screen.findByText("2 / 2")).toBeInTheDocument();
+
+    await switchToCourse("Course Two");
+    expect(await screen.findByText("0 / 2")).toBeInTheDocument();
+
+    await switchToCourse("Course One");
+
+    // The count must reflect the star added during the previous visit, not
+    // the snapshot fetched when the course was first opened.
+    expect(await screen.findByText("Recursion")).toBeInTheDocument();
+    expect(await screen.findByText("2 / 2")).toBeInTheDocument();
+  });
 });
