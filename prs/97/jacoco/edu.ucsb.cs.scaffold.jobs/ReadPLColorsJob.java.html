@@ -73,7 +73,7 @@ public class ReadPLColorsJob implements JobContextConsumer {
 <span class="fc" id="L73">      throw new Exception(message);</span>
 <span class="fc" id="L74">    }</span>
 
-<span class="pc bpc" id="L76" title="1 of 4 branches missed.">    if (scss == null || scss.isBlank()) {</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">    if (scss.isBlank()) {</span>
 <span class="fc" id="L77">      String message =</span>
 <span class="fc" id="L78">          &quot;%s in %s is empty or could not be read&quot;.formatted(COLORS_SCSS_PATH, PL_REPO_NAME);</span>
 <span class="fc" id="L79">      ctx.log(message);</span>
@@ -116,11 +116,11 @@ public class ReadPLColorsJob implements JobContextConsumer {
       }
 <span class="fc" id="L117">    }</span>
 
-<span class="pc bpc" id="L119" title="5 of 6 branches missed.">    if (added == 0 &amp;&amp; updated == 0 &amp;&amp; unchanged == 0) {</span>
-<span class="nc" id="L120">      String message =</span>
-<span class="nc" id="L121">          &quot;%s did not contain any 'name': #hex color entries&quot;.formatted(COLORS_SCSS_PATH);</span>
-<span class="nc" id="L122">      ctx.log(message);</span>
-<span class="nc" id="L123">      throw new Exception(message);</span>
+<span class="pc bpc" id="L119" title="2 of 6 branches missed.">    if (added == 0 &amp;&amp; updated == 0 &amp;&amp; unchanged == 0) {</span>
+<span class="fc" id="L120">      String message =</span>
+<span class="fc" id="L121">          &quot;%s did not contain any 'name': #hex color entries&quot;.formatted(COLORS_SCSS_PATH);</span>
+<span class="fc" id="L122">      ctx.log(message);</span>
+<span class="fc" id="L123">      throw new Exception(message);</span>
     }
 
 <span class="fc" id="L126">    ctx.log(&quot;Done: %d added, %d updated, %d unchanged&quot;.formatted(added, updated, unchanged));</span>
