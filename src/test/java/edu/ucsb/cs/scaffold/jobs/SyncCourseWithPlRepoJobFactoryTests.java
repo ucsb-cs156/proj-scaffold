@@ -8,6 +8,7 @@ import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentSetRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
@@ -33,6 +34,7 @@ public class SyncCourseWithPlRepoJobFactoryTests {
     PlAssessmentRepository plAssessmentRepository = mock(PlAssessmentRepository.class);
     PlAssessmentQuestionRepository plAssessmentQuestionRepository =
         mock(PlAssessmentQuestionRepository.class);
+    PlAssessmentSetRepository plAssessmentSetRepository = mock(PlAssessmentSetRepository.class);
     GithubService githubService = mock(GithubService.class);
     PrairieLearnService prairieLearnService = mock(PrairieLearnService.class);
 
@@ -46,6 +48,7 @@ public class SyncCourseWithPlRepoJobFactoryTests {
     ReflectionTestUtils.setField(factory, "plAssessmentRepository", plAssessmentRepository);
     ReflectionTestUtils.setField(
         factory, "plAssessmentQuestionRepository", plAssessmentQuestionRepository);
+    ReflectionTestUtils.setField(factory, "plAssessmentSetRepository", plAssessmentSetRepository);
     ReflectionTestUtils.setField(factory, "githubService", githubService);
     ReflectionTestUtils.setField(factory, "prairieLearnService", prairieLearnService);
 
@@ -68,6 +71,8 @@ public class SyncCourseWithPlRepoJobFactoryTests {
     assertSame(
         plAssessmentQuestionRepository,
         ReflectionTestUtils.getField(job, "plAssessmentQuestionRepository"));
+    assertSame(
+        plAssessmentSetRepository, ReflectionTestUtils.getField(job, "plAssessmentSetRepository"));
     assertSame(githubService, ReflectionTestUtils.getField(job, "githubService"));
     assertSame(prairieLearnService, ReflectionTestUtils.getField(job, "prairieLearnService"));
   }

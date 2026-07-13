@@ -15,6 +15,7 @@ import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.PatCredential;
 import edu.ucsb.cs.scaffold.entity.PlAssessment;
 import edu.ucsb.cs.scaffold.entity.PlAssessmentQuestion;
+import edu.ucsb.cs.scaffold.entity.PlAssessmentSet;
 import edu.ucsb.cs.scaffold.entity.PlInstance;
 import edu.ucsb.cs.scaffold.entity.PlQuestion;
 import edu.ucsb.cs.scaffold.entity.PlRepo;
@@ -23,6 +24,7 @@ import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentSetRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
@@ -57,6 +59,7 @@ public class SyncCourseWithPlRepoJobTests {
   PlAssessmentRepository plAssessmentRepository = mock(PlAssessmentRepository.class);
   PlAssessmentQuestionRepository plAssessmentQuestionRepository =
       mock(PlAssessmentQuestionRepository.class);
+  PlAssessmentSetRepository plAssessmentSetRepository = mock(PlAssessmentSetRepository.class);
   GithubService githubService = mock(GithubService.class);
   PrairieLearnService prairieLearnService = mock(PrairieLearnService.class);
 
@@ -109,6 +112,7 @@ public class SyncCourseWithPlRepoJobTests {
         .plScaffoldAssessmentRepository(plScaffoldAssessmentRepository)
         .plAssessmentRepository(plAssessmentRepository)
         .plAssessmentQuestionRepository(plAssessmentQuestionRepository)
+        .plAssessmentSetRepository(plAssessmentSetRepository)
         .githubService(githubService)
         .prairieLearnService(prairieLearnService)
         .build();
@@ -151,14 +155,20 @@ public class SyncCourseWithPlRepoJobTests {
         .thenThrow(httpError(HttpStatus.NOT_FOUND));
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
         .thenThrow(httpError(HttpStatus.NOT_FOUND));
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenThrow(httpError(HttpStatus.NOT_FOUND));
   }
 
   static final String ASSESSMENTS_PATH = "courseInstances/Fall2025/assessments";
+  static final String INFO_COURSE_INSTANCE_PATH =
+      "courseInstances/Fall2025/infoCourseInstance.json";
 
   private static final String HEADER = "Syncing course 20 (CS156) with PrairieLearn";
   private static final String ACCESS_LINE =
       "Access verified: repo ucsb-cs156/pl-demo (read/write) and PrairieLearn instance 213133";
   private static final String VERIFIED_LINE = "Instance Fall2025 metadata verified";
+  private static final String SKIP_ASSESSMENT_SETS_LINE =
+      "Instance Fall2025 has no infoCourseInstance.json; skipping assessment set sync";
   private static final String SKIP_QUESTIONS_LINE =
       "Repo ucsb-cs156/pl-demo has no questions directory (or the token cannot see the repo); skipping question sync";
   private static final String SKIP_ASSESSMENTS_LINE =
@@ -168,7 +178,8 @@ public class SyncCourseWithPlRepoJobTests {
   private static final String ENRICH_ZERO_SUMMARY =
       "PrairieLearn assessment fields: 0 updated, 0 without a matching repo assessment";
 
-  private static final String PREAMBLE = HEADER + "\n" + ACCESS_LINE + "\n" + VERIFIED_LINE;
+  private static final String PREAMBLE =
+      HEADER + "\n" + ACCESS_LINE + "\n" + VERIFIED_LINE + "\n" + SKIP_ASSESSMENT_SETS_LINE;
 
   // ────────────────────────── precondition failures ──────────────────────────
 
@@ -364,6 +375,9 @@ public class SyncCourseWithPlRepoJobTests {
     when(githubService.listDirectory(
             eq(REPO), eq("courseInstances/Winter2026/assessments"), eq(TOKEN)))
         .thenReturn(List.of());
+    when(githubService.getFileContent(
+            eq(REPO), eq("courseInstances/Winter2026/infoCourseInstance.json"), eq(TOKEN)))
+        .thenThrow(httpError(HttpStatus.NOT_FOUND));
 
     job().accept(ctx);
 
@@ -377,6 +391,7 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         Instance shortName changed on PrairieLearn: Fall2025 -> Winter2026
         Instance longName changed on PrairieLearn: Fall 2025 -> Winter 2026
+        Instance Winter2026 has no infoCourseInstance.json; skipping assessment set sync
         %s
         %s
         %s"""
@@ -387,6 +402,146 @@ public class SyncCourseWithPlRepoJobTests {
                 NO_ASSESSMENTS_SUMMARY,
                 ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
+  }
+
+  // ────────────────────────── assessment set sync ──────────────────────────
+
+  private static final String INFO_COURSE_INSTANCE_JSON_CONTENT =
+      """
+      {
+        "assessmentSets": [
+          { "abbreviation": "LEC", "name": "Lecture", "heading": "Lectures", "color": "turquoise2" },
+          { "abbreviation": "HW", "name": "Homework", "heading": "Homeworks", "color": "green1" }
+        ]
+      }""";
+
+  @Test
+  public void adds_new_assessment_sets_from_infoCourseInstance_json() throws Exception {
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn(INFO_COURSE_INSTANCE_JSON_CONTENT);
+    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of());
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository)
+        .save(
+            PlAssessmentSet.builder()
+                .plInstanceId(10L)
+                .abbreviation("LEC")
+                .name("Lecture")
+                .heading("Lectures")
+                .color("turquoise2")
+                .build());
+    verify(plAssessmentSetRepository)
+        .save(
+            PlAssessmentSet.builder()
+                .plInstanceId(10L)
+                .abbreviation("HW")
+                .name("Homework")
+                .heading("Homeworks")
+                .color("green1")
+                .build());
+
+    String expected =
+        """
+        %s
+        %s
+        %s
+        Assessment sets: 2 added, 0 updated, 0 deleted, 0 unchanged
+        %s
+        %s
+        %s"""
+            .formatted(
+                HEADER,
+                ACCESS_LINE,
+                VERIFIED_LINE,
+                SKIP_QUESTIONS_LINE,
+                SKIP_ASSESSMENTS_LINE,
+                ENRICH_ZERO_SUMMARY);
+    assertEquals(expected, jobStarted.getLog());
+  }
+
+  @Test
+  public void updates_a_changed_assessment_set_matched_by_abbreviation() throws Exception {
+    PlAssessmentSet existing =
+        PlAssessmentSet.builder()
+            .id(55L)
+            .plInstanceId(10L)
+            .abbreviation("LEC")
+            .name("Lecture (old)")
+            .heading("Lectures (old)")
+            .color("blue1")
+            .build();
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn(INFO_COURSE_INSTANCE_JSON_CONTENT);
+    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of(existing));
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository).save(eq(existing));
+    assertEquals("Lecture", existing.getName());
+    assertEquals("Lectures", existing.getHeading());
+    assertEquals("turquoise2", existing.getColor());
+  }
+
+  @Test
+  public void deletes_stale_assessment_sets_no_longer_present() throws Exception {
+    PlAssessmentSet stale =
+        PlAssessmentSet.builder()
+            .id(56L)
+            .plInstanceId(10L)
+            .abbreviation("EXAM")
+            .name("Exam")
+            .heading("Exams")
+            .color("pink2")
+            .build();
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn(INFO_COURSE_INSTANCE_JSON_CONTENT);
+    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of(stale));
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository).delete(eq(stale));
+  }
+
+  @Test
+  public void skips_assessment_set_sync_when_infoCourseInstance_json_cannot_be_parsed()
+      throws Exception {
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn("not valid json");
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository, never()).save(any());
+    verify(plAssessmentSetRepository, never()).delete(any());
+    String expected =
+        """
+        %s
+        %s
+        %s
+        Skipping assessment set sync for instance Fall2025: could not parse infoCourseInstance.json
+        %s
+        %s
+        %s"""
+            .formatted(
+                HEADER,
+                ACCESS_LINE,
+                VERIFIED_LINE,
+                SKIP_QUESTIONS_LINE,
+                SKIP_ASSESSMENTS_LINE,
+                ENRICH_ZERO_SUMMARY);
+    assertEquals(expected, jobStarted.getLog());
+  }
+
+  @Test
+  public void skips_assessment_set_sync_when_assessmentSets_key_is_missing() throws Exception {
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+        .thenReturn("{ \"longName\": \"Fall 2025\" }");
+
+    job().accept(ctx);
+
+    verify(plAssessmentSetRepository, never()).save(any());
+    verify(plAssessmentSetRepository, never()).delete(any());
   }
 
   // ────────────────────────── question sync ──────────────────────────
