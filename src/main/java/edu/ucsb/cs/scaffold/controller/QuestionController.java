@@ -1,6 +1,5 @@
 package edu.ucsb.cs.scaffold.controller;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,7 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 // selected question is dark until PL questions have their own concept tagging: the old
 // question_concepts table is keyed by the legacy questions.id UUID, which has no relationship to
 // PlQuestion ids, and must not be bridged between the two. LegacyQuestionController (frozen, at
-// /api/legacy/questions/{id}/concepts) still serves the legacy table for LegacyHomePage.
+// /api/legacy/questions/{id}/concepts) still serves the legacy table for LegacyHomePage. No DTO
+// is declared here since nothing is ever constructed; add one when real tagging lands.
 @Tag(name = "Questions")
 @RestController
 public class QuestionController {
@@ -23,14 +23,8 @@ public class QuestionController {
           "List concepts tagged on a question (currently always empty; PL question concept"
               + " tagging doesn't exist yet)")
   @GetMapping("/api/questions/{questionId}/concepts")
-  public List<QuestionConceptDTO> getQuestionConcepts(
+  public List<Object> getQuestionConcepts(
       @Parameter(description = "Id of the PlQuestion") @PathVariable Long questionId) {
     return List.of();
   }
-
-  public record QuestionConceptDTO(
-      String id,
-      @JsonProperty("question_id") String questionId,
-      @JsonProperty("concept_id") String conceptId,
-      @JsonProperty("subconcept_label") String subconceptLabel) {}
 }
