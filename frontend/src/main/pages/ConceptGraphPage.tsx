@@ -961,11 +961,11 @@ function ConceptGraphPageContent() {
         </div>
         <ConceptModal
           showModal={conceptModalState !== null}
-          toggleShowModal={(show) => {
+          toggleShowModal={(show: boolean) => {
             if (!show) setConceptModalState(null);
           }}
           initialContents={conceptModalInitialContents}
-          onSubmitAction={(concept) =>
+          onSubmitAction={(concept: EditableConcept) =>
             conceptModalState?.mode === "edit"
               ? updateConceptMutation.mutate(concept)
               : createConceptMutation.mutate(concept)
@@ -979,11 +979,11 @@ function ConceptGraphPageContent() {
         />
         <SubConceptModal
           showModal={subConceptModalState !== null}
-          toggleShowModal={(show) => {
+          toggleShowModal={(show: boolean) => {
             if (!show) setSubConceptModalState(null);
           }}
           initialContents={subConceptModalInitialContents}
-          onSubmitAction={(subconcept) =>
+          onSubmitAction={(subconcept: EditableSubconcept) =>
             subConceptModalState?.mode === "edit"
               ? updateSubconceptMutation.mutate(subconcept)
               : createSubconceptMutation.mutate(subconcept)
