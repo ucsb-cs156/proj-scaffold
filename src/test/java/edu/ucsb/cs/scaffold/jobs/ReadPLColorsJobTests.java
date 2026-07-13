@@ -67,7 +67,8 @@ public class ReadPLColorsJobTests {
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
 
     assertEquals(
-        "No GitHub PAT is set up for this user; set one up on the /profile page before running this job",
+        "No GitHub PAT is set up for this user; set one up on the /profile page before running this"
+            + " job",
         thrown.getMessage());
     verify(plColorRepository, never()).save(org.mockito.ArgumentMatchers.any());
   }
@@ -162,7 +163,8 @@ public class ReadPLColorsJobTests {
 
     job().accept(ctx);
 
-    verify(plColorRepository, never()).save(PlColor.builder().colorName("red1").hexCode("#ffccbc").build());
+    verify(plColorRepository, never())
+        .save(PlColor.builder().colorName("red1").hexCode("#ffccbc").build());
     verify(plColorRepository, times(1))
         .save(PlColor.builder().colorName("red2").hexCode("#ff0000").build());
     verify(plColorRepository, times(1))
@@ -172,6 +174,7 @@ public class ReadPLColorsJobTests {
     org.junit.jupiter.api.Assertions.assertTrue(log.contains("Added color blue1: #39d5ff"));
     org.junit.jupiter.api.Assertions.assertTrue(
         log.contains("Updated color red2: #c72c1c -> #ff0000"));
-    org.junit.jupiter.api.Assertions.assertTrue(log.contains("Done: 1 added, 1 updated, 1 unchanged"));
+    org.junit.jupiter.api.Assertions.assertTrue(
+        log.contains("Done: 1 added, 1 updated, 1 unchanged"));
   }
 }

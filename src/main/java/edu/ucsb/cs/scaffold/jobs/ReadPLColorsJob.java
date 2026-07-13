@@ -21,9 +21,8 @@ import org.springframework.web.client.HttpClientErrorException;
  * /api/jobs/launch/readPLColors), using that admin's own stored GitHub PAT.
  *
  * <p>PrairieLearn does not expose these colors through an API, so this job reads the raw {@code
- * colors.scss} stylesheet from the public PrairieLearn repo and locates the {@code
- * $custom-colors: ( 'name': #hex, ... )} Sass map with a regular expression, rather than a full
- * SCSS parser.
+ * colors.scss} stylesheet from the public PrairieLearn repo and locates the {@code $custom-colors:
+ * ( 'name': #hex, ... )} Sass map with a regular expression, rather than a full SCSS parser.
  */
 @Builder
 public class ReadPLColorsJob implements JobContextConsumer {
@@ -54,7 +53,8 @@ public class ReadPLColorsJob implements JobContextConsumer {
         patCredentialRepository.findByUserIdAndPlatform(userId, PatPlatform.GITHUB);
     if (githubCredential.isEmpty()) {
       String message =
-          "No GitHub PAT is set up for this user; set one up on the /profile page before running this job";
+          "No GitHub PAT is set up for this user; set one up on the /profile page before running"
+              + " this job";
       ctx.log(message);
       throw new Exception(message);
     }
@@ -123,7 +123,6 @@ public class ReadPLColorsJob implements JobContextConsumer {
       throw new Exception(message);
     }
 
-    ctx.log(
-        "Done: %d added, %d updated, %d unchanged".formatted(added, updated, unchanged));
+    ctx.log("Done: %d added, %d updated, %d unchanged".formatted(added, updated, unchanged));
   }
 }

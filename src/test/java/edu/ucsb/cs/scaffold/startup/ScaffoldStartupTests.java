@@ -276,7 +276,8 @@ class ScaffoldStartupTests {
 
     scaffoldStartup.alwaysRunOnStartup();
 
-    verify(plColorRepository, times(ScaffoldStartup.SEED_PL_COLORS.size())).save(any(PlColor.class));
+    verify(plColorRepository, times(ScaffoldStartup.SEED_PL_COLORS.size()))
+        .save(any(PlColor.class));
     verify(plColorRepository).save(PlColor.builder().colorName("red1").hexCode("#ffccbc").build());
     verify(plColorRepository).save(PlColor.builder().colorName("gray3").hexCode("#505050").build());
   }
