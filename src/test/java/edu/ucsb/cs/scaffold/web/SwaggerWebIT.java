@@ -3,7 +3,6 @@ package edu.ucsb.cs.scaffold.web;
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
 import com.microsoft.playwright.Locator;
-import com.microsoft.playwright.assertions.LocatorAssertions;
 import edu.ucsb.cs.scaffold.WebTestCase;
 import edu.ucsb.cs.scaffold.testconfig.IntegrationConfig;
 import org.junit.jupiter.api.Test;
@@ -44,15 +43,22 @@ public class SwaggerWebIT extends WebTestCase {
     page.navigate(page.url().replaceAll("(http://localhost:\\d+).*", "$1/swagger-ui/index.html"));
 
     // Swagger UI fetches and renders the OpenAPI definition asynchronously, which can
-    // take longer than Playwright's default 5s timeout on a busy CI runner, so we
-    // allow extra time here before asserting on the rendered page contents.
+    // take longer than Playwright's default 5s timeout on a busy CI runner. Wait for
+    // either a successful render (the RosterStudents tag) or a failed one (the error
+    // message) to appear before making any assertions; this avoids a race where the
+    // "not contains" check below could pass simply because the page has not finished
+    // loading yet.
     Locator rosterStudentsTag =
         page.locator("span")
             .filter(new Locator.FilterOptions().setHasText("RosterStudents"))
             .first();
-    assertThat(rosterStudentsTag)
-        .isVisible(new LocatorAssertions.IsVisibleOptions().setTimeout(30000));
+    Locator failedToLoadMessage = page.getByText("Failed to load API definition");
+    rosterStudentsTag
+        .or(failedToLoadMessage)
+        .first()
+        .waitFor(new Locator.WaitForOptions().setTimeout(30000));
 
     assertThat(page.locator("body")).not().containsText("Failed to load API definition");
+    assertThat(rosterStudentsTag).isVisible();
   }
 }
