@@ -291,11 +291,11 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
 <span class="fc" id="L291">              .formatted(instance.getShortName(), INFO_COURSE_INSTANCE_JSON, ASSESSMENT_SETS_KEY));</span>
 <span class="fc" id="L292">      return;</span>
     }
-<span class="pc bpc" id="L294" title="1 of 2 branches missed.">    if (!assessmentSets.isArray()) {</span>
-<span class="nc" id="L295">      ctx.log(</span>
+<span class="fc bfc" id="L294" title="All 2 branches covered.">    if (!assessmentSets.isArray()) {</span>
+<span class="fc" id="L295">      ctx.log(</span>
           &quot;Instance %s's %s has a non-array %s value; skipping assessment set sync&quot;
-<span class="nc" id="L297">              .formatted(instance.getShortName(), INFO_COURSE_INSTANCE_JSON, ASSESSMENT_SETS_KEY));</span>
-<span class="nc" id="L298">      return;</span>
+<span class="fc" id="L297">              .formatted(instance.getShortName(), INFO_COURSE_INSTANCE_JSON, ASSESSMENT_SETS_KEY));</span>
+<span class="fc" id="L298">      return;</span>
     }
 
 <span class="fc" id="L301">    Map&lt;String, PlAssessmentSet&gt; existingByAbbreviation = new LinkedHashMap&lt;&gt;();</span>
@@ -313,7 +313,7 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
 <span class="fc" id="L313">      String name = entry.path(&quot;name&quot;).asText(null);</span>
 <span class="fc" id="L314">      String heading = entry.path(&quot;heading&quot;).asText(null);</span>
 <span class="fc" id="L315">      String color = entry.path(&quot;color&quot;).asText(null);</span>
-<span class="pc bpc" id="L316" title="3 of 8 branches missed.">      if (abbreviation == null || name == null || heading == null || color == null) {</span>
+<span class="fc bfc" id="L316" title="All 8 branches covered.">      if (abbreviation == null || name == null || heading == null || color == null) {</span>
 <span class="fc" id="L317">        skipped++;</span>
 <span class="fc" id="L318">        ctx.log(</span>
             &quot;Skipping assessment set entry %s (instance %s): missing abbreviation, name, heading, or color&quot;
@@ -333,16 +333,16 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
 <span class="fc" id="L333">                .color(color)</span>
 <span class="fc" id="L334">                .build());</span>
 <span class="fc" id="L335">        added++;</span>
-<span class="pc bpc" id="L336" title="1 of 2 branches missed.">      } else if (!Objects.equals(set.getName(), name)</span>
-<span class="nc bnc" id="L337" title="All 2 branches missed.">          || !Objects.equals(set.getHeading(), heading)</span>
-<span class="nc bnc" id="L338" title="All 2 branches missed.">          || !Objects.equals(set.getColor(), color)) {</span>
+<span class="fc bfc" id="L336" title="All 2 branches covered.">      } else if (!Objects.equals(set.getName(), name)</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">          || !Objects.equals(set.getHeading(), heading)</span>
+<span class="fc bfc" id="L338" title="All 2 branches covered.">          || !Objects.equals(set.getColor(), color)) {</span>
 <span class="fc" id="L339">        set.setName(name);</span>
 <span class="fc" id="L340">        set.setHeading(heading);</span>
 <span class="fc" id="L341">        set.setColor(color);</span>
 <span class="fc" id="L342">        plAssessmentSetRepository.save(set);</span>
 <span class="fc" id="L343">        updated++;</span>
       } else {
-<span class="nc" id="L345">        unchanged++;</span>
+<span class="fc" id="L345">        unchanged++;</span>
       }
 <span class="fc" id="L347">    }</span>
 
