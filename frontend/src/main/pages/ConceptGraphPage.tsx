@@ -342,16 +342,31 @@ function ConceptGraphPageContent() {
       > = topLevelPositionsRef.current,
     ) => {
       if (!userId || !courseIdIsValid) return;
+      const starredIdsArray = Array.from(stars);
+      const masteredArray = Array.from(mastered);
       saveUserStateMutate({
         userid: userId,
         courseId,
-        starred_ids: Array.from(stars),
+        starred_ids: starredIdsArray,
         detail_cards: cards,
-        mastered_subconcepts: Array.from(mastered),
+        mastered_subconcepts: masteredArray,
         top_level_positions: topLevelPos,
       });
+      // Mirror the save into the cached user state, so that remounting this
+      // course (switching away and back) seeds from the state the user last
+      // saw — the cache otherwise still holds the snapshot fetched when the
+      // course was first opened, and the once-per-mount seed would restore it.
+      queryClient.setQueryData<UserStateResponse>(
+        ["/api/user-state", userId, courseId],
+        {
+          starred_ids: starredIdsArray,
+          detail_cards: cards,
+          mastered_subconcepts: masteredArray,
+          top_level_positions: topLevelPos,
+        },
+      );
     },
-    [userId, courseId, courseIdIsValid, saveUserStateMutate],
+    [userId, courseId, courseIdIsValid, saveUserStateMutate, queryClient],
   );
 
   // Private overrides take precedence over the shared, instructor-controlled positions.
