@@ -701,4 +701,69 @@ describe("ConceptGraphPage", () => {
       ),
     );
   });
+
+  test("state persisted after switching courses belongs to the new course only", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, [
+      {
+        id: 1,
+        courseName: "Course One",
+        term: "S26",
+        school: { displayName: "UCSB", key: "ucsb" },
+        instructorEmail: "prof@ucsb.edu",
+        studentAccess: true,
+        staffAccess: false,
+        instructorAccess: false,
+        adminAccess: false,
+      },
+      {
+        id: 2,
+        courseName: "Course Two",
+        term: "S26",
+        school: { displayName: "UCSB", key: "ucsb" },
+        instructorEmail: "prof@ucsb.edu",
+        studentAccess: true,
+        staffAccess: false,
+        instructorAccess: false,
+        adminAccess: false,
+      },
+    ]);
+    // Course 2 is brand new for this user: no saved state at all.
+    axiosMock.onGet("/api/user-state").reply((config) =>
+      config.params?.courseId === 2
+        ? [
+            200,
+            {
+              starred_ids: [],
+              detail_cards: [],
+              mastered_subconcepts: [],
+              top_level_positions: {},
+            },
+          ]
+        : [200, userState],
+    );
+
+    renderConceptGraphPage(loggedInWithId);
+    // Course 1's saved state loads: 1 of 2 concepts starred.
+    await screen.findByText("1 / 2");
+
+    // Switch to course 2 through the real Courses menu.
+    fireEvent.click(screen.getByText("Courses"));
+    fireEvent.click(await screen.findByText(/Course Two/));
+    await screen.findByTestId("concept-graph-stub");
+    await waitFor(() => expect(getsTo("/api/user-state")).toHaveLength(2));
+
+    fireEvent.click(screen.getByText("trigger-star-click"));
+
+    // The save must contain course 2's state only — nothing (stars, mastered
+    // subconcepts, detail cards) carried over from course 1.
+    await waitFor(() => expect(postsTo("/api/user-state")).toHaveLength(1));
+    expect(postBodiesTo("/api/user-state")[0]).toEqual({
+      userid: 42,
+      courseId: 2,
+      starred_ids: ["1"],
+      detail_cards: [],
+      mastered_subconcepts: [],
+      top_level_positions: {},
+    });
+  });
 });
