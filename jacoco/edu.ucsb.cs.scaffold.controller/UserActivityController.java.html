@@ -20,31 +20,38 @@ public class UserActivityController {
   private final UserActivityRepository userActivityRepository;
   private final ObjectMapper objectMapper;
 
-  @Operation(summary = &quot;Insert a user activity event&quot;)
+  @Operation(summary = &quot;Insert a user activity event with a course ID&quot;)
   @PostMapping(&quot;/api/user-activity&quot;)
   public ResponseEntity&lt;Void&gt; insertUserActivity(@RequestBody UserActivityRequest body) {
-<span class="fc bfc" id="L26" title="All 6 branches covered.">    if (body.userid() == null || body.eventType() == null || body.eventType().isBlank()) {</span>
-<span class="fc" id="L27">      return ResponseEntity.badRequest().build();</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">    if (body.userid() == null</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        || body.courseId() == null</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        || body.eventType() == null</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">        || body.eventType().isBlank()) {</span>
+<span class="fc" id="L30">      return ResponseEntity.badRequest().build();</span>
     }
 
-<span class="fc" id="L30">    UserActivity activity = new UserActivity();</span>
-<span class="fc" id="L31">    activity.setUserid(body.userid());</span>
-<span class="fc" id="L32">    activity.setEventType(body.eventType());</span>
-<span class="fc" id="L33">    activity.setPayload(</span>
-<span class="fc bfc" id="L34" title="All 2 branches covered.">        writeJson(body.payload() == null ? objectMapper.createObjectNode() : body.payload()));</span>
-<span class="fc" id="L35">    userActivityRepository.save(activity);</span>
-<span class="fc" id="L36">    return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L33">    UserActivity activity = new UserActivity();</span>
+<span class="fc" id="L34">    activity.setUserid(body.userid());</span>
+<span class="fc" id="L35">    activity.setCourseId(body.courseId());</span>
+<span class="fc" id="L36">    activity.setEventType(body.eventType());</span>
+<span class="fc" id="L37">    activity.setPayload(</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        writeJson(body.payload() == null ? objectMapper.createObjectNode() : body.payload()));</span>
+<span class="fc" id="L39">    userActivityRepository.save(activity);</span>
+<span class="fc" id="L40">    return ResponseEntity.noContent().build();</span>
   }
 
   private String writeJson(Object value) {
     try {
-<span class="fc" id="L41">      return objectMapper.writeValueAsString(value);</span>
-<span class="fc" id="L42">    } catch (JsonProcessingException e) {</span>
-<span class="fc" id="L43">      throw new IllegalArgumentException(&quot;Unable to serialize JSON payload&quot;, e);</span>
+<span class="fc" id="L45">      return objectMapper.writeValueAsString(value);</span>
+<span class="fc" id="L46">    } catch (JsonProcessingException e) {</span>
+<span class="fc" id="L47">      throw new IllegalArgumentException(&quot;Unable to serialize JSON payload&quot;, e);</span>
     }
   }
 
-<span class="fc" id="L47">  public record UserActivityRequest(</span>
-      Long userid, @JsonProperty(&quot;event_type&quot;) String eventType, JsonNode payload) {}
+<span class="fc" id="L51">  public record UserActivityRequest(</span>
+      Long userid,
+      @JsonProperty(&quot;courseId&quot;) Long courseId,
+      @JsonProperty(&quot;event_type&quot;) String eventType,
+      JsonNode payload) {}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
