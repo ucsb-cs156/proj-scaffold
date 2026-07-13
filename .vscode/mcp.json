@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "monolog-research": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "monolog-research-mcp"],
+      "env": {
+        "MONOLOG_PROJECT": "proj-scaffold"
+      }
+    }
+  }
+}
