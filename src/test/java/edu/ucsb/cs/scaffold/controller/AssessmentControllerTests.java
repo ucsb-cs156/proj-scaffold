@@ -210,8 +210,8 @@ public class AssessmentControllerTests extends ControllerTestCase {
     String expectedJson =
         """
         [
-          { "id": "201", "assessment_id": "101", "pl_question_uuid": "%s", "title": "Q1" },
-          { "id": "202", "assessment_id": "101", "pl_question_uuid": "%s", "title": "Q2" }
+          { "id": "201", "assessment_id": "101", "pl_question_uuid": "%s", "title": "Q1", "pl_assessment_question_id": "1" },
+          { "id": "202", "assessment_id": "101", "pl_question_uuid": "%s", "title": "Q2", "pl_assessment_question_id": "3" }
         ]
         """
             .formatted(uuid1, uuid2);
