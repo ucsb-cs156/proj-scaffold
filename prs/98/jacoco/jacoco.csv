@@ -6,6 +6,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserActivityController,0,58,0,8,0
 scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserActivityController.LegacyUserActivityRequest,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.SubconceptDTO,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,PLQuestionController,0,30,0,0,0,8,0,5,0,5
+scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController.AssessmentManagementDTO,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.StoredPosition,0,9,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,PatCredentialController,0,159,0,8,0,36,0,16,0,12
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController,0,1101,0,68,0,277,0,76,0,42
@@ -16,7 +17,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,PLScaffoldAssessmentController,0,35,0,0
 scaffold,edu.ucsb.cs.scaffold.controller,PLRepoController,0,117,0,6,0,27,0,10,0,7
 scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserStateController,0,134,0,8,0,30,0,11,0,7
 scaffold,edu.ucsb.cs.scaffold.controller,PrairieLearnController,0,48,0,0,0,10,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.controller,JobsController,0,67,0,0,0,16,0,7,0,7
+scaffold,edu.ucsb.cs.scaffold.controller,JobsController,0,92,0,0,0,24,0,8,0,8
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateController.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.InstructorCourseView,0,75,0,4,0,12,0,4,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.MajorConceptDTO,0,15,0,0,0,1,0,1,0,1
@@ -43,7 +44,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,AdminsController.AdminDTO,0,18,0,0,0,3,
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.SubConceptTableRowDTO,0,30,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserStateController.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.ScaffoldResetReportDTO,0,12,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController,0,125,0,12,0,34,0,13,0,7
+scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController,0,253,0,22,0,64,0,26,0,15
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.StaffCoursesDTO,0,18,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,InstructorsController,0,65,0,2,0,14,0,6,0,5
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateController,0,180,0,12,0,48,0,14,0,8
@@ -103,14 +104,15 @@ scaffold,edu.ucsb.cs.scaffold.services,MarkdownService,0,352,0,20,0,47,0,18,0,8
 scaffold,edu.ucsb.cs.scaffold.services,ConceptGraphService.TarjanState,0,165,0,10,0,27,0,7,0,2
 scaffold,edu.ucsb.cs.scaffold.jobs,RotatePatKeysJob,0,130,0,4,0,26,0,3,0,1
 scaffold,edu.ucsb.cs.scaffold.jobs,UpdateAllJob,0,10,0,0,0,4,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.jobs,SyncCourseWithPlRepoJob,0,1815,0,134,0,385,0,86,0,19
+scaffold,edu.ucsb.cs.scaffold.jobs,SyncCourseWithPlRepoJob,0,1796,0,134,0,383,0,86,0,19
 scaffold,edu.ucsb.cs.scaffold.jobs,TestJob,0,19,0,2,0,6,0,2,0,1
 scaffold,edu.ucsb.cs.scaffold.jobs,SyncCourseWithPlRepoJobFactory,0,43,0,0,0,16,0,2,0,2
 scaffold,edu.ucsb.cs.scaffold.jobs,SyncCourseWithPlRepoJob.QuestionInfo,0,9,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.jobs,ReadPLColorsJob,0,285,0,14,0,64,0,9,0,2
 scaffold,edu.ucsb.cs.scaffold.interceptors,RoleUpdateInterceptor,0,101,0,12,0,24,0,9,0,3
 scaffold,edu.ucsb.cs.scaffold.model,UpsertResponse,0,12,0,0,0,2,0,2,0,2
 scaffold,edu.ucsb.cs.scaffold.model,LoadResult,0,15,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.model,RosterStudentDTO,0,58,0,2,0,12,0,3,0,2
 scaffold,edu.ucsb.cs.scaffold.startup,ScaffoldApplicationRunner,0,14,0,0,0,5,0,3,0,3
-scaffold,edu.ucsb.cs.scaffold.startup,ScaffoldStartup,0,239,0,30,0,71,0,25,0,10
+scaffold,edu.ucsb.cs.scaffold.startup,ScaffoldStartup,0,422,0,32,0,112,0,28,0,12
 scaffold,edu.ucsb.cs.scaffold.startup,WiremockApplicationRunner,0,17,0,0,0,6,0,3,0,3
