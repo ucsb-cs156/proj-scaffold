@@ -104,9 +104,9 @@ referred to.)
 
 `color`, `level`, `x`, and `y` are preserved on a round trip so an upload
 reproduces the graph exactly as it was. If you are hand-editing the file and
-don't want to compute them, leave them out and run **Reset Scaffold** (on the
-Scaffold tab) after uploading: it recomputes levels, colors, and layout from
-the edges.
+don't want to compute them, leave them out and run **Realign Concepts** (in
+the footer, with editing enabled) after uploading: it recomputes levels,
+colors, and layout from the edges.
 
 `label`, `description`, and `example` are Markdown. They are sanitized on
 upload the same way as when entered through the API, so disallowed HTML is
@@ -135,7 +135,7 @@ or color of their own, and cannot appear in `edges`.
 Edges must connect two distinct top-level concepts in the file, must not be
 duplicated, and must not create a cycle. Edge colors are not part of the
 format: the red cycle-edge marking is derived state, recomputed by
-**Reset Scaffold**.
+**Realign Concepts**.
 
 ## What upload replaces (and user state)
 
