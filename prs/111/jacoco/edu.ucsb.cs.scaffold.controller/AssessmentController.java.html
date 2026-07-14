@@ -160,22 +160,28 @@ public class AssessmentController extends ApiController {
   }
 
   private static AssessmentManagementDTO toAssessmentManagementDTO(PlAssessment a) {
-<span class="fc" id="L163">    return new AssessmentManagementDTO(String.valueOf(a.getId()), assessmentLabel(a), a.isLocked());</span>
+<span class="fc" id="L163">    return new AssessmentManagementDTO(</span>
+<span class="fc" id="L164">        String.valueOf(a.getId()),</span>
+<span class="fc" id="L165">        assessmentLabel(a),</span>
+<span class="fc" id="L166">        a.isLocked(),</span>
+<span class="fc" id="L167">        a.getPlAssessmentSetAbbreviation(),</span>
+<span class="fc" id="L168">        a.getPlAssessmentNumber(),</span>
+<span class="fc" id="L169">        a.getPlAssessmentSetColor());</span>
   }
 
   private static String assessmentLabel(PlAssessment a) {
-<span class="fc bfc" id="L167" title="All 2 branches covered.">    return a.getPlAssessmentTitle() != null ? a.getPlAssessmentTitle() : a.getName();</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">    return a.getPlAssessmentTitle() != null ? a.getPlAssessmentTitle() : a.getName();</span>
   }
 
   private static QuestionDTO toQuestionDTO(PlQuestion q, Long assessmentId) {
-<span class="fc" id="L171">    return new QuestionDTO(</span>
-<span class="fc" id="L172">        String.valueOf(q.getId()),</span>
-<span class="fc" id="L173">        String.valueOf(assessmentId),</span>
-<span class="fc" id="L174">        q.getUuid().toString(),</span>
-<span class="fc" id="L175">        q.getTitle());</span>
+<span class="fc" id="L177">    return new QuestionDTO(</span>
+<span class="fc" id="L178">        String.valueOf(q.getId()),</span>
+<span class="fc" id="L179">        String.valueOf(assessmentId),</span>
+<span class="fc" id="L180">        q.getUuid().toString(),</span>
+<span class="fc" id="L181">        q.getTitle());</span>
   }
 
-<span class="fc" id="L178">  public record AssessmentDTO(</span>
+<span class="fc" id="L184">  public record AssessmentDTO(</span>
       String id,
       @JsonProperty(&quot;pl_assessment_id&quot;) String plAssessmentId,
       String name,
@@ -183,9 +189,15 @@ public class AssessmentController extends ApiController {
       @JsonProperty(&quot;pl_assessment_number&quot;) String plAssessmentNumber,
       @JsonProperty(&quot;pl_assessment_set_color&quot;) String plAssessmentSetColor) {}
 
-<span class="fc" id="L186">  public record AssessmentManagementDTO(String id, String name, boolean locked) {}</span>
+<span class="fc" id="L192">  public record AssessmentManagementDTO(</span>
+      String id,
+      String name,
+      boolean locked,
+      @JsonProperty(&quot;pl_assessment_set_abbreviation&quot;) String plAssessmentSetAbbreviation,
+      @JsonProperty(&quot;pl_assessment_number&quot;) String plAssessmentNumber,
+      @JsonProperty(&quot;pl_assessment_set_color&quot;) String plAssessmentSetColor) {}
 
-<span class="fc" id="L188">  public record QuestionDTO(</span>
+<span class="fc" id="L200">  public record QuestionDTO(</span>
       String id,
       @JsonProperty(&quot;assessment_id&quot;) String assessmentId,
       @JsonProperty(&quot;pl_question_uuid&quot;) String plQuestionUuid,
