@@ -8,6 +8,13 @@ import StarStatus from "main/components/Scaffold/StarStatus";
 import UnlockAssessmentsModal from "main/components/Scaffold/UnlockAssessmentsModal";
 import { useStaffTools } from "main/utils/useStaffTools";
 
+// Formats the course-identifying banner text shown above the top bar, e.g.
+// "CMPSC 5B, S26, UCSB, phtcon@ucsb.edu (3)".
+function formatCourseInfo(courseInfo: CourseAccess): string {
+  const { courseName, term, school, instructorEmail, id } = courseInfo;
+  return `${courseName}, ${term}, ${school.displayName}, ${instructorEmail} (${id})`;
+}
+
 interface ScaffoldTopBarProps {
   // Undefined while the course is still loading; the settings link is
   // omitted until it arrives.
@@ -50,7 +57,7 @@ export default function ScaffoldTopBar({
           className="scaffold-top-bar-course-info"
           data-testid="ScaffoldTopBar-courseInfo"
         >
-          {`${courseInfo.courseName}, ${courseInfo.term}, ${courseInfo.school.displayName}, ${courseInfo.instructorEmail} (${courseInfo.id})`}
+          {formatCourseInfo(courseInfo)}
         </div>
       )}
       <div className="scaffold-top-bar" data-testid="ScaffoldTopBar">
