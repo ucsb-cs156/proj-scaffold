@@ -16,10 +16,12 @@ import edu.ucsb.cs.scaffold.annotations.WithStaffCoursePermissions;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.PlAssessment;
 import edu.ucsb.cs.scaffold.entity.PlAssessmentQuestion;
+import edu.ucsb.cs.scaffold.entity.PlColor;
 import edu.ucsb.cs.scaffold.entity.PlQuestion;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
+import edu.ucsb.cs.scaffold.repository.PlColorRepository;
 import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +42,7 @@ public class AssessmentControllerTests extends ControllerTestCase {
   @MockitoBean PlAssessmentRepository plAssessmentRepository;
   @MockitoBean PlAssessmentQuestionRepository plAssessmentQuestionRepository;
   @MockitoBean PlQuestionRepository plQuestionRepository;
+  @MockitoBean PlColorRepository plColorRepository;
 
   @Test
   public void getAssessments_returns_empty_list_when_course_not_found() throws Exception {
@@ -90,6 +93,9 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plAssessmentOrder(2L)
             .plAssessmentTitle("Homework 2")
             .plAssessmentId(5001L)
+            .plAssessmentSetAbbreviation("HW")
+            .plAssessmentNumber("2")
+            .plAssessmentSetColor("green1")
             .locked(false)
             .build();
     PlAssessment noOrderFallsBackToName =
@@ -101,6 +107,9 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plAssessmentOrder(null)
             .plAssessmentTitle(null)
             .plAssessmentId(null)
+            .plAssessmentSetAbbreviation(null)
+            .plAssessmentNumber(null)
+            .plAssessmentSetColor(null)
             .locked(false)
             .build();
     PlAssessment orderOne =
@@ -112,6 +121,9 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plAssessmentOrder(1L)
             .plAssessmentTitle("Homework 0")
             .plAssessmentId(5000L)
+            .plAssessmentSetAbbreviation("HW")
+            .plAssessmentNumber("0")
+            .plAssessmentSetColor("blue1")
             .locked(false)
             .build();
     PlAssessment lockedAssessment =
@@ -127,13 +139,30 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .build();
     when(plAssessmentRepository.findByPlRepoIdAndPlInstanceId(10L, 20L))
         .thenReturn(List.of(orderTwo, noOrderFallsBackToName, orderOne, lockedAssessment));
+    when(plColorRepository.findAll())
+        .thenReturn(
+            List.of(
+                PlColor.builder().colorName("blue1").hexCode("#0000ff").build(),
+                PlColor.builder().colorName("green1").hexCode("#00ff00").build()));
 
     String expectedJson =
         """
         [
-          { "id": "103", "pl_assessment_id": "5000", "name": "Homework 0" },
-          { "id": "101", "pl_assessment_id": "5001", "name": "Homework 2" },
-          { "id": "102", "pl_assessment_id": null, "name": "hw01" }
+          {
+            "id": "103", "pl_assessment_id": "5000", "name": "Homework 0",
+            "pl_assessment_set_abbreviation": "HW", "pl_assessment_number": "0",
+            "pl_assessment_set_color": "#0000ff"
+          },
+          {
+            "id": "101", "pl_assessment_id": "5001", "name": "Homework 2",
+            "pl_assessment_set_abbreviation": "HW", "pl_assessment_number": "2",
+            "pl_assessment_set_color": "#00ff00"
+          },
+          {
+            "id": "102", "pl_assessment_id": null, "name": "hw01",
+            "pl_assessment_set_abbreviation": null, "pl_assessment_number": null,
+            "pl_assessment_set_color": null
+          }
         ]
         """;
 
@@ -290,6 +319,9 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .name("hw01")
             .plAssessmentOrder(1L)
             .plAssessmentTitle("Homework 1")
+            .plAssessmentSetAbbreviation("HW")
+            .plAssessmentNumber("1")
+            .plAssessmentSetColor("blue1")
             .locked(false)
             .build();
     PlAssessment locked =
@@ -304,12 +336,22 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .build();
     when(plAssessmentRepository.findByPlRepoIdAndPlInstanceId(10L, 20L))
         .thenReturn(List.of(unlocked, locked));
+    when(plColorRepository.findAll())
+        .thenReturn(List.of(PlColor.builder().colorName("blue1").hexCode("#0000ff").build()));
 
     String expectedJson =
         """
         [
-          { "id": "101", "name": "Homework 1", "locked": false },
-          { "id": "102", "name": "hw02", "locked": true }
+          {
+            "id": "101", "name": "Homework 1", "locked": false,
+            "pl_assessment_set_abbreviation": "HW", "pl_assessment_number": "1",
+            "pl_assessment_set_color": "#0000ff"
+          },
+          {
+            "id": "102", "name": "hw02", "locked": true,
+            "pl_assessment_set_abbreviation": null, "pl_assessment_number": null,
+            "pl_assessment_set_color": null
+          }
         ]
         """;
 
@@ -448,10 +490,15 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plInstanceId(20L)
             .name("hw01")
             .plAssessmentTitle("Homework 1")
+            .plAssessmentSetAbbreviation("HW")
+            .plAssessmentNumber("1")
+            .plAssessmentSetColor("blue1")
             .locked(true)
             .build();
     when(plAssessmentRepository.findById(101L)).thenReturn(Optional.of(assessment));
     when(plAssessmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    when(plColorRepository.findAll())
+        .thenReturn(List.of(PlColor.builder().colorName("blue1").hexCode("#0000ff").build()));
 
     mockMvc
         .perform(
@@ -465,7 +512,11 @@ public class AssessmentControllerTests extends ControllerTestCase {
             content()
                 .json(
                     """
-                    { "id": "101", "name": "Homework 1", "locked": false }
+                    {
+                      "id": "101", "name": "Homework 1", "locked": false,
+                      "pl_assessment_set_abbreviation": "HW", "pl_assessment_number": "1",
+                      "pl_assessment_set_color": "#0000ff"
+                    }
                     """,
                     true));
   }
@@ -482,6 +533,7 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plInstanceId(20L)
             .name("hw01")
             .plAssessmentTitle("Homework 1")
+            .plAssessmentSetColor("")
             .locked(false)
             .build();
     when(plAssessmentRepository.findById(101L)).thenReturn(Optional.of(assessment));
@@ -499,7 +551,11 @@ public class AssessmentControllerTests extends ControllerTestCase {
             content()
                 .json(
                     """
-                    { "id": "101", "name": "Homework 1", "locked": true }
+                    {
+                      "id": "101", "name": "Homework 1", "locked": true,
+                      "pl_assessment_set_abbreviation": null, "pl_assessment_number": null,
+                      "pl_assessment_set_color": null
+                    }
                     """,
                     true));
   }
