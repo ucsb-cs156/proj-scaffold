@@ -416,4 +416,50 @@ describe("PLTabComponent tests", () => {
     expect(input).toHaveAttribute("type", "text");
     expect(input).toHaveAttribute("inputmode", "numeric");
   });
+
+  // ────────────────────────── sync course job ──────────────────────────
+
+  test("launches the sync job and shows the job number in a toast on success", async () => {
+    axiosMock
+      .onPost("/api/jobs/launch/syncCourseWithPlRepo")
+      .reply(200, { id: 42 });
+
+    renderTab();
+    fireEvent.click(screen.getByTestId("test-plTab-sync-submit"));
+
+    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
+    expect(axiosMock.history.post[0].params).toEqual({ courseId: 7 });
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith(
+        "Sync job launched, job number 42",
+      ),
+    );
+  });
+
+  test("shows the backend error message in a toast when the sync job fails to launch", async () => {
+    axiosMock.onPost("/api/jobs/launch/syncCourseWithPlRepo").reply(403, {
+      type: "ForbiddenException",
+      message: "must associate course with PlRepo first",
+    });
+
+    renderTab();
+    fireEvent.click(screen.getByTestId("test-plTab-sync-submit"));
+
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith(
+        "must associate course with PlRepo first",
+      ),
+    );
+  });
+
+  test("shows a generic toast when the sync job fails with no message", async () => {
+    axiosMock.onPost("/api/jobs/launch/syncCourseWithPlRepo").networkError();
+
+    renderTab();
+    fireEvent.click(screen.getByTestId("test-plTab-sync-submit"));
+
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith("Unable to launch sync job"),
+    );
+  });
 });
