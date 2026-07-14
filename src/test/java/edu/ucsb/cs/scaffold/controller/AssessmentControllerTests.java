@@ -533,6 +533,7 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plInstanceId(20L)
             .name("hw01")
             .plAssessmentTitle("Homework 1")
+            .plAssessmentSetColor("")
             .locked(false)
             .build();
     when(plAssessmentRepository.findById(101L)).thenReturn(Optional.of(assessment));
