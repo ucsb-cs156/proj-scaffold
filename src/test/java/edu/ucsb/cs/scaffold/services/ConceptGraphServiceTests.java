@@ -279,4 +279,21 @@ public class ConceptGraphServiceTests {
     assertEquals(new Position(0, 0), result.positionByConceptId().get(c.getId()));
     assertEquals(new Position(350, 0), result.positionByConceptId().get(a.getId()));
   }
+
+  @Test
+  public void reset_uses_the_given_xSpacing_and_ySpacing_instead_of_the_defaults() {
+    Concept a = concept(1, 0);
+    Concept b = concept(2, 0);
+    Concept c = concept(3, 0);
+    List<ConceptEdge> edges = List.of(edge(10, a, b));
+    Map<Long, Integer> priorXByConceptId = Map.of(a.getId(), 0, b.getId(), 0, c.getId(), 100);
+
+    ResetResult result = service.reset(List.of(a, b, c), edges, priorXByConceptId, 100, 50);
+
+    // a and c share level 1: two concepts centered on x=0, 100 apart -> -50 and 50.
+    assertEquals(new Position(-50, 0), result.positionByConceptId().get(a.getId()));
+    assertEquals(new Position(50, 0), result.positionByConceptId().get(c.getId()));
+    // b is level 2, 50 above level 1.
+    assertEquals(new Position(0, -50), result.positionByConceptId().get(b.getId()));
+  }
 }

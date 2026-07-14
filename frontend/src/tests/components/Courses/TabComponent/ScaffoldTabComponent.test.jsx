@@ -58,6 +58,9 @@ describe("ScaffoldTabComponent tests", () => {
     axiosMock
       .onPost("/api/course/scaffold/reset")
       .reply(200, { message: "Scaffold reset completed." });
+    axiosMock
+      .onGet(/\/api\/courses\/\d+/)
+      .reply(200, { id: 1, xSpacing: 350, ySpacing: 300 });
   });
 
   test("renders the Scaffold heading", () => {
@@ -317,6 +320,99 @@ describe("ScaffoldTabComponent tests", () => {
     expect(
       axiosMock.history.post.filter(
         (r) => r.url === "/api/concepts/yaml/upload",
+      ).length,
+    ).toBe(0);
+  });
+
+  test("spacing fields are populated with the course's current xSpacing/ySpacing", async () => {
+    axiosMock.reset();
+    axiosMock
+      .onGet(/\/api\/courses\/\d+/)
+      .reply(200, { id: 42, xSpacing: 111, ySpacing: 222 });
+
+    renderScaffoldTabComponent({ courseId: 42 });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("test-xSpacing")).toHaveValue(111),
+    );
+    expect(screen.getByTestId("test-ySpacing")).toHaveValue(222);
+  });
+
+  test("updating spacing puts the new values and shows a green check", async () => {
+    axiosMock
+      .onPut("/api/course/scaffold/spacing")
+      .reply(200, { xSpacing: 400, ySpacing: 200 });
+
+    renderScaffoldTabComponent({ courseId: 42 });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("test-xSpacing")).toHaveValue(350),
+    );
+    fireEvent.change(screen.getByTestId("test-xSpacing"), {
+      target: { value: "400" },
+    });
+    fireEvent.change(screen.getByTestId("test-ySpacing"), {
+      target: { value: "200" },
+    });
+    fireEvent.click(screen.getByTestId("test-spacing-submit"));
+
+    await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+    expect(axiosMock.history.put[0].params).toEqual({
+      courseId: 42,
+      xSpacing: 400,
+      ySpacing: 200,
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("test-spacing-check")).toBeInTheDocument(),
+    );
+    expect(screen.queryByTestId("test-spacing-error")).not.toBeInTheDocument();
+  });
+
+  test("a failed spacing update shows an error message instead of the green check", async () => {
+    axiosMock
+      .onPut("/api/course/scaffold/spacing")
+      .reply(400, { message: "xSpacing and ySpacing must be positive" });
+
+    renderScaffoldTabComponent({ courseId: 42 });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("test-xSpacing")).toHaveValue(350),
+    );
+    fireEvent.change(screen.getByTestId("test-xSpacing"), {
+      target: { value: "500" },
+    });
+    fireEvent.click(screen.getByTestId("test-spacing-submit"));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("test-spacing-error")).toHaveTextContent(
+        "xSpacing and ySpacing must be positive",
+      ),
+    );
+    expect(screen.queryByTestId("test-spacing-check")).not.toBeInTheDocument();
+  });
+
+  test("spacing fields require a value", async () => {
+    renderScaffoldTabComponent({ courseId: 42 });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("test-xSpacing")).toHaveValue(350),
+    );
+    fireEvent.change(screen.getByTestId("test-xSpacing"), {
+      target: { value: "" },
+    });
+    fireEvent.click(screen.getByTestId("test-spacing-submit"));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          "X Spacing is required and must be a positive number.",
+        ),
+      ).toBeInTheDocument(),
+    );
+    expect(
+      axiosMock.history.put.filter(
+        (r) => r.url === "/api/course/scaffold/spacing",
       ).length,
     ).toBe(0);
   });

@@ -142,7 +142,9 @@ public class CoursesController extends ApiController {
       // null in course lists.
       String plRepoName,
       String plInstanceShortName,
-      Long plInstanceNumericId) {
+      Long plInstanceNumericId,
+      int xSpacing,
+      int ySpacing) {
 
     // Creates view from Course entity
     public InstructorCourseView(Course c) {
@@ -158,7 +160,9 @@ public class CoursesController extends ApiController {
           c.getPlInstanceId(),
           null,
           null,
-          null);
+          null,
+          c.getXSpacing(),
+          c.getYSpacing());
     }
   }
 
@@ -189,7 +193,9 @@ public class CoursesController extends ApiController {
         c.getPlInstanceId(),
         plRepoName,
         plInstance == null ? null : plInstance.getShortName(),
-        plInstance == null ? null : plInstance.getNumericId());
+        plInstance == null ? null : plInstance.getNumericId(),
+        c.getXSpacing(),
+        c.getYSpacing());
   }
 
   /**

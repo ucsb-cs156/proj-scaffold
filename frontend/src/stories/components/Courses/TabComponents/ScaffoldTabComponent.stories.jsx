@@ -29,6 +29,21 @@ Default.args = {
 
 Default.parameters = {
   msw: [
+    http.get("/api/courses/:courseId", ({ params }) => {
+      return HttpResponse.json(
+        { id: Number(params.courseId), xSpacing: 350, ySpacing: 300 },
+        { status: 200 },
+      );
+    }),
+    http.put("/api/course/scaffold/spacing", ({ request }) => {
+      const url = new URL(request.url);
+      const xSpacing = Number(url.searchParams.get("xSpacing"));
+      const ySpacing = Number(url.searchParams.get("ySpacing"));
+      window.alert(
+        `Invoked scaffold spacing update with courseId=${url.searchParams.get("courseId")}, xSpacing=${xSpacing}, ySpacing=${ySpacing}`,
+      );
+      return HttpResponse.json({ xSpacing, ySpacing }, { status: 200 });
+    }),
     http.post("/api/course/scaffold/reset", ({ request }) => {
       const url = new URL(request.url);
       window.alert(

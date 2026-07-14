@@ -1,9 +1,9 @@
-import React from "react";
-import { Button, Form } from "react-bootstrap";
+import React, { useState } from "react";
+import { Alert, Button, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { useBackendMutation } from "main/utils/useBackend";
+import { useBackend, useBackendMutation } from "main/utils/useBackend";
 
 /**
  * Sanitizes a value for use in a downloaded filename: trims surrounding
@@ -51,6 +51,60 @@ export default function ScaffoldTabComponent({
   const resetScaffoldMutation = useBackendMutation(scaffoldResetAxiosParams, {
     onSuccess: onSuccessScaffoldReset,
   });
+
+  // Current course, used to show the current xSpacing/ySpacing. Refetched after a
+  // successful spacing update (see the invalidated query key on spacingMutation
+  // below) so the fields reflect the value just saved.
+  const { data: course } = useBackend(
+    [`/api/courses/${courseId}`],
+    // Stryker disable next-line StringLiteral : GET and empty string are equivalent
+    { method: "GET", url: `/api/courses/${courseId}` },
+    null,
+    true,
+  );
+
+  const [spacingError, setSpacingError] = useState(null);
+  const [spacingUpdated, setSpacingUpdated] = useState(false);
+
+  const {
+    register: registerSpacing,
+    handleSubmit: handleSubmitSpacing,
+    formState: { errors: spacingFormErrors },
+  } = useForm({
+    values: course
+      ? { xSpacing: course.xSpacing, ySpacing: course.ySpacing }
+      : undefined,
+  });
+
+  const spacingMutation = useBackendMutation(
+    (data) => ({
+      url: "/api/course/scaffold/spacing",
+      method: "PUT",
+      params: {
+        courseId,
+        xSpacing: data.xSpacing,
+        ySpacing: data.ySpacing,
+      },
+    }),
+    {
+      onSuccess: () => {
+        setSpacingError(null);
+        setSpacingUpdated(true);
+      },
+      onError: (error) => {
+        setSpacingUpdated(false);
+        setSpacingError(
+          error?.response?.data?.message ?? "Error updating scaffold spacing",
+        );
+      },
+    },
+    [`/api/courses/${courseId}`],
+  );
+
+  const onSpacingSubmit = (data) => {
+    setSpacingUpdated(false);
+    spacingMutation.mutate(data);
+  };
 
   const downloadYaml = async () => {
     try {
@@ -122,6 +176,73 @@ export default function ScaffoldTabComponent({
       >
         Reset Scaffold
       </Button>
+      <hr />
+      <p>
+        Set the horizontal (xSpacing) and vertical (ySpacing) pixel spacing used
+        to lay out top-level concepts the next time the scaffold is reset.
+      </p>
+      {spacingError && (
+        <Alert
+          variant="danger"
+          className="mt-2"
+          data-testid={`${testIdPrefix}-spacing-error`}
+        >
+          {spacingError}
+        </Alert>
+      )}
+      <Form className="my-2" onSubmit={handleSubmitSpacing(onSpacingSubmit)}>
+        <Form.Group className="mb-2" style={{ maxWidth: "200px" }}>
+          <Form.Label htmlFor={`${testIdPrefix}-xSpacing`}>
+            X Spacing
+          </Form.Label>
+          {spacingUpdated && (
+            <span
+              className="text-success ms-2"
+              data-testid={`${testIdPrefix}-spacing-check`}
+            >
+              ✓ updated
+            </span>
+          )}
+          <Form.Control
+            data-testid={`${testIdPrefix}-xSpacing`}
+            id={`${testIdPrefix}-xSpacing`}
+            type="number"
+            isInvalid={Boolean(spacingFormErrors.xSpacing)}
+            {...registerSpacing("xSpacing", {
+              required: true,
+              valueAsNumber: true,
+              min: 1,
+            })}
+          />
+          <Form.Control.Feedback type="invalid">
+            {spacingFormErrors.xSpacing &&
+              "X Spacing is required and must be a positive number."}
+          </Form.Control.Feedback>
+        </Form.Group>
+        <Form.Group className="mb-2" style={{ maxWidth: "200px" }}>
+          <Form.Label htmlFor={`${testIdPrefix}-ySpacing`}>
+            Y Spacing
+          </Form.Label>
+          <Form.Control
+            data-testid={`${testIdPrefix}-ySpacing`}
+            id={`${testIdPrefix}-ySpacing`}
+            type="number"
+            isInvalid={Boolean(spacingFormErrors.ySpacing)}
+            {...registerSpacing("ySpacing", {
+              required: true,
+              valueAsNumber: true,
+              min: 1,
+            })}
+          />
+          <Form.Control.Feedback type="invalid">
+            {spacingFormErrors.ySpacing &&
+              "Y Spacing is required and must be a positive number."}
+          </Form.Control.Feedback>
+        </Form.Group>
+        <Button type="submit" data-testid={`${testIdPrefix}-spacing-submit`}>
+          Update Spacing
+        </Button>
+      </Form>
       <hr />
       <p>
         Download this course&apos;s concepts, subconcepts, prerequisite edges,
