@@ -31,7 +31,7 @@ function AssessmentBadge({
         padding: "2px 8px",
         borderRadius: 999,
         background: assessment.pl_assessment_set_color ?? "#94A3B8",
-        color: "#ffffff",
+        color: "#000000",
         fontSize: 11,
         fontWeight: 600,
         lineHeight: 1.4,
