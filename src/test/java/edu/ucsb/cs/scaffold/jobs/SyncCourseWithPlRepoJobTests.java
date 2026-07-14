@@ -133,7 +133,8 @@ public class SyncCourseWithPlRepoJobTests {
 
   private static String infoJson(UUID uuid, String title) {
     return """
-        { "uuid": "%s", "title": "%s", "topic": "Default", "type": "v3" }"""
+    { "uuid": "%s", "title": "%s", "topic": "Default", "type": "v3" }\
+    """
         .formatted(uuid, title);
   }
 
@@ -155,22 +156,22 @@ public class SyncCourseWithPlRepoJobTests {
         .thenThrow(httpError(HttpStatus.NOT_FOUND));
     when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
         .thenThrow(httpError(HttpStatus.NOT_FOUND));
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
         .thenThrow(httpError(HttpStatus.NOT_FOUND));
   }
 
   static final String ASSESSMENTS_PATH = "courseInstances/Fall2025/assessments";
-  static final String INFO_COURSE_INSTANCE_PATH =
-      "courseInstances/Fall2025/infoCourseInstance.json";
+  static final String INFO_COURSE_PATH = "infoCourse.json";
 
   private static final String HEADER = "Syncing course 20 (CS156) with PrairieLearn";
   private static final String ACCESS_LINE =
       "Access verified: repo ucsb-cs156/pl-demo (read/write) and PrairieLearn instance 213133";
   private static final String VERIFIED_LINE = "Instance Fall2025 metadata verified";
   private static final String SKIP_ASSESSMENT_SETS_LINE =
-      "Instance Fall2025 has no infoCourseInstance.json; skipping assessment set sync";
+      "Repo ucsb-cs156/pl-demo has no infoCourse.json; skipping assessment set sync";
   private static final String SKIP_QUESTIONS_LINE =
-      "Repo ucsb-cs156/pl-demo has no questions directory (or the token cannot see the repo); skipping question sync";
+      "Repo ucsb-cs156/pl-demo has no questions directory (or the token cannot see the repo);"
+          + " skipping question sync";
   private static final String SKIP_ASSESSMENTS_LINE =
       "Instance Fall2025 has no assessments directory; skipping assessment sync";
   private static final String NO_ASSESSMENTS_SUMMARY =
@@ -212,7 +213,8 @@ public class SyncCourseWithPlRepoJobTests {
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "Missing GitHub PAT and PrairieLearn PAT: set it up on the /profile page before running this job",
+        "Missing GitHub PAT and PrairieLearn PAT: set it up on the /profile page before running"
+            + " this job",
         thrown.getMessage());
   }
 
@@ -222,7 +224,8 @@ public class SyncCourseWithPlRepoJobTests {
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "This course is not associated with a GitHub repo yet; set that up on the PrairieLearn tab of the course settings page",
+        "This course is not associated with a GitHub repo yet; set that up on the PrairieLearn tab"
+            + " of the course settings page",
         thrown.getMessage());
   }
 
@@ -232,7 +235,8 @@ public class SyncCourseWithPlRepoJobTests {
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "This course is not associated with a PrairieLearn course instance yet; set that up on the PrairieLearn tab of the course settings page",
+        "This course is not associated with a PrairieLearn course instance yet; set that up on the"
+            + " PrairieLearn tab of the course settings page",
         thrown.getMessage());
   }
 
@@ -243,7 +247,8 @@ public class SyncCourseWithPlRepoJobTests {
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "This course is not associated with a GitHub repo or a PrairieLearn course instance yet; set that up on the PrairieLearn tab of the course settings page",
+        "This course is not associated with a GitHub repo or a PrairieLearn course instance yet;"
+            + " set that up on the PrairieLearn tab of the course settings page",
         thrown.getMessage());
   }
 
@@ -271,7 +276,8 @@ public class SyncCourseWithPlRepoJobTests {
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "The course's PrairieLearn instance has no numeric id yet; re-associate it on the PrairieLearn tab of the course settings page",
+        "The course's PrairieLearn instance has no numeric id yet; re-associate it on the"
+            + " PrairieLearn tab of the course settings page",
         thrown.getMessage());
   }
 
@@ -282,7 +288,8 @@ public class SyncCourseWithPlRepoJobTests {
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "The stored GitHub PAT cannot read repo ucsb-cs156/pl-demo (HTTP 404); check the token on the /profile page and the repo on the PrairieLearn tab",
+        "The stored GitHub PAT cannot read repo ucsb-cs156/pl-demo (HTTP 404); check the token on"
+            + " the /profile page and the repo on the PrairieLearn tab",
         thrown.getMessage());
   }
 
@@ -292,7 +299,8 @@ public class SyncCourseWithPlRepoJobTests {
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "The stored GitHub PAT has read-only access to repo ucsb-cs156/pl-demo; read/write access is required",
+        "The stored GitHub PAT has read-only access to repo ucsb-cs156/pl-demo; read/write access"
+            + " is required",
         thrown.getMessage());
   }
 
@@ -303,7 +311,8 @@ public class SyncCourseWithPlRepoJobTests {
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "The stored PrairieLearn PAT cannot access course instance 213133 (HTTP 403); check the token on the /profile page",
+        "The stored PrairieLearn PAT cannot access course instance 213133 (HTTP 403); check the"
+            + " token on the /profile page",
         thrown.getMessage());
   }
 
@@ -322,7 +331,8 @@ public class SyncCourseWithPlRepoJobTests {
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "GitHub rejected the stored PAT (HTTP 401). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/Github_PAT.md)",
+        "GitHub rejected the stored PAT (HTTP 401). The token may be expired, revoked, or not"
+            + " approved for this repo; enter a new one (see docs/Github_PAT.md)",
         thrown.getMessage());
   }
 
@@ -333,7 +343,8 @@ public class SyncCourseWithPlRepoJobTests {
 
     Exception thrown = assertThrows(Exception.class, () -> job().accept(ctx));
     assertEquals(
-        "GitHub rejected the stored PAT (HTTP 403). The token may be expired, revoked, or not approved for this repo; enter a new one (see docs/Github_PAT.md)",
+        "GitHub rejected the stored PAT (HTTP 403). The token may be expired, revoked, or not"
+            + " approved for this repo; enter a new one (see docs/Github_PAT.md)",
         thrown.getMessage());
   }
 
@@ -361,7 +372,8 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         %s
         %s
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -375,9 +387,6 @@ public class SyncCourseWithPlRepoJobTests {
     when(githubService.listDirectory(
             eq(REPO), eq("courseInstances/Winter2026/assessments"), eq(TOKEN)))
         .thenReturn(List.of());
-    when(githubService.getFileContent(
-            eq(REPO), eq("courseInstances/Winter2026/infoCourseInstance.json"), eq(TOKEN)))
-        .thenThrow(httpError(HttpStatus.NOT_FOUND));
 
     job().accept(ctx);
 
@@ -391,10 +400,11 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         Instance shortName changed on PrairieLearn: Fall2025 -> Winter2026
         Instance longName changed on PrairieLearn: Fall 2025 -> Winter 2026
-        Instance Winter2026 has no infoCourseInstance.json; skipping assessment set sync
+        Repo ucsb-cs156/pl-demo has no infoCourse.json; skipping assessment set sync
         %s
         %s
-        %s"""
+        %s\
+        """
             .formatted(
                 HEADER,
                 ACCESS_LINE,
@@ -406,27 +416,28 @@ public class SyncCourseWithPlRepoJobTests {
 
   // ────────────────────────── assessment set sync ──────────────────────────
 
-  private static final String INFO_COURSE_INSTANCE_JSON_CONTENT =
+  private static final String INFO_COURSE_JSON_CONTENT =
       """
       {
         "assessmentSets": [
           { "abbreviation": "LEC", "name": "Lecture", "heading": "Lectures", "color": "turquoise2" },
           { "abbreviation": "HW", "name": "Homework", "heading": "Homeworks", "color": "green1" }
         ]
-      }""";
+      }\
+      """;
 
   @Test
-  public void adds_new_assessment_sets_from_infoCourseInstance_json() throws Exception {
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
-        .thenReturn(INFO_COURSE_INSTANCE_JSON_CONTENT);
-    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of());
+  public void adds_new_assessment_sets_from_infoCourse_json() throws Exception {
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
+        .thenReturn(INFO_COURSE_JSON_CONTENT);
+    when(plAssessmentSetRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
 
     job().accept(ctx);
 
     verify(plAssessmentSetRepository)
         .save(
             PlAssessmentSet.builder()
-                .plInstanceId(10L)
+                .plRepoId(3L)
                 .abbreviation("LEC")
                 .name("Lecture")
                 .heading("Lectures")
@@ -435,7 +446,7 @@ public class SyncCourseWithPlRepoJobTests {
     verify(plAssessmentSetRepository)
         .save(
             PlAssessmentSet.builder()
-                .plInstanceId(10L)
+                .plRepoId(3L)
                 .abbreviation("HW")
                 .name("Homework")
                 .heading("Homeworks")
@@ -450,7 +461,8 @@ public class SyncCourseWithPlRepoJobTests {
         Assessment sets: 2 added, 0 updated, 0 deleted, 0 unchanged, 0 skipped
         %s
         %s
-        %s"""
+        %s\
+        """
             .formatted(
                 HEADER,
                 ACCESS_LINE,
@@ -466,15 +478,15 @@ public class SyncCourseWithPlRepoJobTests {
     PlAssessmentSet existing =
         PlAssessmentSet.builder()
             .id(55L)
-            .plInstanceId(10L)
+            .plRepoId(3L)
             .abbreviation("LEC")
             .name("Lecture (old)")
             .heading("Lectures (old)")
             .color("blue1")
             .build();
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
-        .thenReturn(INFO_COURSE_INSTANCE_JSON_CONTENT);
-    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of(existing));
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
+        .thenReturn(INFO_COURSE_JSON_CONTENT);
+    when(plAssessmentSetRepository.findByPlRepoId(eq(3L))).thenReturn(List.of(existing));
 
     job().accept(ctx);
 
@@ -490,7 +502,8 @@ public class SyncCourseWithPlRepoJobTests {
         Assessment sets: 1 added, 1 updated, 0 deleted, 0 unchanged, 0 skipped
         %s
         %s
-        %s"""
+        %s\
+        """
             .formatted(
                 HEADER,
                 ACCESS_LINE,
@@ -506,15 +519,15 @@ public class SyncCourseWithPlRepoJobTests {
     PlAssessmentSet stale =
         PlAssessmentSet.builder()
             .id(56L)
-            .plInstanceId(10L)
+            .plRepoId(3L)
             .abbreviation("EXAM")
             .name("Exam")
             .heading("Exams")
             .color("pink2")
             .build();
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
-        .thenReturn(INFO_COURSE_INSTANCE_JSON_CONTENT);
-    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of(stale));
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
+        .thenReturn(INFO_COURSE_JSON_CONTENT);
+    when(plAssessmentSetRepository.findByPlRepoId(eq(3L))).thenReturn(List.of(stale));
 
     job().accept(ctx);
 
@@ -527,7 +540,8 @@ public class SyncCourseWithPlRepoJobTests {
         Assessment sets: 2 added, 0 updated, 1 deleted, 0 unchanged, 0 skipped
         %s
         %s
-        %s"""
+        %s\
+        """
             .formatted(
                 HEADER,
                 ACCESS_LINE,
@@ -540,15 +554,16 @@ public class SyncCourseWithPlRepoJobTests {
 
   @Test
   public void skips_assessment_set_entries_missing_a_required_field() throws Exception {
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
         .thenReturn(
             """
             {
               "assessmentSets": [
                 { "abbreviation": "LEC", "name": "Lecture", "heading": "Lectures" }
               ]
-            }""");
-    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of());
+            }\
+            """);
+    when(plAssessmentSetRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
 
     job().accept(ctx);
 
@@ -559,11 +574,12 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         %s
         %s
-        Skipping assessment set entry {"abbreviation":"LEC","name":"Lecture","heading":"Lectures"} (instance Fall2025): missing abbreviation, name, heading, or color
+        Skipping assessment set entry {"abbreviation":"LEC","name":"Lecture","heading":"Lectures"} (repo ucsb-cs156/pl-demo): missing abbreviation, name, heading, or color
         Assessment sets: 0 added, 0 updated, 0 deleted, 0 unchanged, 1 skipped
         %s
         %s
-        %s"""
+        %s\
+        """
             .formatted(
                 HEADER,
                 ACCESS_LINE,
@@ -576,15 +592,16 @@ public class SyncCourseWithPlRepoJobTests {
 
   @Test
   public void skips_assessment_set_entries_missing_an_abbreviation() throws Exception {
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
         .thenReturn(
             """
             {
               "assessmentSets": [
                 { "name": "Lecture", "heading": "Lectures", "color": "turquoise2" }
               ]
-            }""");
-    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of());
+            }\
+            """);
+    when(plAssessmentSetRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
 
     job().accept(ctx);
 
@@ -594,15 +611,16 @@ public class SyncCourseWithPlRepoJobTests {
 
   @Test
   public void skips_assessment_set_entries_missing_a_name() throws Exception {
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
         .thenReturn(
             """
             {
               "assessmentSets": [
                 { "abbreviation": "LEC", "heading": "Lectures", "color": "turquoise2" }
               ]
-            }""");
-    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of());
+            }\
+            """);
+    when(plAssessmentSetRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
 
     job().accept(ctx);
 
@@ -612,15 +630,16 @@ public class SyncCourseWithPlRepoJobTests {
 
   @Test
   public void skips_assessment_set_entries_missing_a_heading() throws Exception {
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
         .thenReturn(
             """
             {
               "assessmentSets": [
                 { "abbreviation": "LEC", "name": "Lecture", "color": "turquoise2" }
               ]
-            }""");
-    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of());
+            }\
+            """);
+    when(plAssessmentSetRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
 
     job().accept(ctx);
 
@@ -633,21 +652,22 @@ public class SyncCourseWithPlRepoJobTests {
     PlAssessmentSet existing =
         PlAssessmentSet.builder()
             .id(58L)
-            .plInstanceId(10L)
+            .plRepoId(3L)
             .abbreviation("LEC")
             .name("Lecture")
             .heading("Lectures (old)")
             .color("turquoise2")
             .build();
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
         .thenReturn(
             """
             {
               "assessmentSets": [
                 { "abbreviation": "LEC", "name": "Lecture", "heading": "Lectures", "color": "turquoise2" }
               ]
-            }""");
-    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of(existing));
+            }\
+            """);
+    when(plAssessmentSetRepository.findByPlRepoId(eq(3L))).thenReturn(List.of(existing));
 
     job().accept(ctx);
 
@@ -660,21 +680,22 @@ public class SyncCourseWithPlRepoJobTests {
     PlAssessmentSet existing =
         PlAssessmentSet.builder()
             .id(59L)
-            .plInstanceId(10L)
+            .plRepoId(3L)
             .abbreviation("LEC")
             .name("Lecture")
             .heading("Lectures")
             .color("blue1")
             .build();
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
         .thenReturn(
             """
             {
               "assessmentSets": [
                 { "abbreviation": "LEC", "name": "Lecture", "heading": "Lectures", "color": "turquoise2" }
               ]
-            }""");
-    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of(existing));
+            }\
+            """);
+    when(plAssessmentSetRepository.findByPlRepoId(eq(3L))).thenReturn(List.of(existing));
 
     job().accept(ctx);
 
@@ -683,9 +704,8 @@ public class SyncCourseWithPlRepoJobTests {
   }
 
   @Test
-  public void skips_assessment_set_sync_when_infoCourseInstance_json_cannot_be_parsed()
-      throws Exception {
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+  public void skips_assessment_set_sync_when_infoCourse_json_cannot_be_parsed() throws Exception {
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
         .thenReturn("not valid json");
 
     job().accept(ctx);
@@ -697,10 +717,11 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         %s
         %s
-        Skipping assessment set sync for instance Fall2025: could not parse infoCourseInstance.json
+        Skipping assessment set sync for repo ucsb-cs156/pl-demo: could not parse infoCourse.json
         %s
         %s
-        %s"""
+        %s\
+        """
             .formatted(
                 HEADER,
                 ACCESS_LINE,
@@ -713,7 +734,7 @@ public class SyncCourseWithPlRepoJobTests {
 
   @Test
   public void skips_assessment_set_sync_when_assessmentSets_key_is_missing() throws Exception {
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
         .thenReturn("{ \"longName\": \"Fall 2025\" }");
 
     job().accept(ctx);
@@ -725,10 +746,11 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         %s
         %s
-        Instance Fall2025's infoCourseInstance.json has no assessmentSets key; skipping assessment set sync
+        Repo ucsb-cs156/pl-demo's infoCourse.json has no assessmentSets key; skipping assessment set sync
         %s
         %s
-        %s"""
+        %s\
+        """
             .formatted(
                 HEADER,
                 ACCESS_LINE,
@@ -742,7 +764,7 @@ public class SyncCourseWithPlRepoJobTests {
   @Test
   public void skips_assessment_set_sync_when_assessmentSets_value_is_not_an_array()
       throws Exception {
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
         .thenReturn("{ \"assessmentSets\": \"not an array\" }");
 
     job().accept(ctx);
@@ -754,10 +776,11 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         %s
         %s
-        Instance Fall2025's infoCourseInstance.json has a non-array assessmentSets value; skipping assessment set sync
+        Repo ucsb-cs156/pl-demo's infoCourse.json has a non-array assessmentSets value; skipping assessment set sync
         %s
         %s
-        %s"""
+        %s\
+        """
             .formatted(
                 HEADER,
                 ACCESS_LINE,
@@ -773,21 +796,22 @@ public class SyncCourseWithPlRepoJobTests {
     PlAssessmentSet existing =
         PlAssessmentSet.builder()
             .id(57L)
-            .plInstanceId(10L)
+            .plRepoId(3L)
             .abbreviation("LEC")
             .name("Lecture")
             .heading("Lectures")
             .color("turquoise2")
             .build();
-    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_INSTANCE_PATH), eq(TOKEN)))
+    when(githubService.getFileContent(eq(REPO), eq(INFO_COURSE_PATH), eq(TOKEN)))
         .thenReturn(
             """
             {
               "assessmentSets": [
                 { "abbreviation": "LEC", "name": "Lecture", "heading": "Lectures", "color": "turquoise2" }
               ]
-            }""");
-    when(plAssessmentSetRepository.findByPlInstanceId(eq(10L))).thenReturn(List.of(existing));
+            }\
+            """);
+    when(plAssessmentSetRepository.findByPlRepoId(eq(3L))).thenReturn(List.of(existing));
 
     job().accept(ctx);
 
@@ -801,7 +825,8 @@ public class SyncCourseWithPlRepoJobTests {
         Assessment sets: 0 added, 0 updated, 0 deleted, 1 unchanged, 0 skipped
         %s
         %s
-        %s"""
+        %s\
+        """
             .formatted(
                 HEADER,
                 ACCESS_LINE,
@@ -846,7 +871,8 @@ public class SyncCourseWithPlRepoJobTests {
         Added question foo (2D Array)
         Questions: 1 added, 0 updated, 0 deleted, 0 unchanged
         %s
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -919,7 +945,8 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         Questions: 0 added, 0 updated, 0 deleted, 0 unchanged
         %s
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -955,7 +982,8 @@ public class SyncCourseWithPlRepoJobTests {
         Updated question foo (New Title)
         Questions: 0 added, 1 updated, 0 deleted, 0 unchanged
         %s
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1012,7 +1040,8 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         Questions: 0 added, 0 updated, 0 deleted, 1 unchanged
         %s
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1042,7 +1071,8 @@ public class SyncCourseWithPlRepoJobTests {
         Deleted question old (no longer on GitHub)
         Questions: 0 added, 0 updated, 1 deleted, 0 unchanged
         %s
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1066,7 +1096,8 @@ public class SyncCourseWithPlRepoJobTests {
         Skipping question bad: could not parse info.json
         Questions: 0 added, 0 updated, 0 deleted, 0 unchanged
         %s
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1079,7 +1110,8 @@ public class SyncCourseWithPlRepoJobTests {
         .thenReturn(List.of(file("info.json")));
     when(githubService.getFileContent(eq(REPO), eq("questions/bad/info.json"), eq(TOKEN)))
         .thenReturn("""
-            { "title": "No uuid here" }""");
+            { "title": "No uuid here" }\
+            """);
     when(plQuestionRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
 
     job().accept(ctx);
@@ -1091,7 +1123,8 @@ public class SyncCourseWithPlRepoJobTests {
         Skipping question bad: info.json is missing uuid or title
         Questions: 0 added, 0 updated, 0 deleted, 0 unchanged
         %s
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1104,7 +1137,8 @@ public class SyncCourseWithPlRepoJobTests {
         .thenReturn(List.of(file("info.json")));
     when(githubService.getFileContent(eq(REPO), eq("questions/bad/info.json"), eq(TOKEN)))
         .thenReturn("""
-            { "uuid": "%s" }""".formatted(UUID_1));
+            { "uuid": "%s" }\
+            """.formatted(UUID_1));
     when(plQuestionRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
 
     job().accept(ctx);
@@ -1120,7 +1154,8 @@ public class SyncCourseWithPlRepoJobTests {
         .thenReturn(List.of(file("info.json")));
     when(githubService.getFileContent(eq(REPO), eq("questions/bad/info.json"), eq(TOKEN)))
         .thenReturn("""
-            { "uuid": "not-a-uuid", "title": "Bad UUID" }""");
+            { "uuid": "not-a-uuid", "title": "Bad UUID" }\
+            """);
     when(plQuestionRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
 
     job().accept(ctx);
@@ -1132,7 +1167,8 @@ public class SyncCourseWithPlRepoJobTests {
         Skipping question bad: could not parse info.json
         Questions: 0 added, 0 updated, 0 deleted, 0 unchanged
         %s
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_ASSESSMENTS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1183,7 +1219,8 @@ public class SyncCourseWithPlRepoJobTests {
       """
       Deleted question bar/baz (no longer on GitHub)
       Deleted question foo (no longer on GitHub)
-      Questions: 0 added, 0 updated, 2 deleted, 0 unchanged""";
+      Questions: 0 added, 0 updated, 2 deleted, 0 unchanged\
+      """;
 
   private void stubEmptyQuestionsDirectory() {
     when(githubService.listDirectory(eq(REPO), eq("questions"), eq(TOKEN))).thenReturn(List.of());
@@ -1245,7 +1282,8 @@ public class SyncCourseWithPlRepoJobTests {
         Added assessment exam1 (instance Fall2025)
         Linked 2 question(s) to assessment exam1 (instance Fall2025)
         Assessments: 1 added, 0 deleted, 0 unchanged
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, QUESTIONS_DELETED_LINES, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1262,7 +1300,8 @@ public class SyncCourseWithPlRepoJobTests {
             eq(REPO), eq(ASSESSMENTS_PATH + "/exam1/infoAssessment.json"), eq(TOKEN)))
         .thenReturn(
             """
-            { "zones": [ { "questions": [ { "id": "foo" }, { "id": "nope" } ] } ] }""");
+            { "zones": [ { "questions": [ { "id": "foo" }, { "id": "nope" } ] } ] }\
+            """);
     when(plAssessmentRepository.save(any(PlAssessment.class)))
         .thenAnswer(
             invocation -> {
@@ -1292,7 +1331,8 @@ public class SyncCourseWithPlRepoJobTests {
         Assessment exam1 (instance Fall2025) references unknown question id nope; skipping that link
         Linked 1 question(s) to assessment exam1 (instance Fall2025)
         Assessments: 1 added, 0 deleted, 0 unchanged
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, QUESTIONS_DELETED_LINES, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1341,7 +1381,8 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         %s
         Assessments: 0 added, 0 deleted, 1 unchanged
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, QUESTIONS_DELETED_LINES, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1357,8 +1398,10 @@ public class SyncCourseWithPlRepoJobTests {
         .thenReturn(List.of(file("infoAssessment.json")));
     when(githubService.getFileContent(
             eq(REPO), eq(ASSESSMENTS_PATH + "/exam1/infoAssessment.json"), eq(TOKEN)))
-        .thenReturn("""
-            { "zones": [ { "questions": [ { "id": "bar/baz" } ] } ] }""");
+        .thenReturn(
+            """
+            { "zones": [ { "questions": [ { "id": "bar/baz" } ] } ] }\
+            """);
     PlAssessment existing =
         PlAssessment.builder().id(77L).plRepoId(3L).plInstanceId(10L).name("exam1").build();
     when(plAssessmentRepository.findByPlRepoIdAndPlInstanceId(eq(3L), eq(10L)))
@@ -1394,7 +1437,8 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         Linked 1 question(s) to assessment exam1 (instance Fall2025)
         Assessments: 0 added, 0 deleted, 1 unchanged
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, QUESTIONS_DELETED_LINES, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1420,7 +1464,8 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         Deleted assessment oldExam (instance Fall2025) (no longer on GitHub)
         Assessments: 0 added, 1 deleted, 0 unchanged
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1435,7 +1480,8 @@ public class SyncCourseWithPlRepoJobTests {
             eq(REPO), eq(ASSESSMENTS_PATH + "/exam1/infoAssessment.json"), eq(TOKEN)))
         .thenReturn(
             """
-            { "uuid": "22222222-3333-4444-5555-666666666666", "title": "No zones" }""");
+            { "uuid": "22222222-3333-4444-5555-666666666666", "title": "No zones" }\
+            """);
     when(plAssessmentRepository.save(any(PlAssessment.class)))
         .thenAnswer(
             invocation -> {
@@ -1454,7 +1500,8 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         Added assessment exam1 (instance Fall2025)
         Assessments: 1 added, 0 deleted, 0 unchanged
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1477,7 +1524,8 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         %s
         %s
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, NO_ASSESSMENTS_SUMMARY, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1502,7 +1550,8 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         Skipping assessment bad (instance Fall2025): could not parse infoAssessment.json
         %s
-        %s"""
+        %s\
+        """
             .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, NO_ASSESSMENTS_SUMMARY, ENRICH_ZERO_SUMMARY);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1543,7 +1592,8 @@ public class SyncCourseWithPlRepoJobTests {
         Deleted assessment exam1 (instance Fall2025) (no longer on GitHub)
         Assessments: 0 added, 1 deleted, 0 unchanged
         Updated PrairieLearn fields for assessment exam1
-        PrairieLearn assessment fields: 1 updated, 0 without a matching repo assessment"""
+        PrairieLearn assessment fields: 1 updated, 0 without a matching repo assessment\
+        """
             .formatted(PREAMBLE, SKIP_QUESTIONS_LINE);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1564,7 +1614,8 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         %s
         PrairieLearn assessment exam1 has no matching assessment directory in the repo; skipping
-        PrairieLearn assessment fields: 0 updated, 1 without a matching repo assessment"""
+        PrairieLearn assessment fields: 0 updated, 1 without a matching repo assessment\
+        """
             .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, SKIP_ASSESSMENTS_LINE);
     assertEquals(expected, jobStarted.getLog());
   }
@@ -1582,7 +1633,8 @@ public class SyncCourseWithPlRepoJobTests {
         %s
         %s
         %s
-        Could not list assessments from PrairieLearn (HTTP 429); skipping assessment field updates"""
+        Could not list assessments from PrairieLearn (HTTP 429); skipping assessment field updates\
+        """
             .formatted(PREAMBLE, SKIP_QUESTIONS_LINE, SKIP_ASSESSMENTS_LINE);
     assertEquals(expected, jobStarted.getLog());
   }

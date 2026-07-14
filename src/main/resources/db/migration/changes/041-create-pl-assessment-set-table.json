@@ -23,7 +23,7 @@
                 },
                 {
                   "column": {
-                    "name": "pl_instance_id",
+                    "name": "pl_repo_id",
                     "type": "BIGINT",
                     "constraints": { "nullable": false }
                   }
@@ -62,17 +62,17 @@
           {
             "addForeignKeyConstraint": {
               "baseTableName": "pl_assessment_set",
-              "baseColumnNames": "pl_instance_id",
-              "referencedTableName": "pl_instance",
+              "baseColumnNames": "pl_repo_id",
+              "referencedTableName": "pl_repo",
               "referencedColumnNames": "id",
-              "constraintName": "FK_PL_ASSESSMENT_SET_PL_INSTANCE_ID"
+              "constraintName": "FK_PL_ASSESSMENT_SET_PL_REPO_ID"
             }
           },
           {
             "addUniqueConstraint": {
               "tableName": "pl_assessment_set",
-              "columnNames": "pl_instance_id, abbreviation",
-              "constraintName": "UQ_PL_ASSESSMENT_SET_PL_INSTANCE_ID_ABBREVIATION"
+              "columnNames": "pl_repo_id, abbreviation",
+              "constraintName": "UQ_PL_ASSESSMENT_SET_PL_REPO_ID_ABBREVIATION"
             }
           }
         ]

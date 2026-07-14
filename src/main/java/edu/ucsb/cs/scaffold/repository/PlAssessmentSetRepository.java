@@ -8,10 +8,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PlAssessmentSetRepository extends JpaRepository<PlAssessmentSet, Long> {
-  List<PlAssessmentSet> findByPlInstanceId(Long plInstanceId);
+  List<PlAssessmentSet> findByPlRepoId(Long plRepoId);
 
-  Optional<PlAssessmentSet> findByPlInstanceIdAndAbbreviation(
-      Long plInstanceId, String abbreviation);
+  Optional<PlAssessmentSet> findByPlRepoIdAndAbbreviation(Long plRepoId, String abbreviation);
 
-  void deleteByPlInstanceId(Long plInstanceId);
+  void deleteByPlRepoId(Long plRepoId);
 }

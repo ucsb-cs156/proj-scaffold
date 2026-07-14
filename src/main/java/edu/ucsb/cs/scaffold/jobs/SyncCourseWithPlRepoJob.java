@@ -58,9 +58,9 @@ import org.springframework.web.client.HttpClientErrorException;
  * __drafts__} directories are skipped; question directories are not traversed further; stale
  * PlQuestion rows are deleted (cascading to their PlScaffoldAssessments and join rows).
  *
- * <p>Assessment sets (issue #93): the {@code assessmentSets} array of {@code
- * courseInstances/<instance>/infoCourseInstance.json} becomes the PlAssessmentSet rows of the
- * instance, matched by abbreviation. Stale rows are deleted.
+ * <p>Assessment sets (issue #93): the {@code assessmentSets} array of the repo's top-level {@code
+ * infoCourse.json} becomes the PlAssessmentSet rows of the repo (assessment sets are global to the
+ * whole course, not per-instance), matched by abbreviation. Stale rows are deleted.
  *
  * <p>Assessments: each subdirectory of {@code courseInstances/<instance>/assessments} containing an
  * {@code infoAssessment.json} becomes a PlAssessment; the {@code zones} key is walked recursively
@@ -85,7 +85,7 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
   static final String DRAFTS_DIRECTORY = "__drafts__";
   static final String INFO_JSON = "info.json";
   static final String INFO_ASSESSMENT_JSON = "infoAssessment.json";
-  static final String INFO_COURSE_INSTANCE_JSON = "infoCourseInstance.json";
+  static final String INFO_COURSE_JSON = "infoCourse.json";
   static final String ASSESSMENT_SETS_KEY = "assessmentSets";
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -165,7 +165,8 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
                 () -> new EntityNotFoundException(PlInstance.class, course.getPlInstanceId()));
     if (plInstance.getNumericId() == null) {
       throw new Exception(
-          "The course's PrairieLearn instance has no numeric id yet; re-associate it on the PrairieLearn tab of the course settings page");
+          "The course's PrairieLearn instance has no numeric id yet; re-associate it on the"
+              + " PrairieLearn tab of the course settings page");
     }
 
     String githubToken =
@@ -210,7 +211,7 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
     sanityCheckInstance(ctx, plInstance, instanceInfo);
 
     try {
-      syncAssessmentSets(ctx, plRepo, plInstance, githubToken);
+      syncAssessmentSets(ctx, plRepo, githubToken);
       syncQuestions(ctx, plRepo, githubToken);
       syncAssessments(ctx, plRepo, plInstance, githubToken);
     } catch (HttpClientErrorException.Unauthorized | HttpClientErrorException.Forbidden e) {
@@ -253,24 +254,20 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
   }
 
   /**
-   * Syncs the course instance's assessment sets (issue #93) from the {@code assessmentSets} array
-   * of {@code courseInstances/<instance>/infoCourseInstance.json}. Each entry becomes a
-   * PlAssessmentSet row, matched by abbreviation; stale rows (abbreviations no longer present) are
-   * deleted. If the file is missing (HTTP 404) or cannot be parsed, the sync is skipped entirely so
-   * a token/access problem cannot mass-delete rows.
+   * Syncs the repo's assessment sets (issue #93) from the {@code assessmentSets} array of the
+   * top-level {@code infoCourse.json} — assessment sets are global to the whole course repo, not
+   * per-instance. Each entry becomes a PlAssessmentSet row, matched by abbreviation; stale rows
+   * (abbreviations no longer present) are deleted. If the file is missing (HTTP 404) or cannot be
+   * parsed, the sync is skipped entirely so a token/access problem cannot mass-delete rows.
    */
-  private void syncAssessmentSets(
-      JobContext ctx, PlRepo plRepo, PlInstance instance, String token) {
-    String path =
-        "%s/%s/%s"
-            .formatted(COURSE_INSTANCES_PATH, instance.getShortName(), INFO_COURSE_INSTANCE_JSON);
+  private void syncAssessmentSets(JobContext ctx, PlRepo plRepo, String token) {
     String content;
     try {
-      content = githubService.getFileContent(plRepo.getRepoName(), path, token);
+      content = githubService.getFileContent(plRepo.getRepoName(), INFO_COURSE_JSON, token);
     } catch (HttpClientErrorException.NotFound e) {
       ctx.log(
-          "Instance %s has no %s; skipping assessment set sync"
-              .formatted(instance.getShortName(), INFO_COURSE_INSTANCE_JSON));
+          "Repo %s has no %s; skipping assessment set sync"
+              .formatted(plRepo.getRepoName(), INFO_COURSE_JSON));
       return;
     }
 
@@ -279,27 +276,27 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
       root = MAPPER.readTree(content);
     } catch (Exception e) {
       ctx.log(
-          "Skipping assessment set sync for instance %s: could not parse %s"
-              .formatted(instance.getShortName(), INFO_COURSE_INSTANCE_JSON));
+          "Skipping assessment set sync for repo %s: could not parse %s"
+              .formatted(plRepo.getRepoName(), INFO_COURSE_JSON));
       return;
     }
 
     JsonNode assessmentSets = root.get(ASSESSMENT_SETS_KEY);
     if (assessmentSets == null) {
       ctx.log(
-          "Instance %s's %s has no %s key; skipping assessment set sync"
-              .formatted(instance.getShortName(), INFO_COURSE_INSTANCE_JSON, ASSESSMENT_SETS_KEY));
+          "Repo %s's %s has no %s key; skipping assessment set sync"
+              .formatted(plRepo.getRepoName(), INFO_COURSE_JSON, ASSESSMENT_SETS_KEY));
       return;
     }
     if (!assessmentSets.isArray()) {
       ctx.log(
-          "Instance %s's %s has a non-array %s value; skipping assessment set sync"
-              .formatted(instance.getShortName(), INFO_COURSE_INSTANCE_JSON, ASSESSMENT_SETS_KEY));
+          "Repo %s's %s has a non-array %s value; skipping assessment set sync"
+              .formatted(plRepo.getRepoName(), INFO_COURSE_JSON, ASSESSMENT_SETS_KEY));
       return;
     }
 
     Map<String, PlAssessmentSet> existingByAbbreviation = new LinkedHashMap<>();
-    for (PlAssessmentSet set : plAssessmentSetRepository.findByPlInstanceId(instance.getId())) {
+    for (PlAssessmentSet set : plAssessmentSetRepository.findByPlRepoId(plRepo.getId())) {
       existingByAbbreviation.put(set.getAbbreviation(), set);
     }
 
@@ -316,8 +313,8 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
       if (abbreviation == null || name == null || heading == null || color == null) {
         skipped++;
         ctx.log(
-            "Skipping assessment set entry %s (instance %s): missing abbreviation, name, heading, or color"
-                .formatted(entry, instance.getShortName()));
+            "Skipping assessment set entry %s (repo %s): missing abbreviation, name, heading, or color"
+                .formatted(entry, plRepo.getRepoName()));
         continue;
       }
       foundAbbreviations.add(abbreviation);
@@ -326,7 +323,7 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
       if (set == null) {
         plAssessmentSetRepository.save(
             PlAssessmentSet.builder()
-                .plInstanceId(instance.getId())
+                .plRepoId(plRepo.getId())
                 .abbreviation(abbreviation)
                 .name(name)
                 .heading(heading)

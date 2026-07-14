@@ -19,14 +19,14 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
     name = "pl_assessment_set",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"pl_instance_id", "abbreviation"})})
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"pl_repo_id", "abbreviation"})})
 public class PlAssessmentSet {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "pl_instance_id", nullable = false)
-  private Long plInstanceId;
+  @Column(name = "pl_repo_id", nullable = false)
+  private Long plRepoId;
 
   // e.g. "LEC"
   @Column(name = "abbreviation", nullable = false)
