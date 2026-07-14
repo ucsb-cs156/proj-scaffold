@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import type { Assessment } from "main/types/conceptGraph";
 import PrairieLearnAssessment from "main/components/Scaffold/PrairieLearnAssessment";
+import { compareByAssessmentSetAndNumber } from "main/utils/conceptGraphUtils";
 
 interface AssessmentSelectProps {
   assessments: Assessment[];
@@ -18,6 +19,10 @@ export default function AssessmentSelect({
 
   const selectedAssessment = assessments.find(
     (a) => a.id === selectedAssessmentId,
+  );
+
+  const sortedAssessments = [...assessments].sort(
+    compareByAssessmentSetAndNumber,
   );
 
   useEffect(() => {
@@ -79,7 +84,7 @@ export default function AssessmentSelect({
         </svg>
       </div>
 
-      {isOpen && assessments.length > 0 && (
+      {isOpen && sortedAssessments.length > 0 && (
         <div
           style={{
             position: "absolute",
@@ -95,7 +100,7 @@ export default function AssessmentSelect({
             overflowY: "auto",
           }}
         >
-          {assessments.map((a, i) => (
+          {sortedAssessments.map((a, i) => (
             <div
               key={a.id}
               onMouseDown={() => {
@@ -110,7 +115,9 @@ export default function AssessmentSelect({
                 display: "flex",
                 alignItems: "center",
                 borderBottom:
-                  i < assessments.length - 1 ? "1px solid #F1F5F9" : "none",
+                  i < sortedAssessments.length - 1
+                    ? "1px solid #F1F5F9"
+                    : "none",
               }}
             >
               <PrairieLearnAssessment assessment={a} />
