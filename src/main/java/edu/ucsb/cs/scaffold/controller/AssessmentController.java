@@ -143,9 +143,12 @@ public class AssessmentController extends ApiController {
             .collect(Collectors.toMap(PlQuestion::getId, q -> q));
 
     return joinRows.stream()
-        .map(join -> questionsById.get(join.getPlQuestionId()))
+        .map(
+            join -> {
+              PlQuestion q = questionsById.get(join.getPlQuestionId());
+              return q == null ? null : toQuestionDTO(q, assessmentId, join.getId());
+            })
         .filter(Objects::nonNull)
-        .map(q -> toQuestionDTO(q, assessmentId))
         .toList();
   }
 
@@ -164,12 +167,14 @@ public class AssessmentController extends ApiController {
     return a.getPlAssessmentTitle() != null ? a.getPlAssessmentTitle() : a.getName();
   }
 
-  private static QuestionDTO toQuestionDTO(PlQuestion q, Long assessmentId) {
+  private static QuestionDTO toQuestionDTO(
+      PlQuestion q, Long assessmentId, Long plAssessmentQuestionId) {
     return new QuestionDTO(
         String.valueOf(q.getId()),
         String.valueOf(assessmentId),
         q.getUuid().toString(),
-        q.getTitle());
+        q.getTitle(),
+        String.valueOf(plAssessmentQuestionId));
   }
 
   public record AssessmentDTO(
@@ -181,5 +186,6 @@ public class AssessmentController extends ApiController {
       String id,
       @JsonProperty("assessment_id") String assessmentId,
       @JsonProperty("pl_question_uuid") String plQuestionUuid,
-      String title) {}
+      String title,
+      @JsonProperty("pl_assessment_question_id") String plAssessmentQuestionId) {}
 }
