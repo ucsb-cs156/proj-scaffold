@@ -7,6 +7,74 @@ interface AssessmentSelectProps {
   onSelect: (id: string) => void;
 }
 
+// Width of the badge column: badges of all rows line up in a single centered
+// column, with titles starting flush left immediately after.
+const BADGE_COLUMN_WIDTH = 48;
+
+// Pill-shaped badge showing the assessment's "set" abbreviation + number (e.g. "HW2"),
+// colored with pl_assessment_set_color. Renders nothing if the PL-API sync (issue #71)
+// hasn't populated these fields yet.
+function AssessmentBadge({ assessment }: { assessment: Assessment }) {
+  const label =
+    (assessment.pl_assessment_set_abbreviation ?? "") +
+    (assessment.pl_assessment_number ?? "");
+  if (!label) {
+    return null;
+  }
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: 36,
+        padding: "2px 8px",
+        borderRadius: 999,
+        background: assessment.pl_assessment_set_color ?? "#94A3B8",
+        color: "#ffffff",
+        fontSize: 11,
+        fontWeight: 600,
+        lineHeight: 1.4,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+// A row's content: a centered badge column followed by a left-aligned title, so that
+// badges of all rows line up vertically and titles all start flush left.
+function AssessmentRow({ assessment }: { assessment: Assessment }) {
+  return (
+    <span
+      style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 0 }}
+    >
+      <span
+        style={{
+          width: BADGE_COLUMN_WIDTH,
+          flexShrink: 0,
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <AssessmentBadge assessment={assessment} />
+      </span>
+      <span
+        style={{
+          marginLeft: 8,
+          textAlign: "left",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {assessment.name}
+      </span>
+    </span>
+  );
+}
+
 export default function AssessmentSelect({
   assessments,
   selectedAssessmentId,
@@ -15,8 +83,9 @@ export default function AssessmentSelect({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const selectedName =
-    assessments.find((a) => a.id === selectedAssessmentId)?.name ?? "";
+  const selectedAssessment = assessments.find(
+    (a) => a.id === selectedAssessmentId,
+  );
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -53,7 +122,11 @@ export default function AssessmentSelect({
           userSelect: "none",
         }}
       >
-        <span>{selectedName || "Select assessment…"}</span>
+        {selectedAssessment ? (
+          <AssessmentRow assessment={selectedAssessment} />
+        ) : (
+          <span>Select assessment…</span>
+        )}
         <svg
           width="12"
           height="12"
@@ -101,11 +174,13 @@ export default function AssessmentSelect({
                 (a.id === selectedAssessmentId ? " is-selected" : "")
               }
               style={{
+                display: "flex",
+                alignItems: "center",
                 borderBottom:
                   i < assessments.length - 1 ? "1px solid #F1F5F9" : "none",
               }}
             >
-              {a.name}
+              <AssessmentRow assessment={a} />
             </div>
           ))}
         </div>

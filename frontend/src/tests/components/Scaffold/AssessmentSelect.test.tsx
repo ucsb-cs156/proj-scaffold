@@ -8,6 +8,17 @@ const assessments: Assessment[] = [
   { id: "2", pl_assessment_id: "pl2", name: "HW2" },
 ];
 
+const assessmentsWithBadges: Assessment[] = [
+  {
+    id: "1",
+    pl_assessment_id: "pl1",
+    name: "Homework 1",
+    pl_assessment_set_abbreviation: "HW",
+    pl_assessment_number: "1",
+    pl_assessment_set_color: "#3B82F6",
+  },
+];
+
 describe("AssessmentSelect", () => {
   test("shows placeholder text when nothing is selected", () => {
     render(
@@ -115,5 +126,32 @@ describe("AssessmentSelect", () => {
     fireEvent.mouseDown(screen.getByTestId("outside"));
 
     expect(screen.queryByText("HW1")).not.toBeInTheDocument();
+  });
+
+  test("shows a colored badge with the set abbreviation and number", () => {
+    render(
+      <AssessmentSelect
+        assessments={assessmentsWithBadges}
+        selectedAssessmentId="1"
+        onSelect={vi.fn()}
+      />,
+    );
+
+    const badge = screen.getByText("HW1");
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveStyle({ backgroundColor: "#3B82F6" });
+    expect(screen.getByText("Homework 1")).toBeInTheDocument();
+  });
+
+  test("does not render a badge when the assessment has no set abbreviation/number", () => {
+    render(
+      <AssessmentSelect
+        assessments={assessments}
+        selectedAssessmentId="1"
+        onSelect={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("HW1")).toBeInTheDocument();
   });
 });
