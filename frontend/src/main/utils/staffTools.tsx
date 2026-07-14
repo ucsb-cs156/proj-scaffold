@@ -48,6 +48,17 @@ export function StaffToolsProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const [realignConceptsHandler, setRealignConceptsHandler] = useState<
+    (() => void) | null
+  >(null);
+
+  const registerRealignConceptsHandler = useCallback(
+    (handler: (() => void) | null) => {
+      setRealignConceptsHandler(() => handler);
+    },
+    [],
+  );
+
   const setStaffTool = (tool: keyof StaffToolSettings, value: boolean) => {
     const next = { ...settings, [tool]: value };
     try {
@@ -68,6 +79,8 @@ export function StaffToolsProvider({ children }: { children: ReactNode }) {
         setStaffTool,
         newConceptHandler,
         registerNewConceptHandler,
+        realignConceptsHandler,
+        registerRealignConceptsHandler,
       }}
     >
       {children}

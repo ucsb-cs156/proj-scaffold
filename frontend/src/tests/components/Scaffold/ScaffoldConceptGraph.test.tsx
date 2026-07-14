@@ -480,6 +480,8 @@ describe("ScaffoldConceptGraph debug mode tooltips", () => {
           canUseStaffTools: true,
           newConceptHandler: null,
           registerNewConceptHandler: vi.fn(),
+          realignConceptsHandler: null,
+          registerRealignConceptsHandler: vi.fn(),
         }}
       >
         {ui}
@@ -539,6 +541,8 @@ describe("ScaffoldConceptGraph subconcept drag-and-drop reordering", () => {
           canUseStaffTools: true,
           newConceptHandler: null,
           registerNewConceptHandler: vi.fn(),
+          realignConceptsHandler: null,
+          registerRealignConceptsHandler: vi.fn(),
         }}
       >
         {ui}

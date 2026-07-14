@@ -114,7 +114,8 @@ function ConceptGraphPageContent() {
     courseIdParam !== undefined && !Number.isNaN(courseId);
 
   const currentUser = useCurrentUser();
-  const { registerNewConceptHandler } = useStaffTools();
+  const { registerNewConceptHandler, registerRealignConceptsHandler } =
+    useStaffTools();
   // Derive the numeric id from the users table; null when not logged in.
   const userId: number | null = currentUser?.loggedIn
     ? (currentUser.root.user?.id ?? null)
@@ -333,6 +334,27 @@ function ConceptGraphPageContent() {
     },
   );
 
+  // "Realign Concepts" (Footer button, editing-mode only): recomputes levels,
+  // colors, and layout from the edges via POST /api/course/scaffold/reset.
+  const realignConceptsMutation = useBackendMutation<void>(
+    () => ({
+      method: "POST",
+      url: "/api/course/scaffold/reset",
+      params: { courseId },
+    }),
+    {
+      onSuccess: () => {
+        toast("Concepts realigned successfully.");
+      },
+    },
+    [
+      "/api/concepts/graph",
+      "/api/concepts/positions",
+      "/api/concepts/edges",
+      "/api/concepts/content",
+    ],
+  );
+
   const conceptsPath = `/api/concepts/course?courseId=${courseId}`;
   const editableConceptsQueryKey = [conceptsPath];
   const editableSubconceptsQueryKey = ["/api/concepts/subconcepts", courseId];
@@ -422,6 +444,25 @@ function ConceptGraphPageContent() {
     courseIdIsValid,
     openCreateConceptModal,
     registerNewConceptHandler,
+  ]);
+
+  const { mutate: realignConceptsMutate } = realignConceptsMutation;
+  const realignConcepts = useCallback(() => {
+    realignConceptsMutate();
+  }, [realignConceptsMutate]);
+
+  useEffect(() => {
+    if (!currentUser?.loggedIn || !courseIdIsValid) {
+      registerRealignConceptsHandler(null);
+      return;
+    }
+    registerRealignConceptsHandler(realignConcepts);
+    return () => registerRealignConceptsHandler(null);
+  }, [
+    currentUser?.loggedIn,
+    courseIdIsValid,
+    realignConcepts,
+    registerRealignConceptsHandler,
   ]);
 
   // Log the login once per visit, as soon as we know who the user is.
