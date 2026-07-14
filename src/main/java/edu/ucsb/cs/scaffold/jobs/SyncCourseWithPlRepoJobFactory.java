@@ -4,6 +4,7 @@ import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentSetRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
@@ -38,6 +39,8 @@ public class SyncCourseWithPlRepoJobFactory {
 
   @Autowired private PlAssessmentQuestionRepository plAssessmentQuestionRepository;
 
+  @Autowired private PlAssessmentSetRepository plAssessmentSetRepository;
+
   @Autowired private GithubService githubService;
 
   @Autowired private PrairieLearnService prairieLearnService;
@@ -54,6 +57,7 @@ public class SyncCourseWithPlRepoJobFactory {
         .plScaffoldAssessmentRepository(plScaffoldAssessmentRepository)
         .plAssessmentRepository(plAssessmentRepository)
         .plAssessmentQuestionRepository(plAssessmentQuestionRepository)
+        .plAssessmentSetRepository(plAssessmentSetRepository)
         .githubService(githubService)
         .prairieLearnService(prairieLearnService)
         .build();

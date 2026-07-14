@@ -1,0 +1,31 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "041-add-locked-to-pl-assessment",
+        "author": "claude",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "columnExists": { "tableName": "pl_assessment", "columnName": "locked" } } }
+        ],
+        "changes": [
+          {
+            "addColumn": {
+              "tableName": "pl_assessment",
+              "columns": [
+                {
+                  "column": {
+                    "name": "locked",
+                    "type": "BOOLEAN",
+                    "defaultValue": "true",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

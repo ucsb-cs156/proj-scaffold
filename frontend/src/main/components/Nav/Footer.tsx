@@ -15,6 +15,7 @@ export default function Footer() {
     canUseStaffTools,
     setStaffTool,
     newConceptHandler,
+    realignConceptsHandler,
   } = useStaffTools();
 
   return (
@@ -52,6 +53,16 @@ export default function Footer() {
                 onClick={newConceptHandler}
               >
                 New Concept
+              </Button>
+            )}
+            {enableEditing && realignConceptsHandler && (
+              <Button
+                variant="outline-dark"
+                size="sm"
+                data-testid="realign-concepts-button"
+                onClick={realignConceptsHandler}
+              >
+                Realign Concepts
               </Button>
             )}
             <Form.Check

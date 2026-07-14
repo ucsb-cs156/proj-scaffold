@@ -305,6 +305,22 @@ body.scaffold-canvas-active input::placeholder {
   background-color: #f7ede1;
 }
 
+.scaffold-top-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.scaffold-top-bar-course-info {
+  flex-shrink: 0;
+  background: #e2d76a;
+  padding: 4px 20px;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  color: #1e293b;
+  text-align: left;
+}
+
 .scaffold-top-bar {
   height: 60px;
   flex-shrink: 0;

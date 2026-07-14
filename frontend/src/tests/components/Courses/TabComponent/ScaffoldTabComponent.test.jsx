@@ -69,7 +69,6 @@ describe("ScaffoldTabComponent tests", () => {
   test("renders with correct data-testid", () => {
     renderScaffoldTabComponent();
     expect(screen.getByTestId("test-scaffoldTab")).toBeInTheDocument();
-    expect(screen.getByTestId("test-reset-button")).toBeInTheDocument();
   });
 
   test("renders with custom testIdPrefix", () => {
@@ -79,20 +78,6 @@ describe("ScaffoldTabComponent tests", () => {
     expect(
       screen.getByTestId("InstructorCourseShowPage-scaffoldTab"),
     ).toBeInTheDocument();
-  });
-
-  test("reset button posts scaffold reset for the course and shows success feedback", async () => {
-    renderScaffoldTabComponent({ courseId: 42 });
-
-    fireEvent.click(screen.getByTestId("test-reset-button"));
-
-    await waitFor(() => expect(axiosMock.history.post.length).toBe(1));
-    expect(axiosMock.history.post[0].params).toEqual({ courseId: 42 });
-    await waitFor(() =>
-      expect(mockToast).toHaveBeenCalledWith(
-        "Scaffold reset successfully completed.",
-      ),
-    );
   });
 
   test("renders button labels and the replace-all warning", () => {

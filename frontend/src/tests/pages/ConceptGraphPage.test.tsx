@@ -322,6 +322,7 @@ describe("ConceptGraphPage", () => {
     axiosMock.onPost("/api/user-state").reply(204);
     axiosMock.onPost("/api/user-activity").reply(204);
     axiosMock.onPut("/api/concepts/subconcepts/reorder").reply(200, []);
+    axiosMock.onPost("/api/course/scaffold/reset").reply(200, {});
     axiosMock
       .onGet("/api/concepts/course?courseId=1")
       .reply(200, editableConcepts);
@@ -912,5 +913,31 @@ describe("ConceptGraphPage", () => {
     expect(await screen.findByTestId("ConceptModal-base")).toHaveTextContent(
       "Create Concept",
     );
+  });
+
+  test("the footer realign concepts button appears only when editing is enabled and posts a scaffold reset", async () => {
+    renderConceptGraphPage(currentUserFixtures.adminUser);
+    await screen.findByTestId("concept-graph-stub");
+
+    expect(
+      screen.queryByTestId("realign-concepts-button"),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("enable-editing-toggle"));
+
+    const realignButton = await screen.findByTestId("realign-concepts-button");
+    fireEvent.click(realignButton);
+
+    await waitFor(() =>
+      expect(
+        axiosMock.history.post.filter(
+          (r) => r.url === "/api/course/scaffold/reset",
+        ),
+      ).toHaveLength(1),
+    );
+    expect(
+      axiosMock.history.post.find((r) => r.url === "/api/course/scaffold/reset")
+        ?.params,
+    ).toEqual({ courseId: 1 });
   });
 });

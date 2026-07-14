@@ -37,22 +37,6 @@ export default function ScaffoldTabComponent({
     reset,
   } = useForm();
 
-  const onSuccessScaffoldReset = () => {
-    toast("Scaffold reset successfully completed.");
-  };
-
-  const scaffoldResetAxiosParams = () => ({
-    url: "/api/course/scaffold/reset",
-    method: "POST",
-    params: {
-      courseId,
-    },
-  });
-
-  const resetScaffoldMutation = useBackendMutation(scaffoldResetAxiosParams, {
-    onSuccess: onSuccessScaffoldReset,
-  });
-
   const downloadYaml = async () => {
     try {
       const response = await axios({
@@ -171,13 +155,6 @@ export default function ScaffoldTabComponent({
   return (
     <div className="tabComponent" data-testid={`${testIdPrefix}-scaffoldTab`}>
       <h2>Scaffold</h2>
-      <Button
-        onClick={resetScaffoldMutation.mutate}
-        data-testid={`${testIdPrefix}-reset-button`}
-      >
-        Reset Scaffold
-      </Button>
-      <hr />
       <p>
         Download this course&apos;s concepts, subconcepts, prerequisite edges,
         and practice problems as an editable YAML file, or replace them by

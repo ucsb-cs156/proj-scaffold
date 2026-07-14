@@ -24,6 +24,7 @@ import type {
 } from "main/types/conceptGraph";
 import LoginScreen from "main/components/Auth/LoginScreen";
 import ScaffoldTopBar from "main/components/Scaffold/ScaffoldTopBar";
+import type { CourseAccess } from "main/components/Courses/CourseMenu";
 import { useCurrentUser } from "main/utils/currentUser";
 import { StaffToolsProvider } from "main/utils/staffTools";
 import { useStaffTools } from "main/utils/useStaffTools";
@@ -113,7 +114,8 @@ function ConceptGraphPageContent() {
     courseIdParam !== undefined && !Number.isNaN(courseId);
 
   const currentUser = useCurrentUser();
-  const { registerNewConceptHandler } = useStaffTools();
+  const { registerNewConceptHandler, registerRealignConceptsHandler } =
+    useStaffTools();
   // Derive the numeric id from the users table; null when not logged in.
   const userId: number | null = currentUser?.loggedIn
     ? (currentUser.root.user?.id ?? null)
@@ -140,6 +142,18 @@ function ConceptGraphPageContent() {
   const { data: course } = useBackend<Course | undefined>(
     ["/api/courses", courseId],
     { method: "GET", url: `/api/courses/${courseId}` },
+    undefined,
+    true,
+    { enabled: courseIdIsValid, retry: false },
+  );
+
+  // Unlike /api/courses/{id} above (staff-only), this endpoint is available to
+  // any user with access to the course (student, staff, instructor, or admin),
+  // so it drives the course-identifying banner shown to everyone at the top of
+  // the page.
+  const { data: courseInfo } = useBackend<CourseAccess | undefined>(
+    ["/api/courses/list", courseId],
+    { method: "GET", url: `/api/courses/list/${courseId}` },
     undefined,
     true,
     { enabled: courseIdIsValid, retry: false },
@@ -320,6 +334,27 @@ function ConceptGraphPageContent() {
     },
   );
 
+  // "Realign Concepts" (Footer button, editing-mode only): recomputes levels,
+  // colors, and layout from the edges via POST /api/course/scaffold/reset.
+  const realignConceptsMutation = useBackendMutation<void>(
+    () => ({
+      method: "POST",
+      url: "/api/course/scaffold/reset",
+      params: { courseId },
+    }),
+    {
+      onSuccess: () => {
+        toast("Concepts realigned successfully.");
+      },
+    },
+    [
+      "/api/concepts/graph",
+      "/api/concepts/positions",
+      "/api/concepts/edges",
+      "/api/concepts/content",
+    ],
+  );
+
   const conceptsPath = `/api/concepts/course?courseId=${courseId}`;
   const editableConceptsQueryKey = [conceptsPath];
   const editableSubconceptsQueryKey = ["/api/concepts/subconcepts", courseId];
@@ -409,6 +444,25 @@ function ConceptGraphPageContent() {
     courseIdIsValid,
     openCreateConceptModal,
     registerNewConceptHandler,
+  ]);
+
+  const { mutate: realignConceptsMutate } = realignConceptsMutation;
+  const realignConcepts = useCallback(() => {
+    realignConceptsMutate();
+  }, [realignConceptsMutate]);
+
+  useEffect(() => {
+    if (!currentUser?.loggedIn || !courseIdIsValid) {
+      registerRealignConceptsHandler(null);
+      return;
+    }
+    registerRealignConceptsHandler(realignConcepts);
+    return () => registerRealignConceptsHandler(null);
+  }, [
+    currentUser?.loggedIn,
+    courseIdIsValid,
+    realignConcepts,
+    registerRealignConceptsHandler,
   ]);
 
   // Log the login once per visit, as soon as we know who the user is.
@@ -937,6 +991,8 @@ function ConceptGraphPageContent() {
         {/* ── Top bar ── */}
         <ScaffoldTopBar
           course={course}
+          courseInfo={courseInfo}
+          courseId={courseId}
           assessments={assessments}
           selectedAssessmentId={selectedAssessmentId}
           onSelectAssessment={(id) => {

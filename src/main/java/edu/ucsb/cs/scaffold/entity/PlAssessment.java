@@ -74,4 +74,10 @@ public class PlAssessment {
   // "assessment_set_color"
   @Column(name = "pl_assessment_set_color")
   private String plAssessmentSetColor;
+
+  // Instructor-controlled visibility: locked assessments are hidden from students in
+  // ConceptGraphPage's assessment dropdown until an instructor unlocks them. Defaults to
+  // locked (true) so newly-synced assessments never appear to students automatically.
+  @Column(name = "locked", nullable = false)
+  private boolean locked;
 }

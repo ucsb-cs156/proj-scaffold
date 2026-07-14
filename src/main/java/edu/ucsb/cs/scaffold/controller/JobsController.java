@@ -3,6 +3,7 @@ package edu.ucsb.cs.scaffold.controller;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.jobs.CopyConceptGraphJob;
+import edu.ucsb.cs.scaffold.jobs.ReadPLColorsJob;
 import edu.ucsb.cs.scaffold.jobs.RotatePatKeysJob;
 import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJob;
 import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJobFactory;
@@ -10,8 +11,10 @@ import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
 import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlColorRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
 import edu.ucsb.cs.scaffold.services.ConceptYamlService;
+import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
 import edu.ucsb.cs156.jobs.entities.Job;
@@ -52,6 +55,8 @@ public class JobsController extends ApiController {
   @Autowired private UserRepository userRepository;
   @Autowired private AdminRepository adminRepository;
   @Autowired private ConceptYamlService conceptYamlService;
+  @Autowired private GithubService githubService;
+  @Autowired private PlColorRepository plColorRepository;
 
   @Operation(summary = "Launch UpdateAll job")
   @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -116,6 +121,25 @@ public class JobsController extends ApiController {
             .courseRepository(courseRepository)
             .adminRepository(adminRepository)
             .conceptYamlService(conceptYamlService)
+            .build();
+    return jobService.runAsJob(job);
+  }
+
+  @Operation(
+      summary =
+          "Launch ReadPLColors job (read PrairieLearn's badge colors from GitHub and update the"
+              + " pl_color table, using the launching admin's GitHub PAT)")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PostMapping("/launch/readPLColors")
+  public Job launchReadPLColorsJob() {
+
+    ReadPLColorsJob job =
+        ReadPLColorsJob.builder()
+            .userId(getCurrentUser().getUser().getId())
+            .patCredentialRepository(patCredentialRepository)
+            .patEncryptionService(patEncryptionService)
+            .githubService(githubService)
+            .plColorRepository(plColorRepository)
             .build();
     return jobService.runAsJob(job);
   }

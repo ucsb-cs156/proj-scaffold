@@ -22,6 +22,8 @@ export interface StaffToolsContextType extends StaffToolSettings {
   setStaffTool: (tool: keyof StaffToolSettings, value: boolean) => void;
   newConceptHandler: (() => void) | null;
   registerNewConceptHandler: (handler: (() => void) | null) => void;
+  realignConceptsHandler: (() => void) | null;
+  registerRealignConceptsHandler: (handler: (() => void) | null) => void;
 }
 
 // The default (no provider mounted, e.g. on non-graph pages) is "no tools":
@@ -32,4 +34,6 @@ export const StaffToolsContext = createContext<StaffToolsContextType>({
   setStaffTool: () => {},
   newConceptHandler: null,
   registerNewConceptHandler: () => {},
+  realignConceptsHandler: null,
+  registerRealignConceptsHandler: () => {},
 });
