@@ -7,10 +7,6 @@ interface AssessmentSelectProps {
   onSelect: (id: string) => void;
 }
 
-// Width of the badge column: badges of all rows line up in a single centered
-// column, with titles starting flush left immediately after.
-const BADGE_COLUMN_WIDTH = 48;
-
 // Pill-shaped badge showing the assessment's "set" abbreviation + number (e.g. "HW2"),
 // colored with pl_assessment_set_color. Renders nothing if the PL-API sync (issue #71)
 // hasn't populated these fields yet.
@@ -43,23 +39,13 @@ function AssessmentBadge({ assessment }: { assessment: Assessment }) {
   );
 }
 
-// A row's content: a centered badge column followed by a left-aligned title, so that
-// badges of all rows line up vertically and titles all start flush left.
+// A row's content: badge (if present) followed by the title, both flush left.
 function AssessmentRow({ assessment }: { assessment: Assessment }) {
   return (
     <span
       style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 0 }}
     >
-      <span
-        style={{
-          width: BADGE_COLUMN_WIDTH,
-          flexShrink: 0,
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        <AssessmentBadge assessment={assessment} />
-      </span>
+      <AssessmentBadge assessment={assessment} />
       <span
         style={{
           marginLeft: 8,
