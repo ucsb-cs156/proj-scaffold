@@ -90,6 +90,9 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plAssessmentOrder(2L)
             .plAssessmentTitle("Homework 2")
             .plAssessmentId(5001L)
+            .plAssessmentSetAbbreviation("HW")
+            .plAssessmentNumber("2")
+            .plAssessmentSetColor("green1")
             .locked(false)
             .build();
     PlAssessment noOrderFallsBackToName =
@@ -101,6 +104,9 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plAssessmentOrder(null)
             .plAssessmentTitle(null)
             .plAssessmentId(null)
+            .plAssessmentSetAbbreviation(null)
+            .plAssessmentNumber(null)
+            .plAssessmentSetColor(null)
             .locked(false)
             .build();
     PlAssessment orderOne =
@@ -112,6 +118,9 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plAssessmentOrder(1L)
             .plAssessmentTitle("Homework 0")
             .plAssessmentId(5000L)
+            .plAssessmentSetAbbreviation("HW")
+            .plAssessmentNumber("0")
+            .plAssessmentSetColor("blue1")
             .locked(false)
             .build();
     PlAssessment lockedAssessment =
@@ -131,9 +140,21 @@ public class AssessmentControllerTests extends ControllerTestCase {
     String expectedJson =
         """
         [
-          { "id": "103", "pl_assessment_id": "5000", "name": "Homework 0" },
-          { "id": "101", "pl_assessment_id": "5001", "name": "Homework 2" },
-          { "id": "102", "pl_assessment_id": null, "name": "hw01" }
+          {
+            "id": "103", "pl_assessment_id": "5000", "name": "Homework 0",
+            "pl_assessment_set_abbreviation": "HW", "pl_assessment_number": "0",
+            "pl_assessment_set_color": "blue1"
+          },
+          {
+            "id": "101", "pl_assessment_id": "5001", "name": "Homework 2",
+            "pl_assessment_set_abbreviation": "HW", "pl_assessment_number": "2",
+            "pl_assessment_set_color": "green1"
+          },
+          {
+            "id": "102", "pl_assessment_id": null, "name": "hw01",
+            "pl_assessment_set_abbreviation": null, "pl_assessment_number": null,
+            "pl_assessment_set_color": null
+          }
         ]
         """;
 
