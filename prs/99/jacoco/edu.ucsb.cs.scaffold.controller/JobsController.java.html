@@ -3,6 +3,7 @@
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.jobs.CopyConceptGraphJob;
+import edu.ucsb.cs.scaffold.jobs.ReadPLColorsJob;
 import edu.ucsb.cs.scaffold.jobs.RotatePatKeysJob;
 import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJob;
 import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJobFactory;
@@ -10,8 +11,10 @@ import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
 import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlColorRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
 import edu.ucsb.cs.scaffold.services.ConceptYamlService;
+import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
 import edu.ucsb.cs156.jobs.entities.Job;
@@ -37,8 +40,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = &quot;Jobs&quot;)
 @RequestMapping(&quot;/api/jobs&quot;)
 @RestController
-<span class="fc" id="L40">@Slf4j</span>
-<span class="fc" id="L41">public class JobsController extends ApiController {</span>
+<span class="fc" id="L43">@Slf4j</span>
+<span class="fc" id="L44">public class JobsController extends ApiController {</span>
   @Autowired private JobsRepository jobsRepository;
 
   @Autowired private JobService jobService;
@@ -52,14 +55,16 @@ import org.springframework.web.bind.annotation.RestController;
   @Autowired private UserRepository userRepository;
   @Autowired private AdminRepository adminRepository;
   @Autowired private ConceptYamlService conceptYamlService;
+  @Autowired private GithubService githubService;
+  @Autowired private PlColorRepository plColorRepository;
 
   @Operation(summary = &quot;Launch UpdateAll job&quot;)
   @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
   @PostMapping(&quot;/launch/updateAll&quot;)
   public Job launchUpdateAllJob() {
 
-<span class="fc" id="L61">    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();</span>
-<span class="fc" id="L62">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L66">    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();</span>
+<span class="fc" id="L67">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(
@@ -70,11 +75,11 @@ import org.springframework.web.bind.annotation.RestController;
   public Job launchRotatePatKeysJob() {
 
     RotatePatKeysJob job =
-<span class="fc" id="L73">        RotatePatKeysJob.builder()</span>
-<span class="fc" id="L74">            .patEncryptionService(patEncryptionService)</span>
-<span class="fc" id="L75">            .patCredentialRepository(patCredentialRepository)</span>
-<span class="fc" id="L76">            .build();</span>
-<span class="fc" id="L77">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L78">        RotatePatKeysJob.builder()</span>
+<span class="fc" id="L79">            .patEncryptionService(patEncryptionService)</span>
+<span class="fc" id="L80">            .patCredentialRepository(patCredentialRepository)</span>
+<span class="fc" id="L81">            .build();</span>
+<span class="fc" id="L82">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(
@@ -86,13 +91,13 @@ import org.springframework.web.bind.annotation.RestController;
   public Job launchSyncCourseWithPlRepoJob(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
-<span class="fc" id="L89">    Course course =</span>
+<span class="fc" id="L94">    Course course =</span>
         courseRepository
-<span class="fc" id="L91">            .findById(courseId)</span>
-<span class="fc" id="L92">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc" id="L93">    SyncCourseWithPlRepoJob job =</span>
-<span class="fc" id="L94">        syncCourseWithPlRepoJobFactory.create(getCurrentUser().getUser().getId(), course);</span>
-<span class="fc" id="L95">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L96">            .findById(courseId)</span>
+<span class="fc" id="L97">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L98">    SyncCourseWithPlRepoJob job =</span>
+<span class="fc" id="L99">        syncCourseWithPlRepoJobFactory.create(getCurrentUser().getUser().getId(), course);</span>
+<span class="fc" id="L100">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(
@@ -108,23 +113,42 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;toCourseId&quot;) @RequestParam Long toCourseId) {
 
     CopyConceptGraphJob job =
-<span class="fc" id="L111">        CopyConceptGraphJob.builder()</span>
-<span class="fc" id="L112">            .userId(getCurrentUser().getUser().getId())</span>
-<span class="fc" id="L113">            .fromCourseId(fromCourseId)</span>
-<span class="fc" id="L114">            .toCourseId(toCourseId)</span>
-<span class="fc" id="L115">            .userRepository(userRepository)</span>
-<span class="fc" id="L116">            .courseRepository(courseRepository)</span>
-<span class="fc" id="L117">            .adminRepository(adminRepository)</span>
-<span class="fc" id="L118">            .conceptYamlService(conceptYamlService)</span>
-<span class="fc" id="L119">            .build();</span>
-<span class="fc" id="L120">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L116">        CopyConceptGraphJob.builder()</span>
+<span class="fc" id="L117">            .userId(getCurrentUser().getUser().getId())</span>
+<span class="fc" id="L118">            .fromCourseId(fromCourseId)</span>
+<span class="fc" id="L119">            .toCourseId(toCourseId)</span>
+<span class="fc" id="L120">            .userRepository(userRepository)</span>
+<span class="fc" id="L121">            .courseRepository(courseRepository)</span>
+<span class="fc" id="L122">            .adminRepository(adminRepository)</span>
+<span class="fc" id="L123">            .conceptYamlService(conceptYamlService)</span>
+<span class="fc" id="L124">            .build();</span>
+<span class="fc" id="L125">    return jobService.runAsJob(job);</span>
+  }
+
+  @Operation(
+      summary =
+          &quot;Launch ReadPLColors job (read PrairieLearn's badge colors from GitHub and update the&quot;
+              + &quot; pl_color table, using the launching admin's GitHub PAT)&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @PostMapping(&quot;/launch/readPLColors&quot;)
+  public Job launchReadPLColorsJob() {
+
+    ReadPLColorsJob job =
+<span class="fc" id="L137">        ReadPLColorsJob.builder()</span>
+<span class="fc" id="L138">            .userId(getCurrentUser().getUser().getId())</span>
+<span class="fc" id="L139">            .patCredentialRepository(patCredentialRepository)</span>
+<span class="fc" id="L140">            .patEncryptionService(patEncryptionService)</span>
+<span class="fc" id="L141">            .githubService(githubService)</span>
+<span class="fc" id="L142">            .plColorRepository(plColorRepository)</span>
+<span class="fc" id="L143">            .build();</span>
+<span class="fc" id="L144">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;List jobs by courseId&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @GetMapping(&quot;/course&quot;)
   public Iterable&lt;Job&gt; jobsByCourse(@Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L127">    return jobsRepository.findByScopeTypeAndScopeIdOrderByIdDesc(&quot;course&quot;, courseId);</span>
+<span class="fc" id="L151">    return jobsRepository.findByScopeTypeAndScopeIdOrderByIdDesc(&quot;course&quot;, courseId);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

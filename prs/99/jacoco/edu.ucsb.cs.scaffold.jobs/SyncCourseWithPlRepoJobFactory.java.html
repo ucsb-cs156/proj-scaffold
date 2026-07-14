@@ -4,6 +4,7 @@ import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentSetRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
@@ -20,7 +21,7 @@ import org.springframework.stereotype.Component;
  * /api/courses/updatePLInstance) don't each duplicate the wiring.
  */
 @Component
-<span class="fc" id="L23">public class SyncCourseWithPlRepoJobFactory {</span>
+<span class="fc" id="L24">public class SyncCourseWithPlRepoJobFactory {</span>
 
   @Autowired private PatCredentialRepository patCredentialRepository;
 
@@ -38,25 +39,28 @@ import org.springframework.stereotype.Component;
 
   @Autowired private PlAssessmentQuestionRepository plAssessmentQuestionRepository;
 
+  @Autowired private PlAssessmentSetRepository plAssessmentSetRepository;
+
   @Autowired private GithubService githubService;
 
   @Autowired private PrairieLearnService prairieLearnService;
 
   public SyncCourseWithPlRepoJob create(long userId, Course course) {
-<span class="fc" id="L46">    return SyncCourseWithPlRepoJob.builder()</span>
-<span class="fc" id="L47">        .userId(userId)</span>
-<span class="fc" id="L48">        .course(course)</span>
-<span class="fc" id="L49">        .patCredentialRepository(patCredentialRepository)</span>
-<span class="fc" id="L50">        .patEncryptionService(patEncryptionService)</span>
-<span class="fc" id="L51">        .plRepoRepository(plRepoRepository)</span>
-<span class="fc" id="L52">        .plInstanceRepository(plInstanceRepository)</span>
-<span class="fc" id="L53">        .plQuestionRepository(plQuestionRepository)</span>
-<span class="fc" id="L54">        .plScaffoldAssessmentRepository(plScaffoldAssessmentRepository)</span>
-<span class="fc" id="L55">        .plAssessmentRepository(plAssessmentRepository)</span>
-<span class="fc" id="L56">        .plAssessmentQuestionRepository(plAssessmentQuestionRepository)</span>
-<span class="fc" id="L57">        .githubService(githubService)</span>
-<span class="fc" id="L58">        .prairieLearnService(prairieLearnService)</span>
-<span class="fc" id="L59">        .build();</span>
+<span class="fc" id="L49">    return SyncCourseWithPlRepoJob.builder()</span>
+<span class="fc" id="L50">        .userId(userId)</span>
+<span class="fc" id="L51">        .course(course)</span>
+<span class="fc" id="L52">        .patCredentialRepository(patCredentialRepository)</span>
+<span class="fc" id="L53">        .patEncryptionService(patEncryptionService)</span>
+<span class="fc" id="L54">        .plRepoRepository(plRepoRepository)</span>
+<span class="fc" id="L55">        .plInstanceRepository(plInstanceRepository)</span>
+<span class="fc" id="L56">        .plQuestionRepository(plQuestionRepository)</span>
+<span class="fc" id="L57">        .plScaffoldAssessmentRepository(plScaffoldAssessmentRepository)</span>
+<span class="fc" id="L58">        .plAssessmentRepository(plAssessmentRepository)</span>
+<span class="fc" id="L59">        .plAssessmentQuestionRepository(plAssessmentQuestionRepository)</span>
+<span class="fc" id="L60">        .plAssessmentSetRepository(plAssessmentSetRepository)</span>
+<span class="fc" id="L61">        .githubService(githubService)</span>
+<span class="fc" id="L62">        .prairieLearnService(prairieLearnService)</span>
+<span class="fc" id="L63">        .build();</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
