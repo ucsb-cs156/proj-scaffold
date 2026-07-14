@@ -1,11 +1,18 @@
 package edu.ucsb.cs.scaffold.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.ucsb.cs.scaffold.ControllerTestCase;
+import edu.ucsb.cs.scaffold.annotations.WithInstructorCoursePermissions;
+import edu.ucsb.cs.scaffold.annotations.WithStaffCoursePermissions;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.PlAssessment;
 import edu.ucsb.cs.scaffold.entity.PlAssessmentQuestion;
@@ -67,11 +74,13 @@ public class AssessmentControllerTests extends ControllerTestCase {
   }
 
   @Test
-  public void getAssessments_maps_and_orders_by_pl_assessment_order_then_name() throws Exception {
+  public void getAssessments_maps_and_orders_by_pl_assessment_order_then_name_and_excludes_locked()
+      throws Exception {
     Course course = Course.builder().id(1L).plRepoId(10L).plInstanceId(20L).build();
     when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
 
-    // out of order on purpose: order 2, no order (falls back to name "hw01"), order 1
+    // out of order on purpose: order 2, no order (falls back to name "hw01"), order 1, and a
+    // locked one that must be excluded entirely regardless of its order.
     PlAssessment orderTwo =
         PlAssessment.builder()
             .id(101L)
@@ -81,6 +90,7 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plAssessmentOrder(2L)
             .plAssessmentTitle("Homework 2")
             .plAssessmentId(5001L)
+            .locked(false)
             .build();
     PlAssessment noOrderFallsBackToName =
         PlAssessment.builder()
@@ -91,6 +101,7 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plAssessmentOrder(null)
             .plAssessmentTitle(null)
             .plAssessmentId(null)
+            .locked(false)
             .build();
     PlAssessment orderOne =
         PlAssessment.builder()
@@ -101,9 +112,21 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plAssessmentOrder(1L)
             .plAssessmentTitle("Homework 0")
             .plAssessmentId(5000L)
+            .locked(false)
+            .build();
+    PlAssessment lockedAssessment =
+        PlAssessment.builder()
+            .id(104L)
+            .plRepoId(10L)
+            .plInstanceId(20L)
+            .name("hw-locked")
+            .plAssessmentOrder(0L)
+            .plAssessmentTitle("Homework Locked")
+            .plAssessmentId(5002L)
+            .locked(true)
             .build();
     when(plAssessmentRepository.findByPlRepoIdAndPlInstanceId(10L, 20L))
-        .thenReturn(List.of(orderTwo, noOrderFallsBackToName, orderOne));
+        .thenReturn(List.of(orderTwo, noOrderFallsBackToName, orderOne, lockedAssessment));
 
     String expectedJson =
         """
@@ -198,5 +221,286 @@ public class AssessmentControllerTests extends ControllerTestCase {
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json"))
         .andExpect(content().json(expectedJson, true));
+  }
+
+  // ---------- GET /api/assessments/all ----------
+
+  @Test
+  public void anonymous_user_cannot_get_all_assessments() throws Exception {
+    mockMvc
+        .perform(get("/api/assessments/all").param("courseId", "1"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithStaffCoursePermissions
+  public void staff_cannot_get_all_assessments() throws Exception {
+    mockMvc
+        .perform(get("/api/assessments/all").param("courseId", "1"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getAllAssessments_returns_404_when_course_not_found() throws Exception {
+    when(courseRepository.findById(99L)).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(get("/api/assessments/all").param("courseId", "99"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getAllAssessments_returns_empty_list_when_pl_repo_id_is_null() throws Exception {
+    // No PlRepo/PlInstance associated with the course yet is a normal, unconfigured state,
+    // not an error -- the modal should just show nothing to manage.
+    Course course = Course.builder().id(1L).plRepoId(null).plInstanceId(2L).build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+    mockMvc
+        .perform(get("/api/assessments/all").param("courseId", "1"))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getAllAssessments_returns_empty_list_when_pl_instance_id_is_null() throws Exception {
+    Course course = Course.builder().id(1L).plRepoId(10L).plInstanceId(null).build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+    mockMvc
+        .perform(get("/api/assessments/all").param("courseId", "1"))
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void getAllAssessments_returns_both_locked_and_unlocked_assessments() throws Exception {
+    Course course = Course.builder().id(1L).plRepoId(10L).plInstanceId(20L).build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+    PlAssessment unlocked =
+        PlAssessment.builder()
+            .id(101L)
+            .plRepoId(10L)
+            .plInstanceId(20L)
+            .name("hw01")
+            .plAssessmentOrder(1L)
+            .plAssessmentTitle("Homework 1")
+            .locked(false)
+            .build();
+    PlAssessment locked =
+        PlAssessment.builder()
+            .id(102L)
+            .plRepoId(10L)
+            .plInstanceId(20L)
+            .name("hw02")
+            .plAssessmentOrder(2L)
+            .plAssessmentTitle(null)
+            .locked(true)
+            .build();
+    when(plAssessmentRepository.findByPlRepoIdAndPlInstanceId(10L, 20L))
+        .thenReturn(List.of(unlocked, locked));
+
+    String expectedJson =
+        """
+        [
+          { "id": "101", "name": "Homework 1", "locked": false },
+          { "id": "102", "name": "hw02", "locked": true }
+        ]
+        """;
+
+    mockMvc
+        .perform(get("/api/assessments/all").param("courseId", "1"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType("application/json"))
+        .andExpect(content().json(expectedJson, true));
+  }
+
+  // ---------- PUT /api/assessments/lock ----------
+
+  @Test
+  public void anonymous_user_cannot_set_locked() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/assessments/lock")
+                .with(csrf())
+                .param("courseId", "1")
+                .param("assessmentId", "101")
+                .param("locked", "true"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithStaffCoursePermissions
+  public void staff_cannot_set_locked() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/assessments/lock")
+                .with(csrf())
+                .param("courseId", "1")
+                .param("assessmentId", "101")
+                .param("locked", "true"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setLocked_returns_404_when_course_not_found() throws Exception {
+    when(courseRepository.findById(99L)).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(
+            put("/api/assessments/lock")
+                .with(csrf())
+                .param("courseId", "99")
+                .param("assessmentId", "101")
+                .param("locked", "true"))
+        .andExpect(status().isNotFound());
+    verify(plAssessmentRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setLocked_returns_404_when_assessment_not_found() throws Exception {
+    Course course = Course.builder().id(1L).plRepoId(10L).plInstanceId(20L).build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    when(plAssessmentRepository.findById(999L)).thenReturn(Optional.empty());
+
+    mockMvc
+        .perform(
+            put("/api/assessments/lock")
+                .with(csrf())
+                .param("courseId", "1")
+                .param("assessmentId", "999")
+                .param("locked", "true"))
+        .andExpect(status().isNotFound());
+    verify(plAssessmentRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setLocked_returns_400_when_assessment_belongs_to_a_different_course()
+      throws Exception {
+    Course course = Course.builder().id(1L).plRepoId(10L).plInstanceId(20L).build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    PlAssessment otherCoursesAssessment =
+        PlAssessment.builder()
+            .id(101L)
+            .plRepoId(999L)
+            .plInstanceId(888L)
+            .name("hw01")
+            .locked(true)
+            .build();
+    when(plAssessmentRepository.findById(101L)).thenReturn(Optional.of(otherCoursesAssessment));
+
+    mockMvc
+        .perform(
+            put("/api/assessments/lock")
+                .with(csrf())
+                .param("courseId", "1")
+                .param("assessmentId", "101")
+                .param("locked", "false"))
+        .andExpect(status().isBadRequest());
+    verify(plAssessmentRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setLocked_returns_400_when_only_pl_instance_id_differs() throws Exception {
+    Course course = Course.builder().id(1L).plRepoId(10L).plInstanceId(20L).build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    // Same plRepoId as the course, but a different plInstanceId: the first half of the OR
+    // check (plRepoId mismatch) is false, so this exercises the second half.
+    PlAssessment otherInstancesAssessment =
+        PlAssessment.builder()
+            .id(101L)
+            .plRepoId(10L)
+            .plInstanceId(888L)
+            .name("hw01")
+            .locked(true)
+            .build();
+    when(plAssessmentRepository.findById(101L)).thenReturn(Optional.of(otherInstancesAssessment));
+
+    mockMvc
+        .perform(
+            put("/api/assessments/lock")
+                .with(csrf())
+                .param("courseId", "1")
+                .param("assessmentId", "101")
+                .param("locked", "false"))
+        .andExpect(status().isBadRequest());
+    verify(plAssessmentRepository, never()).save(any());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setLocked_can_unlock_an_assessment() throws Exception {
+    Course course = Course.builder().id(1L).plRepoId(10L).plInstanceId(20L).build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    PlAssessment assessment =
+        PlAssessment.builder()
+            .id(101L)
+            .plRepoId(10L)
+            .plInstanceId(20L)
+            .name("hw01")
+            .plAssessmentTitle("Homework 1")
+            .locked(true)
+            .build();
+    when(plAssessmentRepository.findById(101L)).thenReturn(Optional.of(assessment));
+    when(plAssessmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    mockMvc
+        .perform(
+            put("/api/assessments/lock")
+                .with(csrf())
+                .param("courseId", "1")
+                .param("assessmentId", "101")
+                .param("locked", "false"))
+        .andExpect(status().isOk())
+        .andExpect(
+            content()
+                .json(
+                    """
+                    { "id": "101", "name": "Homework 1", "locked": false }
+                    """,
+                    true));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void setLocked_can_lock_an_assessment() throws Exception {
+    Course course = Course.builder().id(1L).plRepoId(10L).plInstanceId(20L).build();
+    when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+    PlAssessment assessment =
+        PlAssessment.builder()
+            .id(101L)
+            .plRepoId(10L)
+            .plInstanceId(20L)
+            .name("hw01")
+            .plAssessmentTitle("Homework 1")
+            .locked(false)
+            .build();
+    when(plAssessmentRepository.findById(101L)).thenReturn(Optional.of(assessment));
+    when(plAssessmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    mockMvc
+        .perform(
+            put("/api/assessments/lock")
+                .with(csrf())
+                .param("courseId", "1")
+                .param("assessmentId", "101")
+                .param("locked", "true"))
+        .andExpect(status().isOk())
+        .andExpect(
+            content()
+                .json(
+                    """
+                    { "id": "101", "name": "Homework 1", "locked": true }
+                    """,
+                    true));
   }
 }

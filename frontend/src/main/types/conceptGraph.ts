@@ -18,6 +18,14 @@ export interface Question {
   title: string;
 }
 
+// Instructor-facing view of an assessment for the UnlockAssessmentsModal: includes locked
+// assessments (which the plain Assessment list above excludes) and their lock state.
+export interface AssessmentManagementDTO {
+  id: string;
+  name: string;
+  locked: boolean;
+}
+
 export interface QuestionConcept {
   id: string;
   question_id: string;

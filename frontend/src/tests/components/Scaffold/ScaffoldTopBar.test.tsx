@@ -1,8 +1,17 @@
-import { describe, test, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 import ScaffoldTopBar from "main/components/Scaffold/ScaffoldTopBar";
+import { StaffToolsProvider } from "main/utils/staffTools";
+import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import type { Assessment, Course, Question } from "main/types/conceptGraph";
+import mockConsole from "tests/testutils/mockConsole";
+
+import axios from "axios";
+import axiosMockAdapter from "axios-mock-adapter";
+
+const axiosMock = new axiosMockAdapter(axios);
 
 const assessments: Assessment[] = [
   { id: "1", pl_assessment_id: "pl1", name: "HW1" },
@@ -17,6 +26,7 @@ const course: Course = { id: 7, courseName: "CMPSC 156" };
 
 const defaultProps = {
   course,
+  courseId: 7,
   assessments,
   selectedAssessmentId: "",
   onSelectAssessment: () => {},
@@ -27,15 +37,39 @@ const defaultProps = {
   numTotalConcepts: 10,
 };
 
-function renderTopBar(props: Partial<typeof defaultProps> = {}) {
+function renderTopBar(
+  props: Partial<typeof defaultProps> = {},
+  currentUser: unknown = currentUserFixtures.userOnly,
+) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  qc.setQueryData(["current user"], currentUser);
   return render(
-    <MemoryRouter>
-      <ScaffoldTopBar {...defaultProps} {...props} />
-    </MemoryRouter>,
+    <QueryClientProvider client={qc}>
+      <MemoryRouter>
+        <StaffToolsProvider>
+          <ScaffoldTopBar {...defaultProps} {...props} />
+        </StaffToolsProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
 describe("ScaffoldTopBar", () => {
+  let restoreConsole: () => void;
+
+  beforeEach(() => {
+    restoreConsole = mockConsole();
+    sessionStorage.clear();
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    axiosMock.onGet("/api/assessments/all").reply(200, []);
+  });
+
+  afterEach(() => {
+    restoreConsole();
+    sessionStorage.clear();
+  });
+
   test("renders the bar with its className and testid", () => {
     renderTopBar();
     const bar = screen.getByTestId("ScaffoldTopBar");
@@ -93,5 +127,44 @@ describe("ScaffoldTopBar", () => {
     expect(
       screen.getByPlaceholderText("Select assessment to pick question"),
     ).toBeDisabled();
+  });
+
+  test("does not show the Unlock Assessments button for a non-staff user, even in editing mode", () => {
+    sessionStorage.setItem(
+      "staffTools",
+      JSON.stringify({ enableEditing: true }),
+    );
+    renderTopBar({}, currentUserFixtures.userOnly);
+    expect(
+      screen.queryByTestId("ScaffoldTopBar-unlockAssessments"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("does not show the Unlock Assessments button for an admin outside editing mode", () => {
+    renderTopBar({}, currentUserFixtures.adminUser);
+    expect(
+      screen.queryByTestId("ScaffoldTopBar-unlockAssessments"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("shows the Unlock Assessments button for an admin in editing mode and opens the modal", async () => {
+    sessionStorage.setItem(
+      "staffTools",
+      JSON.stringify({ enableEditing: true }),
+    );
+    renderTopBar({}, currentUserFixtures.adminUser);
+    const button = screen.getByTestId("ScaffoldTopBar-unlockAssessments");
+    expect(button).toBeInTheDocument();
+
+    fireEvent.click(button);
+
+    expect(
+      await screen.findByTestId("UnlockAssessmentsModal"),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        axiosMock.history.get.filter((r) => r.url === "/api/assessments/all"),
+      ).toHaveLength(1),
+    );
   });
 });
