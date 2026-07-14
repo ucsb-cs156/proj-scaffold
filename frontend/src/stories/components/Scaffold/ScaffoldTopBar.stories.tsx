@@ -4,6 +4,7 @@ import ScaffoldTopBar from "main/components/Scaffold/ScaffoldTopBar";
 import { StaffToolsProvider } from "main/utils/staffTools";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import type { Assessment, Course, Question } from "main/types/conceptGraph";
+import type { CourseAccess } from "main/components/Courses/CourseMenu";
 
 const sampleAssessments: Assessment[] = [
   { id: "1", pl_assessment_id: "pl1", name: "HW1" },
@@ -28,12 +29,25 @@ const sampleQuestions: Question[] = [
 
 const sampleCourse: Course = { id: 1, courseName: "CMPSC 156" };
 
+const sampleCourseInfo: CourseAccess = {
+  id: 1,
+  courseName: "CMPSC 156",
+  term: "S26",
+  school: { key: "UCSB", displayName: "UCSB" },
+  instructorEmail: "phtcon@ucsb.edu",
+  studentAccess: false,
+  staffAccess: false,
+  instructorAccess: true,
+  adminAccess: false,
+};
+
 const meta: Meta<typeof ScaffoldTopBar> = {
   title: "components/Scaffold/ScaffoldTopBar",
   component: ScaffoldTopBar,
   tags: ["autodocs"],
   args: {
     course: sampleCourse,
+    courseInfo: sampleCourseInfo,
     courseId: 1,
     assessments: sampleAssessments,
     selectedAssessmentId: "",
