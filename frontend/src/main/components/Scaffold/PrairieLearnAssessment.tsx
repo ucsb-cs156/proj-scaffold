@@ -12,8 +12,8 @@ export interface PrairieLearnAssessmentInfo {
 const BADGE_MIN_WIDTH = 36 + 75;
 
 // Chooses badge text color for legibility against the given background color, per the
-// standard perceived-luminance formula: white text on dark/saturated backgrounds
-// (luminance <= 150), black text otherwise.
+// ITU-R BT.601 perceived-luminance formula (Luminance = R*0.299 + G*0.587 + B*0.114):
+// white text on dark/saturated backgrounds (luminance <= 150), black text otherwise.
 function badgeTextColor(backgroundHex: string): string {
   const hex = backgroundHex.replace("#", "");
   if (hex.length !== 6) {
