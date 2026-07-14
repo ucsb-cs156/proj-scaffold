@@ -3,6 +3,7 @@ import { Form } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
 import type { AssessmentManagementDTO } from "main/types/conceptGraph";
+import PrairieLearnAssessment from "main/components/Scaffold/PrairieLearnAssessment";
 
 interface UnlockAssessmentsModalProps {
   show: boolean;
@@ -79,7 +80,7 @@ export default function UnlockAssessmentsModal({
               <Form.Check.Label
                 data-testid={`UnlockAssessmentsModal-label-${assessment.id}`}
               >
-                {assessment.name}
+                <PrairieLearnAssessment assessment={assessment} />
               </Form.Check.Label>
             </Form.Check>
           ))

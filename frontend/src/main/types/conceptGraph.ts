@@ -29,6 +29,9 @@ export interface AssessmentManagementDTO {
   id: string;
   name: string;
   locked: boolean;
+  pl_assessment_set_abbreviation?: string | null;
+  pl_assessment_number?: string | null;
+  pl_assessment_set_color?: string | null;
 }
 
 export interface QuestionConcept {
