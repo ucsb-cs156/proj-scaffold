@@ -1,0 +1,37 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "041-create-pl-color-table",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "pl_color" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "pl_color",
+              "columns": [
+                {
+                  "column": {
+                    "name": "color_name",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "hex_code",
+                    "type": "VARCHAR(7)",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -5,9 +5,11 @@ import static org.mockito.Mockito.*;
 
 import edu.ucsb.cs.scaffold.entity.Admin;
 import edu.ucsb.cs.scaffold.entity.Course;
+import edu.ucsb.cs.scaffold.entity.PlColor;
 import edu.ucsb.cs.scaffold.enums.School;
 import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
+import edu.ucsb.cs.scaffold.repository.PlColorRepository;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +25,8 @@ class ScaffoldStartupTests {
 
   @Mock private CourseRepository courseRepository;
 
+  @Mock private PlColorRepository plColorRepository;
+
   @Mock private JdbcTemplate jdbcTemplate;
 
   private ScaffoldStartup scaffoldStartup;
@@ -33,6 +37,7 @@ class ScaffoldStartupTests {
     scaffoldStartup = new ScaffoldStartup();
     scaffoldStartup.adminRepository = adminRepository;
     scaffoldStartup.courseRepository = courseRepository;
+    scaffoldStartup.plColorRepository = plColorRepository;
     scaffoldStartup.jdbcTemplate = jdbcTemplate;
     scaffoldStartup.adminEmails = List.of("phtcon@ucsb.edu", "admin2@ucsb.edu");
     when(courseRepository.existsById(ScaffoldStartup.SEED_COURSE_ID)).thenReturn(true);
@@ -263,5 +268,36 @@ class ScaffoldStartupTests {
 
     assertEquals(2, statements.size());
     assertEquals("\nINSERT INTO bar VALUES (2)", statements.get(1));
+  }
+
+  @Test
+  void alwaysRunOnStartup_seeds_all_default_pl_colors_when_table_is_empty() {
+    when(plColorRepository.existsById(anyString())).thenReturn(false);
+
+    scaffoldStartup.alwaysRunOnStartup();
+
+    verify(plColorRepository, times(ScaffoldStartup.SEED_PL_COLORS.size()))
+        .save(any(PlColor.class));
+    verify(plColorRepository).save(PlColor.builder().colorName("red1").hexCode("#ffccbc").build());
+    verify(plColorRepository).save(PlColor.builder().colorName("gray3").hexCode("#505050").build());
+  }
+
+  @Test
+  void alwaysRunOnStartup_skips_pl_colors_that_already_exist() {
+    when(plColorRepository.existsById(anyString())).thenReturn(true);
+
+    scaffoldStartup.alwaysRunOnStartup();
+
+    verify(plColorRepository, never()).save(any(PlColor.class));
+  }
+
+  @Test
+  void alwaysRunOnStartup_handles_pl_color_seeding_exception_gracefully() {
+    when(plColorRepository.existsById(anyString())).thenThrow(new RuntimeException("DB error"));
+
+    // Should not throw — exception is caught and logged.
+    scaffoldStartup.alwaysRunOnStartup();
+
+    verify(plColorRepository, never()).save(any(PlColor.class));
   }
 }

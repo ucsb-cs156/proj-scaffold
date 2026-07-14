@@ -17,6 +17,7 @@ import edu.ucsb.cs.scaffold.ControllerTestCase;
 import edu.ucsb.cs.scaffold.annotations.WithInstructorCoursePermissions;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.User;
+import edu.ucsb.cs.scaffold.jobs.ReadPLColorsJob;
 import edu.ucsb.cs.scaffold.jobs.RotatePatKeysJob;
 import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJob;
 import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJobFactory;
@@ -26,6 +27,7 @@ import edu.ucsb.cs.scaffold.repository.CourseStaffRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
+import edu.ucsb.cs.scaffold.repository.PlColorRepository;
 import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
 import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
@@ -91,6 +93,8 @@ public class JobsControllerJobsTests extends ControllerTestCase {
   @MockitoBean PlAssessmentQuestionRepository plAssessmentQuestionRepository;
 
   @MockitoBean GithubService githubService;
+
+  @MockitoBean PlColorRepository plColorRepository;
 
   @MockitoBean SyncCourseWithPlRepoJobFactory syncCourseWithPlRepoJobFactory;
 
@@ -173,6 +177,50 @@ public class JobsControllerJobsTests extends ControllerTestCase {
   @Test
   public void logged_out_users_cannot_launch_rotatePatKeys_job() throws Exception {
     mockMvc.perform(post("/api/jobs/launch/rotatePatKeys")).andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_can_launch_readPLColors_job() throws Exception {
+
+    // arrange
+
+    User user = currentUserService.getUser();
+
+    Job jobStarted =
+        Job.builder()
+            .id(0L)
+            .createdById(user.getId())
+            .createdAt(null)
+            .updatedAt(null)
+            .status("started")
+            .build();
+
+    when(jobService.runAsJob(any(ReadPLColorsJob.class))).thenReturn(jobStarted);
+
+    // act
+    MvcResult response =
+        mockMvc
+            .perform(post("/api/jobs/launch/readPLColors").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    // assert
+
+    verify(jobService, times(1)).runAsJob(any(ReadPLColorsJob.class));
+    String expectedJson = objectMapper.writeValueAsString(jobStarted);
+    assertEquals(expectedJson, response.getResponse().getContentAsString());
+  }
+
+  @WithMockUser(roles = {"INSTRUCTOR"})
+  @Test
+  public void instructors_cannot_launch_readPLColors_job() throws Exception {
+    mockMvc.perform(post("/api/jobs/launch/readPLColors").with(csrf())).andExpect(status().is(403));
+  }
+
+  @Test
+  public void logged_out_users_cannot_launch_readPLColors_job() throws Exception {
+    mockMvc.perform(post("/api/jobs/launch/readPLColors")).andExpect(status().is(403));
   }
 
   @WithInstructorCoursePermissions
