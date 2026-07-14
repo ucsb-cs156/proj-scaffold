@@ -26,5 +26,10 @@ frontend/coverage
 
 
 PRAIRIELEARN_PAT
+GITHUB_PAT
+
+*_PAT
+
 
 .ai-research-api-key
+
