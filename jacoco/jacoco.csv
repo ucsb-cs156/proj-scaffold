@@ -6,6 +6,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserActivityController,0,58,0,8,0
 scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserActivityController.LegacyUserActivityRequest,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.SubconceptDTO,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,PLQuestionController,0,30,0,0,0,8,0,5,0,5
+scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController.AssessmentManagementDTO,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.StoredPosition,0,9,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,PatCredentialController,0,159,0,8,0,36,0,16,0,12
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController,0,1101,0,68,0,277,0,76,0,42
@@ -43,7 +44,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,AdminsController.AdminDTO,0,18,0,0,0,3,
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.SubConceptTableRowDTO,0,30,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserStateController.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.ScaffoldResetReportDTO,0,12,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController,0,125,0,12,0,34,0,13,0,7
+scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController,0,253,0,22,0,64,0,26,0,15
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.StaffCoursesDTO,0,18,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,InstructorsController,0,65,0,2,0,14,0,6,0,5
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateController,0,180,0,12,0,48,0,14,0,8
