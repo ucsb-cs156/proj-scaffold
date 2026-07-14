@@ -7,6 +7,10 @@ export interface PrairieLearnAssessmentInfo {
   pl_assessment_set_color?: string | null;
 }
 
+// Badge min-width, per instructor request: 75px wider than the original 36px so the
+// pill comfortably fits longer set abbreviation + number combinations (e.g. "MidTerm2").
+const BADGE_MIN_WIDTH = 36 + 75;
+
 // Chooses badge text color for legibility against the given background color, per the
 // standard perceived-luminance formula: white text on dark/saturated backgrounds
 // (luminance <= 150), black text otherwise.
@@ -46,7 +50,7 @@ function AssessmentBadge({
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        minWidth: 111,
+        minWidth: BADGE_MIN_WIDTH,
         padding: "2px 8px",
         borderRadius: 999,
         background,
