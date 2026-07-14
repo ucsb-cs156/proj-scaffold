@@ -34,7 +34,10 @@ public class ConceptGraphService {
 
   public static final String CYCLE_EDGE_COLOR = "#FF0000";
 
-  // Initial guesses; revisit if the resulting layout looks too cramped or too sparse.
+  // Initial guesses; revisit if the resulting layout looks too cramped or too sparse. These
+  // are also the default Course.xSpacing/ySpacing values (see the Course entity and its
+  // migration), which let each course override the spacing used by POST
+  // /api/course/scaffold/reset via PUT /api/course/scaffold/spacing.
   public static final int MIN_HORIZONTAL_SEPARATION = 350;
   public static final int VERTICAL_LEVEL_SEPARATION = 300;
 
@@ -96,12 +99,34 @@ public class ConceptGraphService {
    * Like {@link #reset(List, List)}, but sorts each level by the given prior x values instead of
    * each concept's own x column. Used by the controller to sort by the requesting user's private,
    * unsaved drag positions where they exist, falling back to the concept's persisted x otherwise —
-   * see {@code POST /api/course/scaffold/reset}.
+   * see {@code POST /api/course/scaffold/reset}. Lays out using the default {@link
+   * #MIN_HORIZONTAL_SEPARATION}/{@link #VERTICAL_LEVEL_SEPARATION}; see {@link #reset(List, List,
+   * Map, int, int)} to override the spacing.
    */
   public ResetResult reset(
       List<Concept> topLevelConcepts,
       List<ConceptEdge> edges,
       Map<Long, Integer> priorXByConceptId) {
+    return reset(
+        topLevelConcepts,
+        edges,
+        priorXByConceptId,
+        MIN_HORIZONTAL_SEPARATION,
+        VERTICAL_LEVEL_SEPARATION);
+  }
+
+  /**
+   * Like {@link #reset(List, List, Map)}, but lays out using the given xSpacing/ySpacing instead of
+   * the default {@link #MIN_HORIZONTAL_SEPARATION}/{@link #VERTICAL_LEVEL_SEPARATION}. Used by the
+   * controller to honor a course's {@code xSpacing}/{@code ySpacing} settings — see {@code POST
+   * /api/course/scaffold/reset}.
+   */
+  public ResetResult reset(
+      List<Concept> topLevelConcepts,
+      List<ConceptEdge> edges,
+      Map<Long, Integer> priorXByConceptId,
+      int xSpacing,
+      int ySpacing) {
     Set<Long> nodeIds = topLevelConcepts.stream().map(Concept::getId).collect(Collectors.toSet());
 
     Map<Long, Long> sccId = computeStronglyConnectedComponents(buildAdjacency(edges), nodeIds);
@@ -130,20 +155,22 @@ public class ConceptGraphService {
     // excluding these edges cannot change any longest-path level.
     Map<Long, Integer> levelByConceptId = computeLongestPathLevels(nodeIds, acyclicEdges);
     Map<Long, Position> positionByConceptId =
-        computeLayout(topLevelConcepts, levelByConceptId, priorXByConceptId);
+        computeLayout(topLevelConcepts, levelByConceptId, priorXByConceptId, xSpacing, ySpacing);
 
     return new ResetResult(cycleEdgeIds, removedEdgeIds, levelByConceptId, positionByConceptId);
   }
 
   /**
    * Lays each level out left to right, sorted by each concept's prior x (then id to break ties),
-   * centered horizontally at x=0. Each level sits {@link #VERTICAL_LEVEL_SEPARATION} above the
-   * previous one, with level 1 at y=0.
+   * centered horizontally at x=0. Each level sits {@code ySpacing} above the previous one, with
+   * level 1 at y=0.
    */
   private Map<Long, Position> computeLayout(
       List<Concept> topLevelConcepts,
       Map<Long, Integer> levelByConceptId,
-      Map<Long, Integer> priorXByConceptId) {
+      Map<Long, Integer> priorXByConceptId,
+      int xSpacing,
+      int ySpacing) {
     Map<Integer, List<Concept>> byLevel =
         topLevelConcepts.stream()
             .collect(Collectors.groupingBy(c -> levelByConceptId.get(c.getId())));
@@ -158,9 +185,9 @@ public class ConceptGraphService {
                       .thenComparing(Concept::getId))
               .toList();
       int n = sorted.size();
-      int y = -(level - 1) * VERTICAL_LEVEL_SEPARATION;
+      int y = -(level - 1) * ySpacing;
       for (int i = 0; i < n; i++) {
-        int x = (int) Math.round((i - (n - 1) / 2.0) * MIN_HORIZONTAL_SEPARATION);
+        int x = (int) Math.round((i - (n - 1) / 2.0) * xSpacing);
         positions.put(sorted.get(i).getId(), new Position(x, y));
       }
     }
