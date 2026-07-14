@@ -1,64 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import type { Assessment } from "main/types/conceptGraph";
+import PrairieLearnAssessment from "main/components/Scaffold/PrairieLearnAssessment";
 
 interface AssessmentSelectProps {
   assessments: Assessment[];
   selectedAssessmentId: string;
   onSelect: (id: string) => void;
-}
-
-// Pill-shaped badge showing the assessment's "set" abbreviation + number (e.g. "HW2"),
-// colored with pl_assessment_set_color. Renders nothing if the PL-API sync (issue #71)
-// hasn't populated these fields yet.
-function AssessmentBadge({ assessment }: { assessment: Assessment }) {
-  const label =
-    (assessment.pl_assessment_set_abbreviation ?? "") +
-    (assessment.pl_assessment_number ?? "");
-  if (!label) {
-    return null;
-  }
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minWidth: 36,
-        padding: "2px 8px",
-        borderRadius: 999,
-        background: assessment.pl_assessment_set_color ?? "#94A3B8",
-        color: "#ffffff",
-        fontSize: 11,
-        fontWeight: 600,
-        lineHeight: 1.4,
-        whiteSpace: "nowrap",
-      }}
-    >
-      {label}
-    </span>
-  );
-}
-
-// A row's content: badge (if present) followed by the title, both flush left.
-function AssessmentRow({ assessment }: { assessment: Assessment }) {
-  return (
-    <span
-      style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 0 }}
-    >
-      <AssessmentBadge assessment={assessment} />
-      <span
-        style={{
-          marginLeft: 8,
-          textAlign: "left",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {assessment.name}
-      </span>
-    </span>
-  );
 }
 
 export default function AssessmentSelect({
@@ -109,7 +56,7 @@ export default function AssessmentSelect({
         }}
       >
         {selectedAssessment ? (
-          <AssessmentRow assessment={selectedAssessment} />
+          <PrairieLearnAssessment assessment={selectedAssessment} />
         ) : (
           <span>Select assessment…</span>
         )}
@@ -166,7 +113,7 @@ export default function AssessmentSelect({
                   i < assessments.length - 1 ? "1px solid #F1F5F9" : "none",
               }}
             >
-              <AssessmentRow assessment={a} />
+              <PrairieLearnAssessment assessment={a} />
             </div>
           ))}
         </div>

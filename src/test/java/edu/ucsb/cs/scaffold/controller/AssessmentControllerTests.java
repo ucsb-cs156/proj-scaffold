@@ -311,6 +311,9 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .name("hw01")
             .plAssessmentOrder(1L)
             .plAssessmentTitle("Homework 1")
+            .plAssessmentSetAbbreviation("HW")
+            .plAssessmentNumber("1")
+            .plAssessmentSetColor("blue1")
             .locked(false)
             .build();
     PlAssessment locked =
@@ -329,8 +332,16 @@ public class AssessmentControllerTests extends ControllerTestCase {
     String expectedJson =
         """
         [
-          { "id": "101", "name": "Homework 1", "locked": false },
-          { "id": "102", "name": "hw02", "locked": true }
+          {
+            "id": "101", "name": "Homework 1", "locked": false,
+            "pl_assessment_set_abbreviation": "HW", "pl_assessment_number": "1",
+            "pl_assessment_set_color": "blue1"
+          },
+          {
+            "id": "102", "name": "hw02", "locked": true,
+            "pl_assessment_set_abbreviation": null, "pl_assessment_number": null,
+            "pl_assessment_set_color": null
+          }
         ]
         """;
 
@@ -469,6 +480,9 @@ public class AssessmentControllerTests extends ControllerTestCase {
             .plInstanceId(20L)
             .name("hw01")
             .plAssessmentTitle("Homework 1")
+            .plAssessmentSetAbbreviation("HW")
+            .plAssessmentNumber("1")
+            .plAssessmentSetColor("blue1")
             .locked(true)
             .build();
     when(plAssessmentRepository.findById(101L)).thenReturn(Optional.of(assessment));
@@ -486,7 +500,11 @@ public class AssessmentControllerTests extends ControllerTestCase {
             content()
                 .json(
                     """
-                    { "id": "101", "name": "Homework 1", "locked": false }
+                    {
+                      "id": "101", "name": "Homework 1", "locked": false,
+                      "pl_assessment_set_abbreviation": "HW", "pl_assessment_number": "1",
+                      "pl_assessment_set_color": "blue1"
+                    }
                     """,
                     true));
   }
@@ -520,7 +538,11 @@ public class AssessmentControllerTests extends ControllerTestCase {
             content()
                 .json(
                     """
-                    { "id": "101", "name": "Homework 1", "locked": true }
+                    {
+                      "id": "101", "name": "Homework 1", "locked": true,
+                      "pl_assessment_set_abbreviation": null, "pl_assessment_number": null,
+                      "pl_assessment_set_color": null
+                    }
                     """,
                     true));
   }

@@ -160,7 +160,13 @@ public class AssessmentController extends ApiController {
   }
 
   private static AssessmentManagementDTO toAssessmentManagementDTO(PlAssessment a) {
-    return new AssessmentManagementDTO(String.valueOf(a.getId()), assessmentLabel(a), a.isLocked());
+    return new AssessmentManagementDTO(
+        String.valueOf(a.getId()),
+        assessmentLabel(a),
+        a.isLocked(),
+        a.getPlAssessmentSetAbbreviation(),
+        a.getPlAssessmentNumber(),
+        a.getPlAssessmentSetColor());
   }
 
   private static String assessmentLabel(PlAssessment a) {
@@ -183,7 +189,13 @@ public class AssessmentController extends ApiController {
       @JsonProperty("pl_assessment_number") String plAssessmentNumber,
       @JsonProperty("pl_assessment_set_color") String plAssessmentSetColor) {}
 
-  public record AssessmentManagementDTO(String id, String name, boolean locked) {}
+  public record AssessmentManagementDTO(
+      String id,
+      String name,
+      boolean locked,
+      @JsonProperty("pl_assessment_set_abbreviation") String plAssessmentSetAbbreviation,
+      @JsonProperty("pl_assessment_number") String plAssessmentNumber,
+      @JsonProperty("pl_assessment_set_color") String plAssessmentSetColor) {}
 
   public record QuestionDTO(
       String id,
