@@ -100,6 +100,26 @@ export default function PLTabComponent({ courseId, testIdPrefix }) {
     [`/api/courses/${courseId}`],
   );
 
+  const syncJobMutation = useBackendMutation(
+    () => ({
+      url: "/api/jobs/launch/syncCourseWithPlRepo",
+      method: "POST",
+      params: { courseId },
+    }),
+    {
+      onSuccess: (data) => {
+        toast(`Sync job launched, job number ${data.id}`);
+      },
+      onError: (error) => {
+        const message = error?.response?.data?.message;
+        toast.error(message ?? "Unable to launch sync job");
+      },
+    },
+    ["/api/jobs/all"],
+  );
+
+  const launchSyncJob = () => syncJobMutation.mutate();
+
   return (
     <div className="tabComponent" data-testid={`${testIdPrefix}-plTab`}>
       <h2>PrairieLearn</h2>
@@ -214,6 +234,14 @@ export default function PLTabComponent({ courseId, testIdPrefix }) {
           </Form>
         </li>
       </ol>
+
+      <Button
+        onClick={launchSyncJob}
+        disabled={syncJobMutation.isPending}
+        data-testid={`${testIdPrefix}-plTab-sync-submit`}
+      >
+        Sync Course with PrairieLearn Repo
+      </Button>
     </div>
   );
 }
