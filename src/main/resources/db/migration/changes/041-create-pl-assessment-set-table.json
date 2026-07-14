@@ -1,0 +1,82 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "041-create-pl-assessment-set-table",
+        "author": "copilot",
+        "preConditions": [
+          { "onFail": "MARK_RAN" },
+          { "not": { "tableExists": { "tableName": "pl_assessment_set" } } }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "pl_assessment_set",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGINT",
+                    "autoIncrement": true,
+                    "constraints": { "nullable": false, "primaryKey": true }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "pl_repo_id",
+                    "type": "BIGINT",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "abbreviation",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "name",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "heading",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "color",
+                    "type": "VARCHAR(255)",
+                    "constraints": { "nullable": false }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "pl_assessment_set",
+              "baseColumnNames": "pl_repo_id",
+              "referencedTableName": "pl_repo",
+              "referencedColumnNames": "id",
+              "constraintName": "FK_PL_ASSESSMENT_SET_PL_REPO_ID"
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "pl_assessment_set",
+              "columnNames": "pl_repo_id, abbreviation",
+              "constraintName": "UQ_PL_ASSESSMENT_SET_PL_REPO_ID_ABBREVIATION"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
