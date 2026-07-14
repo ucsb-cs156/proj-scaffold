@@ -3151,4 +3151,20 @@ public class ConceptsControllerTests extends ControllerTestCase {
                 .param("ySpacing", "-1"))
         .andExpect(status().isBadRequest());
   }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void update_scaffold_spacing_rejects_a_zero_ySpacing() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+
+    mockMvc
+        .perform(
+            put("/api/course/scaffold/spacing")
+                .with(csrf())
+                .param("courseId", "42")
+                .param("xSpacing", "100")
+                .param("ySpacing", "0"))
+        .andExpect(status().isBadRequest());
+  }
 }
