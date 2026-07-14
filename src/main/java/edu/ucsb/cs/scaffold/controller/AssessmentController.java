@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.PlAssessment;
 import edu.ucsb.cs.scaffold.entity.PlAssessmentQuestion;
+import edu.ucsb.cs.scaffold.entity.PlColor;
 import edu.ucsb.cs.scaffold.entity.PlQuestion;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
+import edu.ucsb.cs.scaffold.repository.PlColorRepository;
 import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -40,6 +42,7 @@ public class AssessmentController extends ApiController {
   private final PlAssessmentRepository plAssessmentRepository;
   private final PlAssessmentQuestionRepository plAssessmentQuestionRepository;
   private final PlQuestionRepository plQuestionRepository;
+  private final PlColorRepository plColorRepository;
 
   @Operation(
       summary =
@@ -55,6 +58,7 @@ public class AssessmentController extends ApiController {
       return List.of();
     }
 
+    Map<String, String> colorHexByName = loadColorHexByName();
     return plAssessmentRepository
         .findByPlRepoIdAndPlInstanceId(course.getPlRepoId(), course.getPlInstanceId())
         .stream()
@@ -64,7 +68,7 @@ public class AssessmentController extends ApiController {
                     PlAssessment::getPlAssessmentOrder,
                     Comparator.nullsLast(Comparator.naturalOrder()))
                 .thenComparing(PlAssessment::getName))
-        .map(AssessmentController::toAssessmentDTO)
+        .map(a -> toAssessmentDTO(a, colorHexByName))
         .toList();
   }
 
@@ -85,6 +89,7 @@ public class AssessmentController extends ApiController {
       return List.of();
     }
 
+    Map<String, String> colorHexByName = loadColorHexByName();
     return plAssessmentRepository
         .findByPlRepoIdAndPlInstanceId(course.getPlRepoId(), course.getPlInstanceId())
         .stream()
@@ -93,7 +98,7 @@ public class AssessmentController extends ApiController {
                     PlAssessment::getPlAssessmentOrder,
                     Comparator.nullsLast(Comparator.naturalOrder()))
                 .thenComparing(PlAssessment::getName))
-        .map(AssessmentController::toAssessmentManagementDTO)
+        .map(a -> toAssessmentManagementDTO(a, colorHexByName))
         .toList();
   }
 
@@ -122,7 +127,7 @@ public class AssessmentController extends ApiController {
 
     assessment.setLocked(locked);
     plAssessmentRepository.save(assessment);
-    return toAssessmentManagementDTO(assessment);
+    return toAssessmentManagementDTO(assessment, loadColorHexByName());
   }
 
   @Operation(
@@ -149,28 +154,47 @@ public class AssessmentController extends ApiController {
         .toList();
   }
 
-  private static AssessmentDTO toAssessmentDTO(PlAssessment a) {
+  private static AssessmentDTO toAssessmentDTO(PlAssessment a, Map<String, String> colorHexByName) {
     return new AssessmentDTO(
         String.valueOf(a.getId()),
         a.getPlAssessmentId() != null ? String.valueOf(a.getPlAssessmentId()) : null,
         assessmentLabel(a),
         a.getPlAssessmentSetAbbreviation(),
         a.getPlAssessmentNumber(),
-        a.getPlAssessmentSetColor());
+        resolveColorHex(a.getPlAssessmentSetColor(), colorHexByName));
   }
 
-  private static AssessmentManagementDTO toAssessmentManagementDTO(PlAssessment a) {
+  private static AssessmentManagementDTO toAssessmentManagementDTO(
+      PlAssessment a, Map<String, String> colorHexByName) {
     return new AssessmentManagementDTO(
         String.valueOf(a.getId()),
         assessmentLabel(a),
         a.isLocked(),
         a.getPlAssessmentSetAbbreviation(),
         a.getPlAssessmentNumber(),
-        a.getPlAssessmentSetColor());
+        resolveColorHex(a.getPlAssessmentSetColor(), colorHexByName));
   }
 
   private static String assessmentLabel(PlAssessment a) {
     return a.getPlAssessmentTitle() != null ? a.getPlAssessmentTitle() : a.getName();
+  }
+
+  // Loads the pl_color name -> hex code map (populated by ReadPLColorsJob, issue #96) so that
+  // pl_assessment_set_color (a PrairieLearn color name like "gray1") can be translated into a hex
+  // code the frontend can use directly as a CSS background color.
+  private Map<String, String> loadColorHexByName() {
+    return plColorRepository.findAll().stream()
+        .collect(Collectors.toMap(PlColor::getColorName, PlColor::getHexCode));
+  }
+
+  // Translates a PrairieLearn color name (e.g. "gray1") into its hex code via the pl_color table.
+  // Returns null if the color name is null/blank or not found (e.g. before ReadPLColorsJob has
+  // been run), so the frontend can fall back to a default badge color.
+  private static String resolveColorHex(String colorName, Map<String, String> colorHexByName) {
+    if (colorName == null || colorName.isBlank()) {
+      return null;
+    }
+    return colorHexByName.get(colorName);
   }
 
   private static QuestionDTO toQuestionDTO(PlQuestion q, Long assessmentId) {
