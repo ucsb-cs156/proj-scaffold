@@ -36,22 +36,6 @@ export default function ScaffoldTabComponent({
     reset,
   } = useForm();
 
-  const onSuccessScaffoldReset = () => {
-    toast("Scaffold reset successfully completed.");
-  };
-
-  const scaffoldResetAxiosParams = () => ({
-    url: "/api/course/scaffold/reset",
-    method: "POST",
-    params: {
-      courseId,
-    },
-  });
-
-  const resetScaffoldMutation = useBackendMutation(scaffoldResetAxiosParams, {
-    onSuccess: onSuccessScaffoldReset,
-  });
-
   // Current course, used to show the current xSpacing/ySpacing. Refetched after a
   // successful spacing update (see the invalidated query key on spacingMutation
   // below) so the fields reflect the value just saved.
@@ -170,13 +154,6 @@ export default function ScaffoldTabComponent({
   return (
     <div className="tabComponent" data-testid={`${testIdPrefix}-scaffoldTab`}>
       <h2>Scaffold</h2>
-      <Button
-        onClick={resetScaffoldMutation.mutate}
-        data-testid={`${testIdPrefix}-reset-button`}
-      >
-        Reset Scaffold
-      </Button>
-      <hr />
       <p>
         Set the horizontal (xSpacing) and vertical (ySpacing) pixel spacing used
         to lay out top-level concepts the next time the scaffold is reset.

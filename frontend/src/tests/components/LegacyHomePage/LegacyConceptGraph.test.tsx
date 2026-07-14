@@ -369,6 +369,8 @@ describe("LegacyConceptGraph debug mode tooltips", () => {
           canUseStaffTools: true,
           newConceptHandler: null,
           registerNewConceptHandler: vi.fn(),
+          realignConceptsHandler: null,
+          registerRealignConceptsHandler: vi.fn(),
         }}
       >
         <LegacyConceptGraph {...baseProps()} />

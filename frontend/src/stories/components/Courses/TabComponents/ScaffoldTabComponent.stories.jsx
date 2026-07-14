@@ -44,16 +44,6 @@ Default.parameters = {
       );
       return HttpResponse.json({ xSpacing, ySpacing }, { status: 200 });
     }),
-    http.post("/api/course/scaffold/reset", ({ request }) => {
-      const url = new URL(request.url);
-      window.alert(
-        `Invoked scaffold reset with courseId=${url.searchParams.get("courseId")} via URL: ${url}`,
-      );
-      return HttpResponse.json(
-        { message: "Scaffold reset completed." },
-        { status: 200 },
-      );
-    }),
     http.get("/api/concepts/yaml/download", () => {
       return new HttpResponse(sampleYaml, {
         status: 200,
