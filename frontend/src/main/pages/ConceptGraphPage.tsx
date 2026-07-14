@@ -24,6 +24,7 @@ import type {
 } from "main/types/conceptGraph";
 import LoginScreen from "main/components/Auth/LoginScreen";
 import ScaffoldTopBar from "main/components/Scaffold/ScaffoldTopBar";
+import type { CourseAccess } from "main/components/Courses/CourseMenu";
 import { useCurrentUser } from "main/utils/currentUser";
 import { StaffToolsProvider } from "main/utils/staffTools";
 import { useStaffTools } from "main/utils/useStaffTools";
@@ -140,6 +141,18 @@ function ConceptGraphPageContent() {
   const { data: course } = useBackend<Course | undefined>(
     ["/api/courses", courseId],
     { method: "GET", url: `/api/courses/${courseId}` },
+    undefined,
+    true,
+    { enabled: courseIdIsValid, retry: false },
+  );
+
+  // Unlike /api/courses/{id} above (staff-only), this endpoint is available to
+  // any user with access to the course (student, staff, instructor, or admin),
+  // so it drives the course-identifying banner shown to everyone at the top of
+  // the page.
+  const { data: courseInfo } = useBackend<CourseAccess | undefined>(
+    ["/api/courses/list", courseId],
+    { method: "GET", url: `/api/courses/list/${courseId}` },
     undefined,
     true,
     { enabled: courseIdIsValid, retry: false },
@@ -937,6 +950,7 @@ function ConceptGraphPageContent() {
         {/* ── Top bar ── */}
         <ScaffoldTopBar
           course={course}
+          courseInfo={courseInfo}
           courseId={courseId}
           assessments={assessments}
           selectedAssessmentId={selectedAssessmentId}

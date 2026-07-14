@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Assessment, Question, Course } from "main/types/conceptGraph";
+import type { CourseAccess } from "main/components/Courses/CourseMenu";
 import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
 import QuestionSearch from "main/components/Scaffold/QuestionSearch";
 import LinkToSettings from "main/components/Scaffold/LinkToSettings";
@@ -11,6 +12,10 @@ interface ScaffoldTopBarProps {
   // Undefined while the course is still loading; the settings link is
   // omitted until it arrives.
   course?: Course;
+  // Undefined while still loading; the course-identifying banner above the
+  // bar is omitted until it arrives. Unlike `course` (staff-only), this is
+  // available to any user with access to the course.
+  courseInfo?: CourseAccess;
   courseId: number;
   assessments: Assessment[];
   selectedAssessmentId: string;
@@ -24,6 +29,7 @@ interface ScaffoldTopBarProps {
 
 export default function ScaffoldTopBar({
   course,
+  courseInfo,
   courseId,
   assessments,
   selectedAssessmentId,
@@ -38,63 +44,73 @@ export default function ScaffoldTopBar({
   const [showUnlockModal, setShowUnlockModal] = useState(false);
 
   return (
-    <div className="scaffold-top-bar" data-testid="ScaffoldTopBar">
-      {enableEditing && (
-        <button
-          data-testid="ScaffoldTopBar-unlockAssessments"
-          onClick={() => setShowUnlockModal(true)}
+    <div className="scaffold-top-bar-wrapper">
+      {courseInfo && (
+        <div
+          className="scaffold-top-bar-course-info"
+          data-testid="ScaffoldTopBar-courseInfo"
+        >
+          {`${courseInfo.courseName}, ${courseInfo.term}, ${courseInfo.school.displayName}, ${courseInfo.instructorEmail} (${courseInfo.id})`}
+        </div>
+      )}
+      <div className="scaffold-top-bar" data-testid="ScaffoldTopBar">
+        {enableEditing && (
+          <button
+            data-testid="ScaffoldTopBar-unlockAssessments"
+            onClick={() => setShowUnlockModal(true)}
+            style={{
+              height: 28,
+              padding: "0px 10px",
+              fontFamily: "Helvetica, Arial, sans-serif",
+              fontSize: 13,
+              background: "#ffffff",
+              color: "#1E293B",
+              border: "1px solid #000000",
+              borderRadius: 6,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Unlock Assessments
+          </button>
+        )}
+        <AssessmentSelect
+          assessments={assessments}
+          selectedAssessmentId={selectedAssessmentId}
+          onSelect={onSelectAssessment}
+        />
+        <UnlockAssessmentsModal
+          show={showUnlockModal}
+          onHide={() => setShowUnlockModal(false)}
+          courseId={courseId}
+        />
+        <div style={{ width: 300 }}>
+          <QuestionSearch
+            questions={questions}
+            selectedQuestionId={selectedQuestionId}
+            onSelect={onSelectQuestion}
+            disabled={!selectedAssessmentId || questions.length === 0}
+          />
+        </div>
+        <div
           style={{
-            height: 28,
-            padding: "0px 10px",
-            fontFamily: "Helvetica, Arial, sans-serif",
-            fontSize: 13,
-            background: "#ffffff",
-            color: "#1E293B",
-            border: "1px solid #000000",
-            borderRadius: 6,
-            cursor: "pointer",
-            whiteSpace: "nowrap",
+            marginLeft: "auto",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
           }}
         >
-          Unlock Assessments
-        </button>
-      )}
-      <AssessmentSelect
-        assessments={assessments}
-        selectedAssessmentId={selectedAssessmentId}
-        onSelect={onSelectAssessment}
-      />
-      <UnlockAssessmentsModal
-        show={showUnlockModal}
-        onHide={() => setShowUnlockModal(false)}
-        courseId={courseId}
-      />
-      <div style={{ width: 300 }}>
-        <QuestionSearch
-          questions={questions}
-          selectedQuestionId={selectedQuestionId}
-          onSelect={onSelectQuestion}
-          disabled={!selectedAssessmentId || questions.length === 0}
-        />
-      </div>
-      <div
-        style={{
-          marginLeft: "auto",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-        }}
-      >
-        {course && (
-          <LinkToSettings
-            course={course}
-            testId="ScaffoldTopBar-linkToSettings"
+          {course && (
+            <LinkToSettings
+              course={course}
+              testId="ScaffoldTopBar-linkToSettings"
+            />
+          )}
+          <StarStatus
+            numStarredConcepts={numStarredConcepts}
+            numTotalConcepts={numTotalConcepts}
           />
-        )}
-        <StarStatus
-          numStarredConcepts={numStarredConcepts}
-          numTotalConcepts={numTotalConcepts}
-        />
+        </div>
       </div>
     </div>
   );

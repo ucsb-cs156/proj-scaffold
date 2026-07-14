@@ -6,6 +6,7 @@ import ScaffoldTopBar from "main/components/Scaffold/ScaffoldTopBar";
 import { StaffToolsProvider } from "main/utils/staffTools";
 import { currentUserFixtures } from "fixtures/currentUserFixtures";
 import type { Assessment, Course, Question } from "main/types/conceptGraph";
+import type { CourseAccess } from "main/components/Courses/CourseMenu";
 import mockConsole from "tests/testutils/mockConsole";
 
 import axios from "axios";
@@ -24,8 +25,21 @@ const questions: Question[] = [
 
 const course: Course = { id: 7, courseName: "CMPSC 156" };
 
+const courseInfo: CourseAccess = {
+  id: 3,
+  courseName: "CMPSC 5B",
+  term: "S26",
+  school: { key: "UCSB", displayName: "UCSB" },
+  instructorEmail: "phtcon@ucsb.edu",
+  studentAccess: false,
+  staffAccess: false,
+  instructorAccess: true,
+  adminAccess: false,
+};
+
 const defaultProps = {
   course,
+  courseInfo,
   courseId: 7,
   assessments,
   selectedAssessmentId: "",
@@ -74,6 +88,20 @@ describe("ScaffoldTopBar", () => {
     renderTopBar();
     const bar = screen.getByTestId("ScaffoldTopBar");
     expect(bar).toHaveClass("scaffold-top-bar");
+  });
+
+  test("shows the course-identifying banner above the bar", () => {
+    renderTopBar();
+    expect(screen.getByTestId("ScaffoldTopBar-courseInfo")).toHaveTextContent(
+      "CMPSC 5B, S26, UCSB, phtcon@ucsb.edu (3)",
+    );
+  });
+
+  test("omits the course-identifying banner while courseInfo is still loading", () => {
+    renderTopBar({ courseInfo: undefined });
+    expect(
+      screen.queryByTestId("ScaffoldTopBar-courseInfo"),
+    ).not.toBeInTheDocument();
   });
 
   test("shows the star status and a disabled question search when no assessment is selected", () => {
