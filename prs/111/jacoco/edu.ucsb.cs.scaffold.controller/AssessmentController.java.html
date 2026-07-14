@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.entity.PlAssessment;
 import edu.ucsb.cs.scaffold.entity.PlAssessmentQuestion;
+import edu.ucsb.cs.scaffold.entity.PlColor;
 import edu.ucsb.cs.scaffold.entity.PlQuestion;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
 import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
+import edu.ucsb.cs.scaffold.repository.PlColorRepository;
 import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -40,6 +42,7 @@ public class AssessmentController extends ApiController {
   private final PlAssessmentRepository plAssessmentRepository;
   private final PlAssessmentQuestionRepository plAssessmentQuestionRepository;
   private final PlQuestionRepository plQuestionRepository;
+  private final PlColorRepository plColorRepository;
 
   @Operation(
       summary =
@@ -48,24 +51,25 @@ public class AssessmentController extends ApiController {
   @GetMapping(&quot;/api/assessments&quot;)
   public List&lt;AssessmentDTO&gt; getAssessments(
       @Parameter(description = &quot;Id of the course&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L51">    Course course = courseRepository.findById(courseId).orElse(null);</span>
-<span class="fc bfc" id="L52" title="All 6 branches covered.">    if (course == null || course.getPlRepoId() == null || course.getPlInstanceId() == null) {</span>
+<span class="fc" id="L54">    Course course = courseRepository.findById(courseId).orElse(null);</span>
+<span class="fc bfc" id="L55" title="All 6 branches covered.">    if (course == null || course.getPlRepoId() == null || course.getPlInstanceId() == null) {</span>
       // No PrairieLearn repo/instance associated with this course yet (or the course doesn't
       // exist): the menu shows no assessments rather than erroring.
-<span class="fc" id="L55">      return List.of();</span>
+<span class="fc" id="L58">      return List.of();</span>
     }
 
-<span class="fc" id="L58">    return plAssessmentRepository</span>
-<span class="fc" id="L59">        .findByPlRepoIdAndPlInstanceId(course.getPlRepoId(), course.getPlInstanceId())</span>
-<span class="fc" id="L60">        .stream()</span>
-<span class="fc bfc" id="L61" title="All 2 branches covered.">        .filter(a -&gt; !a.isLocked())</span>
-<span class="fc" id="L62">        .sorted(</span>
-<span class="fc" id="L63">            Comparator.comparing(</span>
+<span class="fc" id="L61">    Map&lt;String, String&gt; colorHexByName = loadColorHexByName();</span>
+<span class="fc" id="L62">    return plAssessmentRepository</span>
+<span class="fc" id="L63">        .findByPlRepoIdAndPlInstanceId(course.getPlRepoId(), course.getPlInstanceId())</span>
+<span class="fc" id="L64">        .stream()</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        .filter(a -&gt; !a.isLocked())</span>
+<span class="fc" id="L66">        .sorted(</span>
+<span class="fc" id="L67">            Comparator.comparing(</span>
                     PlAssessment::getPlAssessmentOrder,
-<span class="fc" id="L65">                    Comparator.nullsLast(Comparator.naturalOrder()))</span>
-<span class="fc" id="L66">                .thenComparing(PlAssessment::getName))</span>
-<span class="fc" id="L67">        .map(AssessmentController::toAssessmentDTO)</span>
-<span class="fc" id="L68">        .toList();</span>
+<span class="fc" id="L69">                    Comparator.nullsLast(Comparator.naturalOrder()))</span>
+<span class="fc" id="L70">                .thenComparing(PlAssessment::getName))</span>
+<span class="fc" id="L71">        .map(a -&gt; toAssessmentDTO(a, colorHexByName))</span>
+<span class="fc" id="L72">        .toList();</span>
   }
 
   @Operation(
@@ -75,26 +79,27 @@ public class AssessmentController extends ApiController {
   @GetMapping(&quot;/api/assessments/all&quot;)
   public List&lt;AssessmentManagementDTO&gt; getAllAssessments(
       @Parameter(description = &quot;Id of the course&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L78">    Course course =</span>
+<span class="fc" id="L82">    Course course =</span>
         courseRepository
-<span class="fc" id="L80">            .findById(courseId)</span>
-<span class="fc" id="L81">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc bfc" id="L82" title="All 4 branches covered.">    if (course.getPlRepoId() == null || course.getPlInstanceId() == null) {</span>
+<span class="fc" id="L84">            .findById(courseId)</span>
+<span class="fc" id="L85">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc bfc" id="L86" title="All 4 branches covered.">    if (course.getPlRepoId() == null || course.getPlInstanceId() == null) {</span>
       // No PrairieLearn repo/instance associated with this course yet: a normal,
       // not-yet-configured state, not an error. The modal shows no assessments to manage.
-<span class="fc" id="L85">      return List.of();</span>
+<span class="fc" id="L89">      return List.of();</span>
     }
 
-<span class="fc" id="L88">    return plAssessmentRepository</span>
-<span class="fc" id="L89">        .findByPlRepoIdAndPlInstanceId(course.getPlRepoId(), course.getPlInstanceId())</span>
-<span class="fc" id="L90">        .stream()</span>
-<span class="fc" id="L91">        .sorted(</span>
-<span class="fc" id="L92">            Comparator.comparing(</span>
+<span class="fc" id="L92">    Map&lt;String, String&gt; colorHexByName = loadColorHexByName();</span>
+<span class="fc" id="L93">    return plAssessmentRepository</span>
+<span class="fc" id="L94">        .findByPlRepoIdAndPlInstanceId(course.getPlRepoId(), course.getPlInstanceId())</span>
+<span class="fc" id="L95">        .stream()</span>
+<span class="fc" id="L96">        .sorted(</span>
+<span class="fc" id="L97">            Comparator.comparing(</span>
                     PlAssessment::getPlAssessmentOrder,
-<span class="fc" id="L94">                    Comparator.nullsLast(Comparator.naturalOrder()))</span>
-<span class="fc" id="L95">                .thenComparing(PlAssessment::getName))</span>
-<span class="fc" id="L96">        .map(AssessmentController::toAssessmentManagementDTO)</span>
-<span class="fc" id="L97">        .toList();</span>
+<span class="fc" id="L99">                    Comparator.nullsLast(Comparator.naturalOrder()))</span>
+<span class="fc" id="L100">                .thenComparing(PlAssessment::getName))</span>
+<span class="fc" id="L101">        .map(a -&gt; toAssessmentManagementDTO(a, colorHexByName))</span>
+<span class="fc" id="L102">        .toList();</span>
   }
 
   @Operation(summary = &quot;Lock or unlock an assessment so it is hidden from or shown to students&quot;)
@@ -105,24 +110,24 @@ public class AssessmentController extends ApiController {
       @Parameter(description = &quot;Id of the PlAssessment&quot;) @RequestParam Long assessmentId,
       @Parameter(description = &quot;true to lock (hide), false to unlock (show)&quot;) @RequestParam
           boolean locked) {
-<span class="fc" id="L108">    Course course =</span>
+<span class="fc" id="L113">    Course course =</span>
         courseRepository
-<span class="fc" id="L110">            .findById(courseId)</span>
-<span class="fc" id="L111">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc" id="L112">    PlAssessment assessment =</span>
+<span class="fc" id="L115">            .findById(courseId)</span>
+<span class="fc" id="L116">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L117">    PlAssessment assessment =</span>
         plAssessmentRepository
-<span class="fc" id="L114">            .findById(assessmentId)</span>
-<span class="fc" id="L115">            .orElseThrow(() -&gt; new EntityNotFoundException(PlAssessment.class, assessmentId));</span>
+<span class="fc" id="L119">            .findById(assessmentId)</span>
+<span class="fc" id="L120">            .orElseThrow(() -&gt; new EntityNotFoundException(PlAssessment.class, assessmentId));</span>
 
-<span class="fc bfc" id="L117" title="All 2 branches covered.">    if (!Objects.equals(assessment.getPlRepoId(), course.getPlRepoId())</span>
-<span class="fc bfc" id="L118" title="All 2 branches covered.">        || !Objects.equals(assessment.getPlInstanceId(), course.getPlInstanceId())) {</span>
-<span class="fc" id="L119">      throw new IllegalArgumentException(</span>
-<span class="fc" id="L120">          &quot;assessmentId %d belongs to a different course&quot;.formatted(assessmentId));</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">    if (!Objects.equals(assessment.getPlRepoId(), course.getPlRepoId())</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        || !Objects.equals(assessment.getPlInstanceId(), course.getPlInstanceId())) {</span>
+<span class="fc" id="L124">      throw new IllegalArgumentException(</span>
+<span class="fc" id="L125">          &quot;assessmentId %d belongs to a different course&quot;.formatted(assessmentId));</span>
     }
 
-<span class="fc" id="L123">    assessment.setLocked(locked);</span>
-<span class="fc" id="L124">    plAssessmentRepository.save(assessment);</span>
-<span class="fc" id="L125">    return toAssessmentManagementDTO(assessment);</span>
+<span class="fc" id="L128">    assessment.setLocked(locked);</span>
+<span class="fc" id="L129">    plAssessmentRepository.save(assessment);</span>
+<span class="fc" id="L130">    return toAssessmentManagementDTO(assessment, loadColorHexByName());</span>
   }
 
   @Operation(
@@ -130,58 +135,77 @@ public class AssessmentController extends ApiController {
   @GetMapping(&quot;/api/assessments/{assessmentId}/questions&quot;)
   public List&lt;QuestionDTO&gt; getQuestions(
       @Parameter(description = &quot;Id of the PlAssessment&quot;) @PathVariable Long assessmentId) {
-<span class="fc" id="L133">    List&lt;PlAssessmentQuestion&gt; joinRows =</span>
-<span class="fc" id="L134">        plAssessmentQuestionRepository.findByPlAssessmentIdOrderByOrdinalAsc(assessmentId);</span>
-<span class="fc bfc" id="L135" title="All 2 branches covered.">    if (joinRows.isEmpty()) {</span>
-<span class="fc" id="L136">      return List.of();</span>
+<span class="fc" id="L138">    List&lt;PlAssessmentQuestion&gt; joinRows =</span>
+<span class="fc" id="L139">        plAssessmentQuestionRepository.findByPlAssessmentIdOrderByOrdinalAsc(assessmentId);</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">    if (joinRows.isEmpty()) {</span>
+<span class="fc" id="L141">      return List.of();</span>
     }
 
-<span class="fc" id="L139">    Map&lt;Long, PlQuestion&gt; questionsById =</span>
+<span class="fc" id="L144">    Map&lt;Long, PlQuestion&gt; questionsById =</span>
         plQuestionRepository
-<span class="fc" id="L141">            .findAllById(joinRows.stream().map(PlAssessmentQuestion::getPlQuestionId).toList())</span>
-<span class="fc" id="L142">            .stream()</span>
-<span class="fc" id="L143">            .collect(Collectors.toMap(PlQuestion::getId, q -&gt; q));</span>
+<span class="fc" id="L146">            .findAllById(joinRows.stream().map(PlAssessmentQuestion::getPlQuestionId).toList())</span>
+<span class="fc" id="L147">            .stream()</span>
+<span class="fc" id="L148">            .collect(Collectors.toMap(PlQuestion::getId, q -&gt; q));</span>
 
-<span class="fc" id="L145">    return joinRows.stream()</span>
-<span class="fc" id="L146">        .map(join -&gt; questionsById.get(join.getPlQuestionId()))</span>
-<span class="fc" id="L147">        .filter(Objects::nonNull)</span>
-<span class="fc" id="L148">        .map(q -&gt; toQuestionDTO(q, assessmentId))</span>
-<span class="fc" id="L149">        .toList();</span>
+<span class="fc" id="L150">    return joinRows.stream()</span>
+<span class="fc" id="L151">        .map(join -&gt; questionsById.get(join.getPlQuestionId()))</span>
+<span class="fc" id="L152">        .filter(Objects::nonNull)</span>
+<span class="fc" id="L153">        .map(q -&gt; toQuestionDTO(q, assessmentId))</span>
+<span class="fc" id="L154">        .toList();</span>
   }
 
-  private static AssessmentDTO toAssessmentDTO(PlAssessment a) {
-<span class="fc" id="L153">    return new AssessmentDTO(</span>
-<span class="fc" id="L154">        String.valueOf(a.getId()),</span>
-<span class="fc bfc" id="L155" title="All 2 branches covered.">        a.getPlAssessmentId() != null ? String.valueOf(a.getPlAssessmentId()) : null,</span>
-<span class="fc" id="L156">        assessmentLabel(a),</span>
-<span class="fc" id="L157">        a.getPlAssessmentSetAbbreviation(),</span>
-<span class="fc" id="L158">        a.getPlAssessmentNumber(),</span>
-<span class="fc" id="L159">        a.getPlAssessmentSetColor());</span>
+  private static AssessmentDTO toAssessmentDTO(PlAssessment a, Map&lt;String, String&gt; colorHexByName) {
+<span class="fc" id="L158">    return new AssessmentDTO(</span>
+<span class="fc" id="L159">        String.valueOf(a.getId()),</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        a.getPlAssessmentId() != null ? String.valueOf(a.getPlAssessmentId()) : null,</span>
+<span class="fc" id="L161">        assessmentLabel(a),</span>
+<span class="fc" id="L162">        a.getPlAssessmentSetAbbreviation(),</span>
+<span class="fc" id="L163">        a.getPlAssessmentNumber(),</span>
+<span class="fc" id="L164">        resolveColorHex(a.getPlAssessmentSetColor(), colorHexByName));</span>
   }
 
-  private static AssessmentManagementDTO toAssessmentManagementDTO(PlAssessment a) {
-<span class="fc" id="L163">    return new AssessmentManagementDTO(</span>
-<span class="fc" id="L164">        String.valueOf(a.getId()),</span>
-<span class="fc" id="L165">        assessmentLabel(a),</span>
-<span class="fc" id="L166">        a.isLocked(),</span>
-<span class="fc" id="L167">        a.getPlAssessmentSetAbbreviation(),</span>
-<span class="fc" id="L168">        a.getPlAssessmentNumber(),</span>
-<span class="fc" id="L169">        a.getPlAssessmentSetColor());</span>
+  private static AssessmentManagementDTO toAssessmentManagementDTO(
+      PlAssessment a, Map&lt;String, String&gt; colorHexByName) {
+<span class="fc" id="L169">    return new AssessmentManagementDTO(</span>
+<span class="fc" id="L170">        String.valueOf(a.getId()),</span>
+<span class="fc" id="L171">        assessmentLabel(a),</span>
+<span class="fc" id="L172">        a.isLocked(),</span>
+<span class="fc" id="L173">        a.getPlAssessmentSetAbbreviation(),</span>
+<span class="fc" id="L174">        a.getPlAssessmentNumber(),</span>
+<span class="fc" id="L175">        resolveColorHex(a.getPlAssessmentSetColor(), colorHexByName));</span>
   }
 
   private static String assessmentLabel(PlAssessment a) {
-<span class="fc bfc" id="L173" title="All 2 branches covered.">    return a.getPlAssessmentTitle() != null ? a.getPlAssessmentTitle() : a.getName();</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">    return a.getPlAssessmentTitle() != null ? a.getPlAssessmentTitle() : a.getName();</span>
+  }
+
+  // Loads the pl_color name -&gt; hex code map (populated by ReadPLColorsJob, issue #96) so that
+  // pl_assessment_set_color (a PrairieLearn color name like &quot;gray1&quot;) can be translated into a hex
+  // code the frontend can use directly as a CSS background color.
+  private Map&lt;String, String&gt; loadColorHexByName() {
+<span class="fc" id="L186">    return plColorRepository.findAll().stream()</span>
+<span class="fc" id="L187">        .collect(Collectors.toMap(PlColor::getColorName, PlColor::getHexCode));</span>
+  }
+
+  // Translates a PrairieLearn color name (e.g. &quot;gray1&quot;) into its hex code via the pl_color table.
+  // Returns null if the color name is null/blank or not found (e.g. before ReadPLColorsJob has
+  // been run), so the frontend can fall back to a default badge color.
+  private static String resolveColorHex(String colorName, Map&lt;String, String&gt; colorHexByName) {
+<span class="fc bfc" id="L194" title="All 4 branches covered.">    if (colorName == null || colorName.isBlank()) {</span>
+<span class="fc" id="L195">      return null;</span>
+    }
+<span class="fc" id="L197">    return colorHexByName.get(colorName);</span>
   }
 
   private static QuestionDTO toQuestionDTO(PlQuestion q, Long assessmentId) {
-<span class="fc" id="L177">    return new QuestionDTO(</span>
-<span class="fc" id="L178">        String.valueOf(q.getId()),</span>
-<span class="fc" id="L179">        String.valueOf(assessmentId),</span>
-<span class="fc" id="L180">        q.getUuid().toString(),</span>
-<span class="fc" id="L181">        q.getTitle());</span>
+<span class="fc" id="L201">    return new QuestionDTO(</span>
+<span class="fc" id="L202">        String.valueOf(q.getId()),</span>
+<span class="fc" id="L203">        String.valueOf(assessmentId),</span>
+<span class="fc" id="L204">        q.getUuid().toString(),</span>
+<span class="fc" id="L205">        q.getTitle());</span>
   }
 
-<span class="fc" id="L184">  public record AssessmentDTO(</span>
+<span class="fc" id="L208">  public record AssessmentDTO(</span>
       String id,
       @JsonProperty(&quot;pl_assessment_id&quot;) String plAssessmentId,
       String name,
@@ -189,7 +213,7 @@ public class AssessmentController extends ApiController {
       @JsonProperty(&quot;pl_assessment_number&quot;) String plAssessmentNumber,
       @JsonProperty(&quot;pl_assessment_set_color&quot;) String plAssessmentSetColor) {}
 
-<span class="fc" id="L192">  public record AssessmentManagementDTO(</span>
+<span class="fc" id="L216">  public record AssessmentManagementDTO(</span>
       String id,
       String name,
       boolean locked,
@@ -197,7 +221,7 @@ public class AssessmentController extends ApiController {
       @JsonProperty(&quot;pl_assessment_number&quot;) String plAssessmentNumber,
       @JsonProperty(&quot;pl_assessment_set_color&quot;) String plAssessmentSetColor) {}
 
-<span class="fc" id="L200">  public record QuestionDTO(</span>
+<span class="fc" id="L224">  public record QuestionDTO(</span>
       String id,
       @JsonProperty(&quot;assessment_id&quot;) String assessmentId,
       @JsonProperty(&quot;pl_question_uuid&quot;) String plQuestionUuid,
