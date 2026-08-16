@@ -125,6 +125,7 @@ function ConceptGraphPageContent() {
 
   const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
   const [selectedQuestionId, setSelectedQuestionId] = useState("");
+  const [assignConceptsMode, setAssignConceptsMode] = useState(false);
 
   // Course-scoped: the backend returns [] when the course has no associated
   // PlRepo/PlInstance yet, rather than an error.
@@ -170,12 +171,18 @@ function ConceptGraphPageContent() {
     { enabled: !!selectedAssessmentId },
   );
 
+  const selectedQuestion = questions.find((q) => q.id === selectedQuestionId);
+  const plAssessmentQuestionId = selectedQuestion?.pl_assessment_question_id;
+
   const { data: questionConcepts = [] } = useBackend<QuestionConcept[]>(
-    ["/api/questions", selectedQuestionId, "concepts"],
-    { method: "GET", url: `/api/questions/${selectedQuestionId}/concepts` },
+    ["/api/plAssessmentQuestion", plAssessmentQuestionId, "concepts"],
+    {
+      method: "GET",
+      url: `/api/plAssessmentQuestion/${plAssessmentQuestionId}/concepts`,
+    },
     [],
     false,
-    { enabled: !!selectedQuestionId },
+    { enabled: !!plAssessmentQuestionId },
   );
   const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(
@@ -769,6 +776,7 @@ function ConceptGraphPageContent() {
     if (!selectedAssessmentId) return;
     /* eslint-disable react-hooks/set-state-in-effect */
     setSelectedQuestionId("");
+    setAssignConceptsMode(false);
     setHighlightedIds(new Set());
     setSelectedConceptId(null);
     setHighlightedSubconcepts(new Map());
@@ -827,7 +835,44 @@ function ConceptGraphPageContent() {
     ? majorConcepts.find((c) => String(c.id) === selectedConceptId)
     : null;
 
+  // The concepts directly tagged on the selected question, distinct from
+  // highlightedIds (which also includes ancestors via computeScaffoldSubgraph) —
+  // needed so a click on an ancestor-only-highlighted node correctly POSTs
+  // rather than mistakenly attempting a DELETE.
+  const assignedConceptIds = useMemo(
+    () => new Set(questionConcepts.map((c) => c.concept_id)),
+    [questionConcepts],
+  );
+
+  const addConceptToQuestionMutation = useBackendMutation(
+    (conceptId: string) => ({
+      url: "/api/plAssessmentQuestion/addConcept",
+      method: "POST",
+      params: { plAssessmentQuestionId, conceptId },
+    }),
+    {},
+    ["/api/plAssessmentQuestion"],
+  );
+
+  const removeConceptFromQuestionMutation = useBackendMutation(
+    (conceptId: string) => ({
+      url: "/api/plAssessmentQuestion/deleteConcept",
+      method: "DELETE",
+      params: { plAssessmentQuestionId, conceptId },
+    }),
+    {},
+    ["/api/plAssessmentQuestion"],
+  );
+
   const handleConceptClick = (id: string) => {
+    if (assignConceptsMode && plAssessmentQuestionId) {
+      if (assignedConceptIds.has(id)) {
+        removeConceptFromQuestionMutation.mutate(id);
+      } else {
+        addConceptToQuestionMutation.mutate(id);
+      }
+      return;
+    }
     setSelectedConceptId(id);
     if (!selectedQuestionId) {
       setHighlightedIds(computeScaffoldSubgraph([id], prereqEdgeData));
@@ -855,6 +900,7 @@ function ConceptGraphPageContent() {
     setSelectedConceptId(null);
     setSelectedItem(null);
     setSelectedQuestionId("");
+    setAssignConceptsMode(false);
     setSavedDetailCards([]);
     setAddedDetailKeys(new Set());
     setMasteredSubconcepts(new Set());
@@ -1002,6 +1048,8 @@ function ConceptGraphPageContent() {
           questions={questions}
           selectedQuestionId={selectedQuestionId}
           onSelectQuestion={setSelectedQuestionId}
+          assignConceptsMode={assignConceptsMode}
+          onToggleAssignConcepts={() => setAssignConceptsMode((v) => !v)}
           numStarredConcepts={starredIds.size}
           numTotalConcepts={majorConcepts.length}
         />

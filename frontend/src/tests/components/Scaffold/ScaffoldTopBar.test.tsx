@@ -20,7 +20,13 @@ const assessments: Assessment[] = [
 ];
 
 const questions: Question[] = [
-  { id: "q1", assessment_id: "1", pl_question_uuid: "u1", title: "Loops 101" },
+  {
+    id: "q1",
+    assessment_id: "1",
+    pl_question_uuid: "u1",
+    title: "Loops 101",
+    pl_assessment_question_id: "501",
+  },
 ];
 
 const course: Course = { id: 7, courseName: "CMPSC 156" };
@@ -47,6 +53,8 @@ const defaultProps = {
   questions: [] as Question[],
   selectedQuestionId: "",
   onSelectQuestion: () => {},
+  assignConceptsMode: false,
+  onToggleAssignConcepts: () => {},
   numStarredConcepts: 2,
   numTotalConcepts: 10,
 };
@@ -194,5 +202,50 @@ describe("ScaffoldTopBar", () => {
         axiosMock.history.get.filter((r) => r.url === "/api/assessments/all"),
       ).toHaveLength(1),
     );
+  });
+
+  test("does not show the Assign Concepts toggle for a non-staff user, even in editing mode", () => {
+    sessionStorage.setItem(
+      "staffTools",
+      JSON.stringify({ enableEditing: true }),
+    );
+    renderTopBar({}, currentUserFixtures.userOnly);
+    expect(
+      screen.queryByTestId("AssignConceptsToggle"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("does not show the Assign Concepts toggle for an admin outside editing mode", () => {
+    renderTopBar({}, currentUserFixtures.adminUser);
+    expect(
+      screen.queryByTestId("AssignConceptsToggle"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("shows the Assign Concepts toggle for an admin in editing mode, disabled without a selected question", () => {
+    sessionStorage.setItem(
+      "staffTools",
+      JSON.stringify({ enableEditing: true }),
+    );
+    renderTopBar({}, currentUserFixtures.adminUser);
+    expect(screen.getByTestId("AssignConceptsToggle")).toBeDisabled();
+  });
+
+  test("enables the Assign Concepts toggle once a question is selected, and calls onToggleAssignConcepts when clicked", () => {
+    sessionStorage.setItem(
+      "staffTools",
+      JSON.stringify({ enableEditing: true }),
+    );
+    const onToggleAssignConcepts = vi.fn();
+    renderTopBar(
+      { selectedQuestionId: "q1", onToggleAssignConcepts },
+      currentUserFixtures.adminUser,
+    );
+    const toggle = screen.getByTestId("AssignConceptsToggle");
+    expect(toggle).toBeEnabled();
+
+    fireEvent.click(toggle);
+
+    expect(onToggleAssignConcepts).toHaveBeenCalledTimes(1);
   });
 });
