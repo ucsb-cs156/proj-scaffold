@@ -2,6 +2,7 @@ package edu.ucsb.cs.scaffold.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.ucsb.cs.scaffold.enums.School;
+import edu.ucsb.cs.scaffold.services.ConceptGraphService;
 import jakarta.persistence.*;
 import java.util.List;
 import lombok.*;
@@ -41,6 +42,18 @@ public class Course {
   // PUT /api/courses/updatePLInstance.
   @Column(name = "pl_instance_id")
   private Long plInstanceId;
+
+  // Horizontal/vertical spacing (in pixels) used to lay out top-level concepts when
+  // POST /api/course/scaffold/reset is run; editable via PUT /api/course/scaffold/spacing.
+  // Defaults match ConceptGraphService's MIN_HORIZONTAL_SEPARATION/VERTICAL_LEVEL_SEPARATION,
+  // the spacing used before these became configurable per course.
+  @Builder.Default
+  @Column(name = "x_spacing", nullable = false)
+  private int xSpacing = ConceptGraphService.MIN_HORIZONTAL_SEPARATION;
+
+  @Builder.Default
+  @Column(name = "y_spacing", nullable = false)
+  private int ySpacing = ConceptGraphService.VERTICAL_LEVEL_SEPARATION;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "course")
   @Fetch(FetchMode.JOIN)

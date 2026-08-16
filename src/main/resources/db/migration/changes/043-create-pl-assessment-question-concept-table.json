@@ -2,7 +2,7 @@
   "databaseChangeLog": [
     {
       "changeSet": {
-        "id": "042-create-pl-assessment-question-concept-table",
+        "id": "043-create-pl-assessment-question-concept-table",
         "author": "pc",
         "preConditions": [
           { "onFail": "MARK_RAN" },
