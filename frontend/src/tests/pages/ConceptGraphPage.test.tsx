@@ -164,7 +164,13 @@ const assessments: Assessment[] = [
 ];
 
 const questions: Question[] = [
-  { id: "q1", assessment_id: "a1", pl_question_uuid: "u1", title: "Q1" },
+  {
+    id: "q1",
+    assessment_id: "a1",
+    pl_question_uuid: "u1",
+    title: "Q1",
+    pl_assessment_question_id: "501",
+  },
 ];
 
 const questionConcepts: QuestionConcept[] = [
@@ -243,6 +249,8 @@ const postsTo = (url: string) =>
   axiosMock.history.post.filter((r) => r.url === url);
 const postBodiesTo = (url: string) =>
   postsTo(url).map((r) => JSON.parse(r.data as string));
+const deletesTo = (url: string) =>
+  axiosMock.history.delete.filter((r) => r.url === url);
 
 const editableConcepts = [
   {
@@ -313,7 +321,13 @@ describe("ConceptGraphPage", () => {
       .onGet(/\/api\/courses\/\d+/)
       .reply(200, { id: 1, courseName: "CMPSC 8" });
     axiosMock.onGet("/api/assessments/a1/questions").reply(200, questions);
-    axiosMock.onGet("/api/questions/q1/concepts").reply(200, questionConcepts);
+    axiosMock
+      .onGet("/api/plAssessmentQuestion/501/concepts")
+      .reply(200, questionConcepts);
+    axiosMock.onPost("/api/plAssessmentQuestion/addConcept").reply(200, {});
+    axiosMock
+      .onDelete("/api/plAssessmentQuestion/deleteConcept")
+      .reply(200, {});
     axiosMock.onGet("/api/concepts/graph").reply(200, majorConcepts);
     axiosMock.onGet("/api/concepts/content").reply(200, conceptContent);
     axiosMock.onGet("/api/concepts/positions").reply(200, positions);
@@ -466,7 +480,7 @@ describe("ConceptGraphPage", () => {
     fireEvent.mouseDown(await screen.findByText("Q1"));
 
     await waitFor(() =>
-      expect(getsTo("/api/questions/q1/concepts")).toHaveLength(1),
+      expect(getsTo("/api/plAssessmentQuestion/501/concepts")).toHaveLength(1),
     );
     await waitFor(() =>
       expect(screen.getByTestId("highlighted-count")).not.toHaveTextContent(
@@ -939,5 +953,99 @@ describe("ConceptGraphPage", () => {
       axiosMock.history.post.find((r) => r.url === "/api/course/scaffold/reset")
         ?.params,
     ).toEqual({ courseId: 1 });
+  });
+
+  test("the Assign Concepts toggle is absent without editing enabled", async () => {
+    renderConceptGraphPage(currentUserFixtures.adminUser);
+    await screen.findByTestId("concept-graph-stub");
+
+    expect(
+      screen.queryByTestId("AssignConceptsToggle"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("the Assign Concepts toggle is disabled in editing mode until a question is selected", async () => {
+    renderConceptGraphPage(currentUserFixtures.adminUser);
+    await screen.findByTestId("concept-graph-stub");
+
+    fireEvent.click(screen.getByTestId("enable-editing-toggle"));
+
+    expect(await screen.findByTestId("AssignConceptsToggle")).toBeDisabled();
+
+    fireEvent.click(await screen.findByText("Select assessment…"));
+    fireEvent.mouseDown(await screen.findByText("HW1"));
+    fireEvent.focus(await screen.findByPlaceholderText("Search questions…"));
+    fireEvent.mouseDown(await screen.findByText("Q1"));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("AssignConceptsToggle")).toBeEnabled(),
+    );
+  });
+
+  test("clicking an untagged concept in assign mode POSTs addConcept and highlights it", async () => {
+    axiosMock.onGet("/api/plAssessmentQuestion/501/concepts").reply(200, []);
+    renderConceptGraphPage(currentUserFixtures.adminUser);
+    await screen.findByTestId("concept-graph-stub");
+
+    fireEvent.click(screen.getByTestId("enable-editing-toggle"));
+    fireEvent.click(await screen.findByText("Select assessment…"));
+    fireEvent.mouseDown(await screen.findByText("HW1"));
+    fireEvent.focus(await screen.findByPlaceholderText("Search questions…"));
+    fireEvent.mouseDown(await screen.findByText("Q1"));
+
+    fireEvent.click(await screen.findByTestId("AssignConceptsToggle"));
+    fireEvent.click(screen.getByText("trigger-concept-click"));
+
+    await waitFor(() =>
+      expect(postsTo("/api/plAssessmentQuestion/addConcept")).toHaveLength(1),
+    );
+    expect(postsTo("/api/plAssessmentQuestion/addConcept")[0].params).toEqual({
+      plAssessmentQuestionId: "501",
+      conceptId: "1",
+    });
+  });
+
+  test("clicking a tagged concept in assign mode DELETEs deleteConcept and unhighlights it", async () => {
+    renderConceptGraphPage(currentUserFixtures.adminUser);
+    await screen.findByTestId("concept-graph-stub");
+
+    fireEvent.click(screen.getByTestId("enable-editing-toggle"));
+    fireEvent.click(await screen.findByText("Select assessment…"));
+    fireEvent.mouseDown(await screen.findByText("HW1"));
+    fireEvent.focus(await screen.findByPlaceholderText("Search questions…"));
+    fireEvent.mouseDown(await screen.findByText("Q1"));
+    await waitFor(() =>
+      expect(getsTo("/api/plAssessmentQuestion/501/concepts")).toHaveLength(1),
+    );
+
+    fireEvent.click(await screen.findByTestId("AssignConceptsToggle"));
+    fireEvent.click(screen.getByText("trigger-concept-click"));
+
+    await waitFor(() =>
+      expect(deletesTo("/api/plAssessmentQuestion/deleteConcept")).toHaveLength(
+        1,
+      ),
+    );
+    expect(
+      deletesTo("/api/plAssessmentQuestion/deleteConcept")[0].params,
+    ).toEqual({ plAssessmentQuestionId: "501", conceptId: "1" });
+  });
+
+  test("clicking a concept while not in assign mode selects it instead of tagging it", async () => {
+    renderConceptGraphPage(currentUserFixtures.adminUser);
+    await screen.findByTestId("concept-graph-stub");
+
+    fireEvent.click(screen.getByTestId("enable-editing-toggle"));
+    fireEvent.click(await screen.findByText("Select assessment…"));
+    fireEvent.mouseDown(await screen.findByText("HW1"));
+    fireEvent.focus(await screen.findByPlaceholderText("Search questions…"));
+    fireEvent.mouseDown(await screen.findByText("Q1"));
+
+    fireEvent.click(screen.getByText("trigger-concept-click"));
+
+    expect(postsTo("/api/plAssessmentQuestion/addConcept")).toHaveLength(0);
+    expect(deletesTo("/api/plAssessmentQuestion/deleteConcept")).toHaveLength(
+      0,
+    );
   });
 });

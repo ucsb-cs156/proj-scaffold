@@ -2251,6 +2251,25 @@ public class ConceptsControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void reset_uses_the_courses_xSpacing_and_ySpacing_instead_of_the_defaults()
+      throws Exception {
+    Course course = Course.builder().id(42L).xSpacing(100).ySpacing(50).build();
+    Concept a = Concept.builder().id(1L).course(course).label("A").x(999).y(999).build();
+    Concept b = Concept.builder().id(2L).course(course).label("B").x(999).y(999).build();
+    ConceptEdge edge = ConceptEdge.builder().id(10L).course(course).source(a).target(b).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(conceptRepository.findByCourseId(42L)).thenReturn(List.of(a, b));
+    when(conceptEdgeRepository.findByCourseId(42L)).thenReturn(List.of(edge));
+
+    mockMvc
+        .perform(post("/api/course/scaffold/reset").with(csrf()).param("courseId", "42"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.report.levels[0].y").value(0))
+        .andExpect(jsonPath("$.report.levels[1].y").value(-50));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void reset_sorts_by_the_callers_private_position_override_instead_of_the_saved_x()
       throws Exception {
     Course course = Course.builder().id(42L).build();
@@ -3029,5 +3048,123 @@ public class ConceptsControllerTests extends ControllerTestCase {
     mockMvc
         .perform(get("/api/concepts/subconcepts").param("courseId", "42"))
         .andExpect(status().isForbidden());
+  }
+
+  // ---------- PUT /api/course/scaffold/spacing ----------
+
+  @Test
+  public void anonymous_user_cannot_update_scaffold_spacing() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/course/scaffold/spacing")
+                .with(csrf())
+                .param("courseId", "42")
+                .param("xSpacing", "100")
+                .param("ySpacing", "50"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(roles = {"USER"})
+  public void user_without_course_permissions_cannot_update_scaffold_spacing() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/course/scaffold/spacing")
+                .with(csrf())
+                .param("courseId", "42")
+                .param("xSpacing", "100")
+                .param("ySpacing", "50"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void update_scaffold_spacing_returns_404_when_course_does_not_exist() throws Exception {
+    when(courseRepository.findById(42L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/course/scaffold/spacing")
+                    .with(csrf())
+                    .param("courseId", "42")
+                    .param("xSpacing", "100")
+                    .param("ySpacing", "50"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("Course with id 42 not found", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void update_scaffold_spacing_saves_the_new_values_and_returns_them() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+    when(courseRepository.save(any(Course.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    mockMvc
+        .perform(
+            put("/api/course/scaffold/spacing")
+                .with(csrf())
+                .param("courseId", "42")
+                .param("xSpacing", "100")
+                .param("ySpacing", "50"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.xSpacing").value(100))
+        .andExpect(jsonPath("$.ySpacing").value(50));
+
+    assertEquals(100, course.getXSpacing());
+    assertEquals(50, course.getYSpacing());
+    verify(courseRepository).save(course);
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void update_scaffold_spacing_rejects_a_non_positive_xSpacing() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+
+    mockMvc
+        .perform(
+            put("/api/course/scaffold/spacing")
+                .with(csrf())
+                .param("courseId", "42")
+                .param("xSpacing", "0")
+                .param("ySpacing", "50"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void update_scaffold_spacing_rejects_a_non_positive_ySpacing() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+
+    mockMvc
+        .perform(
+            put("/api/course/scaffold/spacing")
+                .with(csrf())
+                .param("courseId", "42")
+                .param("xSpacing", "100")
+                .param("ySpacing", "-1"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
+  public void update_scaffold_spacing_rejects_a_zero_ySpacing() throws Exception {
+    Course course = Course.builder().id(42L).build();
+    when(courseRepository.findById(42L)).thenReturn(Optional.of(course));
+
+    mockMvc
+        .perform(
+            put("/api/course/scaffold/spacing")
+                .with(csrf())
+                .param("courseId", "42")
+                .param("xSpacing", "100")
+                .param("ySpacing", "0"))
+        .andExpect(status().isBadRequest());
   }
 }

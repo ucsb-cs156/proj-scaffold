@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Assessment, Question, Course } from "main/types/conceptGraph";
 import type { CourseAccess } from "main/components/Courses/CourseMenu";
 import AssessmentSelect from "main/components/Scaffold/AssessmentSelect";
+import AssignConceptsToggle from "main/components/Scaffold/AssignConceptsToggle";
 import QuestionSearch from "main/components/Scaffold/QuestionSearch";
 import LinkToSettings from "main/components/Scaffold/LinkToSettings";
 import StarStatus from "main/components/Scaffold/StarStatus";
@@ -30,6 +31,8 @@ interface ScaffoldTopBarProps {
   questions: Question[];
   selectedQuestionId: string;
   onSelectQuestion: (id: string) => void;
+  assignConceptsMode: boolean;
+  onToggleAssignConcepts: () => void;
   numStarredConcepts: number;
   numTotalConcepts: number;
 }
@@ -44,6 +47,8 @@ export default function ScaffoldTopBar({
   questions,
   selectedQuestionId,
   onSelectQuestion,
+  assignConceptsMode,
+  onToggleAssignConcepts,
   numStarredConcepts,
   numTotalConcepts,
 }: ScaffoldTopBarProps) {
@@ -99,6 +104,13 @@ export default function ScaffoldTopBar({
             disabled={!selectedAssessmentId || questions.length === 0}
           />
         </div>
+        {enableEditing && (
+          <AssignConceptsToggle
+            active={assignConceptsMode}
+            disabled={!selectedQuestionId}
+            onClick={onToggleAssignConcepts}
+          />
+        )}
         <div
           style={{
             marginLeft: "auto",

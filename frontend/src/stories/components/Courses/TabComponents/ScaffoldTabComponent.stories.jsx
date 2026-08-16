@@ -29,6 +29,57 @@ Default.args = {
 
 Default.parameters = {
   msw: [
+    http.get("/api/courses/list", () => {
+      return HttpResponse.json(
+        [
+          {
+            id: 2,
+            courseName: "CMPSC 156",
+            term: "F25",
+            school: { key: "UCSB", displayName: "UCSB" },
+            instructorEmail: "instructor@example.org",
+            studentAccess: false,
+            staffAccess: false,
+            instructorAccess: true,
+            adminAccess: false,
+          },
+          {
+            id: 3,
+            courseName: "CMPSC 24",
+            term: "F25",
+            school: { key: "UCSB", displayName: "UCSB" },
+            instructorEmail: "staffprof@example.org",
+            studentAccess: false,
+            staffAccess: true,
+            instructorAccess: false,
+            adminAccess: false,
+          },
+        ],
+        { status: 200 },
+      );
+    }),
+    http.post("/api/jobs/launch/copyConceptGraph", ({ request }) => {
+      const url = new URL(request.url);
+      window.alert(
+        `Invoked Copy Concept Graph job launch with fromCourseId=${url.searchParams.get("fromCourseId")}, toCourseId=${url.searchParams.get("toCourseId")}`,
+      );
+      return HttpResponse.json({ id: 1, status: "queued" }, { status: 200 });
+    }),
+    http.get("/api/courses/:courseId", ({ params }) => {
+      return HttpResponse.json(
+        { id: Number(params.courseId), xSpacing: 350, ySpacing: 300 },
+        { status: 200 },
+      );
+    }),
+    http.put("/api/course/scaffold/spacing", ({ request }) => {
+      const url = new URL(request.url);
+      const xSpacing = Number(url.searchParams.get("xSpacing"));
+      const ySpacing = Number(url.searchParams.get("ySpacing"));
+      window.alert(
+        `Invoked scaffold spacing update with courseId=${url.searchParams.get("courseId")}, xSpacing=${xSpacing}, ySpacing=${ySpacing}`,
+      );
+      return HttpResponse.json({ xSpacing, ySpacing }, { status: 200 });
+    }),
     http.get("/api/concepts/yaml/download", () => {
       return new HttpResponse(sampleYaml, {
         status: 200,

@@ -24,7 +24,7 @@ const Template = (args) => {
 };
 
 export const LoggedOut = Template.bind({});
-LoggedOut.parameters = {
+LoggedOut.args = {
   currentUser: {
     loggedIn: false,
   },
@@ -70,15 +70,21 @@ LoggedInInstructor.args = {
 
 export const Localhost3000 = Template.bind({});
 Localhost3000.args = {
+  currentUser: { loggedIn: false },
+  doLogout: () => {},
   currentUrl: "http://localhost:3000",
 };
 
 export const LocalhostNumeric3000 = Template.bind({});
 LocalhostNumeric3000.args = {
+  currentUser: { loggedIn: false },
+  doLogout: () => {},
   currentUrl: "http://127.0.0.1:3000",
 };
 
 export const Localhost8080 = Template.bind({});
 Localhost8080.args = {
+  currentUser: { loggedIn: false },
+  doLogout: () => {},
   currentUrl: "http://localhost:8080",
 };

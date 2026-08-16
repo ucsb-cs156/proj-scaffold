@@ -726,9 +726,10 @@ public class ConceptsController extends ApiController {
   @PostMapping("/api/course/scaffold/reset")
   public ScaffoldResetResponseDTO resetCourseScaffold(
       @Parameter(name = "courseId") @RequestParam Long courseId) throws EntityNotFoundException {
-    courseRepository
-        .findById(courseId)
-        .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
 
     List<Concept> topLevelConcepts =
         conceptRepository.findByCourseId(courseId).stream()
@@ -739,7 +740,8 @@ public class ConceptsController extends ApiController {
     Map<Long, Integer> priorXByConceptId =
         priorXByConceptId(topLevelConcepts, callerPrivatePositions(courseId));
     ConceptGraphService.ResetResult result =
-        conceptGraphService.reset(topLevelConcepts, edges, priorXByConceptId);
+        conceptGraphService.reset(
+            topLevelConcepts, edges, priorXByConceptId, course.getXSpacing(), course.getYSpacing());
 
     for (ConceptEdge edge : edges) {
       edge.setColor(
@@ -796,6 +798,38 @@ public class ConceptsController extends ApiController {
     ScaffoldResetReportDTO report =
         new ScaffoldResetReportDTO(cycleEdgeDtos, removedEdgeDtos, levelDtos);
     return new ScaffoldResetResponseDTO(report, getGraph(courseId), getEdges(courseId));
+  }
+
+  @Operation(
+      summary = "Update the x/y spacing used by POST /api/course/scaffold/reset for a course",
+      description =
+          """
+          Sets the horizontal (xSpacing) and vertical (ySpacing) pixel spacing, between
+          concepts on the same level and between levels respectively, that the next
+          POST /api/course/scaffold/reset for this course will use to lay out top-level
+          concepts. Does not itself change any concept's position.
+          """)
+  @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
+  @PutMapping("/api/course/scaffold/spacing")
+  public ScaffoldSpacingDTO updateScaffoldSpacing(
+      @Parameter(name = "courseId") @RequestParam Long courseId,
+      @Parameter(name = "xSpacing") @RequestParam int xSpacing,
+      @Parameter(name = "ySpacing") @RequestParam int ySpacing)
+      throws EntityNotFoundException {
+    Course course =
+        courseRepository
+            .findById(courseId)
+            .orElseThrow(() -> new EntityNotFoundException(Course.class, courseId));
+
+    if (xSpacing <= 0 || ySpacing <= 0) {
+      throw new IllegalArgumentException("xSpacing and ySpacing must be positive");
+    }
+
+    course.setXSpacing(xSpacing);
+    course.setYSpacing(ySpacing);
+    Course savedCourse = courseRepository.save(course);
+
+    return new ScaffoldSpacingDTO(savedCourse.getXSpacing(), savedCourse.getYSpacing());
   }
 
   private String cleanAndValidateLabel(String label) {
@@ -973,4 +1007,6 @@ public class ConceptsController extends ApiController {
 
   public record ScaffoldResetResponseDTO(
       ScaffoldResetReportDTO report, List<MajorConceptDTO> graph, List<EdgeDTO> edges) {}
+
+  public record ScaffoldSpacingDTO(int xSpacing, int ySpacing) {}
 }

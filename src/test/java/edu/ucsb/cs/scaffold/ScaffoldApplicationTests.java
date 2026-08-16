@@ -239,9 +239,9 @@ class ScaffoldApplicationTests {
   }
 
   @Test
-  void getConceptsForQuestionReturnsEmptyList() throws Exception {
+  void getConceptsForPlAssessmentQuestionReturnsEmptyList() throws Exception {
     mockMvc
-        .perform(get("/api/questions/{id}/concepts", 999999L))
+        .perform(get("/api/plAssessmentQuestion/{id}/concepts", 999999L))
         .andExpect(status().isOk())
         .andExpect(content().json("[]"));
   }

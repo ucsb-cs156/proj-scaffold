@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import type { Assessment } from "main/types/conceptGraph";
+import PrairieLearnAssessment from "main/components/Scaffold/PrairieLearnAssessment";
+import { compareByAssessmentSetAndNumber } from "main/utils/conceptGraphUtils";
 
 interface AssessmentSelectProps {
   assessments: Assessment[];
@@ -15,8 +17,13 @@ export default function AssessmentSelect({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const selectedName =
-    assessments.find((a) => a.id === selectedAssessmentId)?.name ?? "";
+  const selectedAssessment = assessments.find(
+    (a) => a.id === selectedAssessmentId,
+  );
+
+  const sortedAssessments = [...assessments].sort(
+    compareByAssessmentSetAndNumber,
+  );
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -53,7 +60,11 @@ export default function AssessmentSelect({
           userSelect: "none",
         }}
       >
-        <span>{selectedName || "Select assessment…"}</span>
+        {selectedAssessment ? (
+          <PrairieLearnAssessment assessment={selectedAssessment} />
+        ) : (
+          <span>Select assessment…</span>
+        )}
         <svg
           width="12"
           height="12"
@@ -73,7 +84,7 @@ export default function AssessmentSelect({
         </svg>
       </div>
 
-      {isOpen && assessments.length > 0 && (
+      {isOpen && sortedAssessments.length > 0 && (
         <div
           style={{
             position: "absolute",
@@ -89,7 +100,7 @@ export default function AssessmentSelect({
             overflowY: "auto",
           }}
         >
-          {assessments.map((a, i) => (
+          {sortedAssessments.map((a, i) => (
             <div
               key={a.id}
               onMouseDown={() => {
@@ -101,11 +112,15 @@ export default function AssessmentSelect({
                 (a.id === selectedAssessmentId ? " is-selected" : "")
               }
               style={{
+                display: "flex",
+                alignItems: "center",
                 borderBottom:
-                  i < assessments.length - 1 ? "1px solid #F1F5F9" : "none",
+                  i < sortedAssessments.length - 1
+                    ? "1px solid #F1F5F9"
+                    : "none",
               }}
             >
-              {a.name}
+              <PrairieLearnAssessment assessment={a} />
             </div>
           ))}
         </div>

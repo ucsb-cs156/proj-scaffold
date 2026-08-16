@@ -4,12 +4,19 @@ import QuestionSearch from "main/components/Scaffold/QuestionSearch";
 import type { Question } from "main/types/conceptGraph";
 
 const questions: Question[] = [
-  { id: "1", assessment_id: "a1", pl_question_uuid: "u1", title: "Loops 101" },
+  {
+    id: "1",
+    assessment_id: "a1",
+    pl_question_uuid: "u1",
+    title: "Loops 101",
+    pl_assessment_question_id: "501",
+  },
   {
     id: "2",
     assessment_id: "a1",
     pl_question_uuid: "u2",
     title: "Recursion basics",
+    pl_assessment_question_id: "502",
   },
 ];
 
@@ -288,6 +295,7 @@ describe("QuestionSearch", () => {
         assessment_id: "a2",
         pl_question_uuid: "u3",
         title: "Dictionaries",
+        pl_assessment_question_id: "503",
       },
     ];
     // Simulate the two-step transition that ConceptGraphPage / LegacyHomePage

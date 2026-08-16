@@ -55,6 +55,13 @@ describe("ScaffoldTabComponent tests", () => {
     axiosMock.reset();
     mockToast.mockClear();
     mockToastError.mockClear();
+    axiosMock
+      .onGet(/\/api\/courses\/\d+/)
+      .reply(200, { id: 1, xSpacing: 350, ySpacing: 300 });
+    axiosMock
+      .onPost("/api/course/scaffold/reset")
+      .reply(200, { message: "Scaffold reset completed." });
+    axiosMock.onGet("/api/courses/list").reply(200, []);
   });
 
   test("renders the Scaffold heading", () => {
@@ -301,5 +308,307 @@ describe("ScaffoldTabComponent tests", () => {
         (r) => r.url === "/api/concepts/yaml/upload",
       ).length,
     ).toBe(0);
+  });
+
+  test("spacing fields are populated with the course's current xSpacing/ySpacing", async () => {
+    axiosMock.reset();
+    axiosMock
+      .onGet(/\/api\/courses\/\d+/)
+      .reply(200, { id: 42, xSpacing: 111, ySpacing: 222 });
+
+    renderScaffoldTabComponent({ courseId: 42 });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("test-xSpacing")).toHaveValue(111),
+    );
+    expect(screen.getByTestId("test-ySpacing")).toHaveValue(222);
+  });
+
+  test("updating spacing puts the new values and shows a green check", async () => {
+    axiosMock
+      .onPut("/api/course/scaffold/spacing")
+      .reply(200, { xSpacing: 400, ySpacing: 200 });
+
+    renderScaffoldTabComponent({ courseId: 42 });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("test-xSpacing")).toHaveValue(350),
+    );
+    fireEvent.change(screen.getByTestId("test-xSpacing"), {
+      target: { value: "400" },
+    });
+    fireEvent.change(screen.getByTestId("test-ySpacing"), {
+      target: { value: "200" },
+    });
+    fireEvent.click(screen.getByTestId("test-spacing-submit"));
+
+    await waitFor(() => expect(axiosMock.history.put.length).toBe(1));
+    expect(axiosMock.history.put[0].params).toEqual({
+      courseId: 42,
+      xSpacing: 400,
+      ySpacing: 200,
+    });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("test-spacing-check")).toBeInTheDocument(),
+    );
+    expect(screen.queryByTestId("test-spacing-error")).not.toBeInTheDocument();
+  });
+
+  test("a failed spacing update shows an error message instead of the green check", async () => {
+    axiosMock
+      .onPut("/api/course/scaffold/spacing")
+      .reply(400, { message: "xSpacing and ySpacing must be positive" });
+
+    renderScaffoldTabComponent({ courseId: 42 });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("test-xSpacing")).toHaveValue(350),
+    );
+    fireEvent.change(screen.getByTestId("test-xSpacing"), {
+      target: { value: "500" },
+    });
+    fireEvent.click(screen.getByTestId("test-spacing-submit"));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("test-spacing-error")).toHaveTextContent(
+        "xSpacing and ySpacing must be positive",
+      ),
+    );
+    expect(screen.queryByTestId("test-spacing-check")).not.toBeInTheDocument();
+  });
+
+  test("spacing fields require a value", async () => {
+    renderScaffoldTabComponent({ courseId: 42 });
+
+    await waitFor(() =>
+      expect(screen.getByTestId("test-xSpacing")).toHaveValue(350),
+    );
+    fireEvent.change(screen.getByTestId("test-xSpacing"), {
+      target: { value: "" },
+    });
+    fireEvent.click(screen.getByTestId("test-spacing-submit"));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          "X Spacing is required and must be a positive number.",
+        ),
+      ).toBeInTheDocument(),
+    );
+    expect(
+      axiosMock.history.put.filter(
+        (r) => r.url === "/api/course/scaffold/spacing",
+      ).length,
+    ).toBe(0);
+  });
+
+  const otherCourses = [
+    {
+      id: 2,
+      courseName: "CMPSC 156",
+      term: "F25",
+      school: { key: "UCSB", displayName: "UCSB" },
+      instructorEmail: "instructor@example.org",
+      studentAccess: false,
+      staffAccess: false,
+      instructorAccess: true,
+      adminAccess: false,
+    },
+    {
+      id: 3,
+      courseName: "CMPSC 24",
+      term: "F25",
+      school: { key: "UCSB", displayName: "UCSB" },
+      instructorEmail: "staffprof@example.org",
+      studentAccess: false,
+      staffAccess: true,
+      instructorAccess: false,
+      adminAccess: false,
+    },
+    {
+      id: 1,
+      courseName: "CMPSC 8",
+      term: "S26",
+      school: { key: "UCSB", displayName: "UCSB" },
+      instructorEmail: "self@example.org",
+      studentAccess: false,
+      staffAccess: false,
+      instructorAccess: true,
+      adminAccess: false,
+    },
+  ];
+
+  test("renders the Copy Concept Graph section with courses grouped by access, excluding the current course", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, otherCourses);
+
+    renderScaffoldTabComponent({ courseId: 1 });
+
+    expect(
+      screen.getByText("Copy Concept Graph from Another Course"),
+    ).toBeInTheDocument();
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /CMPSC 156/ }),
+      ).toBeInTheDocument(),
+    );
+    expect(
+      screen.getByRole("option", { name: /CMPSC 24/ }),
+    ).toBeInTheDocument();
+    // The current course (id 1) is not offered as a "from" choice.
+    expect(
+      screen.queryByRole("option", { name: /CMPSC 8/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("shows an Admin group listing every course when the user has adminAccess", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, [
+      {
+        id: 5,
+        courseName: "CMPSC 130",
+        term: "F25",
+        school: { key: "UCSB", displayName: "UCSB" },
+        instructorEmail: "someone@example.org",
+        studentAccess: false,
+        staffAccess: false,
+        instructorAccess: false,
+        adminAccess: true,
+      },
+    ]);
+
+    renderScaffoldTabComponent({ courseId: 1 });
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /CMPSC 130/ }),
+      ).toBeInTheDocument(),
+    );
+    const select = screen.getByTestId(
+      "test-copy-concept-graph-from-course-select",
+    );
+    expect(select.querySelector("optgroup[label='Admin']")).not.toBeNull();
+  });
+
+  test("Copy Concept Graph button is disabled until a from-course is selected", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, otherCourses);
+
+    renderScaffoldTabComponent({ courseId: 1 });
+
+    const copyButton = screen.getByTestId("test-copy-concept-graph-button");
+    expect(copyButton).toBeDisabled();
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /CMPSC 156/ }),
+      ).toBeInTheDocument(),
+    );
+    fireEvent.change(
+      screen.getByTestId("test-copy-concept-graph-from-course-select"),
+      { target: { value: "2" } },
+    );
+
+    expect(copyButton).not.toBeDisabled();
+  });
+
+  test("clicking Copy Concept Graph opens the confirmation modal, and Yes launches the job", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, otherCourses);
+    axiosMock
+      .onPost("/api/jobs/launch/copyConceptGraph")
+      .reply(200, { id: 42, status: "queued" });
+
+    renderScaffoldTabComponent({ courseId: 1 });
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /CMPSC 156/ }),
+      ).toBeInTheDocument(),
+    );
+    fireEvent.change(
+      screen.getByTestId("test-copy-concept-graph-from-course-select"),
+      { target: { value: "2" } },
+    );
+    fireEvent.click(screen.getByTestId("test-copy-concept-graph-button"));
+
+    expect(
+      screen.getByText(
+        "This will replace ALL content in the Concept Graph, and erase all User State; are you sure?",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByTestId("test-copyConceptGraphModal-yes-button"),
+    );
+
+    await waitFor(() =>
+      expect(
+        axiosMock.history.post.filter(
+          (r) => r.url === "/api/jobs/launch/copyConceptGraph",
+        ).length,
+      ).toBe(1),
+    );
+    const request = axiosMock.history.post.find(
+      (r) => r.url === "/api/jobs/launch/copyConceptGraph",
+    );
+    expect(request.params).toEqual({ fromCourseId: "2", toCourseId: 1 });
+
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith(
+        "Copy Concept Graph job (id 42) launched. You can monitor its progress on the Jobs tab.",
+      ),
+    );
+  });
+
+  test("clicking No on the confirmation modal does not launch the job", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, otherCourses);
+
+    renderScaffoldTabComponent({ courseId: 1 });
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /CMPSC 156/ }),
+      ).toBeInTheDocument(),
+    );
+    fireEvent.change(
+      screen.getByTestId("test-copy-concept-graph-from-course-select"),
+      { target: { value: "2" } },
+    );
+    fireEvent.click(screen.getByTestId("test-copy-concept-graph-button"));
+    fireEvent.click(screen.getByTestId("test-copyConceptGraphModal-no-button"));
+
+    expect(
+      axiosMock.history.post.filter(
+        (r) => r.url === "/api/jobs/launch/copyConceptGraph",
+      ).length,
+    ).toBe(0);
+  });
+
+  test("shows an error toast when launching the Copy Concept Graph job fails", async () => {
+    axiosMock.onGet("/api/courses/list").reply(200, otherCourses);
+    axiosMock
+      .onPost("/api/jobs/launch/copyConceptGraph")
+      .reply(403, { message: "Forbidden" });
+
+    renderScaffoldTabComponent({ courseId: 1 });
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("option", { name: /CMPSC 156/ }),
+      ).toBeInTheDocument(),
+    );
+    fireEvent.change(
+      screen.getByTestId("test-copy-concept-graph-from-course-select"),
+      { target: { value: "2" } },
+    );
+    fireEvent.click(screen.getByTestId("test-copy-concept-graph-button"));
+    fireEvent.click(
+      screen.getByTestId("test-copyConceptGraphModal-yes-button"),
+    );
+
+    await waitFor(() =>
+      expect(mockToastError).toHaveBeenCalledWith(
+        "Error launching Copy Concept Graph job: Forbidden",
+      ),
+    );
   });
 });
