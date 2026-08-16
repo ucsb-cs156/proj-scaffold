@@ -726,98 +726,132 @@ public class ConceptsController extends ApiController {
   @PostMapping(&quot;/api/course/scaffold/reset&quot;)
   public ScaffoldResetResponseDTO resetCourseScaffold(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) throws EntityNotFoundException {
-<span class="fc" id="L729">    courseRepository</span>
-<span class="fc" id="L730">        .findById(courseId)</span>
-<span class="fc" id="L731">        .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L729">    Course course =</span>
+        courseRepository
+<span class="fc" id="L731">            .findById(courseId)</span>
+<span class="fc" id="L732">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
 
-<span class="fc" id="L733">    List&lt;Concept&gt; topLevelConcepts =</span>
-<span class="fc" id="L734">        conceptRepository.findByCourseId(courseId).stream()</span>
-<span class="fc bfc" id="L735" title="All 2 branches covered.">            .filter(concept -&gt; !concept.isSubconcept())</span>
-<span class="fc" id="L736">            .toList();</span>
-<span class="fc" id="L737">    List&lt;ConceptEdge&gt; edges = conceptEdgeRepository.findByCourseId(courseId);</span>
+<span class="fc" id="L734">    List&lt;Concept&gt; topLevelConcepts =</span>
+<span class="fc" id="L735">        conceptRepository.findByCourseId(courseId).stream()</span>
+<span class="fc bfc" id="L736" title="All 2 branches covered.">            .filter(concept -&gt; !concept.isSubconcept())</span>
+<span class="fc" id="L737">            .toList();</span>
+<span class="fc" id="L738">    List&lt;ConceptEdge&gt; edges = conceptEdgeRepository.findByCourseId(courseId);</span>
 
-<span class="fc" id="L739">    Map&lt;Long, Integer&gt; priorXByConceptId =</span>
-<span class="fc" id="L740">        priorXByConceptId(topLevelConcepts, callerPrivatePositions(courseId));</span>
-<span class="fc" id="L741">    ConceptGraphService.ResetResult result =</span>
-<span class="fc" id="L742">        conceptGraphService.reset(topLevelConcepts, edges, priorXByConceptId);</span>
+<span class="fc" id="L740">    Map&lt;Long, Integer&gt; priorXByConceptId =</span>
+<span class="fc" id="L741">        priorXByConceptId(topLevelConcepts, callerPrivatePositions(courseId));</span>
+<span class="fc" id="L742">    ConceptGraphService.ResetResult result =</span>
+<span class="fc" id="L743">        conceptGraphService.reset(</span>
+<span class="fc" id="L744">            topLevelConcepts, edges, priorXByConceptId, course.getXSpacing(), course.getYSpacing());</span>
 
-<span class="fc bfc" id="L744" title="All 2 branches covered.">    for (ConceptEdge edge : edges) {</span>
-<span class="fc" id="L745">      edge.setColor(</span>
-<span class="fc bfc" id="L746" title="All 2 branches covered.">          result.cycleEdgeIds().contains(edge.getId())</span>
-<span class="fc" id="L747">              ? ConceptGraphService.CYCLE_EDGE_COLOR</span>
-<span class="fc" id="L748">              : null);</span>
-<span class="fc" id="L749">    }</span>
-<span class="fc" id="L750">    conceptEdgeRepository.saveAll(edges);</span>
+<span class="fc bfc" id="L746" title="All 2 branches covered.">    for (ConceptEdge edge : edges) {</span>
+<span class="fc" id="L747">      edge.setColor(</span>
+<span class="fc bfc" id="L748" title="All 2 branches covered.">          result.cycleEdgeIds().contains(edge.getId())</span>
+<span class="fc" id="L749">              ? ConceptGraphService.CYCLE_EDGE_COLOR</span>
+<span class="fc" id="L750">              : null);</span>
+<span class="fc" id="L751">    }</span>
+<span class="fc" id="L752">    conceptEdgeRepository.saveAll(edges);</span>
 
-<span class="fc" id="L752">    List&lt;ConceptEdge&gt; removedEdges =</span>
-<span class="fc" id="L753">        edges.stream().filter(edge -&gt; result.removedEdgeIds().contains(edge.getId())).toList();</span>
-<span class="fc" id="L754">    conceptEdgeRepository.deleteAll(removedEdges);</span>
+<span class="fc" id="L754">    List&lt;ConceptEdge&gt; removedEdges =</span>
+<span class="fc" id="L755">        edges.stream().filter(edge -&gt; result.removedEdgeIds().contains(edge.getId())).toList();</span>
+<span class="fc" id="L756">    conceptEdgeRepository.deleteAll(removedEdges);</span>
 
-<span class="fc bfc" id="L756" title="All 2 branches covered.">    for (Concept concept : topLevelConcepts) {</span>
-<span class="fc" id="L757">      int level = result.levelByConceptId().getOrDefault(concept.getId(), 1);</span>
-<span class="fc" id="L758">      ConceptGraphService.Position position = result.positionByConceptId().get(concept.getId());</span>
-<span class="fc" id="L759">      concept.setLevel(level);</span>
-<span class="fc" id="L760">      concept.setColor(conceptGraphService.colorForLevel(level));</span>
-<span class="fc" id="L761">      concept.setX(position.x());</span>
-<span class="fc" id="L762">      concept.setY(position.y());</span>
-<span class="fc" id="L763">    }</span>
-<span class="fc" id="L764">    conceptRepository.saveAll(topLevelConcepts);</span>
-<span class="fc" id="L765">    clearPrivateTopLevelPositions(courseId);</span>
+<span class="fc bfc" id="L758" title="All 2 branches covered.">    for (Concept concept : topLevelConcepts) {</span>
+<span class="fc" id="L759">      int level = result.levelByConceptId().getOrDefault(concept.getId(), 1);</span>
+<span class="fc" id="L760">      ConceptGraphService.Position position = result.positionByConceptId().get(concept.getId());</span>
+<span class="fc" id="L761">      concept.setLevel(level);</span>
+<span class="fc" id="L762">      concept.setColor(conceptGraphService.colorForLevel(level));</span>
+<span class="fc" id="L763">      concept.setX(position.x());</span>
+<span class="fc" id="L764">      concept.setY(position.y());</span>
+<span class="fc" id="L765">    }</span>
+<span class="fc" id="L766">    conceptRepository.saveAll(topLevelConcepts);</span>
+<span class="fc" id="L767">    clearPrivateTopLevelPositions(courseId);</span>
 
-<span class="fc" id="L767">    List&lt;CycleEdgeDTO&gt; cycleEdgeDtos =</span>
-<span class="fc" id="L768">        edges.stream()</span>
-<span class="fc" id="L769">            .filter(edge -&gt; result.cycleEdgeIds().contains(edge.getId()))</span>
-<span class="fc" id="L770">            .map(</span>
+<span class="fc" id="L769">    List&lt;CycleEdgeDTO&gt; cycleEdgeDtos =</span>
+<span class="fc" id="L770">        edges.stream()</span>
+<span class="fc" id="L771">            .filter(edge -&gt; result.cycleEdgeIds().contains(edge.getId()))</span>
+<span class="fc" id="L772">            .map(</span>
                 edge -&gt;
-<span class="fc" id="L772">                    new CycleEdgeDTO(</span>
-<span class="fc" id="L773">                        edge.getId(), edge.getSource().getId(), edge.getTarget().getId()))</span>
-<span class="fc" id="L774">            .toList();</span>
-<span class="fc" id="L775">    List&lt;RemovedEdgeDTO&gt; removedEdgeDtos =</span>
-<span class="fc" id="L776">        removedEdges.stream()</span>
-<span class="fc" id="L777">            .map(</span>
+<span class="fc" id="L774">                    new CycleEdgeDTO(</span>
+<span class="fc" id="L775">                        edge.getId(), edge.getSource().getId(), edge.getTarget().getId()))</span>
+<span class="fc" id="L776">            .toList();</span>
+<span class="fc" id="L777">    List&lt;RemovedEdgeDTO&gt; removedEdgeDtos =</span>
+<span class="fc" id="L778">        removedEdges.stream()</span>
+<span class="fc" id="L779">            .map(</span>
                 edge -&gt;
-<span class="fc" id="L779">                    new RemovedEdgeDTO(</span>
-<span class="fc" id="L780">                        edge.getId(), edge.getSource().getId(), edge.getTarget().getId()))</span>
-<span class="fc" id="L781">            .toList();</span>
-<span class="fc" id="L782">    List&lt;LevelAssignmentDTO&gt; levelDtos =</span>
-<span class="fc" id="L783">        topLevelConcepts.stream()</span>
-<span class="fc" id="L784">            .sorted(Comparator.comparing(Concept::getId))</span>
-<span class="fc" id="L785">            .map(</span>
+<span class="fc" id="L781">                    new RemovedEdgeDTO(</span>
+<span class="fc" id="L782">                        edge.getId(), edge.getSource().getId(), edge.getTarget().getId()))</span>
+<span class="fc" id="L783">            .toList();</span>
+<span class="fc" id="L784">    List&lt;LevelAssignmentDTO&gt; levelDtos =</span>
+<span class="fc" id="L785">        topLevelConcepts.stream()</span>
+<span class="fc" id="L786">            .sorted(Comparator.comparing(Concept::getId))</span>
+<span class="fc" id="L787">            .map(</span>
                 concept -&gt;
-<span class="fc" id="L787">                    new LevelAssignmentDTO(</span>
-<span class="fc" id="L788">                        concept.getId(),</span>
-<span class="fc" id="L789">                        concept.getLabel(),</span>
-<span class="fc" id="L790">                        concept.getLevel(),</span>
-<span class="fc" id="L791">                        concept.getColor(),</span>
-<span class="fc" id="L792">                        concept.getX(),</span>
-<span class="fc" id="L793">                        concept.getY()))</span>
-<span class="fc" id="L794">            .toList();</span>
+<span class="fc" id="L789">                    new LevelAssignmentDTO(</span>
+<span class="fc" id="L790">                        concept.getId(),</span>
+<span class="fc" id="L791">                        concept.getLabel(),</span>
+<span class="fc" id="L792">                        concept.getLevel(),</span>
+<span class="fc" id="L793">                        concept.getColor(),</span>
+<span class="fc" id="L794">                        concept.getX(),</span>
+<span class="fc" id="L795">                        concept.getY()))</span>
+<span class="fc" id="L796">            .toList();</span>
 
-<span class="fc" id="L796">    ScaffoldResetReportDTO report =</span>
+<span class="fc" id="L798">    ScaffoldResetReportDTO report =</span>
         new ScaffoldResetReportDTO(cycleEdgeDtos, removedEdgeDtos, levelDtos);
-<span class="fc" id="L798">    return new ScaffoldResetResponseDTO(report, getGraph(courseId), getEdges(courseId));</span>
+<span class="fc" id="L800">    return new ScaffoldResetResponseDTO(report, getGraph(courseId), getEdges(courseId));</span>
+  }
+
+  @Operation(
+      summary = &quot;Update the x/y spacing used by POST /api/course/scaffold/reset for a course&quot;,
+      description =
+          &quot;&quot;&quot;
+          Sets the horizontal (xSpacing) and vertical (ySpacing) pixel spacing, between
+          concepts on the same level and between levels respectively, that the next
+          POST /api/course/scaffold/reset for this course will use to lay out top-level
+          concepts. Does not itself change any concept's position.
+          &quot;&quot;&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PutMapping(&quot;/api/course/scaffold/spacing&quot;)
+  public ScaffoldSpacingDTO updateScaffoldSpacing(
+      @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId,
+      @Parameter(name = &quot;xSpacing&quot;) @RequestParam int xSpacing,
+      @Parameter(name = &quot;ySpacing&quot;) @RequestParam int ySpacing)
+      throws EntityNotFoundException {
+<span class="fc" id="L819">    Course course =</span>
+        courseRepository
+<span class="fc" id="L821">            .findById(courseId)</span>
+<span class="fc" id="L822">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc bfc" id="L824" title="All 4 branches covered.">    if (xSpacing &lt;= 0 || ySpacing &lt;= 0) {</span>
+<span class="fc" id="L825">      throw new IllegalArgumentException(&quot;xSpacing and ySpacing must be positive&quot;);</span>
+    }
+
+<span class="fc" id="L828">    course.setXSpacing(xSpacing);</span>
+<span class="fc" id="L829">    course.setYSpacing(ySpacing);</span>
+<span class="fc" id="L830">    Course savedCourse = courseRepository.save(course);</span>
+
+<span class="fc" id="L832">    return new ScaffoldSpacingDTO(savedCourse.getXSpacing(), savedCourse.getYSpacing());</span>
   }
 
   private String cleanAndValidateLabel(String label) {
-<span class="fc" id="L802">    return cleanAndValidateLabel(label, MAX_RENDERED_CONCEPT_LABEL_LENGTH);</span>
+<span class="fc" id="L836">    return cleanAndValidateLabel(label, MAX_RENDERED_CONCEPT_LABEL_LENGTH);</span>
   }
 
   private String cleanAndValidateSubconceptLabel(String label) {
-<span class="fc" id="L806">    return cleanAndValidateLabel(label, MAX_RENDERED_SUBCONCEPT_LABEL_LENGTH);</span>
+<span class="fc" id="L840">    return cleanAndValidateLabel(label, MAX_RENDERED_SUBCONCEPT_LABEL_LENGTH);</span>
   }
 
   private String cleanAndValidateLabel(String label, int maxRenderedLength) {
-<span class="fc" id="L810">    String cleanLabel = markdownService.cleanLabel(label);</span>
-<span class="fc bfc" id="L811" title="All 4 branches covered.">    if (cleanLabel == null || cleanLabel.isEmpty()) {</span>
-<span class="fc" id="L812">      throw new IllegalArgumentException(&quot;label may not be empty&quot;);</span>
+<span class="fc" id="L844">    String cleanLabel = markdownService.cleanLabel(label);</span>
+<span class="fc bfc" id="L845" title="All 4 branches covered.">    if (cleanLabel == null || cleanLabel.isEmpty()) {</span>
+<span class="fc" id="L846">      throw new IllegalArgumentException(&quot;label may not be empty&quot;);</span>
     }
-<span class="fc" id="L814">    int renderedLength = markdownService.renderedLength(cleanLabel);</span>
-<span class="fc bfc" id="L815" title="All 2 branches covered.">    if (renderedLength &gt; maxRenderedLength) {</span>
-<span class="fc" id="L816">      throw new IllegalArgumentException(</span>
+<span class="fc" id="L848">    int renderedLength = markdownService.renderedLength(cleanLabel);</span>
+<span class="fc bfc" id="L849" title="All 2 branches covered.">    if (renderedLength &gt; maxRenderedLength) {</span>
+<span class="fc" id="L850">      throw new IllegalArgumentException(</span>
           &quot;label renders to %d characters; the maximum is %d&quot;
-<span class="fc" id="L818">              .formatted(renderedLength, maxRenderedLength));</span>
+<span class="fc" id="L852">              .formatted(renderedLength, maxRenderedLength));</span>
     }
-<span class="fc" id="L820">    return cleanLabel;</span>
+<span class="fc" id="L854">    return cleanLabel;</span>
   }
 
   /**
@@ -827,40 +861,40 @@ public class ConceptsController extends ApiController {
    * (they display last, after positioned rows, until the author reorders).
    */
   private int nextSortOrder(Long parentId) {
-<span class="fc" id="L830">    return conceptRepository.findByParentId(parentId).stream()</span>
-<span class="fc" id="L831">            .map(Concept::getSortOrder)</span>
-<span class="fc" id="L832">            .filter(Objects::nonNull)</span>
-<span class="fc" id="L833">            .mapToInt(Integer::intValue)</span>
-<span class="fc" id="L834">            .max()</span>
-<span class="fc" id="L835">            .orElse(-1)</span>
+<span class="fc" id="L864">    return conceptRepository.findByParentId(parentId).stream()</span>
+<span class="fc" id="L865">            .map(Concept::getSortOrder)</span>
+<span class="fc" id="L866">            .filter(Objects::nonNull)</span>
+<span class="fc" id="L867">            .mapToInt(Integer::intValue)</span>
+<span class="fc" id="L868">            .max()</span>
+<span class="fc" id="L869">            .orElse(-1)</span>
         + 1;
   }
 
   private void rejectDuplicateLabelUnderParent(Concept parent, String label) {
-<span class="fc" id="L840">    rejectDuplicateLabelUnderParent(parent, label, null);</span>
-<span class="fc" id="L841">  }</span>
+<span class="fc" id="L874">    rejectDuplicateLabelUnderParent(parent, label, null);</span>
+<span class="fc" id="L875">  }</span>
 
   private void rejectDuplicateLabelUnderParent(
       Concept parent, String label, Long excludeConceptId) {
-<span class="fc" id="L845">    Concept duplicate =</span>
-<span class="fc" id="L846">        conceptRepository.findByParentIdAndLabel(parent.getId(), label).orElse(null);</span>
-<span class="fc bfc" id="L847" title="All 4 branches covered.">    if (duplicate != null &amp;&amp; !Objects.equals(duplicate.getId(), excludeConceptId)) {</span>
-<span class="fc" id="L848">      throw new IllegalArgumentException(</span>
-<span class="fc" id="L849">          &quot;concept %d already has a subconcept with label %s&quot;.formatted(parent.getId(), label));</span>
+<span class="fc" id="L879">    Concept duplicate =</span>
+<span class="fc" id="L880">        conceptRepository.findByParentIdAndLabel(parent.getId(), label).orElse(null);</span>
+<span class="fc bfc" id="L881" title="All 4 branches covered.">    if (duplicate != null &amp;&amp; !Objects.equals(duplicate.getId(), excludeConceptId)) {</span>
+<span class="fc" id="L882">      throw new IllegalArgumentException(</span>
+<span class="fc" id="L883">          &quot;concept %d already has a subconcept with label %s&quot;.formatted(parent.getId(), label));</span>
     }
-<span class="fc" id="L851">  }</span>
+<span class="fc" id="L885">  }</span>
 
   private void deleteConceptArtifacts(Long courseId, List&lt;Long&gt; conceptIds) {
-<span class="fc" id="L854">    Map&lt;Long, ConceptEdge&gt; distinctEdges = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L855" title="All 2 branches covered.">    for (Long id : conceptIds) {</span>
-<span class="fc" id="L856">      practiceProblemRepository.deleteAll(</span>
-<span class="fc" id="L857">          practiceProblemRepository.findByCourseIdAndConceptId(courseId, id));</span>
-<span class="fc bfc" id="L858" title="All 2 branches covered.">      for (ConceptEdge edge : conceptEdgeRepository.findBySourceIdOrTargetId(id, id)) {</span>
-<span class="fc" id="L859">        distinctEdges.put(edge.getId(), edge);</span>
-<span class="fc" id="L860">      }</span>
-<span class="fc" id="L861">    }</span>
-<span class="fc" id="L862">    conceptEdgeRepository.deleteAll(distinctEdges.values());</span>
-<span class="fc" id="L863">  }</span>
+<span class="fc" id="L888">    Map&lt;Long, ConceptEdge&gt; distinctEdges = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L889" title="All 2 branches covered.">    for (Long id : conceptIds) {</span>
+<span class="fc" id="L890">      practiceProblemRepository.deleteAll(</span>
+<span class="fc" id="L891">          practiceProblemRepository.findByCourseIdAndConceptId(courseId, id));</span>
+<span class="fc bfc" id="L892" title="All 2 branches covered.">      for (ConceptEdge edge : conceptEdgeRepository.findBySourceIdOrTargetId(id, id)) {</span>
+<span class="fc" id="L893">        distinctEdges.put(edge.getId(), edge);</span>
+<span class="fc" id="L894">      }</span>
+<span class="fc" id="L895">    }</span>
+<span class="fc" id="L896">    conceptEdgeRepository.deleteAll(distinctEdges.values());</span>
+<span class="fc" id="L897">  }</span>
 
   /**
    * The requesting user's own private, unsaved top-level position overrides for the course (see
@@ -868,18 +902,18 @@ public class ConceptsController extends ApiController {
    * if the user has never dragged a top-level node or has no saved state for the course.
    */
   private Map&lt;String, StoredPosition&gt; callerPrivatePositions(Long courseId) {
-<span class="fc" id="L871">    Long userId = getCurrentUser().getUser().getId();</span>
-<span class="fc" id="L872">    return userStateRepository</span>
-<span class="fc" id="L873">        .findByUseridAndCourseId(userId, courseId)</span>
-<span class="fc" id="L874">        .map(state -&gt; parseTopLevelPositions(state.getTopLevelPositions()))</span>
-<span class="fc" id="L875">        .orElseGet(Map::of);</span>
+<span class="fc" id="L905">    Long userId = getCurrentUser().getUser().getId();</span>
+<span class="fc" id="L906">    return userStateRepository</span>
+<span class="fc" id="L907">        .findByUseridAndCourseId(userId, courseId)</span>
+<span class="fc" id="L908">        .map(state -&gt; parseTopLevelPositions(state.getTopLevelPositions()))</span>
+<span class="fc" id="L909">        .orElseGet(Map::of);</span>
   }
 
   private Map&lt;String, StoredPosition&gt; parseTopLevelPositions(String json) {
     try {
-<span class="fc" id="L880">      return objectMapper.readValue(json, new TypeReference&lt;Map&lt;String, StoredPosition&gt;&gt;() {});</span>
-<span class="fc" id="L881">    } catch (JsonProcessingException e) {</span>
-<span class="fc" id="L882">      throw new IllegalStateException(&quot;Unable to parse stored top-level position overrides&quot;, e);</span>
+<span class="fc" id="L914">      return objectMapper.readValue(json, new TypeReference&lt;Map&lt;String, StoredPosition&gt;&gt;() {});</span>
+<span class="fc" id="L915">    } catch (JsonProcessingException e) {</span>
+<span class="fc" id="L916">      throw new IllegalStateException(&quot;Unable to parse stored top-level position overrides&quot;, e);</span>
     }
   }
 
@@ -889,13 +923,13 @@ public class ConceptsController extends ApiController {
    */
   private Map&lt;Long, Integer&gt; priorXByConceptId(
       List&lt;Concept&gt; topLevelConcepts, Map&lt;String, StoredPosition&gt; privatePositions) {
-<span class="fc" id="L892">    Map&lt;Long, Integer&gt; result = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L893" title="All 2 branches covered.">    for (Concept concept : topLevelConcepts) {</span>
-<span class="fc" id="L894">      StoredPosition override = privatePositions.get(String.valueOf(concept.getId()));</span>
-<span class="fc bfc" id="L895" title="All 4 branches covered.">      Integer x = override != null &amp;&amp; override.x() != null ? override.x() : concept.getX();</span>
-<span class="fc" id="L896">      result.put(concept.getId(), x);</span>
-<span class="fc" id="L897">    }</span>
-<span class="fc" id="L898">    return result;</span>
+<span class="fc" id="L926">    Map&lt;Long, Integer&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L927" title="All 2 branches covered.">    for (Concept concept : topLevelConcepts) {</span>
+<span class="fc" id="L928">      StoredPosition override = privatePositions.get(String.valueOf(concept.getId()));</span>
+<span class="fc bfc" id="L929" title="All 4 branches covered.">      Integer x = override != null &amp;&amp; override.x() != null ? override.x() : concept.getX();</span>
+<span class="fc" id="L930">      result.put(concept.getId(), x);</span>
+<span class="fc" id="L931">    }</span>
+<span class="fc" id="L932">    return result;</span>
   }
 
   /**
@@ -904,31 +938,31 @@ public class ConceptsController extends ApiController {
    * stale private override render in the wrong row.
    */
   private void clearPrivateTopLevelPositions(Long courseId) {
-<span class="fc" id="L907">    List&lt;UserState&gt; states = userStateRepository.findByCourseId(courseId);</span>
-<span class="fc bfc" id="L908" title="All 2 branches covered.">    for (UserState state : states) {</span>
-<span class="fc" id="L909">      state.setTopLevelPositions(&quot;{}&quot;);</span>
-<span class="fc" id="L910">    }</span>
-<span class="fc" id="L911">    userStateRepository.saveAll(states);</span>
-<span class="fc" id="L912">  }</span>
+<span class="fc" id="L941">    List&lt;UserState&gt; states = userStateRepository.findByCourseId(courseId);</span>
+<span class="fc bfc" id="L942" title="All 2 branches covered.">    for (UserState state : states) {</span>
+<span class="fc" id="L943">      state.setTopLevelPositions(&quot;{}&quot;);</span>
+<span class="fc" id="L944">    }</span>
+<span class="fc" id="L945">    userStateRepository.saveAll(states);</span>
+<span class="fc" id="L946">  }</span>
 
-<span class="fc" id="L914">  private record StoredPosition(Integer x, Integer y) {}</span>
+<span class="fc" id="L948">  private record StoredPosition(Integer x, Integer y) {}</span>
 
   private Map&lt;Long, String&gt; firstUrlByConceptId(Long courseId) {
-<span class="fc" id="L917">    Map&lt;Long, String&gt; result = new LinkedHashMap&lt;&gt;();</span>
-<span class="fc" id="L918">    List&lt;PracticeProblem&gt; problems =</span>
-<span class="fc" id="L919">        practiceProblemRepository.findByCourseId(courseId).stream()</span>
-<span class="fc" id="L920">            .sorted(Comparator.comparing(PracticeProblem::getId))</span>
-<span class="fc" id="L921">            .toList();</span>
-<span class="fc bfc" id="L922" title="All 2 branches covered.">    for (PracticeProblem problem : problems) {</span>
-<span class="fc" id="L923">      result.putIfAbsent(problem.getConcept().getId(), problem.getUrl());</span>
-<span class="fc" id="L924">    }</span>
-<span class="fc" id="L925">    return result;</span>
+<span class="fc" id="L951">    Map&lt;Long, String&gt; result = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L952">    List&lt;PracticeProblem&gt; problems =</span>
+<span class="fc" id="L953">        practiceProblemRepository.findByCourseId(courseId).stream()</span>
+<span class="fc" id="L954">            .sorted(Comparator.comparing(PracticeProblem::getId))</span>
+<span class="fc" id="L955">            .toList();</span>
+<span class="fc bfc" id="L956" title="All 2 branches covered.">    for (PracticeProblem problem : problems) {</span>
+<span class="fc" id="L957">      result.putIfAbsent(problem.getConcept().getId(), problem.getUrl());</span>
+<span class="fc" id="L958">    }</span>
+<span class="fc" id="L959">    return result;</span>
   }
 
-<span class="fc" id="L928">  public record ConceptContentDTO(</span>
+<span class="fc" id="L962">  public record ConceptContentDTO(</span>
       Long id, Long parentId, String descriptionHtml, String exampleHtml, String practiceUrl) {}
 
-<span class="fc" id="L931">  public record CourseConceptDTO(</span>
+<span class="fc" id="L965">  public record CourseConceptDTO(</span>
       Long id,
       String label,
       String description,
@@ -937,14 +971,14 @@ public class ConceptsController extends ApiController {
       Integer x,
       Integer y) {}
 
-<span class="fc" id="L940">  public record MajorConceptDTO(</span>
+<span class="fc" id="L974">  public record MajorConceptDTO(</span>
       Long id, String labelHtml, String color, List&lt;SubconceptDTO&gt; subconcepts) {}
 
-<span class="fc" id="L943">  public record SubconceptDTO(Long id, Long parentId, String labelHtml) {}</span>
+<span class="fc" id="L977">  public record SubconceptDTO(Long id, Long parentId, String labelHtml) {}</span>
 
-<span class="fc" id="L945">  public record TopLevelConceptDTO(Long id, String label, Integer level, Integer x, Integer y) {}</span>
+<span class="fc" id="L979">  public record TopLevelConceptDTO(Long id, String label, Integer level, Integer x, Integer y) {}</span>
 
-<span class="fc" id="L947">  public record SubConceptTableRowDTO(</span>
+<span class="fc" id="L981">  public record SubConceptTableRowDTO(</span>
       Long id,
       String label,
       String description,
@@ -955,23 +989,25 @@ public class ConceptsController extends ApiController {
       Integer parentX,
       Integer sortOrder) {}
 
-<span class="fc" id="L958">  public record PositionDTO(Integer x, Integer y) {}</span>
+<span class="fc" id="L992">  public record PositionDTO(Integer x, Integer y) {}</span>
 
-<span class="fc" id="L960">  public record EdgeDTO(Long id, Long sourceId, Long targetId, String color) {}</span>
+<span class="fc" id="L994">  public record EdgeDTO(Long id, Long sourceId, Long targetId, String color) {}</span>
 
-<span class="fc" id="L962">  public record CycleEdgeDTO(Long edgeId, Long sourceId, Long targetId) {}</span>
+<span class="fc" id="L996">  public record CycleEdgeDTO(Long edgeId, Long sourceId, Long targetId) {}</span>
 
-<span class="fc" id="L964">  public record RemovedEdgeDTO(Long edgeId, Long sourceId, Long targetId) {}</span>
+<span class="fc" id="L998">  public record RemovedEdgeDTO(Long edgeId, Long sourceId, Long targetId) {}</span>
 
-<span class="fc" id="L966">  public record LevelAssignmentDTO(</span>
+<span class="fc" id="L1000">  public record LevelAssignmentDTO(</span>
       Long id, String label, Integer level, String color, Integer x, Integer y) {}
 
-<span class="fc" id="L969">  public record ScaffoldResetReportDTO(</span>
+<span class="fc" id="L1003">  public record ScaffoldResetReportDTO(</span>
       List&lt;CycleEdgeDTO&gt; cycleEdges,
       List&lt;RemovedEdgeDTO&gt; removedEdges,
       List&lt;LevelAssignmentDTO&gt; levels) {}
 
-<span class="fc" id="L974">  public record ScaffoldResetResponseDTO(</span>
+<span class="fc" id="L1008">  public record ScaffoldResetResponseDTO(</span>
       ScaffoldResetReportDTO report, List&lt;MajorConceptDTO&gt; graph, List&lt;EdgeDTO&gt; edges) {}
+
+<span class="fc" id="L1011">  public record ScaffoldSpacingDTO(int xSpacing, int ySpacing) {}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
