@@ -189,6 +189,36 @@ public class PLAssessmentQuestionControllerTests extends ControllerTestCase {
 
   @Test
   @WithInstructorCoursePermissions
+  public void add_concept_returns_404_when_pl_assessment_does_not_exist() throws Exception {
+    Course course = Course.builder().id(42L).plInstanceId(7L).build();
+    Concept concept = Concept.builder().id(1L).course(course).build();
+    PlAssessmentQuestion paq =
+        PlAssessmentQuestion.builder()
+            .id(501L)
+            .plRepoId(10L)
+            .plAssessmentId(101L)
+            .plQuestionId(201L)
+            .ordinal(0)
+            .build();
+    when(conceptRepository.findById(1L)).thenReturn(Optional.of(concept));
+    when(plAssessmentQuestionRepository.findById(501L)).thenReturn(Optional.of(paq));
+    when(plAssessmentRepository.findById(101L)).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                post("/api/plAssessmentQuestion/addConcept")
+                    .with(csrf())
+                    .param("plAssessmentQuestionId", "501")
+                    .param("conceptId", "1"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("PlAssessment with id 101 not found", json.get("message"));
+  }
+
+  @Test
+  @WithInstructorCoursePermissions
   public void add_concept_returns_422_when_pl_instance_does_not_match() throws Exception {
     Course course = Course.builder().id(42L).plInstanceId(7L).build();
     Concept concept = Concept.builder().id(1L).course(course).build();
