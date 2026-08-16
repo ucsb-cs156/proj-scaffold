@@ -148,64 +148,69 @@ public class AssessmentController extends ApiController {
 <span class="fc" id="L148">            .collect(Collectors.toMap(PlQuestion::getId, q -&gt; q));</span>
 
 <span class="fc" id="L150">    return joinRows.stream()</span>
-<span class="fc" id="L151">        .map(join -&gt; questionsById.get(join.getPlQuestionId()))</span>
-<span class="fc" id="L152">        .filter(Objects::nonNull)</span>
-<span class="fc" id="L153">        .map(q -&gt; toQuestionDTO(q, assessmentId))</span>
-<span class="fc" id="L154">        .toList();</span>
+<span class="fc" id="L151">        .map(</span>
+            join -&gt; {
+<span class="fc" id="L153">              PlQuestion q = questionsById.get(join.getPlQuestionId());</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">              return q == null ? null : toQuestionDTO(q, assessmentId, join.getId());</span>
+            })
+<span class="fc" id="L156">        .filter(Objects::nonNull)</span>
+<span class="fc" id="L157">        .toList();</span>
   }
 
   private static AssessmentDTO toAssessmentDTO(PlAssessment a, Map&lt;String, String&gt; colorHexByName) {
-<span class="fc" id="L158">    return new AssessmentDTO(</span>
-<span class="fc" id="L159">        String.valueOf(a.getId()),</span>
-<span class="fc bfc" id="L160" title="All 2 branches covered.">        a.getPlAssessmentId() != null ? String.valueOf(a.getPlAssessmentId()) : null,</span>
-<span class="fc" id="L161">        assessmentLabel(a),</span>
-<span class="fc" id="L162">        a.getPlAssessmentSetAbbreviation(),</span>
-<span class="fc" id="L163">        a.getPlAssessmentNumber(),</span>
-<span class="fc" id="L164">        resolveColorHex(a.getPlAssessmentSetColor(), colorHexByName));</span>
+<span class="fc" id="L161">    return new AssessmentDTO(</span>
+<span class="fc" id="L162">        String.valueOf(a.getId()),</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        a.getPlAssessmentId() != null ? String.valueOf(a.getPlAssessmentId()) : null,</span>
+<span class="fc" id="L164">        assessmentLabel(a),</span>
+<span class="fc" id="L165">        a.getPlAssessmentSetAbbreviation(),</span>
+<span class="fc" id="L166">        a.getPlAssessmentNumber(),</span>
+<span class="fc" id="L167">        resolveColorHex(a.getPlAssessmentSetColor(), colorHexByName));</span>
   }
 
   private static AssessmentManagementDTO toAssessmentManagementDTO(
       PlAssessment a, Map&lt;String, String&gt; colorHexByName) {
-<span class="fc" id="L169">    return new AssessmentManagementDTO(</span>
-<span class="fc" id="L170">        String.valueOf(a.getId()),</span>
-<span class="fc" id="L171">        assessmentLabel(a),</span>
-<span class="fc" id="L172">        a.isLocked(),</span>
-<span class="fc" id="L173">        a.getPlAssessmentSetAbbreviation(),</span>
-<span class="fc" id="L174">        a.getPlAssessmentNumber(),</span>
-<span class="fc" id="L175">        resolveColorHex(a.getPlAssessmentSetColor(), colorHexByName));</span>
+<span class="fc" id="L172">    return new AssessmentManagementDTO(</span>
+<span class="fc" id="L173">        String.valueOf(a.getId()),</span>
+<span class="fc" id="L174">        assessmentLabel(a),</span>
+<span class="fc" id="L175">        a.isLocked(),</span>
+<span class="fc" id="L176">        a.getPlAssessmentSetAbbreviation(),</span>
+<span class="fc" id="L177">        a.getPlAssessmentNumber(),</span>
+<span class="fc" id="L178">        resolveColorHex(a.getPlAssessmentSetColor(), colorHexByName));</span>
   }
 
   private static String assessmentLabel(PlAssessment a) {
-<span class="fc bfc" id="L179" title="All 2 branches covered.">    return a.getPlAssessmentTitle() != null ? a.getPlAssessmentTitle() : a.getName();</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">    return a.getPlAssessmentTitle() != null ? a.getPlAssessmentTitle() : a.getName();</span>
   }
 
   // Loads the pl_color name -&gt; hex code map (populated by ReadPLColorsJob, issue #96) so that
   // pl_assessment_set_color (a PrairieLearn color name like &quot;gray1&quot;) can be translated into a hex
   // code the frontend can use directly as a CSS background color.
   private Map&lt;String, String&gt; loadColorHexByName() {
-<span class="fc" id="L186">    return plColorRepository.findAll().stream()</span>
-<span class="fc" id="L187">        .collect(Collectors.toMap(PlColor::getColorName, PlColor::getHexCode));</span>
+<span class="fc" id="L189">    return plColorRepository.findAll().stream()</span>
+<span class="fc" id="L190">        .collect(Collectors.toMap(PlColor::getColorName, PlColor::getHexCode));</span>
   }
 
   // Translates a PrairieLearn color name (e.g. &quot;gray1&quot;) into its hex code via the pl_color table.
   // Returns null if the color name is null/blank or not found (e.g. before ReadPLColorsJob has
   // been run), so the frontend can fall back to a default badge color.
   private static String resolveColorHex(String colorName, Map&lt;String, String&gt; colorHexByName) {
-<span class="fc bfc" id="L194" title="All 4 branches covered.">    if (colorName == null || colorName.isBlank()) {</span>
-<span class="fc" id="L195">      return null;</span>
+<span class="fc bfc" id="L197" title="All 4 branches covered.">    if (colorName == null || colorName.isBlank()) {</span>
+<span class="fc" id="L198">      return null;</span>
     }
-<span class="fc" id="L197">    return colorHexByName.get(colorName);</span>
+<span class="fc" id="L200">    return colorHexByName.get(colorName);</span>
   }
 
-  private static QuestionDTO toQuestionDTO(PlQuestion q, Long assessmentId) {
-<span class="fc" id="L201">    return new QuestionDTO(</span>
-<span class="fc" id="L202">        String.valueOf(q.getId()),</span>
-<span class="fc" id="L203">        String.valueOf(assessmentId),</span>
-<span class="fc" id="L204">        q.getUuid().toString(),</span>
-<span class="fc" id="L205">        q.getTitle());</span>
+  private static QuestionDTO toQuestionDTO(
+      PlQuestion q, Long assessmentId, Long plAssessmentQuestionId) {
+<span class="fc" id="L205">    return new QuestionDTO(</span>
+<span class="fc" id="L206">        String.valueOf(q.getId()),</span>
+<span class="fc" id="L207">        String.valueOf(assessmentId),</span>
+<span class="fc" id="L208">        q.getUuid().toString(),</span>
+<span class="fc" id="L209">        q.getTitle(),</span>
+<span class="fc" id="L210">        String.valueOf(plAssessmentQuestionId));</span>
   }
 
-<span class="fc" id="L208">  public record AssessmentDTO(</span>
+<span class="fc" id="L213">  public record AssessmentDTO(</span>
       String id,
       @JsonProperty(&quot;pl_assessment_id&quot;) String plAssessmentId,
       String name,
@@ -213,7 +218,7 @@ public class AssessmentController extends ApiController {
       @JsonProperty(&quot;pl_assessment_number&quot;) String plAssessmentNumber,
       @JsonProperty(&quot;pl_assessment_set_color&quot;) String plAssessmentSetColor) {}
 
-<span class="fc" id="L216">  public record AssessmentManagementDTO(</span>
+<span class="fc" id="L221">  public record AssessmentManagementDTO(</span>
       String id,
       String name,
       boolean locked,
@@ -221,10 +226,11 @@ public class AssessmentController extends ApiController {
       @JsonProperty(&quot;pl_assessment_number&quot;) String plAssessmentNumber,
       @JsonProperty(&quot;pl_assessment_set_color&quot;) String plAssessmentSetColor) {}
 
-<span class="fc" id="L224">  public record QuestionDTO(</span>
+<span class="fc" id="L229">  public record QuestionDTO(</span>
       String id,
       @JsonProperty(&quot;assessment_id&quot;) String assessmentId,
       @JsonProperty(&quot;pl_question_uuid&quot;) String plQuestionUuid,
-      String title) {}
+      String title,
+      @JsonProperty(&quot;pl_assessment_question_id&quot;) String plAssessmentQuestionId) {}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
