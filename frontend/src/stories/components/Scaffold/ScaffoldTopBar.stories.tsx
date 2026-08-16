@@ -18,12 +18,14 @@ const sampleQuestions: Question[] = [
     assessment_id: "1",
     pl_question_uuid: "u1",
     title: "Loops 101",
+    pl_assessment_question_id: "501",
   },
   {
     id: "q2",
     assessment_id: "1",
     pl_question_uuid: "u2",
     title: "Recursion basics",
+    pl_assessment_question_id: "502",
   },
 ];
 
@@ -55,6 +57,8 @@ const meta: Meta<typeof ScaffoldTopBar> = {
     questions: [],
     selectedQuestionId: "",
     onSelectQuestion: () => {},
+    assignConceptsMode: false,
+    onToggleAssignConcepts: () => {},
     numStarredConcepts: 3,
     numTotalConcepts: 12,
   },

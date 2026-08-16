@@ -8,18 +8,21 @@ const sampleQuestions: Question[] = [
     assessment_id: "a1",
     pl_question_uuid: "u1",
     title: "Loops 101",
+    pl_assessment_question_id: "501",
   },
   {
     id: "2",
     assessment_id: "a1",
     pl_question_uuid: "u2",
     title: "Recursion basics",
+    pl_assessment_question_id: "502",
   },
   {
     id: "3",
     assessment_id: "a1",
     pl_question_uuid: "u3",
     title: "Scaffold graph fundamentals",
+    pl_assessment_question_id: "503",
   },
 ];
 

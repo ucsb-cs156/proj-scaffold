@@ -21,6 +21,7 @@ export interface Question {
   assessment_id: string;
   pl_question_uuid: string;
   title: string;
+  pl_assessment_question_id: string;
 }
 
 // Instructor-facing view of an assessment for the UnlockAssessmentsModal: includes locked
