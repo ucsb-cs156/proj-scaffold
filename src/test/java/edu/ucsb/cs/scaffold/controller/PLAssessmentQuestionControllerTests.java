@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import edu.ucsb.cs.scaffold.ControllerTestCase;
@@ -137,7 +138,9 @@ public class PLAssessmentQuestionControllerTests extends ControllerTestCase {
                 .with(csrf())
                 .param("plAssessmentQuestionId", "501")
                 .param("conceptId", "1"))
-        .andExpect(status().isOk());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.plAssessmentQuestionId").value(501))
+        .andExpect(jsonPath("$.concept.id").value(1));
 
     ArgumentCaptor<PlAssessmentQuestionConcept> captor =
         ArgumentCaptor.forClass(PlAssessmentQuestionConcept.class);
