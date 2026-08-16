@@ -45,7 +45,6 @@ function AssessmentBadge({
       style={{
         display: "inline-flex",
         alignItems: "center",
-        justifyContent: "center",
         width: "fit-content",
         padding: "2px 8px",
         borderRadius: 999,
