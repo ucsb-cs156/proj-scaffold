@@ -3,6 +3,8 @@ import { Form } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { useBackend, useBackendMutation } from "main/utils/useBackend";
 import type { AssessmentManagementDTO } from "main/types/conceptGraph";
+import PrairieLearnAssessment from "main/components/Scaffold/PrairieLearnAssessment";
+import { compareByAssessmentSetAndNumber } from "main/utils/conceptGraphUtils";
 
 interface UnlockAssessmentsModalProps {
   show: boolean;
@@ -44,6 +46,10 @@ export default function UnlockAssessmentsModal({
     ["/api/assessments/all", "/api/assessments"],
   );
 
+  const sortedAssessments = [...assessments].sort(
+    compareByAssessmentSetAndNumber,
+  );
+
   return (
     <Modal
       show={show}
@@ -58,7 +64,7 @@ export default function UnlockAssessmentsModal({
             No assessments are available for this course yet.
           </Form.Text>
         ) : (
-          assessments.map((assessment) => (
+          sortedAssessments.map((assessment) => (
             <Form.Check
               key={assessment.id}
               type="switch"
@@ -79,7 +85,7 @@ export default function UnlockAssessmentsModal({
               <Form.Check.Label
                 data-testid={`UnlockAssessmentsModal-label-${assessment.id}`}
               >
-                {assessment.name}
+                <PrairieLearnAssessment assessment={assessment} />
               </Form.Check.Label>
             </Form.Check>
           ))

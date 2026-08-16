@@ -4,11 +4,16 @@
 // separate copies — do not consolidate (see LegacyHomePage isolation).
 
 // id is the PlAssessment row id (as a string); pl_assessment_id is PrairieLearn's own numeric
-// assessment id, null until the PL-API sync job (issue #71) fills it in.
+// assessment id, null until the PL-API sync job (issue #71) fills it in. The
+// pl_assessment_set_* / pl_assessment_number fields are also null until that job fills them in;
+// they drive the colored "set" badge (e.g. "HW2") shown next to the title in AssessmentSelect.
 export interface Assessment {
   id: string;
   pl_assessment_id: string | null;
   name: string;
+  pl_assessment_set_abbreviation?: string | null;
+  pl_assessment_number?: string | null;
+  pl_assessment_set_color?: string | null;
 }
 
 export interface Question {
@@ -24,6 +29,9 @@ export interface AssessmentManagementDTO {
   id: string;
   name: string;
   locked: boolean;
+  pl_assessment_set_abbreviation?: string | null;
+  pl_assessment_number?: string | null;
+  pl_assessment_set_color?: string | null;
 }
 
 export interface QuestionConcept {
