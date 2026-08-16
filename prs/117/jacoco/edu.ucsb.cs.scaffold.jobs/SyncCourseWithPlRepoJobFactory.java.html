@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SyncCourseWithPlRepoJobFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.jobs</a> &gt; <span class="el_source">SyncCourseWithPlRepoJobFactory.java</span></div><h1>SyncCourseWithPlRepoJobFactory.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.jobs;
+
+import edu.ucsb.cs.scaffold.entity.Course;
+import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentSetRepository;
+import edu.ucsb.cs.scaffold.repository.PlInstanceRepository;
+import edu.ucsb.cs.scaffold.repository.PlQuestionRepository;
+import edu.ucsb.cs.scaffold.repository.PlRepoRepository;
+import edu.ucsb.cs.scaffold.repository.PlScaffoldAssessmentRepository;
+import edu.ucsb.cs.scaffold.services.GithubService;
+import edu.ucsb.cs.scaffold.services.PatEncryptionService;
+import edu.ucsb.cs.scaffold.services.PrairieLearnService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+/**
+ * Assembles a {@link SyncCourseWithPlRepoJob} with its many repository/service dependencies, so the
+ * two launch sites (the JobsController endpoint and the automatic launch after a successful PUT
+ * /api/courses/updatePLInstance) don't each duplicate the wiring.
+ */
+@Component
+<span class="fc" id="L24">public class SyncCourseWithPlRepoJobFactory {</span>
+
+  @Autowired private PatCredentialRepository patCredentialRepository;
+
+  @Autowired private PatEncryptionService patEncryptionService;
+
+  @Autowired private PlRepoRepository plRepoRepository;
+
+  @Autowired private PlInstanceRepository plInstanceRepository;
+
+  @Autowired private PlQuestionRepository plQuestionRepository;
+
+  @Autowired private PlScaffoldAssessmentRepository plScaffoldAssessmentRepository;
+
+  @Autowired private PlAssessmentRepository plAssessmentRepository;
+
+  @Autowired private PlAssessmentQuestionRepository plAssessmentQuestionRepository;
+
+  @Autowired private PlAssessmentSetRepository plAssessmentSetRepository;
+
+  @Autowired private GithubService githubService;
+
+  @Autowired private PrairieLearnService prairieLearnService;
+
+  public SyncCourseWithPlRepoJob create(long userId, Course course) {
+<span class="fc" id="L49">    return SyncCourseWithPlRepoJob.builder()</span>
+<span class="fc" id="L50">        .userId(userId)</span>
+<span class="fc" id="L51">        .course(course)</span>
+<span class="fc" id="L52">        .patCredentialRepository(patCredentialRepository)</span>
+<span class="fc" id="L53">        .patEncryptionService(patEncryptionService)</span>
+<span class="fc" id="L54">        .plRepoRepository(plRepoRepository)</span>
+<span class="fc" id="L55">        .plInstanceRepository(plInstanceRepository)</span>
+<span class="fc" id="L56">        .plQuestionRepository(plQuestionRepository)</span>
+<span class="fc" id="L57">        .plScaffoldAssessmentRepository(plScaffoldAssessmentRepository)</span>
+<span class="fc" id="L58">        .plAssessmentRepository(plAssessmentRepository)</span>
+<span class="fc" id="L59">        .plAssessmentQuestionRepository(plAssessmentQuestionRepository)</span>
+<span class="fc" id="L60">        .plAssessmentSetRepository(plAssessmentSetRepository)</span>
+<span class="fc" id="L61">        .githubService(githubService)</span>
+<span class="fc" id="L62">        .prairieLearnService(prairieLearnService)</span>
+<span class="fc" id="L63">        .build();</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
