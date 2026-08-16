@@ -2,14 +2,18 @@
 
 import edu.ucsb.cs.scaffold.entity.Course;
 import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.jobs.CopyConceptGraphJob;
 import edu.ucsb.cs.scaffold.jobs.ReadPLColorsJob;
 import edu.ucsb.cs.scaffold.jobs.RotatePatKeysJob;
 import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJob;
 import edu.ucsb.cs.scaffold.jobs.SyncCourseWithPlRepoJobFactory;
 import edu.ucsb.cs.scaffold.jobs.UpdateAllJob;
+import edu.ucsb.cs.scaffold.repository.AdminRepository;
 import edu.ucsb.cs.scaffold.repository.CourseRepository;
 import edu.ucsb.cs.scaffold.repository.PatCredentialRepository;
 import edu.ucsb.cs.scaffold.repository.PlColorRepository;
+import edu.ucsb.cs.scaffold.repository.UserRepository;
+import edu.ucsb.cs.scaffold.services.ConceptYamlService;
 import edu.ucsb.cs.scaffold.services.GithubService;
 import edu.ucsb.cs.scaffold.services.PatEncryptionService;
 import edu.ucsb.cs.scaffold.services.UpdateUserService;
@@ -36,8 +40,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = &quot;Jobs&quot;)
 @RequestMapping(&quot;/api/jobs&quot;)
 @RestController
-<span class="fc" id="L39">@Slf4j</span>
-<span class="fc" id="L40">public class JobsController extends ApiController {</span>
+<span class="fc" id="L43">@Slf4j</span>
+<span class="fc" id="L44">public class JobsController extends ApiController {</span>
   @Autowired private JobsRepository jobsRepository;
 
   @Autowired private JobService jobService;
@@ -48,6 +52,9 @@ import org.springframework.web.bind.annotation.RestController;
   @Autowired private PatEncryptionService patEncryptionService;
   @Autowired private PatCredentialRepository patCredentialRepository;
   @Autowired private SyncCourseWithPlRepoJobFactory syncCourseWithPlRepoJobFactory;
+  @Autowired private UserRepository userRepository;
+  @Autowired private AdminRepository adminRepository;
+  @Autowired private ConceptYamlService conceptYamlService;
   @Autowired private GithubService githubService;
   @Autowired private PlColorRepository plColorRepository;
 
@@ -56,8 +63,8 @@ import org.springframework.web.bind.annotation.RestController;
   @PostMapping(&quot;/launch/updateAll&quot;)
   public Job launchUpdateAllJob() {
 
-<span class="fc" id="L59">    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();</span>
-<span class="fc" id="L60">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L66">    UpdateAllJob job = UpdateAllJob.builder().updateUserService(updateUserService).build();</span>
+<span class="fc" id="L67">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(
@@ -68,11 +75,11 @@ import org.springframework.web.bind.annotation.RestController;
   public Job launchRotatePatKeysJob() {
 
     RotatePatKeysJob job =
-<span class="fc" id="L71">        RotatePatKeysJob.builder()</span>
-<span class="fc" id="L72">            .patEncryptionService(patEncryptionService)</span>
-<span class="fc" id="L73">            .patCredentialRepository(patCredentialRepository)</span>
-<span class="fc" id="L74">            .build();</span>
-<span class="fc" id="L75">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L78">        RotatePatKeysJob.builder()</span>
+<span class="fc" id="L79">            .patEncryptionService(patEncryptionService)</span>
+<span class="fc" id="L80">            .patCredentialRepository(patCredentialRepository)</span>
+<span class="fc" id="L81">            .build();</span>
+<span class="fc" id="L82">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(
@@ -84,13 +91,38 @@ import org.springframework.web.bind.annotation.RestController;
   public Job launchSyncCourseWithPlRepoJob(
       @Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
 
-<span class="fc" id="L87">    Course course =</span>
+<span class="fc" id="L94">    Course course =</span>
         courseRepository
-<span class="fc" id="L89">            .findById(courseId)</span>
-<span class="fc" id="L90">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc" id="L91">    SyncCourseWithPlRepoJob job =</span>
-<span class="fc" id="L92">        syncCourseWithPlRepoJobFactory.create(getCurrentUser().getUser().getId(), course);</span>
-<span class="fc" id="L93">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L96">            .findById(courseId)</span>
+<span class="fc" id="L97">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L98">    SyncCourseWithPlRepoJob job =</span>
+<span class="fc" id="L99">        syncCourseWithPlRepoJobFactory.create(getCurrentUser().getUser().getId(), course);</span>
+<span class="fc" id="L100">    return jobService.runAsJob(job);</span>
+  }
+
+  @Operation(
+      summary =
+          &quot;Launch CopyConceptGraph job (replace the to course's concept graph with a copy of the&quot;
+              + &quot; from course's concept graph, and clear the to course's user state)&quot;)
+  @PreAuthorize(
+      &quot;@CourseSecurity.hasManagePermissions(#root, #fromCourseId) and&quot;
+          + &quot; @CourseSecurity.hasManagePermissions(#root, #toCourseId)&quot;)
+  @PostMapping(&quot;/launch/copyConceptGraph&quot;)
+  public Job launchCopyConceptGraphJob(
+      @Parameter(name = &quot;fromCourseId&quot;) @RequestParam Long fromCourseId,
+      @Parameter(name = &quot;toCourseId&quot;) @RequestParam Long toCourseId) {
+
+    CopyConceptGraphJob job =
+<span class="fc" id="L116">        CopyConceptGraphJob.builder()</span>
+<span class="fc" id="L117">            .userId(getCurrentUser().getUser().getId())</span>
+<span class="fc" id="L118">            .fromCourseId(fromCourseId)</span>
+<span class="fc" id="L119">            .toCourseId(toCourseId)</span>
+<span class="fc" id="L120">            .userRepository(userRepository)</span>
+<span class="fc" id="L121">            .courseRepository(courseRepository)</span>
+<span class="fc" id="L122">            .adminRepository(adminRepository)</span>
+<span class="fc" id="L123">            .conceptYamlService(conceptYamlService)</span>
+<span class="fc" id="L124">            .build();</span>
+<span class="fc" id="L125">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(
@@ -102,21 +134,21 @@ import org.springframework.web.bind.annotation.RestController;
   public Job launchReadPLColorsJob() {
 
     ReadPLColorsJob job =
-<span class="fc" id="L105">        ReadPLColorsJob.builder()</span>
-<span class="fc" id="L106">            .userId(getCurrentUser().getUser().getId())</span>
-<span class="fc" id="L107">            .patCredentialRepository(patCredentialRepository)</span>
-<span class="fc" id="L108">            .patEncryptionService(patEncryptionService)</span>
-<span class="fc" id="L109">            .githubService(githubService)</span>
-<span class="fc" id="L110">            .plColorRepository(plColorRepository)</span>
-<span class="fc" id="L111">            .build();</span>
-<span class="fc" id="L112">    return jobService.runAsJob(job);</span>
+<span class="fc" id="L137">        ReadPLColorsJob.builder()</span>
+<span class="fc" id="L138">            .userId(getCurrentUser().getUser().getId())</span>
+<span class="fc" id="L139">            .patCredentialRepository(patCredentialRepository)</span>
+<span class="fc" id="L140">            .patEncryptionService(patEncryptionService)</span>
+<span class="fc" id="L141">            .githubService(githubService)</span>
+<span class="fc" id="L142">            .plColorRepository(plColorRepository)</span>
+<span class="fc" id="L143">            .build();</span>
+<span class="fc" id="L144">    return jobService.runAsJob(job);</span>
   }
 
   @Operation(summary = &quot;List jobs by courseId&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
   @GetMapping(&quot;/course&quot;)
   public Iterable&lt;Job&gt; jobsByCourse(@Parameter(name = &quot;courseId&quot;) @RequestParam Long courseId) {
-<span class="fc" id="L119">    return jobsRepository.findByScopeTypeAndScopeIdOrderByIdDesc(&quot;course&quot;, courseId);</span>
+<span class="fc" id="L151">    return jobsRepository.findByScopeTypeAndScopeIdOrderByIdDesc(&quot;course&quot;, courseId);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
