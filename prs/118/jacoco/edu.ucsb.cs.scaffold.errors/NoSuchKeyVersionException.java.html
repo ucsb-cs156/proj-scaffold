@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NoSuchKeyVersionException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.errors</a> &gt; <span class="el_source">NoSuchKeyVersionException.java</span></div><h1>NoSuchKeyVersionException.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.errors;
+
+/**
+ * Thrown when a stored PAT was encrypted under a key version for which no key material is currently
+ * configured (e.g. PREVIOUS_PAT_ENCRYPTION_KEY was removed before the rotate-keys job re-encrypted
+ * every credential). The affected credential cannot be decrypted; the user must re-enter their PAT
+ * unless the missing key is restored.
+ */
+public class NoSuchKeyVersionException extends RuntimeException {
+  public NoSuchKeyVersionException(int keyVersion) {
+<span class="fc" id="L11">    super(</span>
+        &quot;No PAT encryption key is configured for key version %d; the credential cannot be decrypted until that key is restored or the user re-enters their PAT&quot;
+<span class="fc" id="L13">            .formatted(keyVersion));</span>
+<span class="fc" id="L14">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
