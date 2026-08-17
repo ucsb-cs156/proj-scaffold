@@ -148,6 +148,14 @@ public class JobsController extends ApiController {
   @PreAuthorize("@CourseSecurity.hasManagePermissions(#root, #courseId)")
   @GetMapping("/course")
   public Iterable<Job> jobsByCourse(@Parameter(name = "courseId") @RequestParam Long courseId) {
-    return jobsRepository.findByScopeTypeAndScopeIdOrderByIdDesc("course", courseId);
+    Iterable<Job> jobs = jobsRepository.findByScopeTypeAndScopeIdOrderByIdDesc("course", courseId);
+    /*
+     * Since lib-jobs v0.2.0, Job.log is @Transient (see job_logs) and is no
+     * longer populated automatically by JPA; callers that return Job entities
+     * directly must set it explicitly, same as the library's own controller
+     * does for /all and /paginated.
+     */
+    jobs.forEach(job -> job.setLog(jobService.getJobLogPreview(job.getId())));
+    return jobs;
   }
 }
