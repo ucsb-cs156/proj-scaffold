@@ -322,13 +322,18 @@ public class JobsControllerJobsTests extends ControllerTestCase {
   @Test
   public void admin_can_get_jobs_by_course() throws Exception {
 
-    // arrange
-    Job job1 = Job.builder().log("job for course 5 - 1").build();
-    Job job2 = Job.builder().log("job for course 5 - 2").build();
-    List<Job> expectedJobs = List.of(job1, job2);
+    // arrange: log is @Transient (job_logs, not a jobs column) since lib-jobs v0.2.0, so
+    // jobsRepository's freshly-fetched entities have log == null; the controller must populate it
+    // per job via jobService.getJobLogPreview before serializing, same as the library's own
+    // /all and /paginated endpoints do
+    Job job1 = Job.builder().id(10L).build();
+    Job job2 = Job.builder().id(20L).build();
+    List<Job> repositoryJobs = List.of(job1, job2);
 
     when(jobsRepository.findByScopeTypeAndScopeIdOrderByIdDesc("course", 5L))
-        .thenReturn(expectedJobs);
+        .thenReturn(repositoryJobs);
+    when(jobService.getJobLogPreview(10L)).thenReturn("job for course 5 - 1");
+    when(jobService.getJobLogPreview(20L)).thenReturn("job for course 5 - 2");
 
     // act
     MvcResult response =
@@ -339,6 +344,12 @@ public class JobsControllerJobsTests extends ControllerTestCase {
 
     // assert
     verify(jobsRepository).findByScopeTypeAndScopeIdOrderByIdDesc("course", 5L);
+    verify(jobService).getJobLogPreview(10L);
+    verify(jobService).getJobLogPreview(20L);
+    List<Job> expectedJobs =
+        List.of(
+            Job.builder().id(10L).log("job for course 5 - 1").build(),
+            Job.builder().id(20L).log("job for course 5 - 2").build());
     String expectedJson = objectMapper.writeValueAsString(expectedJobs);
     assertEquals(expectedJson, response.getResponse().getContentAsString());
   }
