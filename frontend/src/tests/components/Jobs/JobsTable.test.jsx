@@ -1,18 +1,32 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 import JobsTable from "main/components/Jobs/JobsTable";
 import { formatTime } from "main/utils/dateUtils";
 import { vi } from "vitest";
+import AxiosMockAdapter from "axios-mock-adapter";
+import axios from "axios";
 
 vi.mock("main/utils/dateUtils", () => ({
   formatTime: vi.fn(),
 }));
 
+const axiosMock = new AxiosMockAdapter(axios);
+const mockToast = vi.fn();
+vi.mock("react-toastify", async (importOriginal) => {
+  return {
+    ...(await importOriginal()),
+    toast: (x) => mockToast(x),
+  };
+});
+
 describe("JobsTable tests", () => {
   const queryClient = new QueryClient();
 
   beforeEach(() => {
+    axiosMock.reset();
+    axiosMock.resetHistory();
+    vi.clearAllMocks();
     formatTime.mockReset();
   });
 
@@ -147,5 +161,93 @@ describe("JobsTable tests", () => {
     expect(formatTime).toHaveBeenCalledTimes(2);
     expect(formatTime).toHaveBeenNthCalledWith(1, "2023-01-01T10:00:00");
     expect(formatTime).toHaveBeenNthCalledWith(2, "2023-01-01T10:05:00");
+  });
+
+  test.each(["queued", "running"])(
+    "shows a Cancel button for a %s job",
+    (status) => {
+      const jobsFixture = [{ id: 5, jobName: "Test Job", status }];
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <JobsTable jobs={jobsFixture} />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      expect(
+        screen.getByTestId("JobsTable-cell-row-0-col-cancel-button"),
+      ).toBeInTheDocument();
+    },
+  );
+
+  test.each(["complete", "error", "cancelling", "cancelled"])(
+    "does not show a Cancel button for a %s job",
+    (status) => {
+      const jobsFixture = [{ id: 5, jobName: "Test Job", status }];
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter>
+            <JobsTable jobs={jobsFixture} />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      expect(
+        screen.queryByTestId("JobsTable-cell-row-0-col-cancel-button"),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  test("clicking Cancel requests cancellation and calls onCancelled", async () => {
+    axiosMock.onPost("/api/jobs/5/cancel").reply(200, {
+      id: 5,
+      status: "cancelling",
+    });
+    const onCancelled = vi.fn();
+    const jobsFixture = [{ id: 5, jobName: "Test Job", status: "running" }];
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <JobsTable jobs={jobsFixture} onCancelled={onCancelled} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const cancelButton = screen.getByTestId(
+      "JobsTable-cell-row-0-col-cancel-button",
+    );
+    fireEvent.click(cancelButton);
+
+    await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
+    expect(mockToast).toBeCalledWith("Cancellation requested.");
+    expect(onCancelled).toHaveBeenCalledTimes(1);
+  });
+
+  test("clicking Cancel works without an onCancelled prop", async () => {
+    axiosMock.onPost("/api/jobs/5/cancel").reply(200, {
+      id: 5,
+      status: "cancelling",
+    });
+    const jobsFixture = [{ id: 5, jobName: "Test Job", status: "running" }];
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <JobsTable jobs={jobsFixture} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const cancelButton = screen.getByTestId(
+      "JobsTable-cell-row-0-col-cancel-button",
+    );
+    fireEvent.click(cancelButton);
+
+    await waitFor(() => expect(axiosMock.history.post.length).toEqual(1));
+    expect(mockToast).toBeCalledWith("Cancellation requested.");
   });
 });
