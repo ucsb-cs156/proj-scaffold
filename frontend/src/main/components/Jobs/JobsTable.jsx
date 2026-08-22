@@ -1,8 +1,31 @@
 import React from "react";
 import OurTable from "main/components/Common/OurTable";
 import { formatTime } from "main/utils/dateUtils";
+import { useBackendMutation } from "main/utils/useBackend";
+import { Button } from "react-bootstrap";
+import { toast } from "react-toastify";
 
-export default function JobsTable({ jobs }) {
+const CANCELLABLE_STATUSES = ["queued", "running"];
+
+export default function JobsTable({ jobs, onCancelled = () => {} }) {
+  const cellToAxiosParamsCancel = (cell) => ({
+    url: `/api/jobs/${cell.row.original.id}/cancel`,
+    method: "POST",
+  });
+
+  const cancelSuccess = () => {
+    toast("Cancellation requested.");
+    onCancelled();
+  };
+
+  const cancelMutation = useBackendMutation(cellToAxiosParamsCancel, {
+    onSuccess: cancelSuccess,
+  });
+
+  const cancelCallback = (cell) => {
+    cancelMutation.mutate(cell);
+  };
+
   const columns = [
     {
       header: "id",
@@ -35,6 +58,21 @@ export default function JobsTable({ jobs }) {
     {
       header: "Status",
       accessorKey: "status",
+    },
+    {
+      header: "Cancel",
+      id: "cancel",
+      cell: ({ cell }) =>
+        CANCELLABLE_STATUSES.includes(cell.row.original.status) ? (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => cancelCallback(cell)}
+            data-testid={`JobsTable-cell-row-${cell.row.index}-col-cancel-button`}
+          >
+            Cancel
+          </Button>
+        ) : null,
     },
     {
       header: "Log",

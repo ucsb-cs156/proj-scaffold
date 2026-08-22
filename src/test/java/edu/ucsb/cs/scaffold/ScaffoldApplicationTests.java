@@ -1,6 +1,7 @@
 package edu.ucsb.cs.scaffold;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -17,7 +18,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -34,6 +38,16 @@ class ScaffoldApplicationTests {
   @Autowired private UserActivityRepository userActivityRepository;
 
   @Autowired private CourseRepository courseRepository;
+
+  @Test
+  void restTemplate_hasConnectAndReadTimeoutsConfigured() {
+    RestTemplate restTemplate = new ScaffoldApplication().restTemplate();
+
+    SimpleClientHttpRequestFactory factory =
+        (SimpleClientHttpRequestFactory) restTemplate.getRequestFactory();
+    assertEquals(10_000, ReflectionTestUtils.getField(factory, "connectTimeout"));
+    assertEquals(60_000, ReflectionTestUtils.getField(factory, "readTimeout"));
+  }
 
   @Test
   void healthCheckReturnsOk() throws Exception {

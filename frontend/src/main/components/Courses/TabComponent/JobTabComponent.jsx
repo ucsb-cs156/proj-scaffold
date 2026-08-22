@@ -30,7 +30,7 @@ export default function JobTabComponent({ courseId, testIdPrefix }) {
         Refresh
       </Button>
 
-      <JobsTable jobs={jobs} />
+      <JobsTable jobs={jobs} onCancelled={refreshJobs} />
     </div>
   );
 }

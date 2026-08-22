@@ -451,6 +451,9 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
 
     Set<String> foundNames = new LinkedHashSet<>();
     for (DirectoryEntry entry : entries) {
+      // Most assessments are unchanged from a prior sync and never reach a ctx.log(...) call below
+      // -- see walkQuestionsDirectory's javadoc for why each iteration needs its own checkpoint.
+      ctx.checkCancellation();
       if (!"dir".equals(entry.type())) {
         continue;
       }
@@ -641,6 +644,12 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
   /**
    * Recursively walks a directory under {@code questions}. {@code questionId} is the path relative
    * to the questions directory ("" for the questions directory itself, which is never a question).
+   *
+   * <p>Most directories under {@code questions} are unchanged from a prior sync and never produce a
+   * {@code ctx.log(...)} call (see below), so a cancellation request could otherwise sit unactioned
+   * for the whole remainder of a large walk. {@code ctx.checkCancellation()} makes each directory
+   * visited its own cancellation checkpoint instead, independent of whether that directory happens
+   * to log anything.
    */
   private void walkQuestionsDirectory(
       JobContext ctx,
@@ -649,6 +658,7 @@ public class SyncCourseWithPlRepoJob implements JobContextConsumer {
       String path,
       String questionId,
       Map<String, QuestionInfo> foundQuestions) {
+    ctx.checkCancellation();
     List<DirectoryEntry> entries = githubService.listDirectory(plRepo.getRepoName(), path, token);
 
     boolean hasInfoJson =

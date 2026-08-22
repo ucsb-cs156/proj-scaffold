@@ -36,6 +36,8 @@ import edu.ucsb.cs.scaffold.services.PrairieLearnService;
 import edu.ucsb.cs.scaffold.services.PrairieLearnService.AssessmentInfo;
 import edu.ucsb.cs.scaffold.services.PrairieLearnService.CourseInstanceInfo;
 import edu.ucsb.cs156.jobs.entities.Job;
+import edu.ucsb.cs156.jobs.errors.JobCancelledException;
+import edu.ucsb.cs156.jobs.repositories.JobsRepository;
 import edu.ucsb.cs156.jobs.services.JobContext;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -1643,5 +1645,75 @@ public class SyncCourseWithPlRepoJobTests {
   public void the_job_reports_its_course_scope_for_the_jobs_table() {
     assertEquals("course", job().getScopeType());
     assertEquals(course.getId(), job().getScopeId());
+  }
+
+  // ────────────────────── checkCancellation checkpoints ──────────────────────
+  // walkQuestionsDirectory and syncAssessments' entry loop both hit long silent
+  // stretches (see their javadoc/comment): most directories/assessments are
+  // unchanged from a prior sync and never reach a ctx.log(...) call, so without
+  // their own ctx.checkCancellation() checkpoint a cancel request could sit
+  // unactioned for an entire large walk even though nothing is hung. These
+  // tests set up a JobsRepository mock that reports "running" for exactly the
+  // calls that happen before the checkpoint under test, then "cancelling" from
+  // then on -- proving the checkpoint fires there specifically, not just from
+  // some other, later ctx.log(...) call reusing the same "cancelling" status.
+
+  private static Job runningJob() {
+    return Job.builder().id(99L).status("running").build();
+  }
+
+  private static Job cancellingJob() {
+    return Job.builder().id(99L).status("cancelling").build();
+  }
+
+  @Test
+  public void checkCancellation_stops_the_question_walk_before_its_first_github_call()
+      throws Exception {
+    JobsRepository jobsRepository = mock(JobsRepository.class);
+    // 4 real checkpoints precede the walk's own check under the default setup:
+    // the header line, the access-verified line, the instance-verified line,
+    // and syncAssessmentSets' "no infoCourse.json" skip line.
+    when(jobsRepository.findById(99L))
+        .thenReturn(
+            Optional.of(runningJob()),
+            Optional.of(runningJob()),
+            Optional.of(runningJob()),
+            Optional.of(runningJob()),
+            Optional.of(cancellingJob()));
+    Job job = Job.builder().id(99L).build();
+    JobContext cancellingCtx = new JobContext(null, job, null, jobsRepository);
+
+    assertThrows(JobCancelledException.class, () -> job().accept(cancellingCtx));
+
+    verify(githubService, never()).listDirectory(eq(REPO), eq("questions"), eq(TOKEN));
+  }
+
+  @Test
+  public void checkCancellation_stops_the_assessment_walk_before_its_first_github_call()
+      throws Exception {
+    when(githubService.listDirectory(eq(REPO), eq(ASSESSMENTS_PATH), eq(TOKEN)))
+        .thenReturn(List.of(dir("mt1")));
+    JobsRepository jobsRepository = mock(JobsRepository.class);
+    // 6 real checkpoints precede the assessments loop's own check under this
+    // setup: the header line, the access-verified line, the instance-verified
+    // line, syncAssessmentSets' skip line, the question walk's own
+    // checkCancellation() (checked above), and syncQuestions' "no questions
+    // directory" skip line.
+    when(jobsRepository.findById(99L))
+        .thenReturn(
+            Optional.of(runningJob()),
+            Optional.of(runningJob()),
+            Optional.of(runningJob()),
+            Optional.of(runningJob()),
+            Optional.of(runningJob()),
+            Optional.of(runningJob()),
+            Optional.of(cancellingJob()));
+    Job job = Job.builder().id(99L).build();
+    JobContext cancellingCtx = new JobContext(null, job, null, jobsRepository);
+
+    assertThrows(JobCancelledException.class, () -> job().accept(cancellingCtx));
+
+    verify(githubService, never())
+        .listDirectory(eq(REPO), eq(ASSESSMENTS_PATH + "/mt1"), eq(TOKEN));
   }
 }
