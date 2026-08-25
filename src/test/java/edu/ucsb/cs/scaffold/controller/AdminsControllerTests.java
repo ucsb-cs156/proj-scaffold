@@ -177,6 +177,13 @@ public class AdminsControllerTests extends ControllerTestCase {
   @WithMockUser(roles = {"ADMIN"})
   @Test
   public void logged_in_admin_can_get_all_users_with_roles() throws Exception {
+    User repoAdminUser =
+        User.builder()
+            .id(5L)
+            .email("repoadmin@ucsb.edu")
+            .givenName("Rae")
+            .familyName("Poadmin")
+            .build();
     User adminUser =
         User.builder()
             .id(7L)
@@ -205,12 +212,14 @@ public class AdminsControllerTests extends ControllerTestCase {
     List<AdminsController.UserDTO> expectedUsers =
         List.of(
             new AdminsController.UserDTO(3L, "Ivy", "Instructor", "ins@ucsb.edu", false, true),
+            new AdminsController.UserDTO(5L, "Rae", "Poadmin", "repoadmin@ucsb.edu", true, false),
             new AdminsController.UserDTO(7L, "Alice", "Admin", "acdamstedt@ucsb.edu", true, false),
             new AdminsController.UserDTO(11L, "Stu", "Dent", "student@ucsb.edu", false, false));
 
     when(adminRepository.findAll()).thenReturn(List.of(repoAdmin));
     when(instructorRepository.findAll()).thenReturn(List.of(instructor));
-    when(userRepository.findAll()).thenReturn(List.of(studentUser, adminUser, instructorUser));
+    when(userRepository.findAll())
+        .thenReturn(List.of(studentUser, adminUser, repoAdminUser, instructorUser));
 
     MvcResult response =
         mockMvc.perform(get("/api/admin/users")).andExpect(status().isOk()).andReturn();
