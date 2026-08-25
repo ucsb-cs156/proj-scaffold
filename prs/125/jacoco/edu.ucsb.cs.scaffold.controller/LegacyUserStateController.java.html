@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LegacyUserStateController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.controller</a> &gt; <span class="el_source">LegacyUserStateController.java</span></div><h1>LegacyUserStateController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.controller;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.ucsb.cs.scaffold.model.LegacyUserState;
+import edu.ucsb.cs.scaffold.repository.LegacyUserStateRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+// Serves only LegacyHomePage.tsx (via legacyClient.ts). State here is per-user with no
+// course scoping; the course-scoped counterpart is UserStateController at /api/user-state.
+@Tag(name = &quot;Legacy User State&quot;)
+@RestController
+@RequiredArgsConstructor
+public class LegacyUserStateController {
+
+  private final LegacyUserStateRepository legacyUserStateRepository;
+  private final ObjectMapper objectMapper;
+
+  @Operation(summary = &quot;Get saved legacy user state by user ID&quot;)
+  @GetMapping(&quot;/api/legacy/user-state/{userid}&quot;)
+  public ResponseEntity&lt;LegacyUserStateResponse&gt; getUserState(
+      @Parameter(description = &quot;User ID (from users table)&quot;) @PathVariable Long userid) {
+<span class="fc" id="L32">    return legacyUserStateRepository</span>
+<span class="fc" id="L33">        .findByUserid(userid)</span>
+<span class="fc" id="L34">        .map(</span>
+            state -&gt;
+<span class="fc" id="L36">                ResponseEntity.ok(</span>
+                    new LegacyUserStateResponse(
+<span class="fc" id="L38">                        parseStringList(state.getStarredIds()),</span>
+<span class="fc" id="L39">                        parseJsonNode(state.getDetailCards()),</span>
+<span class="fc" id="L40">                        parseStringList(state.getMasteredSubconcepts()))))</span>
+<span class="fc" id="L41">        .orElseGet(() -&gt; ResponseEntity.notFound().build());</span>
+  }
+
+  @Operation(summary = &quot;Upsert saved legacy user state by user ID&quot;)
+  @PostMapping(&quot;/api/legacy/user-state&quot;)
+  public ResponseEntity&lt;Void&gt; upsertUserState(@RequestBody LegacyUserStateRequest body) {
+<span class="fc bfc" id="L47" title="All 2 branches covered.">    if (body.userid() == null) {</span>
+<span class="fc" id="L48">      return ResponseEntity.badRequest().build();</span>
+    }
+
+<span class="fc" id="L51">    LegacyUserState state =</span>
+<span class="fc" id="L52">        legacyUserStateRepository.findByUserid(body.userid()).orElseGet(LegacyUserState::new);</span>
+<span class="fc" id="L53">    state.setUserid(body.userid());</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">    state.setStarredIds(writeJson(body.starredIds() == null ? List.of() : body.starredIds()));</span>
+<span class="fc" id="L55">    state.setDetailCards(</span>
+<span class="fc" id="L56">        writeJson(</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">            body.detailCards() == null ? objectMapper.createArrayNode() : body.detailCards()));</span>
+<span class="fc" id="L58">    state.setMasteredSubconcepts(</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        writeJson(body.masteredSubconcepts() == null ? List.of() : body.masteredSubconcepts()));</span>
+<span class="fc" id="L60">    legacyUserStateRepository.save(state);</span>
+
+<span class="fc" id="L62">    return ResponseEntity.noContent().build();</span>
+  }
+
+  private List&lt;String&gt; parseStringList(String json) {
+    try {
+<span class="fc" id="L67">      return objectMapper.readValue(json, new TypeReference&lt;&gt;() {});</span>
+<span class="fc" id="L68">    } catch (JsonProcessingException e) {</span>
+<span class="fc" id="L69">      throw new IllegalStateException(&quot;Unable to parse stored string list JSON&quot;, e);</span>
+    }
+  }
+
+  private JsonNode parseJsonNode(String json) {
+    try {
+<span class="fc" id="L75">      return objectMapper.readTree(json);</span>
+<span class="fc" id="L76">    } catch (JsonProcessingException e) {</span>
+<span class="fc" id="L77">      throw new IllegalStateException(&quot;Unable to parse stored JSON payload&quot;, e);</span>
+    }
+  }
+
+  private String writeJson(Object value) {
+    try {
+<span class="fc" id="L83">      return objectMapper.writeValueAsString(value);</span>
+<span class="fc" id="L84">    } catch (JsonProcessingException e) {</span>
+<span class="fc" id="L85">      throw new IllegalArgumentException(&quot;Unable to serialize JSON payload&quot;, e);</span>
+    }
+  }
+
+<span class="fc" id="L89">  public record LegacyUserStateRequest(</span>
+      Long userid,
+      @JsonProperty(&quot;starred_ids&quot;) List&lt;String&gt; starredIds,
+      @JsonProperty(&quot;detail_cards&quot;) JsonNode detailCards,
+      @JsonProperty(&quot;mastered_subconcepts&quot;) List&lt;String&gt; masteredSubconcepts) {}
+
+<span class="fc" id="L95">  public record LegacyUserStateResponse(</span>
+      @JsonProperty(&quot;starred_ids&quot;) List&lt;String&gt; starredIds,
+      @JsonProperty(&quot;detail_cards&quot;) JsonNode detailCards,
+      @JsonProperty(&quot;mastered_subconcepts&quot;) List&lt;String&gt; masteredSubconcepts) {}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
