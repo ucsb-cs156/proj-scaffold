@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PLAssessmentQuestionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.controller</a> &gt; <span class="el_source">PLAssessmentQuestionController.java</span></div><h1>PLAssessmentQuestionController.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.controller;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.ucsb.cs.scaffold.entity.Concept;
+import edu.ucsb.cs.scaffold.entity.PlAssessment;
+import edu.ucsb.cs.scaffold.entity.PlAssessmentQuestion;
+import edu.ucsb.cs.scaffold.entity.PlAssessmentQuestionConcept;
+import edu.ucsb.cs.scaffold.errors.EntityNotFoundException;
+import edu.ucsb.cs.scaffold.repository.ConceptRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionConceptRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentQuestionRepository;
+import edu.ucsb.cs.scaffold.repository.PlAssessmentRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+// Tags Concepts onto a PlAssessmentQuestion (a PlQuestion's occurrence within one PlAssessment),
+// so instructors can associate concepts with the questions students practice. Serves
+// ConceptGraphPage's question-driven concept highlighting; replaces the QuestionController stub
+// that this feature (issue #116) makes obsolete.
+@Tag(name = &quot;PlAssessmentQuestion&quot;)
+@RequestMapping(&quot;/api/plAssessmentQuestion&quot;)
+@RestController
+@RequiredArgsConstructor
+public class PLAssessmentQuestionController extends ApiController {
+
+  private final ConceptRepository conceptRepository;
+  private final PlAssessmentRepository plAssessmentRepository;
+  private final PlAssessmentQuestionRepository plAssessmentQuestionRepository;
+  private final PlAssessmentQuestionConceptRepository plAssessmentQuestionConceptRepository;
+
+  @Operation(summary = &quot;List concepts tagged on a PlAssessmentQuestion&quot;)
+  @GetMapping(&quot;/{plAssessmentQuestionId}/concepts&quot;)
+  public List&lt;TaggedConceptDTO&gt; getConcepts(
+      @Parameter(description = &quot;Id of the PlAssessmentQuestion&quot;) @PathVariable
+          Long plAssessmentQuestionId) {
+<span class="fc" id="L52">    return plAssessmentQuestionConceptRepository</span>
+<span class="fc" id="L53">        .findByPlAssessmentQuestionId(plAssessmentQuestionId)</span>
+<span class="fc" id="L54">        .stream()</span>
+<span class="fc" id="L55">        .map(PLAssessmentQuestionController::toTaggedConceptDTO)</span>
+<span class="fc" id="L56">        .toList();</span>
+  }
+
+  @Operation(
+      summary =
+          &quot;Tag a Concept onto a PlAssessmentQuestion; the concept's course must be associated&quot;
+              + &quot; with the same PrairieLearn instance as the assessment&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasConceptManagementPermissions(#root, #conceptId)&quot;)
+  @PostMapping(&quot;/addConcept&quot;)
+  public PlAssessmentQuestionConcept addConcept(
+      @Parameter(description = &quot;Id of the PlAssessmentQuestion&quot;) @RequestParam
+          Long plAssessmentQuestionId,
+      @Parameter(description = &quot;Id of the Concept&quot;) @RequestParam Long conceptId)
+      throws EntityNotFoundException {
+<span class="fc" id="L70">    Concept concept =</span>
+        conceptRepository
+<span class="fc" id="L72">            .findById(conceptId)</span>
+<span class="fc" id="L73">            .orElseThrow(() -&gt; new EntityNotFoundException(Concept.class, conceptId));</span>
+<span class="fc" id="L74">    PlAssessmentQuestion plAssessmentQuestion =</span>
+        plAssessmentQuestionRepository
+<span class="fc" id="L76">            .findById(plAssessmentQuestionId)</span>
+<span class="fc" id="L77">            .orElseThrow(</span>
+                () -&gt;
+<span class="fc" id="L79">                    new EntityNotFoundException(</span>
+                        PlAssessmentQuestion.class, plAssessmentQuestionId));
+<span class="fc" id="L81">    PlAssessment plAssessment =</span>
+        plAssessmentRepository
+<span class="fc" id="L83">            .findById(plAssessmentQuestion.getPlAssessmentId())</span>
+<span class="fc" id="L84">            .orElseThrow(</span>
+                () -&gt;
+<span class="fc" id="L86">                    new EntityNotFoundException(</span>
+<span class="fc" id="L87">                        PlAssessment.class, plAssessmentQuestion.getPlAssessmentId()));</span>
+
+<span class="fc bfc" id="L89" title="All 2 branches covered.">    if (!Objects.equals(concept.getCourse().getPlInstanceId(), plAssessment.getPlInstanceId())) {</span>
+<span class="fc" id="L90">      throw new IllegalArgumentException(</span>
+          &quot;concept %d's course PL instance does not match assessment %d's PL instance&quot;
+<span class="fc" id="L92">              .formatted(conceptId, plAssessment.getId()));</span>
+    }
+
+    PlAssessmentQuestionConcept tag =
+<span class="fc" id="L96">        PlAssessmentQuestionConcept.builder()</span>
+<span class="fc" id="L97">            .plAssessmentQuestionId(plAssessmentQuestionId)</span>
+<span class="fc" id="L98">            .concept(concept)</span>
+<span class="fc" id="L99">            .build();</span>
+<span class="fc" id="L100">    return plAssessmentQuestionConceptRepository.save(tag);</span>
+  }
+
+  @Operation(summary = &quot;Remove a Concept tag from a PlAssessmentQuestion&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasConceptManagementPermissions(#root, #conceptId)&quot;)
+  @DeleteMapping(&quot;/deleteConcept&quot;)
+  public Object deleteConcept(
+      @Parameter(description = &quot;Id of the PlAssessmentQuestion&quot;) @RequestParam
+          Long plAssessmentQuestionId,
+      @Parameter(description = &quot;Id of the Concept&quot;) @RequestParam Long conceptId)
+      throws EntityNotFoundException {
+<span class="fc" id="L111">    PlAssessmentQuestionConcept tag =</span>
+        plAssessmentQuestionConceptRepository
+<span class="fc" id="L113">            .findByPlAssessmentQuestionIdAndConceptId(plAssessmentQuestionId, conceptId)</span>
+<span class="fc" id="L114">            .orElseThrow(</span>
+                () -&gt;
+<span class="fc" id="L116">                    new EntityNotFoundException(</span>
+                        PlAssessmentQuestionConcept.class,
+                        &quot;plAssessmentQuestionId=%d, conceptId=%d&quot;
+<span class="fc" id="L119">                            .formatted(plAssessmentQuestionId, conceptId)));</span>
+<span class="fc" id="L120">    plAssessmentQuestionConceptRepository.delete(tag);</span>
+<span class="fc" id="L121">    return genericMessage(</span>
+        &quot;Concept %d untagged from PlAssessmentQuestion %d&quot;
+<span class="fc" id="L123">            .formatted(conceptId, plAssessmentQuestionId));</span>
+  }
+
+  // Overrides ApiController's IllegalArgumentException -&gt; 400 mapping for this controller only:
+  // the mismatched-PL-instance check above is a 422 (Unprocessable Entity) per issue #116, since
+  // the request is well-formed but semantically invalid, not malformed.
+  @ExceptionHandler({IllegalArgumentException.class})
+  @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+  public Object handleIllegalArgument(Throwable e) {
+<span class="fc" id="L132">    return Map.of(</span>
+<span class="fc" id="L133">        &quot;type&quot;, e.getClass().getSimpleName(),</span>
+<span class="fc" id="L134">        &quot;message&quot;, e.getMessage());</span>
+  }
+
+  private static TaggedConceptDTO toTaggedConceptDTO(PlAssessmentQuestionConcept tag) {
+<span class="fc" id="L138">    return new TaggedConceptDTO(</span>
+<span class="fc" id="L139">        String.valueOf(tag.getId()),</span>
+<span class="fc" id="L140">        String.valueOf(tag.getPlAssessmentQuestionId()),</span>
+<span class="fc" id="L141">        String.valueOf(tag.getConcept().getId()),</span>
+        null);
+  }
+
+<span class="fc" id="L145">  public record TaggedConceptDTO(</span>
+      String id,
+      @JsonProperty(&quot;question_id&quot;) String questionId,
+      @JsonProperty(&quot;concept_id&quot;) String conceptId,
+      @JsonProperty(&quot;subconcept_label&quot;) String subconceptLabel) {}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ScaffoldStartup.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.startup</a> &gt; <span class="el_source">ScaffoldStartup.java</span></div><h1>ScaffoldStartup.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.startup;
+
+import edu.ucsb.cs.scaffold.entity.Admin;
+import edu.ucsb.cs.scaffold.entity.Course;
+import edu.ucsb.cs.scaffold.entity.PlColor;
+import edu.ucsb.cs.scaffold.enums.School;
+import edu.ucsb.cs.scaffold.repository.AdminRepository;
+import edu.ucsb.cs.scaffold.repository.CourseRepository;
+import edu.ucsb.cs.scaffold.repository.PlColorRepository;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StreamUtils;
+
+<span class="fc" id="L26">@Slf4j</span>
+@Component
+<span class="fc" id="L28">public class ScaffoldStartup {</span>
+
+<span class="fc" id="L30">  static final Long SEED_COURSE_ID = 1L;</span>
+  static final String SEED_DATA_RESOURCE = &quot;db/seed/concepts.sql&quot;;
+
+  // Default PrairieLearn badge colors (issue #96), taken from the $custom-colors map in
+  // https://github.com/PrairieLearn/PrairieLearn/blob/master/apps/prairielearn/public/stylesheets/colors.scss.
+  // ReadPLColorsJob keeps these up to date with any changes on the PrairieLearn side; this seed
+  // only fills in rows that don't already exist so a restart never clobbers job updates.
+<span class="fc" id="L37">  static final Map&lt;String, String&gt; SEED_PL_COLORS = new LinkedHashMap&lt;&gt;();</span>
+
+  static {
+<span class="fc" id="L40">    SEED_PL_COLORS.put(&quot;red1&quot;, &quot;#ffccbc&quot;);</span>
+<span class="fc" id="L41">    SEED_PL_COLORS.put(&quot;red2&quot;, &quot;#ff6c5c&quot;);</span>
+<span class="fc" id="L42">    SEED_PL_COLORS.put(&quot;red3&quot;, &quot;#c72c1c&quot;);</span>
+<span class="fc" id="L43">    SEED_PL_COLORS.put(&quot;pink1&quot;, &quot;#ffbcd8&quot;);</span>
+<span class="fc" id="L44">    SEED_PL_COLORS.put(&quot;pink2&quot;, &quot;#fa5c98&quot;);</span>
+<span class="fc" id="L45">    SEED_PL_COLORS.put(&quot;pink3&quot;, &quot;#ba1c58&quot;);</span>
+<span class="fc" id="L46">    SEED_PL_COLORS.put(&quot;purple1&quot;, &quot;#dcc6e0&quot;);</span>
+<span class="fc" id="L47">    SEED_PL_COLORS.put(&quot;purple2&quot;, &quot;#9b59b6&quot;);</span>
+<span class="fc" id="L48">    SEED_PL_COLORS.put(&quot;purple3&quot;, &quot;#5e147d&quot;);</span>
+<span class="fc" id="L49">    SEED_PL_COLORS.put(&quot;blue1&quot;, &quot;#39d5ff&quot;);</span>
+<span class="fc" id="L50">    SEED_PL_COLORS.put(&quot;blue2&quot;, &quot;#1297e0&quot;);</span>
+<span class="fc" id="L51">    SEED_PL_COLORS.put(&quot;blue3&quot;, &quot;#0057a0&quot;);</span>
+<span class="fc" id="L52">    SEED_PL_COLORS.put(&quot;turquoise1&quot;, &quot;#5efaf7&quot;);</span>
+<span class="fc" id="L53">    SEED_PL_COLORS.put(&quot;turquoise2&quot;, &quot;#27cbc0&quot;);</span>
+<span class="fc" id="L54">    SEED_PL_COLORS.put(&quot;turquoise3&quot;, &quot;#008b80&quot;);</span>
+<span class="fc" id="L55">    SEED_PL_COLORS.put(&quot;green1&quot;, &quot;#8effc1&quot;);</span>
+<span class="fc" id="L56">    SEED_PL_COLORS.put(&quot;green2&quot;, &quot;#2ecc71&quot;);</span>
+<span class="fc" id="L57">    SEED_PL_COLORS.put(&quot;green3&quot;, &quot;#008c31&quot;);</span>
+<span class="fc" id="L58">    SEED_PL_COLORS.put(&quot;yellow1&quot;, &quot;#fdeea5&quot;);</span>
+<span class="fc" id="L59">    SEED_PL_COLORS.put(&quot;yellow2&quot;, &quot;#f5ce32&quot;);</span>
+<span class="fc" id="L60">    SEED_PL_COLORS.put(&quot;yellow3&quot;, &quot;#d6a100&quot;);</span>
+<span class="fc" id="L61">    SEED_PL_COLORS.put(&quot;orange1&quot;, &quot;#ffdcb5&quot;);</span>
+<span class="fc" id="L62">    SEED_PL_COLORS.put(&quot;orange2&quot;, &quot;#ff926b&quot;);</span>
+<span class="fc" id="L63">    SEED_PL_COLORS.put(&quot;orange3&quot;, &quot;#c3522b&quot;);</span>
+<span class="fc" id="L64">    SEED_PL_COLORS.put(&quot;brown1&quot;, &quot;#e6bfa8&quot;);</span>
+<span class="fc" id="L65">    SEED_PL_COLORS.put(&quot;brown2&quot;, &quot;#c0957c&quot;);</span>
+<span class="fc" id="L66">    SEED_PL_COLORS.put(&quot;brown3&quot;, &quot;#7d5640&quot;);</span>
+<span class="fc" id="L67">    SEED_PL_COLORS.put(&quot;gray1&quot;, &quot;#e0e0e0&quot;);</span>
+<span class="fc" id="L68">    SEED_PL_COLORS.put(&quot;gray2&quot;, &quot;#909090&quot;);</span>
+<span class="fc" id="L69">    SEED_PL_COLORS.put(&quot;gray3&quot;, &quot;#505050&quot;);</span>
+<span class="fc" id="L70">  }</span>
+
+  @Value(&quot;#{'${app.admin.emails}'.split(',')}&quot;)
+  List&lt;String&gt; adminEmails;
+
+  @Autowired AdminRepository adminRepository;
+
+  @Autowired CourseRepository courseRepository;
+
+  @Autowired PlColorRepository plColorRepository;
+
+  @Autowired JdbcTemplate jdbcTemplate;
+
+  public void alwaysRunOnStartup() {
+<span class="fc" id="L84">    log.info(&quot;ScaffoldStartup.alwaysRunOnStartup called&quot;);</span>
+
+    try {
+<span class="fc" id="L87">      adminEmails.forEach(</span>
+          (email) -&gt; {
+<span class="fc" id="L89">            Admin admin = new Admin(email.strip());</span>
+<span class="fc" id="L90">            adminRepository.save(admin);</span>
+<span class="fc" id="L91">          });</span>
+<span class="fc" id="L92">    } catch (Exception e) {</span>
+<span class="fc" id="L93">      log.error(&quot;Error loading ADMIN_EMAILS into admins table:&quot;, e);</span>
+<span class="fc" id="L94">    }</span>
+
+    // Temporary demo/test seed data for the concept graph feature. This creates course 1
+    // (if it doesn't already exist) and loads db/seed/concepts.sql, ignoring errors for
+    // records that already exist. Remove this once the app is past the demo/testing stage.
+    try {
+<span class="fc" id="L100">      seedCourseOne();</span>
+<span class="fc" id="L101">      seedConceptsSqlFile();</span>
+<span class="fc" id="L102">    } catch (Exception e) {</span>
+<span class="fc" id="L103">      log.error(&quot;Error seeding concept graph demo data:&quot;, e);</span>
+<span class="fc" id="L104">    }</span>
+
+    try {
+<span class="fc" id="L107">      seedPlColors();</span>
+<span class="fc" id="L108">    } catch (Exception e) {</span>
+<span class="fc" id="L109">      log.error(&quot;Error seeding pl_color table:&quot;, e);</span>
+<span class="fc" id="L110">    }</span>
+<span class="fc" id="L111">  }</span>
+
+  private void seedPlColors() {
+<span class="fc" id="L114">    SEED_PL_COLORS.forEach(</span>
+        (colorName, hexCode) -&gt; {
+<span class="fc bfc" id="L116" title="All 2 branches covered.">          if (!plColorRepository.existsById(colorName)) {</span>
+<span class="fc" id="L117">            plColorRepository.save(PlColor.builder().colorName(colorName).hexCode(hexCode).build());</span>
+          }
+<span class="fc" id="L119">        });</span>
+<span class="fc" id="L120">  }</span>
+
+  private void seedCourseOne() {
+<span class="fc bfc" id="L123" title="All 2 branches covered.">    if (courseRepository.existsById(SEED_COURSE_ID)) {</span>
+<span class="fc" id="L124">      return;</span>
+    }
+    Course course =
+<span class="fc" id="L127">        Course.builder()</span>
+<span class="fc" id="L128">            .courseName(&quot;CMPSC 8&quot;)</span>
+<span class="fc" id="L129">            .instructorEmail(&quot;phtcon@ucsb.edu&quot;)</span>
+<span class="fc" id="L130">            .term(&quot;S26&quot;)</span>
+<span class="fc" id="L131">            .school(School.UCSB)</span>
+<span class="fc" id="L132">            .build();</span>
+<span class="fc" id="L133">    courseRepository.save(course);</span>
+<span class="fc" id="L134">    log.info(&quot;Created seed course: CMPSC 8&quot;);</span>
+<span class="fc" id="L135">  }</span>
+
+  private void seedConceptsSqlFile() throws IOException {
+    // Subconcepts have a NULL name, so re-running the seed script would not trip the
+    // (course_id, name) unique constraint and would insert duplicates; skip the whole
+    // script once any concepts exist for the seed course.
+<span class="fc bfc" id="L141" title="All 2 branches covered.">    if (seedConceptsAlreadyPresent()) {</span>
+<span class="fc" id="L142">      return;</span>
+    }
+<span class="fc" id="L144">    String sql =</span>
+<span class="fc" id="L145">        StreamUtils.copyToString(</span>
+<span class="fc" id="L146">            new ClassPathResource(SEED_DATA_RESOURCE).getInputStream(), StandardCharsets.UTF_8);</span>
+<span class="fc" id="L147">    executeSeedStatements(sql);</span>
+<span class="fc" id="L148">  }</span>
+
+  boolean seedConceptsAlreadyPresent() {
+<span class="fc" id="L151">    Integer count =</span>
+<span class="fc" id="L152">        jdbcTemplate.queryForObject(</span>
+            &quot;SELECT COUNT(*) FROM concepts WHERE course_id = ?&quot;, Integer.class, SEED_COURSE_ID);
+<span class="fc bfc" id="L154" title="All 4 branches covered.">    return count != null &amp;&amp; count &gt; 0;</span>
+  }
+
+  void executeSeedStatements(String sql) {
+<span class="fc bfc" id="L158" title="All 2 branches covered.">    for (String rawStatement : splitSqlStatements(sql)) {</span>
+<span class="fc" id="L159">      String cleaned = stripLeadingCommentsAndBlankLines(rawStatement);</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">      if (cleaned.isEmpty()) {</span>
+<span class="fc" id="L161">        continue;</span>
+      }
+      try {
+<span class="fc" id="L164">        jdbcTemplate.execute(cleaned);</span>
+<span class="fc" id="L165">      } catch (DataAccessException e) {</span>
+<span class="fc" id="L166">        log.debug(&quot;Skipping seed statement (likely already applied): {}&quot;, e.getMessage());</span>
+<span class="fc" id="L167">      }</span>
+<span class="fc" id="L168">    }</span>
+<span class="fc" id="L169">  }</span>
+
+  /**
+   * Removes leading blank and &quot;--&quot; comment lines from a single SQL statement, since those aren't
+   * separated from the following real statement by their own semicolon and would otherwise end up
+   * glued to the front of it. Only LEADING lines are removed (stopping at the first line of real
+   * content) so that a blank line inside a multi-paragraph string value later in the same statement
+   * is left untouched.
+   */
+  static String stripLeadingCommentsAndBlankLines(String statement) {
+<span class="fc" id="L179">    String[] lines = statement.split(&quot;\n&quot;, -1);</span>
+<span class="fc" id="L180">    int start = 0;</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">    while (start &lt; lines.length) {</span>
+<span class="fc" id="L182">      String trimmedLine = lines[start].strip();</span>
+<span class="fc bfc" id="L183" title="All 4 branches covered.">      if (trimmedLine.isEmpty() || trimmedLine.startsWith(&quot;--&quot;)) {</span>
+<span class="fc" id="L184">        start++;</span>
+      } else {
+        break;
+      }
+<span class="fc" id="L188">    }</span>
+<span class="fc" id="L189">    String result = String.join(&quot;\n&quot;, Arrays.copyOfRange(lines, start, lines.length));</span>
+<span class="fc" id="L190">    return result.strip();</span>
+  }
+
+  /**
+   * Splits a SQL script into individual statements on top-level semicolons, ignoring semicolons
+   * that appear inside single-quoted string literals (including '' escaped quotes, since a pair of
+   * quote-toggles cancels out and leaves the parser in the correct state).
+   */
+  static List&lt;String&gt; splitSqlStatements(String sql) {
+<span class="fc" id="L199">    List&lt;String&gt; statements = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L200">    StringBuilder current = new StringBuilder();</span>
+<span class="fc" id="L201">    boolean inSingleQuotedString = false;</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">    for (int i = 0; i &lt; sql.length(); i++) {</span>
+<span class="fc" id="L203">      char c = sql.charAt(i);</span>
+<span class="fc" id="L204">      current.append(c);</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">      if (c == '\'') {</span>
+<span class="fc bfc" id="L206" title="All 2 branches covered.">        inSingleQuotedString = !inSingleQuotedString;</span>
+<span class="fc bfc" id="L207" title="All 4 branches covered.">      } else if (c == ';' &amp;&amp; !inSingleQuotedString) {</span>
+<span class="fc" id="L208">        statements.add(current.toString());</span>
+<span class="fc" id="L209">        current.setLength(0);</span>
+      }
+    }
+<span class="fc bfc" id="L212" title="All 2 branches covered.">    if (!current.toString().isBlank()) {</span>
+<span class="fc" id="L213">      statements.add(current.toString());</span>
+    }
+<span class="fc" id="L215">    return statements;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

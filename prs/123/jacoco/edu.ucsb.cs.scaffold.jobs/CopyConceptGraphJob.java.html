@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CopyConceptGraphJob.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">scaffold</a> &gt; <a href="index.source.html" class="el_package">edu.ucsb.cs.scaffold.jobs</a> &gt; <span class="el_source">CopyConceptGraphJob.java</span></div><h1>CopyConceptGraphJob.java</h1><pre class="source lang-java linenums">package edu.ucsb.cs.scaffold.jobs;
+
+import edu.ucsb.cs.scaffold.entity.Course;
+import edu.ucsb.cs.scaffold.entity.User;
+import edu.ucsb.cs.scaffold.repository.AdminRepository;
+import edu.ucsb.cs.scaffold.repository.CourseRepository;
+import edu.ucsb.cs.scaffold.repository.UserRepository;
+import edu.ucsb.cs.scaffold.services.ConceptYamlService;
+import edu.ucsb.cs156.jobs.services.JobContext;
+import edu.ucsb.cs156.jobs.services.JobContextConsumer;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import lombok.Builder;
+
+/**
+ * Copies one course's entire concept-graph content (concepts, subconcepts, prerequisite edges, and
+ * practice problems) into another course, replacing ALL of the destination course's content and
+ * clearing every user's saved per-course scaffold state for that course.
+ *
+ * &lt;p&gt;Implemented as an in-memory YAML export of the &quot;from&quot; course immediately followed by a YAML
+ * import into the &quot;to&quot; course (see docs/yaml-format.md), so this job cannot drift from the behavior
+ * of the download/upload endpoints in {@link
+ * edu.ucsb.cs.scaffold.controller.ConceptsYamlController}: the same code performs both, and any
+ * future bug fix in {@link ConceptYamlService} applies to this job automatically.
+ *
+ * &lt;p&gt;Before copying anything, the job verifies that both courses exist and that the launching user
+ * has admin or instructor/staff level access to both; otherwise it logs an error and terminates
+ * without touching either course.
+ */
+@Builder
+public class CopyConceptGraphJob implements JobContextConsumer {
+
+  private long userId;
+  private Long fromCourseId;
+  private Long toCourseId;
+  private UserRepository userRepository;
+  private CourseRepository courseRepository;
+  private AdminRepository adminRepository;
+  private ConceptYamlService conceptYamlService;
+
+  @Override
+  public String getScopeType() {
+<span class="fc" id="L47">    return &quot;course&quot;;</span>
+  }
+
+  @Override
+  public Long getScopeId() {
+<span class="fc" id="L52">    return toCourseId;</span>
+  }
+
+  @Override
+  public void accept(JobContext ctx) throws Exception {
+<span class="fc" id="L57">    ctx.log(</span>
+<span class="fc" id="L58">        &quot;Copying concept graph from course %d to course %d&quot;.formatted(fromCourseId, toCourseId));</span>
+
+<span class="fc" id="L60">    Optional&lt;Course&gt; fromCourse = courseRepository.findById(fromCourseId);</span>
+<span class="fc" id="L61">    Optional&lt;Course&gt; toCourse = courseRepository.findById(toCourseId);</span>
+<span class="fc" id="L62">    List&lt;String&gt; missingCourses = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">    if (fromCourse.isEmpty()) {</span>
+<span class="fc" id="L64">      missingCourses.add(&quot;from course id %d&quot;.formatted(fromCourseId));</span>
+    }
+<span class="fc bfc" id="L66" title="All 2 branches covered.">    if (toCourse.isEmpty()) {</span>
+<span class="fc" id="L67">      missingCourses.add(&quot;to course id %d&quot;.formatted(toCourseId));</span>
+    }
+<span class="fc bfc" id="L69" title="All 2 branches covered.">    if (!missingCourses.isEmpty()) {</span>
+<span class="fc" id="L70">      throw new Exception(</span>
+          &quot;Cannot copy concept graph: %s not found&quot;
+<span class="fc" id="L72">              .formatted(String.join(&quot; and &quot;, missingCourses)));</span>
+    }
+
+<span class="fc" id="L75">    User user =</span>
+        userRepository
+<span class="fc" id="L77">            .findById(userId)</span>
+<span class="fc" id="L78">            .orElseThrow(</span>
+                () -&gt;
+<span class="fc" id="L80">                    new Exception(</span>
+<span class="fc" id="L81">                        &quot;Cannot copy concept graph: user %d not found&quot;.formatted(userId)));</span>
+
+<span class="fc bfc" id="L83" title="All 2 branches covered.">    if (!hasManagePermissions(user, fromCourse.get())) {</span>
+<span class="fc" id="L84">      throw new Exception(</span>
+          (&quot;Cannot copy concept graph: user %s does not have admin or instructor/staff access&quot;
+                  + &quot; to the from course (id %d)&quot;)
+<span class="fc" id="L87">              .formatted(user.getEmail(), fromCourseId));</span>
+    }
+<span class="fc bfc" id="L89" title="All 2 branches covered.">    if (!hasManagePermissions(user, toCourse.get())) {</span>
+<span class="fc" id="L90">      throw new Exception(</span>
+          (&quot;Cannot copy concept graph: user %s does not have admin or instructor/staff access&quot;
+                  + &quot; to the to course (id %d)&quot;)
+<span class="fc" id="L93">              .formatted(user.getEmail(), toCourseId));</span>
+    }
+
+<span class="fc" id="L96">    String yaml = conceptYamlService.createYAML(fromCourseId);</span>
+<span class="fc" id="L97">    Map&lt;String, Object&gt; report =</span>
+<span class="fc" id="L98">        conceptYamlService.replaceFromYAML(</span>
+<span class="fc" id="L99">            toCourseId, new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));</span>
+
+<span class="fc bfc" id="L101" title="All 2 branches covered.">    if (!Boolean.TRUE.equals(report.get(&quot;success&quot;))) {</span>
+<span class="fc" id="L102">      throw new Exception(&quot;Failed to copy concept graph: %s&quot;.formatted(report.get(&quot;errors&quot;)));</span>
+    }
+
+<span class="fc" id="L105">    ctx.log(</span>
+        (&quot;Copied concept graph: %s concepts, %s subconcepts, %s edges, %s practice problems&quot;
+                + &quot; created; %s user states cleared&quot;)
+<span class="fc" id="L108">            .formatted(</span>
+<span class="fc" id="L109">                report.get(&quot;conceptsCreated&quot;),</span>
+<span class="fc" id="L110">                report.get(&quot;subconceptsCreated&quot;),</span>
+<span class="fc" id="L111">                report.get(&quot;edgesCreated&quot;),</span>
+<span class="fc" id="L112">                report.get(&quot;practiceProblemsCreated&quot;),</span>
+<span class="fc" id="L113">                report.get(&quot;userStatesCleared&quot;)));</span>
+<span class="fc" id="L114">  }</span>
+
+  private boolean hasManagePermissions(User user, Course course) {
+<span class="fc" id="L117">    String email = user.getEmail();</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">    if (adminRepository.existsByEmail(email)) {</span>
+<span class="fc" id="L119">      return true;</span>
+    }
+<span class="fc bfc" id="L121" title="All 2 branches covered.">    if (course.getCourseStaff() != null</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        &amp;&amp; course.getCourseStaff().stream().anyMatch(staff -&gt; email.equals(staff.getEmail()))) {</span>
+<span class="fc" id="L123">      return true;</span>
+    }
+<span class="fc" id="L125">    return email.equals(course.getInstructorEmail());</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
