@@ -204,12 +204,9 @@ public class AdminsControllerTests extends ControllerTestCase {
 
     List<AdminsController.UserDTO> expectedUsers =
         List.of(
-            new AdminsController.UserDTO(
-                3L, "Ivy", "Instructor", "ins@ucsb.edu", false, true),
-            new AdminsController.UserDTO(
-                7L, "Alice", "Admin", "acdamstedt@ucsb.edu", true, false),
-            new AdminsController.UserDTO(
-                11L, "Stu", "Dent", "student@ucsb.edu", false, false));
+            new AdminsController.UserDTO(3L, "Ivy", "Instructor", "ins@ucsb.edu", false, true),
+            new AdminsController.UserDTO(7L, "Alice", "Admin", "acdamstedt@ucsb.edu", true, false),
+            new AdminsController.UserDTO(11L, "Stu", "Dent", "student@ucsb.edu", false, false));
 
     when(adminRepository.findAll()).thenReturn(List.of(repoAdmin));
     when(instructorRepository.findAll()).thenReturn(List.of(instructor));

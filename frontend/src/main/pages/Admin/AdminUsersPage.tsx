@@ -69,7 +69,9 @@ export default function AdminUsersPage(): React.JSX.Element {
           <Pagination.Next
             data-testid="AdminUsersPage-next"
             disabled={currentPageIndex >= pageCount - 1}
-            onClick={() => setPageIndex(Math.min(currentPageIndex + 1, pageCount - 1))}
+            onClick={() =>
+              setPageIndex(Math.min(currentPageIndex + 1, pageCount - 1))
+            }
           />
         </Pagination>
       </div>

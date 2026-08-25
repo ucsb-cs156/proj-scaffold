@@ -58,15 +58,17 @@ describe("AdminUsersPage tests", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("UsersTable-cell-row-0-col-email")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("UsersTable-cell-row-0-col-email"),
+      ).toBeInTheDocument();
     });
 
-    expect(screen.getByTestId("UsersTable-cell-row-0-col-email")).toHaveTextContent(
-      "user1@example.com",
-    );
-    expect(screen.getByTestId("UsersTable-cell-row-9-col-email")).toHaveTextContent(
-      "user10@example.com",
-    );
+    expect(
+      screen.getByTestId("UsersTable-cell-row-0-col-email"),
+    ).toHaveTextContent("user1@example.com");
+    expect(
+      screen.getByTestId("UsersTable-cell-row-9-col-email"),
+    ).toHaveTextContent("user10@example.com");
     expect(screen.queryByText("user11@example.com")).not.toBeInTheDocument();
 
     const pageSize = screen.getByTestId("AdminUsersPage-page-size");
@@ -132,7 +134,9 @@ describe("AdminUsersPage tests", () => {
       expect(screen.getByText("user1@example.com")).toBeInTheDocument();
     });
     expect(screen.getByText("user12@example.com")).toBeInTheDocument();
-    expect(screen.queryByTestId("AdminUsersPage-page-2")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("AdminUsersPage-page-2"),
+    ).not.toBeInTheDocument();
   });
 
   test("useBackend is called with correct cache query key", () => {
