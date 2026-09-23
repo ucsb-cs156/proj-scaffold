@@ -494,7 +494,8 @@ public class ConceptYamlServiceTests {
     when(practiceProblemRepository.findByCourseId(42L)).thenReturn(List.of());
     when(userStateRepository.findByCourseId(42L)).thenReturn(List.of());
 
-    String yaml = """
+    String yaml =
+        """
         format: 1
         concepts: []
         """;
@@ -506,13 +507,15 @@ public class ConceptYamlServiceTests {
   @Test
   public void replaceFromYAML_reports_missing_and_unsupported_format() throws Exception {
     Map<String, Object> report =
-        replaceExpectingFailure("""
+        replaceExpectingFailure(
+            """
             concepts: []
             """);
     assertEquals(failureReport(List.of("format is required (expected: format: 1)")), report);
 
     report =
-        replaceExpectingFailure("""
+        replaceExpectingFailure(
+            """
             format: 2
             concepts: []
             """);
@@ -521,7 +524,9 @@ public class ConceptYamlServiceTests {
 
   @Test
   public void replaceFromYAML_reports_missing_concepts_list() throws Exception {
-    Map<String, Object> report = replaceExpectingFailure("""
+    Map<String, Object> report =
+        replaceExpectingFailure(
+            """
             format: 1
             """);
     assertEquals(
