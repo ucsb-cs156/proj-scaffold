@@ -1111,7 +1111,8 @@ public class SyncCourseWithPlRepoJobTests {
     when(githubService.listDirectory(eq(REPO), eq("questions/bad"), eq(TOKEN)))
         .thenReturn(List.of(file("info.json")));
     when(githubService.getFileContent(eq(REPO), eq("questions/bad/info.json"), eq(TOKEN)))
-        .thenReturn("""
+        .thenReturn(
+            """
             { "title": "No uuid here" }\
             """);
     when(plQuestionRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
@@ -1138,9 +1139,11 @@ public class SyncCourseWithPlRepoJobTests {
     when(githubService.listDirectory(eq(REPO), eq("questions/bad"), eq(TOKEN)))
         .thenReturn(List.of(file("info.json")));
     when(githubService.getFileContent(eq(REPO), eq("questions/bad/info.json"), eq(TOKEN)))
-        .thenReturn("""
+        .thenReturn(
+            """
             { "uuid": "%s" }\
-            """.formatted(UUID_1));
+            """
+                .formatted(UUID_1));
     when(plQuestionRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());
 
     job().accept(ctx);
@@ -1155,7 +1158,8 @@ public class SyncCourseWithPlRepoJobTests {
     when(githubService.listDirectory(eq(REPO), eq("questions/bad"), eq(TOKEN)))
         .thenReturn(List.of(file("info.json")));
     when(githubService.getFileContent(eq(REPO), eq("questions/bad/info.json"), eq(TOKEN)))
-        .thenReturn("""
+        .thenReturn(
+            """
             { "uuid": "not-a-uuid", "title": "Bad UUID" }\
             """);
     when(plQuestionRepository.findByPlRepoId(eq(3L))).thenReturn(List.of());

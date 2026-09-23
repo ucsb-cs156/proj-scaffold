@@ -30,7 +30,8 @@ public class LegacyUserActivityControllerTests extends ControllerTestCase {
         .perform(
             post("/api/legacy/user-activity")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
+                .content(
+                    """
                     {"event_type": "click"}
                     """))
         .andExpect(status().isBadRequest());
@@ -42,7 +43,8 @@ public class LegacyUserActivityControllerTests extends ControllerTestCase {
         .perform(
             post("/api/legacy/user-activity")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
+                .content(
+                    """
                     {"userid": 1}
                     """))
         .andExpect(status().isBadRequest());

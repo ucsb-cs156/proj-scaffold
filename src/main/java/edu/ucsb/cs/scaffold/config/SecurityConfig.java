@@ -1,7 +1,5 @@
 package edu.ucsb.cs.scaffold.config;
 
-import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
-
 import edu.ucsb.cs.scaffold.services.GoogleSignInService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -28,7 +26,7 @@ import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -62,7 +60,8 @@ public class SecurityConfig {
         .logout(
             logout ->
                 logout
-                    .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                    .logoutRequestMatcher(
+                        PathPatternRequestMatcher.withDefaults().matcher("/logout"))
                     .logoutSuccessUrl("/"));
     return http.build();
   }
@@ -70,7 +69,9 @@ public class SecurityConfig {
   @Bean
   @Profile({"development", "integration"})
   public WebSecurityCustomizer webSecurityCustomizer() {
-    return web -> web.ignoring().requestMatchers(antMatcher("/h2-console/**"));
+    return web ->
+        web.ignoring()
+            .requestMatchers(PathPatternRequestMatcher.withDefaults().matcher("/h2-console/**"));
   }
 
   @Bean

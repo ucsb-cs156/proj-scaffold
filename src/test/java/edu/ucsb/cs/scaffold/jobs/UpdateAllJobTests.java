@@ -22,7 +22,8 @@ public class UpdateAllJobTests {
     var job = spy(UpdateAllJob.builder().updateUserService(updateUserService).build());
 
     job.accept(ctx);
-    String expected = """
+    String expected =
+        """
                 Processing...
                 Done""";
 
