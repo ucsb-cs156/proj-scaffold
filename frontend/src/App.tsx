@@ -23,6 +23,7 @@ import HomePageLoggedOut from "main/pages/Home/HomePageLoggedOut";
 import AdminJobsPage from "main/pages/Admin/AdminJobsPage";
 import InstructorCourseShowPage from "main/pages/Courses/InstructorCourseShowPage";
 import UserProfilePage from "main/pages/UserProfilePage";
+import AdminUsersPage from "main/pages/Admin/AdminUsersPage";
 
 export default function App() {
   const currentUser = useCurrentUser();
@@ -108,6 +109,16 @@ export default function App() {
           element={
             <ProtectedPage
               component={<AdminCoursesIndexPage />}
+              enforceRole={"ROLE_ADMIN"}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedPage
+              component={<AdminUsersPage />}
               enforceRole={"ROLE_ADMIN"}
               currentUser={currentUser}
             />

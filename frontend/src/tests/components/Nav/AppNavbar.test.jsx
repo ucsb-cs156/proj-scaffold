@@ -124,6 +124,7 @@ describe("AppNavbar tests", () => {
     const adminMenuItems = [
       "Admins",
       "Instructors",
+      "Users",
       "Developer Info",
       "LegacyHomePage",
     ];
@@ -133,6 +134,7 @@ describe("AppNavbar tests", () => {
         expect(screen.getByText(item)).toBeInTheDocument();
       });
     });
+    expect(screen.getByText("Users")).toHaveAttribute("href", "/admin/users");
   });
 
   test("does not render Admin menu for non-admin users", () => {
