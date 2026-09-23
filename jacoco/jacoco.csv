@@ -18,7 +18,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,PLRepoController,0,117,0,6,0,27,0,10,0,
 scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserStateController,0,134,0,8,0,30,0,11,0,7
 scaffold,edu.ucsb.cs.scaffold.controller,PrairieLearnController,0,48,0,0,0,10,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,JobsController,0,136,0,0,0,36,0,10,0,10
-scaffold,edu.ucsb.cs.scaffold.controller,UserStateController.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.controller,UserStateController.new TypeReference() {...},0,8,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.InstructorCourseView,0,85,0,4,0,14,0,4,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.MajorConceptDTO,0,15,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.LevelAssignmentDTO,0,21,0,0,0,1,0,1,0,1
@@ -32,7 +32,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,RosterStudentsController,0,390,0,34,0,9
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateController.UserStateRequest,0,21,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.TopLevelConceptDTO,0,18,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.RemovedEdgeDTO,0,12,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.new TypeReference() {...},0,8,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,UserActivityController.UserActivityRequest,0,15,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,HealthController,0,7,0,0,0,2,0,2,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController.AssessmentDTO,0,21,0,0,0,1,0,1,0,1
@@ -43,7 +43,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserStateController.LegacyUserSta
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.RosterStudentCoursesDTO,0,18,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,AdminsController.AdminDTO,0,18,0,0,0,3,0,2,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.SubConceptTableRowDTO,0,30,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserStateController.new TypeReference() {...},0,3,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserStateController.new TypeReference() {...},0,8,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.ScaffoldResetReportDTO,0,12,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,AssessmentController,0,315,0,28,0,82,0,32,0,18
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.StaffCoursesDTO,0,18,0,0,0,1,0,1,0,1
@@ -79,8 +79,8 @@ scaffold,edu.ucsb.cs.scaffold.enums,CourseOptions,0,15,0,0,0,3,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,ConceptGraphService.ResetResult,0,15,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,ConceptGraphService,0,649,0,56,0,126,0,46,0,18
 scaffold,edu.ucsb.cs.scaffold.services,PatEncryptionService,0,229,0,20,0,50,0,18,0,8
-scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService.new ParameterizedTypeReference() {...},0,3,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService.new ParameterizedTypeReference() {...},0,3,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService.new ParameterizedTypeReference() {...},0,8,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService.new ParameterizedTypeReference() {...},0,8,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,SystemInfoService,0,3,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,UpdateUserService,0,139,0,12,0,36,0,13,0,7
 scaffold,edu.ucsb.cs.scaffold.services,PatEncryptionService.EncryptedPat,0,9,0,0,0,1,0,1,0,1
@@ -90,8 +90,8 @@ scaffold,edu.ucsb.cs.scaffold.services,GithubService.DirectoryEntry,0,9,0,0,0,1,
 scaffold,edu.ucsb.cs.scaffold.services,ApiRetryHelper,0,264,0,14,0,53,0,14,0,7
 scaffold,edu.ucsb.cs.scaffold.services,ApiRetryHelper.ApiUnavailableException,0,4,0,0,0,2,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService.AssessmentInfo,0,30,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.services,MarkdownService.new AbstractVisitor() {...},0,48,0,0,0,15,0,5,0,5
-scaffold,edu.ucsb.cs.scaffold.services,MarkdownService.new AbstractVisitor() {...},0,51,0,4,0,17,0,7,0,5
+scaffold,edu.ucsb.cs.scaffold.services,MarkdownService.new AbstractVisitor() {...},0,53,0,0,0,15,0,5,0,5
+scaffold,edu.ucsb.cs.scaffold.services,MarkdownService.new AbstractVisitor() {...},0,56,0,4,0,17,0,7,0,5
 scaffold,edu.ucsb.cs.scaffold.services,GithubService,0,266,0,10,0,54,0,18,0,13
 scaffold,edu.ucsb.cs.scaffold.services,PatEncryptionService.VersionedKey,0,9,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService.CourseInstanceInfo,0,12,0,0,0,1,0,1,0,1
@@ -99,9 +99,9 @@ scaffold,edu.ucsb.cs.scaffold.services,ConceptGraphService.Position,0,9,0,0,0,1,
 scaffold,edu.ucsb.cs.scaffold.services,ConceptYamlService,0,1239,0,102,0,271,0,71,0,20
 scaffold,edu.ucsb.cs.scaffold.services,JobUserProviderImpl,0,26,0,4,0,5,0,5,0,3
 scaffold,edu.ucsb.cs.scaffold.services,PrairieLearnService,0,251,0,16,0,52,0,16,0,8
-scaffold,edu.ucsb.cs.scaffold.services,GithubService.new ParameterizedTypeReference() {...},0,3,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.services,GithubService.new ParameterizedTypeReference() {...},0,3,0,0,0,1,0,1,0,1
-scaffold,edu.ucsb.cs.scaffold.services,GithubService.new ParameterizedTypeReference() {...},0,3,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.services,GithubService.new ParameterizedTypeReference() {...},0,8,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.services,GithubService.new ParameterizedTypeReference() {...},0,8,0,0,0,1,0,1,0,1
+scaffold,edu.ucsb.cs.scaffold.services,GithubService.new ParameterizedTypeReference() {...},0,8,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.services,MarkdownService,0,352,0,20,0,47,0,18,0,8
 scaffold,edu.ucsb.cs.scaffold.services,ConceptGraphService.TarjanState,0,165,0,10,0,27,0,7,0,2
 scaffold,edu.ucsb.cs.scaffold.jobs,RotatePatKeysJob,0,130,0,4,0,26,0,3,0,1
