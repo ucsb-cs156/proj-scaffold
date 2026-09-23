@@ -20,4 +20,4 @@ repo_name: "TBD"
 repo: ucsb-cs156/proj-scaffold
 owner: ucsb-cs156
 repo_name: proj-scaffold
-pull_requests: [{"author":{"id":"MDQ6VXNlcjExMTkwMTc=","is_bot":false,"login":"pconrad","name":"Phill Conrad"},"headRefName":"pc-spring-boot-3.5.16-java-25","number":127,"title":"Migrate to Spring Boot 3.5.16 and Java 25","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/127"},{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/add-admin-users-page","number":125,"title":"Add admin users index with role-aware user table","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/125"}]
+pull_requests: [{"author":{"is_bot":true,"login":"app/copilot-swe-agent"},"headRefName":"copilot/add-admin-users-page","number":125,"title":"Add admin users index with role-aware user table","url":"https://github.com/ucsb-cs156/proj-scaffold/pull/125"}]
