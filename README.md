@@ -34,6 +34,10 @@ npm install   # first time only
 npm start
 ```
 
+The frontend needs the Node version pinned in `frontend/package.json` (`engines.node`);
+`cd frontend && nvm use` selects it. See [`docs/versions.md`](docs/versions.md) for how to
+update the Java, Node and frontend dependency versions.
+
 The app is available at <http://localhost:8080>. Use port **8080** (not 3000) so that Google OAuth redirects work correctly.
 
 ## Running tests
