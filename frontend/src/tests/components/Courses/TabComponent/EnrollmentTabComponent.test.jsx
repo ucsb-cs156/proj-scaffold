@@ -620,11 +620,13 @@ describe("EnrollmentTabComponent Tests", () => {
     expect(infoIcon).toBeInTheDocument();
     expect(infoIcon).toHaveStyle({ position: "absolute" });
     expect(infoIcon).toHaveStyle({ top: "50%" });
-    expect(infoIcon).toHaveStyle({ right: "0.75rem" });
+    // jsdom 30 resolves rem to px in computed styles, so check the inline
+    // style declaration for the rem-valued properties.
+    expect(infoIcon.style.right).toBe("0.75rem");
     expect(infoIcon).toHaveStyle({ transform: "translateY(-50%)" });
     expect(infoIcon).toHaveStyle({ color: "#fff" });
     expect(infoIcon).toHaveStyle({ cursor: "pointer" });
-    expect(infoIcon).toHaveStyle({ fontSize: "0.9rem" });
+    expect(infoIcon.style.fontSize).toBe("0.9rem");
     expect(infoIcon).toHaveStyle({ userSelect: "none" });
     expect(infoIcon.tagName.toLowerCase()).toBe("svg");
 
