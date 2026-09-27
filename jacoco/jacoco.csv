@@ -1,5 +1,5 @@
 GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-scaffold,edu.ucsb.cs.scaffold.controller,AdminsController,0,82,0,2,0,16,0,8,0,7
+scaffold,edu.ucsb.cs.scaffold.controller,AdminsController,0,134,0,2,0,28,0,10,0,9
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateController.UserStateResponse,0,15,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,LegacyAssessmentController,0,9,0,0,0,2,0,2,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserActivityController,0,58,0,8,0,12,0,6,0,2
@@ -18,6 +18,7 @@ scaffold,edu.ucsb.cs.scaffold.controller,PLRepoController,0,117,0,6,0,27,0,10,0,
 scaffold,edu.ucsb.cs.scaffold.controller,LegacyUserStateController,0,134,0,8,0,30,0,11,0,7
 scaffold,edu.ucsb.cs.scaffold.controller,PrairieLearnController,0,48,0,0,0,10,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,JobsController,0,136,0,0,0,36,0,10,0,10
+scaffold,edu.ucsb.cs.scaffold.controller,AdminsController.UserDTO,0,40,0,0,0,9,0,2,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,UserStateController.new TypeReference() {...},0,8,0,0,0,1,0,1,0,1
 scaffold,edu.ucsb.cs.scaffold.controller,CoursesController.InstructorCourseView,0,85,0,4,0,14,0,4,0,2
 scaffold,edu.ucsb.cs.scaffold.controller,ConceptsController.MajorConceptDTO,0,15,0,0,0,1,0,1,0,1
