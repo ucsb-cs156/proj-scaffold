@@ -14,7 +14,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import edu.ucsb.cs.scaffold.ControllerTestCase;
 import edu.ucsb.cs.scaffold.entity.Admin;
+import edu.ucsb.cs.scaffold.entity.Instructor;
+import edu.ucsb.cs.scaffold.entity.User;
 import edu.ucsb.cs.scaffold.repository.AdminRepository;
+import edu.ucsb.cs.scaffold.repository.InstructorRepository;
 import edu.ucsb.cs.scaffold.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +39,7 @@ import org.springframework.test.web.servlet.MvcResult;
 public class AdminsControllerTests extends ControllerTestCase {
 
   @MockitoBean AdminRepository adminRepository;
+  @MockitoBean InstructorRepository instructorRepository;
   @MockitoBean UserRepository userRepository;
 
   // Authorization tests for post
@@ -68,6 +72,25 @@ public class AdminsControllerTests extends ControllerTestCase {
   @Test
   public void logged_in_admin_can_get_all() throws Exception {
     mockMvc.perform(get("/api/admin/all")).andExpect(status().is(200));
+  }
+
+  // Authorization tests for get users
+
+  @Test
+  public void logged_out_users_cannot_get_users() throws Exception {
+    mockMvc.perform(get("/api/admin/users")).andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_users_cannot_get_users() throws Exception {
+    mockMvc.perform(get("/api/admin/users")).andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void logged_in_admin_can_get_users() throws Exception {
+    mockMvc.perform(get("/api/admin/users")).andExpect(status().is(200));
   }
 
   // Authorization tests for delete
@@ -147,6 +170,64 @@ public class AdminsControllerTests extends ControllerTestCase {
 
     verify(adminRepository, times(1)).findAll();
     String expectedJson = mapper.writeValueAsString(expectedAdminDTOs);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void logged_in_admin_can_get_all_users_with_roles() throws Exception {
+    User repoAdminUser =
+        User.builder()
+            .id(5L)
+            .email("repoadmin@ucsb.edu")
+            .givenName("Rae")
+            .familyName("Poadmin")
+            .build();
+    User adminUser =
+        User.builder()
+            .id(7L)
+            .email("acdamstedt@ucsb.edu")
+            .givenName("Alice")
+            .familyName("Admin")
+            .build();
+    User instructorUser =
+        User.builder()
+            .id(3L)
+            .email("ins@ucsb.edu")
+            .givenName("Ivy")
+            .familyName("Instructor")
+            .build();
+    User studentUser =
+        User.builder()
+            .id(11L)
+            .email("student@ucsb.edu")
+            .givenName("Stu")
+            .familyName("Dent")
+            .build();
+
+    Admin repoAdmin = Admin.builder().email("repoadmin@ucsb.edu").build();
+    Instructor instructor = Instructor.builder().email("ins@ucsb.edu").build();
+
+    List<AdminsController.UserDTO> expectedUsers =
+        List.of(
+            new AdminsController.UserDTO(3L, "Ivy", "Instructor", "ins@ucsb.edu", false, true),
+            new AdminsController.UserDTO(5L, "Rae", "Poadmin", "repoadmin@ucsb.edu", true, false),
+            new AdminsController.UserDTO(7L, "Alice", "Admin", "acdamstedt@ucsb.edu", true, false),
+            new AdminsController.UserDTO(11L, "Stu", "Dent", "student@ucsb.edu", false, false));
+
+    when(adminRepository.findAll()).thenReturn(List.of(repoAdmin));
+    when(instructorRepository.findAll()).thenReturn(List.of(instructor));
+    when(userRepository.findAll())
+        .thenReturn(List.of(studentUser, adminUser, repoAdminUser, instructorUser));
+
+    MvcResult response =
+        mockMvc.perform(get("/api/admin/users")).andExpect(status().isOk()).andReturn();
+
+    verify(adminRepository, times(1)).findAll();
+    verify(instructorRepository, times(1)).findAll();
+    verify(userRepository, times(1)).findAll();
+    String expectedJson = mapper.writeValueAsString(expectedUsers);
     String responseString = response.getResponse().getContentAsString();
     assertEquals(expectedJson, responseString);
   }
