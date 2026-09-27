@@ -1615,8 +1615,8 @@
 <span class="cline-any cline-yes">291x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">291x</span>
-<span class="cline-any cline-yes">291x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">291x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">291x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1787,10 +1787,10 @@
 <span class="cline-any cline-yes">291x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">291x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">291x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">291x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">291x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1915,8 +1915,8 @@
 <span class="cline-any cline-yes">77x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">291x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">291x</span>
 <span class="cline-any cline-yes">291x</span>
 <span class="cline-any cline-yes">75x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -3543,8 +3543,8 @@ function ConceptGraphPageContent() {
     );
     <span class="missing-if-branch" title="else path not taken" >E</span>if (editableConcept) return editableConcept;
 &nbsp;
-    const fallbackConcept = <span class="cstat-no" title="statement not covered" >majorConcepts.find(</span>
-<span class="fstat-no" title="function not covered" >      (c</span>oncept) =&gt; <span class="cstat-no" title="statement not covered" >concept.id === conceptModalState.conceptId,</span>
+    const fallbackConcept = <span class="cstat-no" title="statement not covered" >majorConcepts.<span class="fstat-no" title="function not covered" >find(</span></span>
+      (concept) =&gt; <span class="cstat-no" title="statement not covered" >concept.id === conceptModalState.conceptId,</span>
     );
     const fallbackContent = <span class="cstat-no" title="statement not covered" >conceptContent[String(conceptModalState.conceptId)];</span>
 <span class="cstat-no" title="statement not covered" >    return {</span>
@@ -3562,8 +3562,8 @@ function ConceptGraphPageContent() {
         editableConcepts.find(
           (concept) =&gt; concept.id === subConceptModalState.parentConceptId,
         ) ??
-<span class="branch-1 cbranch-no" title="branch not covered" >        majorConcepts.find(</span>
-<span class="fstat-no" title="function not covered" >          (c</span>oncept) =&gt; <span class="cstat-no" title="statement not covered" >concept.id === subConceptModalState.parentConceptId,</span>
+<span class="branch-1 cbranch-no" title="branch not covered" >        majorConcepts.<span class="fstat-no" title="function not covered" >find(</span></span>
+          (concept) =&gt; <span class="cstat-no" title="statement not covered" >concept.id === subConceptModalState.parentConceptId,</span>
         );
 &nbsp;
       return {
@@ -3587,13 +3587,13 @@ function ConceptGraphPageContent() {
       };
     }
 &nbsp;
-    const fallbackParent = <span class="cstat-no" title="statement not covered" >majorConcepts.find(<span class="fstat-no" title="function not covered" >(c</span>oncept) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >      concept.subconcepts.some(</span>
-<span class="fstat-no" title="function not covered" >        (s</span>ubconcept) =&gt; <span class="cstat-no" title="statement not covered" >subconcept.id === subConceptModalState.subConceptId,</span>
+    const fallbackParent = <span class="cstat-no" title="statement not covered" >majorConcepts.<span class="fstat-no" title="function not covered" >find((c</span>oncept) =&gt;</span>
+<span class="cstat-no" title="statement not covered" >      concept.subconcepts.<span class="fstat-no" title="function not covered" >some(</span></span>
+        (subconcept) =&gt; <span class="cstat-no" title="statement not covered" >subconcept.id === subConceptModalState.subConceptId,</span>
       ),
     );
-    const fallbackSubconcept = <span class="cstat-no" title="statement not covered" >fallbackParent?.subconcepts.find(</span>
-<span class="fstat-no" title="function not covered" >      (s</span>ubconcept) =&gt; <span class="cstat-no" title="statement not covered" >subconcept.id === subConceptModalState.subConceptId,</span>
+    const fallbackSubconcept = <span class="cstat-no" title="statement not covered" >fallbackParent?.subconcepts.<span class="fstat-no" title="function not covered" >find(</span></span>
+      (subconcept) =&gt; <span class="cstat-no" title="statement not covered" >subconcept.id === subConceptModalState.subConceptId,</span>
     );
     const fallbackContent =
       conceptContent[String(subConceptModalState.subConceptId)];
@@ -3612,8 +3612,8 @@ function ConceptGraphPageContent() {
     conceptContent,
   ]);
 &nbsp;
-  const createConceptMutation = useBackendMutation(
-<span class="fstat-no" title="function not covered" >    (c</span>oncept: EditableConcept) =&gt; (<span class="cstat-no" title="statement not covered" >{</span>
+  const createConceptMutation = <span class="fstat-no" title="function not covered" >useBackendMutation(</span>
+    (concept: EditableConcept) =&gt; (<span class="cstat-no" title="statement not covered" >{</span>
       url: "/api/concept",
       method: "POST",
       data: {
@@ -3633,8 +3633,8 @@ function ConceptGraphPageContent() {
     conceptMutationInvalidations,
   );
 &nbsp;
-  const updateConceptMutation = useBackendMutation(
-<span class="fstat-no" title="function not covered" >    (c</span>oncept: EditableConcept) =&gt; (<span class="cstat-no" title="statement not covered" >{</span>
+  const updateConceptMutation = <span class="fstat-no" title="function not covered" >useBackendMutation(</span>
+    (concept: EditableConcept) =&gt; (<span class="cstat-no" title="statement not covered" >{</span>
       url: `/api/concept/put?conceptId=${
         conceptModalState?.mode === "edit" ? conceptModalState.conceptId : ""
       }`,
@@ -3654,8 +3654,8 @@ function ConceptGraphPageContent() {
     conceptMutationInvalidations,
   );
 &nbsp;
-  const createSubconceptMutation = useBackendMutation(
-<span class="fstat-no" title="function not covered" >    (s</span>ubconcept: EditableSubconcept) =&gt; (<span class="cstat-no" title="statement not covered" >{</span>
+  const createSubconceptMutation = <span class="fstat-no" title="function not covered" >useBackendMutation(</span>
+    (subconcept: EditableSubconcept) =&gt; (<span class="cstat-no" title="statement not covered" >{</span>
       url: "/api/concept/subconcept",
       method: "POST",
       data: {
@@ -3675,8 +3675,8 @@ function ConceptGraphPageContent() {
     subConceptMutationInvalidations,
   );
 &nbsp;
-  const updateSubconceptMutation = useBackendMutation(
-<span class="fstat-no" title="function not covered" >    (s</span>ubconcept: EditableSubconcept) =&gt; (<span class="cstat-no" title="statement not covered" >{</span>
+  const updateSubconceptMutation = <span class="fstat-no" title="function not covered" >useBackendMutation(</span>
+    (subconcept: EditableSubconcept) =&gt; (<span class="cstat-no" title="statement not covered" >{</span>
       url: `/api/concept/subconcept/put?conceptId=${
         subConceptModalState?.mode === "edit"
           ? subConceptModalState.subConceptId
@@ -4020,11 +4020,11 @@ function ConceptGraphPageContent() {
         &lt;/div&gt;
         &lt;ConceptModal
           showModal={conceptModalState !== null}
-          toggleShowModal={<span class="fstat-no" title="function not covered" >(s</span>how: boolean) =&gt; {
+<span class="fstat-no" title="function not covered" >          toggleShowModal={(s</span>how: boolean) =&gt; {
 <span class="cstat-no" title="statement not covered" >            if (!show) <span class="cstat-no" title="statement not covered" >setConceptModalState(null);</span></span>
           }}
           initialContents={conceptModalInitialContents}
-          onSubmitAction={<span class="fstat-no" title="function not covered" >(c</span>oncept: EditableConcept) =&gt;
+<span class="fstat-no" title="function not covered" >          onSubmitAction={(c</span>oncept: EditableConcept) =&gt;
 <span class="cstat-no" title="statement not covered" >            conceptModalState?.mode === "edit"</span>
               ? updateConceptMutation.mutate(concept)
               : createConceptMutation.mutate(concept)
@@ -4038,11 +4038,11 @@ function ConceptGraphPageContent() {
         /&gt;
         &lt;SubConceptModal
           showModal={subConceptModalState !== null}
-          toggleShowModal={<span class="fstat-no" title="function not covered" >(s</span>how: boolean) =&gt; {
+<span class="fstat-no" title="function not covered" >          toggleShowModal={(s</span>how: boolean) =&gt; {
 <span class="cstat-no" title="statement not covered" >            if (!show) <span class="cstat-no" title="statement not covered" >setSubConceptModalState(null);</span></span>
           }}
           initialContents={subConceptModalInitialContents}
-          onSubmitAction={<span class="fstat-no" title="function not covered" >(s</span>ubconcept: EditableSubconcept) =&gt;
+<span class="fstat-no" title="function not covered" >          onSubmitAction={(s</span>ubconcept: EditableSubconcept) =&gt;
 <span class="cstat-no" title="statement not covered" >            subConceptModalState?.mode === "edit"</span>
               ? updateSubconceptMutation.mutate(subconcept)
               : createSubconceptMutation.mutate(subconcept)
@@ -4378,7 +4378,7 @@ function ConceptGraphPageContent() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-08-22T16:55:11.069Z
+                at 2026-09-27T22:31:05.048Z
             </div>
         <script src="../prettify.js"></script>
         <script>

@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.73% </span>
+                <span class="strong">94.75% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>216/228</span>
+                <span class='fraction'>217/229</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">92.95% </span>
+                <span class="strong">93.05% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>66/71</span>
+                <span class='fraction'>67/72</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.51% </span>
+                <span class="strong">96.53% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>194/201</span>
+                <span class='fraction'>195/202</span>
             </div>
         
             
@@ -2044,7 +2044,7 @@
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2302,7 +2302,7 @@ function toPastel(hex: string, strength: number = 0.35): string {
   return `rgb(${pr}, ${pg}, ${pb})`;
 }
 &nbsp;
-const DeleteDetailContext = createContext&lt;(id: string) =&gt; void&gt;(<span class="fstat-no" title="function not covered" >() =&gt; {</span>});
+const DeleteDetailContext = <span class="fstat-no" title="function not covered" >createContext&lt;(id: string) =&gt; void&gt;(() =&gt; {</span>});
 const ConceptContentContext = createContext&lt;Record&lt;string, ConceptContentDTO&gt;&gt;(
   {},
 );
@@ -2310,9 +2310,9 @@ const ConceptContentContext = createContext&lt;Record&lt;string, ConceptContentD
 // a new order (nodeId is the parent's React Flow node id, i.e. its numeric
 // concept id as a string). Provided by ScaffoldConceptGraph, which updates the node's
 // data and notifies the page so it can persist the order.
-const SubconceptReorderContext = createContext&lt;
+const SubconceptReorderContext = <span class="fstat-no" title="function not covered" >createContext&lt;</span>
   (nodeId: string, reordered: SubconceptLike[]) =&gt; void
-&gt;(<span class="fstat-no" title="function not covered" >() =&gt; {</span>});
+&gt;(() =&gt; {});
 &nbsp;
 function MajorNode({ data, id }: NodeProps) {
   const color = data.color as string;
@@ -2423,7 +2423,7 @@ function MajorNode({ data, id }: NodeProps) {
             e.stopPropagation();
             onStarClick();
           }}
-          onDoubleClick={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >e.stopPropagation()}</span>
+<span class="fstat-no" title="function not covered" >          onDoubleClick={(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >e.stopPropagation()}</span>
           style={{
             position: "absolute",
             top: 12,
@@ -2534,7 +2534,7 @@ function MajorNode({ data, id }: NodeProps) {
                   e.stopPropagation();
                   onSubconceptMastered?.(sub.labelHtml);
                 }}
-                onDoubleClick={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >e.stopPropagation()}</span>
+<span class="fstat-no" title="function not covered" >                onDoubleClick={(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >e.stopPropagation()}</span>
                 style={{
                   position: "absolute",
                   left: 6,
@@ -3175,7 +3175,7 @@ export default function ScaffoldConceptGraph({
 <span class="branch-1 cbranch-no" title="branch not covered" >          change.dragging === false &amp;&amp;</span>
 <span class="branch-2 cbranch-no" title="branch not covered" >          change.position</span>
         ) {
-          const node = <span class="cstat-no" title="statement not covered" >nodesRef.current.find(<span class="fstat-no" title="function not covered" >(n</span>) =&gt; <span class="cstat-no" title="statement not covered" >n.id === change.id)</span>;</span>
+          const node = <span class="cstat-no" title="statement not covered" >nodesRef.current.<span class="fstat-no" title="function not covered" >find((n</span>) =&gt; <span class="cstat-no" title="statement not covered" >n.id === change.id)</span>;</span>
 <span class="cstat-no" title="statement not covered" >          if (node?.type === "detail") {</span>
 <span class="cstat-no" title="statement not covered" >            onDetailMoved?.(</span>
               node.data.cardType as string,
@@ -3183,7 +3183,7 @@ export default function ScaffoldConceptGraph({
               change.position.x,
               change.position.y,
             );
-<span class="cstat-no" title="statement not covered" >          } else if (node?.type === "major") {</span>
+          } else <span class="cstat-no" title="statement not covered" >if (node?.type === "major") {</span>
 <span class="cstat-no" title="statement not covered" >            onMajorMoved?.(node.id, change.position.x, change.position.y);</span>
           }
         }
@@ -3250,7 +3250,7 @@ export default function ScaffoldConceptGraph({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-08-22T16:55:11.069Z
+                at 2026-09-27T22:31:05.048Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
